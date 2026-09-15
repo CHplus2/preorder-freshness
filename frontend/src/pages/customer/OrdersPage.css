@@ -10,12 +10,12 @@
 .orders-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #f3f4f6;
+  color: #29472f;
   margin-bottom: 30px;
 }
 
 .orders-empty {
-  color: #9ca3af;
+  color: #586854;
   text-align: center;
 }
 
@@ -24,7 +24,7 @@
    ORDER CARD
 ============================== */
 .order-card {
-  background: rgba(17, 24, 39, 0.7);
+  background: #ffffff;
   backdrop-filter: blur(12px);
 
   border-radius: 16px;
@@ -32,7 +32,7 @@
   margin-bottom: 18px;
 
   border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(32,61,44,0.08);
 
   transition: all 0.25s ease;
 }
@@ -55,12 +55,12 @@
 
 .order-id {
   font-weight: 700;
-  color: #f9fafb;
+  color: #29472f;
 }
 
 .order-user {
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: #586854;
 }
 
 
@@ -76,17 +76,17 @@
 /* dynamic colors */
 .status-pending {
   background: rgba(234, 179, 8, 0.2);
-  color: #facc15;
+  color: #805700;
 }
 
 .status-shipped {
   background: rgba(34, 197, 94, 0.2);
-  color: #4ade80;
+  color: #276036;
 }
 
 .status-cancelled {
   background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
+  color: #a52f27;
 }
 
 
@@ -104,7 +104,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 6px;
-  color: #d1d5db;
+  color: #3d513e;
 }
 
 .item-name {
@@ -112,7 +112,7 @@
 }
 
 .item-qty {
-  color: #9ca3af;
+  color: #586854;
 }
 
 
@@ -127,7 +127,7 @@
 }
 
 .payment-status {
-  color: #9ca3af;
+  color: #586854;
   font-size: 0.9rem;
 }
 
@@ -135,7 +135,7 @@
   font-size: 1.2rem;
   font-weight: 700;
 
-  background: linear-gradient(90deg, #7c3aed, #22d3ee);
+  background: transparent;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: currentColor;
 }

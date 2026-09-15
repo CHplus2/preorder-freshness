@@ -11,3 +11,26 @@ nav {background:#faf9f5; border-bottom:1px solid #dfe3da; padding:18px max(24px,
 .dk-calendar{margin:24px 0;background:#fff;border:1px solid #dce2d5;border-radius:12px;padding:20px;}.dk-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;}.dk-calendar-grid>strong{text-align:center;font-size:12px;}.dk-calendar-grid button{min-height:70px;text-align:left;background:#f5f7f0;padding:8px;}.dk-calendar-grid button small{display:block;font-size:11px;}.dk-calendar-grid .selected{border:2px solid #285a3e;background:#e0ead7;}@media(max-width:560px){.dk-calendar{padding:10px;}.dk-calendar-grid button{padding:5px;min-height:58px;font-size:12px;}.dk-calendar-grid button small{font-size:9px;}}
 
 .dk-sales-row{display:grid;grid-template-columns:150px 1fr 110px;gap:15px;align-items:center;margin:14px 0;font-size:14px;}@media(max-width:560px){.dk-sales-row{grid-template-columns:95px 1fr 85px;gap:8px;font-size:12px;}}
+
+/* Shared form defaults: reserve room for native arrows and separate labels from fields. */
+.escrow-demo h2 { font-size:21px;margin-bottom:24px; } .escrow-demo h3 { font-size:18px;margin:20px 0 10px; } .escrow-demo input { margin-top:8px; } .escrow-address { overflow-wrap:anywhere;font-size:13px; } .escrow-steps { display:flex;flex-wrap:wrap;gap:14px 35px;padding:20px 24px; } .escrow-demo summary { cursor:pointer;font-weight:650; }
+:root { --card:#fff; --muted:#586854; --primary:#285a3e; --secondary:#285a3e; --danger:#a52f27; --success:#276036; }
+select { padding-right:38px; line-height:1.5; }
+label > input, label > select, label > textarea { display:block; margin-top:8px; }
+input[type=radio],input[type=checkbox] { min-height:20px; width:20px; accent-color:#285a3e; }
+button:disabled { cursor:not-allowed; }
+.form-modal label,.edit-modal label { margin:18px 0 8px; }
+.form-modal input,.form-modal select,.edit-modal select { width:100%; }
+.cart-container,.payment-card,.wallet-card { box-shadow:0 4px 20px #203d2c0d; }
+.quantity-controls button { min-width:44px; }
+.qty-btn { width:44px;min-width:44px;height:44px;padding:0; }
+.cart-left,.cart-item-info { min-width:0; } .cart-item-name { overflow-wrap:anywhere; }
+.cart-image-wrapper { flex-shrink:0; }
+.alert.success { background:#e9f5e8;color:#235831; }
+.alert.error { background:#fff0ec;color:#92372a; }
+.alert.info { background:#eaf2fa;color:#245785; }
+.auth-blocked { color:#586854; } .logout-btn { color:#92372a; }
+.modal-content .switch-link { background:transparent;border:0;color:#285a3e;padding:4px 8px;text-decoration:underline;box-shadow:none; }
+.admin-customers-container table,.admin-reports-container table { display:block;overflow-x:auto;box-shadow:0 4px 20px #203d2c0d; }
+@media(max-width:600px) { .cart-item { align-items:flex-start;flex-direction:column;gap:18px; } .cart-right { width:100%;justify-content:space-between;flex-wrap:wrap;gap:12px; } .order-item { gap:12px; } .meta { flex-wrap:wrap;gap:10px; } .modal-content,.edit-modal,.form-modal { max-width:calc(100vw - 32px); } }
+@media(max-width:600px) { .cart-container { padding:18px;margin:20px 12px; } .admin-products-container,.admin-inventory-container,.admin-customers-container,.admin-reports-container,.orders-container { padding:16px;min-width:0; } }

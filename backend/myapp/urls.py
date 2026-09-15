@@ -6,7 +6,7 @@ from .views.planning import planning
 from .views.auth import signup_view, login_view, logout_view, check_auth
 from .views.products import CategoryListCreate, CategoryDetail, ProductListCreate, ProductDetail, recommend
 from .views.cart import CartViewSet
-from .views.orders import OrderList, place_order, AddressListCreate
+from .views.orders import OrderList, place_order, AddressListCreate, saved_address
 from .views.wallet import get_wallet, create_wallet, topup_wallet
 from .views.admin import admin_order_list, admin_order_detail, product_sales_report, AdminCustomerViewSet
 from .views.inventory import (
@@ -19,6 +19,7 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path("address/", saved_address),
     path("storefront/", storefront),
     path("products/<int:pk>/reviews/", reviews),
     path("admin/planning/", planning),

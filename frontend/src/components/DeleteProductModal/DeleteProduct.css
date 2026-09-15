@@ -9,7 +9,7 @@
 .delete-warning {
   margin: 16px 0 22px;
   font-size: 14px;
-  color: #9ca3af;
+  color: #586854;
   line-height: 1.5;
 }
 
@@ -28,7 +28,7 @@
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
 
-  color: #e5e7eb;
+  color: #304830;
   cursor: pointer;
 
   transition: 0.2s;
@@ -44,7 +44,7 @@
   border-radius: 10px;
   border: none;
 
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: linear-gradient(135deg, #a52f27, #dc2626);
   color: white;
   font-weight: 600;
 

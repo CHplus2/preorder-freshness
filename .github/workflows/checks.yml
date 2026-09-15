@@ -23,3 +23,5 @@ jobs:
       - run: python manage.py makemigrations --check --dry-run
       - run: python manage.py test myapp --noinput
       - run: python manage.py collectstatic --noinput
+      - run: npm ci --prefix escrow --ignore-scripts
+      - run: npm --prefix escrow test

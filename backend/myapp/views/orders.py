@@ -144,6 +144,7 @@ def place_order(request):
         preparation_at=delivery_at - timedelta(minutes=prep + buffer),
         delivery_method=method,
         address=address,
+        delivery_address=dict(AddressSerializer(address).data),
         total_amount=0,
         status="pending",
         payment_status=is_paid,
@@ -188,9 +189,24 @@ def place_order(request):
 # ADDRESS
 # ------------------------------------------
 
-class AddressListCreate(generics.ListCreateAPIView):
+class AddressListCreate(generics.ListAPIView):
     serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Address.objects.filter(user=self.request.user)
+        return Address.objects.filter(user=self.request.user, is_default=True)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
+def saved_address(request):
+    from django.contrib.auth.models import User
+    User.objects.select_for_update().get(pk=request.user.pk)
+    address = Address.objects.filter(user=request.user, is_default=True).first()
+    if request.method == 'GET':
+        return Response(AddressSerializer(address).data if address else None)
+    serializer = AddressSerializer(address, data=request.data, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    address = serializer.save(user=request.user, is_default=True)
+    return Response(AddressSerializer(address).data)

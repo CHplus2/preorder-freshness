@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { User, Menu, X, ShoppingBag } from "lucide-react";
 import { useAuth } from "./contexts/AuthProvider";
 import { useUI } from "./contexts/UIProvider";
@@ -34,6 +34,7 @@ import "./business.css";
 import StorefrontProvider, {useStorefront} from './contexts/StorefrontProvider';
 import {HomePage,StoryPage,HowItWorksPage,ContactPage} from './pages/customer/BusinessPages';
 import {BusinessFooter,PageMeta} from './components/BusinessLayout';
+const EscrowDemoPage=lazy(()=>import('./pages/customer/EscrowDemoPage'));
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -48,6 +49,7 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        <Route path="/escrow-demo" element={<Suspense fallback={<p className="dk-workspace">Loading escrow lab…</p>}><EscrowDemoPage/></Suspense>}/>
         <Route path="/story" element={<StoryPage/>}/>
         <Route path="/how-it-works" element={<HowItWorksPage/>}/>
         <Route path="/contact" element={<ContactPage/>}/>

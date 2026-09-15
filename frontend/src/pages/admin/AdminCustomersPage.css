@@ -2,16 +2,16 @@
    ROOT (MATCH YOUR SYSTEM)
 ========================= */
 :root {
-  --bg: #020617;
-  --card: rgba(17, 24, 39, 0.7);
+  --bg: #faf9f5;
+  --card: #ffffff;
   --border: rgba(255,255,255,0.08);
-  --text: #e5e7eb;
-  --muted: #9ca3af;
+  --text: #304830;
+  --muted: #586854;
 
-  --primary: #7c3aed;
-  --secondary: #22d3ee;
-  --danger: #ef4444;
-  --success: #22c55e;
+  --primary: #285a3e;
+  --secondary: #285a3e;
+  --danger: #a52f27;
+  --success: #276036;
 }
 
 /* =========================
@@ -36,7 +36,7 @@
 
   background: linear-gradient(90deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: currentColor;
 }
 
 /* =========================

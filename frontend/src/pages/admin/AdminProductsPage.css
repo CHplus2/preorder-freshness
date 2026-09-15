@@ -1,16 +1,16 @@
 /* =========================
-   ROOT THEME (CRYPTO)
+   SHARED LIGHT THEME
 ========================= */
 :root {
-  --bg: #0b1120;
-  --card: rgba(17, 24, 39, 0.7);
+  --bg: #edf2e9;
+  --card: #ffffff;
   --border: rgba(255,255,255,0.08);
-  --text: #e5e7eb;
-  --muted: #9ca3af;
+  --text: #304830;
+  --muted: #586854;
 
-  --primary: #7c3aed;   /* purple */
-  --secondary: #22d3ee; /* cyan */
-  --danger: #ef4444;
+  --primary: #285a3e;   /* purple */
+  --secondary: #285a3e; /* cyan */
+  --danger: #a52f27;
 }
 
 /* =========================

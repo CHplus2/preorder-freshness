@@ -78,7 +78,7 @@ export default function AdminOrdersPage() {
                 </button>
 
                 <div className="order-total">
-                  RM {order.total_amount}
+                  RM {(Number(order.total_amount)+Number(order.shipping_fee)).toFixed(2)}
                 </div>
               </div>
 
@@ -96,6 +96,7 @@ export default function AdminOrdersPage() {
                 <div className="modal-address-block">
                   <strong>Shipping Address:</strong>
                   <p>
+                    {editingOrder.address?.recipient_name}<br />
                     {editingOrder.address?.line1}<br />
                     {editingOrder.address?.line2 && (
                       <>

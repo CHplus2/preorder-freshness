@@ -19,3 +19,4 @@ backend/backups/
 **/dist/
 **/staticfiles/
 .vercel/
+escrow/artifacts/

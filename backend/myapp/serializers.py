@@ -83,7 +83,7 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = "__all__"
-        read_only_fields = ["id", "user"]
+        read_only_fields = ["id", "user", "is_default"]
 
     def create(self, validated_data):
         validated_data["user"] = self.context["request"].user
@@ -97,7 +97,10 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    address = AddressSerializer(read_only=True)
+    address = serializers.SerializerMethodField()
+
+    def get_address(self, obj):
+        return obj.delivery_address or (AddressSerializer(obj.address).data if obj.address else None)
     items = OrderItemSerializer(many=True, read_only=True)
     user = serializers.SerializerMethodField()
 

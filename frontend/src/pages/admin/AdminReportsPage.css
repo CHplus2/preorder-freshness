@@ -2,15 +2,15 @@
    ROOT THEME
 ========================= */
 :root {
-  --bg: #020617;
-  --card: rgba(17, 24, 39, 0.7);
+  --bg: #faf9f5;
+  --card: #ffffff;
   --border: rgba(255,255,255,0.08);
-  --text: #e5e7eb;
-  --muted: #9ca3af;
+  --text: #304830;
+  --muted: #586854;
 
-  --primary: #7c3aed;
-  --secondary: #22d3ee;
-  --success: #22c55e;
+  --primary: #285a3e;
+  --secondary: #285a3e;
+  --success: #276036;
 }
 
 /* =========================
@@ -34,7 +34,7 @@
 
   background: linear-gradient(90deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: currentColor;
 }
 
 /* =========================
@@ -86,7 +86,7 @@
 /* Product name */
 .admin-reports-container td:first-child {
   font-weight: 500;
-  color: #f3f4f6;
+  color: #29472f;
 }
 
 /* Quantity */
@@ -99,7 +99,7 @@
 .admin-reports-container td:nth-child(3) {
   font-weight: 700;
 
-  background: linear-gradient(90deg, #7c3aed, #22d3ee);
+  background: transparent;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: currentColor;
 }

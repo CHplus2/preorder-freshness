@@ -114,6 +114,12 @@ if database_url:
     DATABASES = {'default': dj_database_url.parse(database_url, conn_max_age=0)}
     if DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
         DATABASES['default']['OPTIONS'] = {'sslmode': 'require', 'connect_timeout': 10}
+        # Keep Django tables outside Supabase's public Data API schema.
+        database_schema = os.getenv('DATABASE_SCHEMA', 'public')
+        import re
+        if not re.fullmatch(r'[a-z_][a-z0-9_]*', database_schema):
+            raise ValueError('DATABASE_SCHEMA must be a simple lowercase PostgreSQL identifier.')
+        DATABASES['default']['OPTIONS']['options'] = f'-c search_path={database_schema}'
         DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
 else:
     DATABASES = {'default': {'ENGINE':'django.db.backends.sqlite3', 'NAME':BASE_DIR / 'db.sqlite3'}}

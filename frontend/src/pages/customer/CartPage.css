@@ -6,12 +6,12 @@
   margin: 40px auto;
   padding: 28px;
 
-  background: rgba(17, 24, 39, 0.7);
+  background: #ffffff;
   backdrop-filter: blur(14px);
 
   border-radius: 18px;
   border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  box-shadow: 0 20px 50px rgba(32,61,44,0.08);
 }
 
 
@@ -21,7 +21,7 @@
 .cart-title {
   font-size: 1.9rem;
   font-weight: 700;
-  color: #f3f4f6;
+  color: #29472f;
   margin-bottom: 28px;
 }
 
@@ -37,7 +37,7 @@
   padding: 18px;
   margin-bottom: 16px;
 
-  background: rgba(17, 24, 39, 0.6);
+  background: #ffffff;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.05);
 
@@ -46,7 +46,7 @@
 
 .cart-item:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(32,61,44,0.08);
   border-color: rgba(124, 58, 237, 0.4);
 }
 
@@ -65,7 +65,7 @@
   height: 70px;
   border-radius: 12px;
   overflow: hidden;
-  background: #0b1120;
+  background: #edf2e9;
 }
 
 .cart-item-image {
@@ -84,12 +84,12 @@
 .cart-item-name {
   font-size: 1.05rem;
   font-weight: 600;
-  color: #f3f4f6;
+  color: #29472f;
 }
 
 .cart-item-price {
   font-size: 0.95rem;
-  color: #9ca3af;
+  color: #586854;
 }
 
 
@@ -118,7 +118,7 @@
   border: 1px solid rgba(124, 58, 237, 0.5);
 
   background: transparent;
-  color: #c4b5fd;
+  color: #365b3c;
 
   font-size: 18px;
   cursor: pointer;
@@ -134,7 +134,7 @@
 .qty-number {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #f3f4f6;
+  color: #29472f;
 }
 
 
@@ -148,7 +148,7 @@
   border: none;
 
   background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  color: #a52f27;
 
   font-weight: 600;
   cursor: pointer;
@@ -172,7 +172,7 @@
   font-size: 1.4rem;
   font-weight: 700;
 
-  color: #f3f4f6;
+  color: #29472f;
 }
 
 
@@ -190,7 +190,7 @@
   font-weight: 700;
   font-size: 1.1rem;
 
-  background: linear-gradient(135deg, #7c3aed, #22d3ee);
+  background: #285a3e;
   color: white;
 
   cursor: pointer;
@@ -207,5 +207,5 @@
 
 /* EMPTY STATE */
 .cart-container p {
-  color: #9ca3af;
+  color: #586854;
 }

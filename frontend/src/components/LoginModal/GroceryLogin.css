@@ -25,7 +25,7 @@
 
   border-radius: 18px;
 
-  background: rgba(17, 24, 39, 0.75);
+  background: #ffffff;
   backdrop-filter: blur(18px);
 
   border: 1px solid rgba(255,255,255,0.08);
@@ -34,7 +34,7 @@
     0 20px 60px rgba(0,0,0,0.7),
     0 0 40px rgba(124, 58, 237, 0.15);
 
-  color: #e5e7eb;
+  color: #304830;
   position: relative;
 }
 
@@ -61,7 +61,7 @@
   background: transparent;
   border: none;
 
-  color: #9ca3af;
+  color: #586854;
   font-size: 1.2rem;
   cursor: pointer;
 
@@ -69,7 +69,7 @@
 }
 
 .close-btn:hover {
-  color: #e5e7eb;
+  color: #304830;
 }
 
 /* =========================
@@ -82,9 +82,9 @@
   font-size: 1.5rem;
   font-weight: 700;
 
-  background: linear-gradient(90deg, #7c3aed, #22d3ee);
+  background: transparent;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: currentColor;
 }
 
 /* =========================
@@ -104,17 +104,17 @@
   border: 1px solid rgba(255,255,255,0.08);
 
   background: rgba(255,255,255,0.03);
-  color: #e5e7eb;
+  color: #304830;
 
   transition: 0.2s;
 }
 
 .login-form input::placeholder {
-  color: #6b7280;
+  color: #586854;
 }
 
 .login-form input:focus {
-  border-color: #7c3aed;
+  border-color: #285a3e;
   box-shadow: 0 0 10px rgba(124,58,237,0.5);
   outline: none;
 }
@@ -133,7 +133,7 @@
   cursor: pointer;
 
   color: white;
-  background: linear-gradient(135deg, #7c3aed, #22d3ee);
+  background: #285a3e;
 
   transition: 0.25s;
   box-shadow: 0 0 16px rgba(124,58,237,0.4);
@@ -148,7 +148,7 @@
    ERROR
 ========================= */
 .error {
-  color: #ef4444;
+  color: #a52f27;
   font-size: 13px;
   text-align: center;
 }
@@ -160,16 +160,16 @@
   margin-top: 14px;
   text-align: center;
   font-size: 13px;
-  color: #9ca3af;
+  color: #586854;
 }
 
 /* LINK */
 .switch-link {
-  color: #22d3ee;
+  color: #285a3e;
   font-weight: 600;
   cursor: pointer;
 }
 
 .switch-link:hover {
-  color: #7c3aed;
+  color: #285a3e;
 }

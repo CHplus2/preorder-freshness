@@ -43,6 +43,7 @@ export default function OrdersPage() {
 
             <p>Delivery: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Contact owner to arrange'} · {order.delivery_method}</p>
             <p>Bulk discount: RM {order.discount_amount} · Delivery fee: RM {order.shipping_fee}</p>
+            {order.address && <details className="dk-panel"><summary>Delivery address used for this order</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}
             {/* BODY */}
             <div className="order-body">
               {order.items.map((item) => (

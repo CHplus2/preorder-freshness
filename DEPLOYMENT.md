@@ -21,6 +21,7 @@ Import `CHplus2/preorder-freshness` with **Root Directory `.`**, **Django** fram
 Required environment variables:
 
 - `DATABASE_URL`: Supabase PostgreSQL URI, ideally transaction pooler for serverless traffic.
+- `DATABASE_SCHEMA`: `django_app` when using the private schema prepared below. Use the same value locally and on Vercel.
 - `SECRET_KEY`: a newly generated long random Django secret; keep it stable across deployments.
 - `DEBUG`: `False`.
 - `ALLOWED_HOSTS`: any custom hostname(s), separated by commas. Vercel’s deployment and production hostnames are automatically added from its system environment variables.
@@ -31,6 +32,17 @@ Keep the variables server-side. Do not set `SUPABASE_DATABASE_URL` alone in Verc
 ## 3. Initialise the remote database explicitly
 
 Migrations do **not** run automatically on every build or request. Preview deployments must not unexpectedly alter a production database.
+
+For a first transfer of your existing local data, keep `DATABASE_URL` unset, set the session pooler URI in the private `SUPABASE_DATABASE_URL`, and run:
+
+```powershell
+backend/venv/Scripts/python.exe manage.py migrate
+backend/venv/Scripts/python.exe manage.py prepare_supabase
+```
+
+This explicitly uploads local accounts, addresses, orders, inventory and menu data to your Supabase project. Use it only when you intend that transfer. It creates a private `django_app` schema with no `anon` or `authenticated` schema access, keeps an ignored local JSON backup, excludes browser sessions and the local UI QA account, and refuses to overwrite a populated `django_app` schema. If interrupted after migrations, inspect the remote state before retrying; it will not overwrite it automatically. The existing SQLite file remains available.
+
+After a successful transfer, set `DATABASE_URL` to your pooler URI and `DATABASE_SCHEMA=django_app`, then restart the backend. Do not expose `django_app` through the Supabase Data API.
 
 After validating the connection and selecting the intended Supabase database, set your local shell’s `DATABASE_URL` from the ignored environment file, then run:
 
@@ -49,6 +61,11 @@ Create a new owner only if you are starting with an empty database. To retain lo
 - Place a test preorder and verify owner-only pages reject customer accounts.
 - Configure actual owner story, portrait, service area and contact channels in Brand & settings.
 - Confirm production uses PostgreSQL, not a local `.sqlite3` file.
+- Save a delivery address, leave checkout and return: it should be reused. Edit it and confirm past orders retain their original delivery details.
+
+## Testnet escrow
+
+`/escrow-demo` is an academic Sepolia demonstration, separate from production orders. See [escrow setup and limitations](escrow/README.md). Deploy the included contract with your own test wallet and enter its address in the demo, or set the public `VITE_TESTNET_ESCROW_ADDRESS` before building. No private wallet key is required or accepted by the app. The included contract cannot be deployed on mainnet.
 
 The code has local build and backend regression checks. Successful Vercel deployment and remote database migration require a reachable Supabase connection and configured Vercel variables; a GitHub push alone does not complete those steps.
 

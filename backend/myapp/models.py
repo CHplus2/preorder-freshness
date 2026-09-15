@@ -215,6 +215,7 @@ class WalletTransaction(models.Model):
 
 # ============ USER ADDRESSES ============
 class Address(models.Model):
+    recipient_name = models.CharField(max_length=150, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     line1 = models.CharField(max_length=255)
     line2 = models.CharField(max_length=255, blank=True)
@@ -224,6 +225,9 @@ class Address(models.Model):
     country = models.CharField(max_length=100, default="Malaysia")
     phone = models.CharField(max_length=20)
     is_default = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user'], condition=models.Q(is_default=True), name='one_default_address_per_user')]
 
     def __str__(self):
         return f"{self.user.username} - {self.line1}, {self.city}"
@@ -248,6 +252,7 @@ class CartItem(models.Model):
 
 # ============ ORDER ============
 class Order(models.Model):
+    delivery_address = models.JSONField(default=dict, blank=True)
     delivery_at = models.DateTimeField(null=True, blank=True)
     preparation_at = models.DateTimeField(null=True, blank=True)
     delivery_method = models.CharField(max_length=20, choices=[("standard", "Owner delivery"), ("express", "Express request")], default="standard")

@@ -205,3 +205,46 @@ class BrowserCartTests(TestCase):
         for path in ['/', '/menu', '/story', '/how-it-works', '/contact', '/admin/planner']:
             self.assertEqual(resolve(path).kwargs.get('template_name'),None)
             self.assertEqual(resolve(path).func.view_initkwargs['template_name'],'index.html')
+
+
+class SavedAddressTests(TestCase):
+    def setUp(self):
+        self.user=User.objects.create_user('address-customer')
+        self.client=APIClient()
+        self.client.force_authenticate(self.user)
+        self.data=dict(recipient_name='Test Customer',line1='1 Test Street',city='Kuching',state='Sarawak',postal_code='93000',country='Malaysia',phone='0123456789')
+
+    def test_repeated_save_updates_single_address(self):
+        first=self.client.put('/api/address/',self.data,format='json')
+        self.assertEqual(first.status_code,200,first.data)
+        self.data['line1']='2 Test Street'
+        second=self.client.put('/api/address/',self.data,format='json')
+        self.assertEqual(first.data['id'],second.data['id'])
+        self.assertEqual(Address.objects.filter(user=self.user).count(),1)
+        self.assertEqual(self.client.get('/api/address/').data['line1'],'2 Test Street')
+
+    def test_other_customer_cannot_read_or_overwrite_address(self):
+        saved=self.client.put('/api/address/',self.data,format='json').data
+        other=User.objects.create_user('other-customer')
+        self.client.force_authenticate(other)
+        self.assertIsNone(self.client.get('/api/address/').data)
+        self.data.update(id=saved['id'],user=self.user.id)
+        updated=self.client.put('/api/address/',self.data,format='json')
+        self.assertNotEqual(updated.data['id'],saved['id'])
+        self.assertEqual(updated.data['user'],other.id)
+
+    def test_order_snapshot_survives_saved_address_edit(self):
+        saved=self.client.put('/api/address/',self.data,format='json').data
+        product=Product.objects.create(name='Test meal',price=12)
+        CartItem.objects.create(user=self.user,product=product,quantity=1)
+        delivery=(timezone.localtime()+timedelta(days=4)).replace(hour=12,minute=0)
+        result=self.client.post('/api/orders/place/',dict(address_id=saved['id'],payment='cod',delivery_at=delivery.isoformat()),format='json')
+        self.assertEqual(result.status_code,201,result.data)
+        self.data['line1']='New saved address'
+        self.client.put('/api/address/',self.data,format='json')
+        from .serializers import OrderSerializer
+        self.assertEqual(OrderSerializer(Order.objects.get()).data['address']['line1'],'1 Test Street')
+
+    def test_anonymous_address_access_denied(self):
+        self.client.force_authenticate(None)
+        self.assertIn(self.client.get('/api/address/').status_code,[401,403])

@@ -6,10 +6,10 @@ import axios from "axios"
 import "./GrocerySignup.css";
 
 function GrocerySignup() {
-    const [account, setAccount] = useState({ 
-        "username": "", 
+    const [account, setAccount] = useState({
+        "username": "",
         "password": "",
-        "confirmPassword": "", 
+        "confirmPassword": "",
     });
     const { setShowSignup, setShowLogin, modalMotion, setAlert } = useUI();
     const { signup } = useAuth();
@@ -29,30 +29,33 @@ function GrocerySignup() {
         await signup(account);
 
         setAccount({ "username": "", "password": "", "confirmPassword": "" });
-    }   
+    }
 
     return (
         <div className="modal-overlay">
             <motion.div
                 className="modal-content"
+                role="dialog" aria-modal="true" aria-label="Account access"
                 {...modalMotion}
                 transition= {{ ...modalMotion.transition, duration: 0.25 }}
                 onClick={(e) => e.stopPropagation()}
             >
-                <button className="close-btn" onClick={() => setShowSignup(false)}>✖</button>
+                <button className="close-btn" aria-label="Close account dialog" onClick={() => setShowSignup(false)}>✖</button>
                 <h2>Register for an Account</h2>
                 <form onSubmit={handleSubmit} className="login-form">
-                    <input 
-                        type="text" 
-                        name="username" 
+                    <input
+                        type="text"
+                        name="username"
+                        aria-label="Username" autoComplete="username"
                         placeholder="Username"
                         value={account.username}
                         onChange={handleChange}
                         required
                     />
-                    <input 
-                        type="password" 
-                        name="password" 
+                    <input
+                        type="password"
+                        name="password"
+                        aria-label="Password" autoComplete="new-password"
                         placeholder="Password"
                         value={account.password}
                         onChange={handleChange}
@@ -61,6 +64,7 @@ function GrocerySignup() {
                     <input
                         type="password"
                         name="confirmPassword"
+                        aria-label="Confirm password" autoComplete="new-password"
                         placeholder="Confirm Password"
                         value={account.confirmPassword}
                         onChange={handleChange}
@@ -71,15 +75,15 @@ function GrocerySignup() {
 
                 <p>
                     Already have an account?{" "}
-                    <span
+                    <button type="button"
                         className="switch-link"
                         onClick={() => {
                             setShowSignup(false);
                             setShowLogin(true);
-                        }}   
+                        }}
                     >
                         Log in
-                    </span>
+                    </button>
                 </p>
             </motion.div>
         </div>

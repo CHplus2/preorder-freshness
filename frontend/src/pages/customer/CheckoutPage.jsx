@@ -1,251 +1,46 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useUI } from "../../contexts/UIProvider";
-import { useCart } from "../../contexts/CartProvider";
-import { useOrder } from "../../contexts/OrderProvider";
-import { getCookie } from "../../utils/cookieUtils";
-import "./CheckoutPage.css";
-import axios from "axios";
+import {useEffect,useState} from 'react';
+import {Link,useNavigate} from 'react-router-dom';
+import {MapPin,CalendarDays,CreditCard,Check,ChevronLeft} from 'lucide-react';
+import axios from 'axios';
+import {useUI} from '../../contexts/UIProvider';
+import {useCart} from '../../contexts/CartProvider';
+import {useOrder} from '../../contexts/OrderProvider';
+import {getCookie} from '../../utils/cookieUtils';
+import './CheckoutPage.css';
+const emptyAddress={recipient_name:'',line1:'',line2:'',city:'',state:'',postal_code:'',country:'Malaysia',phone:''};
+const states=['Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Penang','Perak','Perlis','Sabah','Sarawak','Selangor','Terengganu','Kuala Lumpur','Labuan','Putrajaya'];
+const errorText=e=>{const data=e.response?.data;if(typeof data==='string')return data;if(Array.isArray(data))return data.join(' ');if(data)return Object.entries(data).map(([key,v])=>`${key==='detail'?'':key+': '}${Array.isArray(v)?v.join(' '):v}`).join(' ');return 'Could not connect. Please try again.';};
+export default function CheckoutPage(){
+ const [openedAt]=useState(()=>Date.now());
+ const [address,setAddress]=useState(null),[draft,setDraft]=useState(emptyAddress),[editing,setEditing]=useState(false),[addressLoading,setAddressLoading]=useState(true),[saving,setSaving]=useState(false),[loading,setLoading]=useState(false),[error,setError]=useState('');
+ const [form,setForm]=useState({delivery_at:'',delivery_method:'standard',payment:'cod'});
+ const {formatPrice}=useUI();const {cart,total,SHIPPING_FEE,finalTotal,discount,promotion}=useCart();const {placeOrder}=useOrder();const navigate=useNavigate();
+ useEffect(()=>{let active=true;axios.get('/api/address/').then(r=>{if(active){setAddress(r.data);setDraft(r.data || emptyAddress);setEditing(!r.data);}}).catch(e=>{if(active)setError(errorText(e));}).finally(()=>{if(active)setAddressLoading(false);});return()=>{active=false};},[]);
+ const notice=Math.max(0,...cart.map(i=>i.product.lead_hours ?? 24));const cooking=cart.reduce((n,i)=>n+(i.product.preparation_minutes ?? 60),0);const buffer=promotion?.delivery_buffer_minutes ?? 90;
+ const localInput=d=>new Date(d.getTime()+8*3600000).toISOString().slice(0,16);
+ const earliest=localInput(new Date(openedAt+(notice*60+cooking+buffer)*60000));const latest=localInput(new Date(openedAt+90*86400000));
+ const saveAddress=async e=>{e.preventDefault();setSaving(true);setError('');try{const r=await axios.put('/api/address/',draft,{headers:{'X-CSRFToken':getCookie('csrftoken')}});setAddress(r.data);setDraft(r.data);setEditing(false);}catch(e){setError(errorText(e));}finally{setSaving(false);}};
+ const submit=async e=>{
+  e.preventDefault();if(!address || editing || loading)return;
+  setLoading(true);setError('');
+  try {
+   sessionStorage.setItem('deliveryPlan',JSON.stringify({delivery_at:form.delivery_at+':00+08:00',delivery_method:form.delivery_method}));
+   if(form.payment==='cod'){
+    await placeOrder(address.id,'cod',{throwOnError:true});
+    navigate('/orders',{state:{formPayment:true}});
+   }else{
+    localStorage.setItem('addressId',address.id);
+    navigate('/payment/wallet',{state:{addressId:address.id}});
+   }
+  }catch(e){setError(errorText(e));}finally{setLoading(false);}
+ };
 
-export default function CheckoutPage() {
-  const [openedAt]=useState(()=>Date.now());
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    delivery_at: "",
-    delivery_method: "standard",
-    name: "",
-    line1: "",
-    city: "",
-    state: "",
-    postal_code: "",
-    phone: "",
-    payment: "",
-  });
-  const { formatPrice, setAlert } = useUI();
-  const { cart, total, SHIPPING_FEE, finalTotal, discount, promotion } = useCart();
-  const { placeOrder } = useOrder();
-  const navigate = useNavigate();
-  const notice = Math.max(0,...cart.map(i=>i.product.lead_hours || 24));
-  const cooking = cart.reduce((n,i)=>n+(i.product.preparation_minutes || 60),0);
-  const localInput = d=>new Date(d.getTime()+8*3600000).toISOString().slice(0,16);
-  const earliest = localInput(new Date(openedAt+(notice*60+cooking+(promotion?.delivery_buffer_minutes || 90))*60000));
-  const latest = localInput(new Date(openedAt+90*86400000));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (loading) return;
-    setLoading(true);
-
-    sessionStorage.setItem("deliveryPlan", JSON.stringify({delivery_at: form.delivery_at + ":00+08:00", delivery_method: form.delivery_method}));
-    // Create address
-    let data;
-    try {
-      const res = await axios.post("/api/addresses/", {
-        line1: form.line1,
-        city: form.city,
-        state: form.state,
-        postal_code: form.postal_code,
-        phone: form.phone,
-      }, {
-        withCredentials: true,
-        headers: { "X-CSRFToken": getCookie("csrftoken") },
-      });
-      data = res.data;
-    } catch (err) {
-      setLoading(false);
-      setAlert({ message: "Address could not be saved", type: "error" });
-      console.error("createAddress:", err.response?.data || err.message);
-      return;
-    }
-
-    if (!data.id) {
-      setLoading(false);
-      setAlert({ message: "Address could not be saved", type: "error" });
-      return;
-    }
-
-    setLoading(true);
-
-    if (form.payment === "cod") {
-      const success = await placeOrder(data.id, form.payment);
-      setLoading(false);
-
-      if (!success) {
-        setAlert({ message: "Order failed. Please try again.", type: "error" });
-        return;
-      }
-
-      navigate("/orders", { state: { formPayment: true } });
-      return;
-    }
-
-    localStorage.setItem("addressId", data.id);
-    navigate(`/payment/${form.payment}`, { state: { addressId: data.id }});
-  };
-
-  return (
-    <div className="checkout-container">
-      <h2 className="checkout-title">Checkout</h2>
-
-      <div className="checkout-grid">
-
-        {/* LEFT: FORM */}
-        <div className="checkout-left">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            ← Back to Cart
-          </button>
-          <form className="checkout-form" onSubmit={handleSubmit}>
-            <div className="form-section">
-              <h4>Plan your delivery</h4>
-              <p>Choose a date up to 90 days ahead, 9am–9pm Malaysia time. Each menu needs advance notice, cooking time and a {promotion?.delivery_buffer_minutes || 90}-minute travel/contingency buffer. Your owner confirms fulfilment.</p>
-              <p>For this basket: {notice}h notice + {cooking} minutes cooking + {promotion?.delivery_buffer_minutes || 90} minutes delivery buffer.</p>
-              <label>Requested delivery date and time (Malaysia)
-                <input className="checkout-input" type="datetime-local" min={earliest} max={latest} required value={form.delivery_at} onChange={e => setForm({...form, delivery_at:e.target.value})}/>
-              </label>
-              <label>Delivery service
-                <select className="checkout-input" value={form.delivery_method} onChange={e => setForm({...form, delivery_method:e.target.value})}>
-                  <option value="standard">Owner delivery</option><option value="express">Request express — owner confirmation required</option>
-                </select>
-              </label>
-              <p>Express requests retain the menu lead time. Any courier arrangement or additional charge must be agreed with the owner.</p>
-              <h4>Delivery address</h4>
-                <input
-                className="checkout-input"
-                placeholder="Full Name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-              />
-
-              <input
-                className="checkout-input"
-                placeholder="Street Address"
-                value={form.line1}
-                onChange={(e) => setForm({ ...form, line1: e.target.value })}
-                required
-              />
-
-              <input
-                className="checkout-input"
-                placeholder="City"
-                value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
-                required
-              />
-
-              <input
-                className="checkout-input"
-                placeholder="State"
-                value={form.state}
-                onChange={(e) => setForm({ ...form, state: e.target.value })}
-                required
-              />
-
-              <input
-                className="checkout-input"
-                placeholder="Postal Code"
-                value={form.postal_code}
-                onChange={(e) => setForm({ ...form, postal_code: e.target.value })}
-                required
-              />
-
-              <input
-                className="checkout-input"
-                placeholder="Phone Number"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-section">
-              <h4>Payment</h4>
-              <div className="payment-options">
-                <label>
-                  <input type="radio"
-                  name="payment"
-                  value="cod"
-                  onChange={(e) => setForm(
-                    { ...form, payment: e.target.value }
-                  )}
-                  required
-                  />
-                  Cash on Delivery
-                </label>
-
-                <label>
-                  <input
-                  type="radio"
-                  name="payment"
-                  value="paypal" disabled
-                  onChange={
-                    (e) => setForm(
-                      { ...form, payment: e.target.value }
-                    )}
-                  required
-                  />
-                  PayPal (setup required)
-                </label>
-
-                <label>
-                  <input
-                  type="radio"
-                  name="payment"
-                  value="wallet"
-                  onChange={
-                    (e) => setForm(
-                      { ...form, payment: e.target.value }
-                    )}
-                  required
-                  />
-                  Demo credit wallet
-                </label>
-              </div>
-            </div>
-
-            <button className="checkout-submit" type="submit" disabled={loading}>
-              {loading ? "Processing..." : "Proceed to Payment"}
-            </button>
-          </form>
-        </div>
-
-        {/* RIGHT: ORDER SUMMARY */}
-        <div className="checkout-right">
-          <h3 className="summary-title">Order Summary</h3>
-          <p className="summary-subtitle">Secure checkout</p>
-
-          {cart.map((item) => (
-            <div key={item.id} className="summary-item">
-              <span>{item.product.name}</span>
-              <span>x{item.quantity}</span>
-              <span>{formatPrice(item.product.price * item.quantity)}</span>
-            </div>
-          ))}
-
-          <div className="summary-breakdown">
-            <div className="summary-row">
-              <span>Subtotal</span>
-              <span>{formatPrice(total)}</span>
-            </div>
-
-            <div className="summary-row"><span>Bulk discount</span><span>−{formatPrice(discount)}</span></div>
-            <div className="summary-row">
-              <span>Shipping Fee</span>
-              <span>{SHIPPING_FEE > 0 ? formatPrice(SHIPPING_FEE) : "Free"}</span>
-            </div>
-          </div>
-
-          {total < 50 && (
-            <p className="summary-note">
-              Add {formatPrice(50 - total)} more for free shipping!
-            </p>
-          )}
-
-          <div className="summary-total">
-            Total: <strong>{formatPrice(finalTotal)}</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+ if(!cart.length)return <main className="checkout-container"><h1>Your basket is empty</h1><p>Add something from the menu before checking out.</p><Link className="dk-primary" to="/menu">Explore the menu</Link></main>;
+ return <main className="checkout-container"><Link to="/cart" className="checkout-back"><ChevronLeft size={16}/>Back to basket</Link><h1 className="checkout-title">Almost at your table.</h1><p className="checkout-intro">Confirm your address, choose a delivery time, and place your preorder.</p>{error && <div role="alert" className="checkout-error">{error}</div>}<div className="checkout-grid"><div className="checkout-main">
+ <section className="checkout-section"><div className="checkout-section-heading"><MapPin size={21}/><h2>Delivery address</h2>{address && !editing && <button type="button" onClick={()=>setEditing(true)}>Change</button>}</div>
+ {addressLoading?<p role="status">Loading your saved address…</p>:editing?<form className="address-form" onSubmit={saveAddress}><p className="checkout-hint">Save once. We’ll use this address for your next orders too.</p><div className="address-fields">{[['recipient_name','Recipient name','name'],['phone','Phone number','tel'],['line1','Street address','address-line1'],['line2','Apartment, floor or unit (optional)','address-line2'],['city','City','address-level2'],['postal_code','Postcode','postal-code']].map(([key,label,auto])=><label key={key} className={['line1','line2'].includes(key)?'field-wide':''}>{label}<input type={key==='phone'?'tel':'text'} autoComplete={auto} required={key!=='line2'} pattern={key==='postal_code'?'[0-9]{5}':undefined} maxLength={key==='postal_code'?5:key==='phone'?20:150} value={draft[key] || ''} onChange={e=>setDraft({...draft,[key]:e.target.value})}/></label>)}<label>State / territory<select required autoComplete="address-level1" value={draft.state} onChange={e=>setDraft({...draft,state:e.target.value})}><option value="">Select a state</option>{states.map(s=><option key={s}>{s}</option>)}</select></label><label>Country<input value="Malaysia" readOnly autoComplete="country-name"/></label></div><div className="checkout-actions"><button className="checkout-submit" disabled={saving}>{saving?'Saving…':'Save delivery address'}</button>{address && <button type="button" onClick={()=>{setDraft(address);setEditing(false)}}>Cancel</button>}</div></form>:address?<div className="saved-address"><span className="address-default"><Check size={14}/>Saved address</span><strong>{address.recipient_name || 'Delivery recipient'}</strong><p>{address.phone}</p><p>{address.line1}{address.line2 && <><br/>{address.line2}</>}<br/>{address.postal_code} {address.city}, {address.state}<br/>{address.country}</p><p className="checkout-hint">Changing your saved address won’t alter orders already placed.</p></div>:<button onClick={()=>setEditing(true)}>Add delivery address</button>}</section>
+ <form onSubmit={submit} className="checkout-form"><section className="checkout-section"><div className="checkout-section-heading"><CalendarDays size={21}/><h2>Delivery plan</h2></div><div className="checkout-timing"><span>{notice}h advance notice</span><span>{cooking} min cooking</span><span>{buffer} min delivery buffer</span></div><label>Requested date and time<input type="datetime-local" required min={earliest} max={latest} value={form.delivery_at} onChange={e=>setForm({...form,delivery_at:e.target.value})}/><span className="checkout-hint">Malaysia time · 9am–9pm · up to 90 days ahead</span></label><label>Delivery service<select value={form.delivery_method} onChange={e=>setForm({...form,delivery_method:e.target.value})}><option value="standard">Owner delivery</option><option value="express">Request express delivery</option></select><span className="checkout-hint">{form.delivery_method==='express'?'The owner must confirm courier availability and any extra charge. Menu lead times still apply.':'The owner confirms your requested delivery arrangements.'}</span></label></section>
+ <section className="checkout-section"><div className="checkout-section-heading"><CreditCard size={21}/><h2>Payment</h2></div><div className="payment-options">{[['cod','Cash on delivery','Pay when your order arrives.'],['wallet','Demo credit wallet','For project demonstrations. No real money or blockchain transfer.']].map(([value,title,subtitle])=><label key={value} className={form.payment===value?'selected':''}><input type="radio" name="payment" value={value} checked={form.payment===value} onChange={()=>setForm({...form,payment:value})}/><span><strong>{title}</strong><small>{subtitle}</small></span></label>)}</div><p className="checkout-hint">Smart-contract escrow is not enabled for live payments. <Link to="/escrow-demo">Explore the testnet demo</Link></p></section>
+ <button className="checkout-submit" disabled={loading || addressLoading || !address || editing}>{loading?'Placing order…':form.payment==='cod'?`Place preorder · ${formatPrice(finalTotal)}`:'Continue to demo wallet'}</button>{(!address || editing) && <p className="checkout-hint">Save your delivery address to continue.</p>}</form></div>
+ <aside className="checkout-summary"><h2>Your preorder</h2>{cart.map(item=><div className="checkout-summary-item" key={item.id}><div><strong>{item.product.name}</strong><span>Quantity: {item.quantity}</span></div><strong>{formatPrice(item.product.price*item.quantity)}</strong></div>)}<dl><div><dt>Food subtotal</dt><dd>{formatPrice(total)}</dd></div>{discount>0 && <div><dt>Bulk discount</dt><dd>−{formatPrice(discount)}</dd></div>}<div><dt>Delivery</dt><dd>{SHIPPING_FEE?formatPrice(SHIPPING_FEE):'Free'}</dd></div><div className="checkout-total"><dt>Total</dt><dd>{formatPrice(finalTotal)}</dd></div></dl>{total<50 && <p className="checkout-hint">Add {formatPrice(50-total)} in food for free delivery.</p>}<p className="checkout-hint">Your order status will appear in My Orders after checkout.</p></aside></div></main>;
 }

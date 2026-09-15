@@ -39,7 +39,7 @@ export default function OrderProvider({ children }) {
         }
     }, []);
 
-    const placeOrder = useCallback(async (addressId, payment) => {
+    const placeOrder = useCallback(async (addressId, payment, options = {}) => {
         try {
             await axios.post("/api/orders/place/", { address_id: addressId, payment, ...JSON.parse(sessionStorage.getItem("deliveryPlan") || "{}") }, {
                 withCredentials: true,
@@ -49,6 +49,7 @@ export default function OrderProvider({ children }) {
             return true;
         } catch (err) {
             console.error("placeOrder:", err.response?.data || err.message);
+            if (options.throwOnError) throw err;
             window.alert(JSON.stringify(err.response?.data || "Order could not be placed"));
             return false;
         }

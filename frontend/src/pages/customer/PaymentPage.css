@@ -10,18 +10,18 @@
 /* BACK BUTTON */
 .back-btn {
   font-size: 14px;
-  color: #9ca3af;
+  color: #586854;
   transition: 0.2s;
 }
 
 .back-btn:hover {
-  color: #22d3ee;
+  color: #285a3e;
   transform: translateX(-2px);
 }
 
 /* CARD */
 .payment-card {
-  background: rgba(17, 24, 39, 0.7);
+  background: #ffffff;
   padding: 28px;
   border-radius: 18px;
 
@@ -35,14 +35,14 @@
 .payment-title {
   font-size: 1.6rem;
   font-weight: 700;
-  color: #f9fafb;
+  color: #29472f;
   margin-bottom: 6px;
 }
 
 /* SUBTEXT */
 .payment-sub {
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: #586854;
   margin-bottom: 20px;
 }
 
@@ -52,7 +52,7 @@
   padding: 16px;
   border-radius: 12px;
 
-  background: #0f172a;
+  background: #edf2e9;
   border: 1px solid rgba(255,255,255,0.05);
 }
 
@@ -63,7 +63,7 @@
   padding: 14px;
   border-radius: 12px;
 
-  background: linear-gradient(135deg, #7c3aed, #22d3ee);
+  background: #285a3e;
   color: white;
 
   font-weight: 700;
@@ -81,7 +81,7 @@
 
 /* CRYPTO WALLET */
 .wallet-box, .paypal-box {
-  background: rgba(17, 24, 39, 0.7);
+  background: #ffffff;
   backdrop-filter: blur(14px);
   border: 1px solid rgba(255,255,255,0.06);
   box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
@@ -108,7 +108,7 @@
   padding: 12px;
   border-radius: 10px;
 
-  background: linear-gradient(135deg, #7c3aed, #22d3ee);
+  background: #285a3e;
   color: white;
 
   font-weight: 600;
@@ -132,7 +132,7 @@
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 10px;
 
-  color: #e5e7eb;
+  color: #304830;
   cursor: pointer;
 
   transition: 0.2s;
@@ -143,7 +143,7 @@
 }
 
 .warning-text {
-  color: #ff6b6b;
+  color: #a52f27;
   margin-bottom: 10px;
 }
 
@@ -158,7 +158,7 @@
   border-radius: 10px;
 
   border: 1px solid rgba(255,255,255,0.1);
-  background: #0f172a;
+  background: #edf2e9;
   color: white;
 
   margin-bottom: 10px;
@@ -166,5 +166,5 @@
 
 .topup-section input:focus {
   outline: none;
-  border-color: #22d3ee;
+  border-color: #285a3e;
 }
