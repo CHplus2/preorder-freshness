@@ -41,6 +41,8 @@ export default function OrdersPage() {
               </span>
             </div>
 
+            <p>Delivery: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Contact owner to arrange'} · {order.delivery_method}</p>
+            <p>Bulk discount: RM {order.discount_amount} · Delivery fee: RM {order.shipping_fee}</p>
             {/* BODY */}
             <div className="order-body">
               {order.items.map((item) => (
@@ -58,7 +60,7 @@ export default function OrdersPage() {
               </div>
 
               <div className="order-total">
-                RM {order.total_amount}
+                RM {(Number(order.total_amount)+Number(order.shipping_fee)).toFixed(2)}
               </div>
             </div>
 

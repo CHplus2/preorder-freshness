@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from ..models import Product, CartItem
@@ -14,7 +14,7 @@ class CartViewSet(viewsets.ViewSet):
 
     def create(self, request):
         product_id = request.data.get("product_id")
-        quantity = int(request.data.get("quantity", 1))
+        quantity = serializers.IntegerField(min_value=1, max_value=10000).run_validation(request.data.get("quantity", 1))
 
         if not product_id:
             return Response({"detail": "product_id required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -47,7 +47,7 @@ class CartViewSet(viewsets.ViewSet):
         if quantity is None:
             return Response({"detail": "Quantity required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        quantity = int(quantity)
+        quantity = serializers.IntegerField(min_value=0, max_value=10000).run_validation(quantity)
 
         if quantity <= 0:
             item.delete()

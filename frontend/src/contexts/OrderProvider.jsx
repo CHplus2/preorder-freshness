@@ -41,7 +41,7 @@ export default function OrderProvider({ children }) {
 
     const placeOrder = useCallback(async (addressId, payment) => {
         try {
-            await axios.post("/api/orders/place/", { address_id: addressId, payment }, {
+            await axios.post("/api/orders/place/", { address_id: addressId, payment, ...JSON.parse(sessionStorage.getItem("deliveryPlan") || "{}") }, {
                 withCredentials: true,
                 headers: { "X-CSRFToken": getCookie("csrftoken") },
             })
@@ -49,6 +49,7 @@ export default function OrderProvider({ children }) {
             return true;
         } catch (err) {
             console.error("placeOrder:", err.response?.data || err.message);
+            window.alert(JSON.stringify(err.response?.data || "Order could not be placed"));
             return false;
         }
     }, [refreshCart]);
@@ -61,8 +62,10 @@ export default function OrderProvider({ children }) {
                 withCredentials: true,
                 headers: { "X-CSRFToken": getCookie("csrftoken") },
             })
+            return true;
         } catch (err) {
-            console.error("updateOrder:", err.response?.data || err.message);
+            window.alert(JSON.stringify(err.response?.data || "Update failed"));
+            return false;
         }
     }
 

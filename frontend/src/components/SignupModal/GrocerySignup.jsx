@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { getCookie } from "../../utils/cookieUtils";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useUI } from "../../contexts/UIProvider";
 import { useAuth } from "../../contexts/AuthProvider";
@@ -12,7 +11,7 @@ function GrocerySignup() {
         "password": "",
         "confirmPassword": "", 
     });
-    const { setShowSignup, setShowLogin, modalMotion } = useUI();
+    const { setShowSignup, setShowLogin, modalMotion, setAlert } = useUI();
     const { signup } = useAuth();
 
     const handleChange = (e) => {
@@ -29,7 +28,7 @@ function GrocerySignup() {
 
         await signup(account);
 
-        setFormData({ "username": "", "password": "", "confirmPassword": "" });
+        setAccount({ "username": "", "password": "", "confirmPassword": "" });
     }   
 
     return (

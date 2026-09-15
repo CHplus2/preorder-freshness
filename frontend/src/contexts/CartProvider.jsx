@@ -3,7 +3,7 @@ import { getCookie } from "../utils/cookieUtils";
 import { useAuth } from "./AuthProvider";
 import { useUI } from "./UIProvider";
 import axios from "axios";
- 
+
 export const CartContext = createContext();
 
 export const useCart = () => {
@@ -17,7 +17,9 @@ export const useCart = () => {
 }
 
 export default function CartProvider({ children }) {
-  const [wallet, setWallet] = useState(null); 
+  const [promotion, setPromotion] = useState(null);
+  useEffect(()=>{axios.get("/api/storefront/").then(r=>setPromotion(r.data)).catch(()=>{});},[]);
+  const [wallet, setWallet] = useState(null);
   const [walletLoading, setWalletLoading] = useState(true);
 
   const { isAuthenticated, cart, setCart } = useAuth();
@@ -25,19 +27,21 @@ export default function CartProvider({ children }) {
 
   const total = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const SHIPPING_FEE = total >= 50 ? 0 : 5;
-  const finalTotal = total + SHIPPING_FEE;
+  const portions = cart.reduce((n,i)=>n+i.quantity,0);
+  const discount = promotion && portions >= promotion.bulk_minimum ? Math.round(total * promotion.bulk_discount_percent) / 100 : 0;
+  const finalTotal = total - discount + SHIPPING_FEE;
 
   const fetchWallet = useCallback(async () => {
     try {
       const res = await axios.get("/api/wallet/", { withCredentials: true });
       setWallet(res.data);
     } catch (err) {
-      
+
       if (err.response?.status === 404) {
         setWallet(null);
       } else {
         setWallet(false);
-      } 
+      }
 
       console.error("fetchWallet:", err.response?.data || err.message);
     } finally {
@@ -68,13 +72,13 @@ export default function CartProvider({ children }) {
     if (isAuthenticated) {
       fetchWallet();
       refreshCart();
-    } 
+    }
   }, [fetchWallet, refreshCart]);
 
   const createWallet = useCallback(async () => {
     try {
-      const res = await axios.post("/api/wallet/create/", {}, { 
-        withCredentials: true, 
+      const res = await axios.post("/api/wallet/create/", {}, {
+        withCredentials: true,
         headers: { "X-CSRFToken": getCookie("csrftoken") },
       })
       setWallet(res.data);
@@ -88,8 +92,8 @@ export default function CartProvider({ children }) {
 
   const topupWallet = useCallback(async (amount) => {
     try {
-      const res = await axios.post("/api/wallet/topup/", { amount }, { 
-        withCredentials: true, 
+      const res = await axios.post("/api/wallet/topup/", { amount }, {
+        withCredentials: true,
         headers: { "X-CSRFToken": getCookie("csrftoken") },
       })
       setWallet(prev => ({...prev, "balance": res.data.balance}));
@@ -104,24 +108,25 @@ export default function CartProvider({ children }) {
   const addToCart = async (productId, quantity = 1) => {
     if (isAuthenticated) {
       try {
-        const res = await axios.post("/api/cart/", 
+        await axios.post("/api/cart/",
           { product_id: productId, quantity },
-          { 
+          {
             withCredentials: true,
             headers: { "X-CSRFToken": getCookie("csrftoken") }
           }
         );
 
-        setAlert(prev => ({ message: "Item added to cart", type: "success" }));
+        setAlert({ message: "Item added to cart", type: "success" });
         refreshCart();
 
       } catch (err) {
-        setAlert({ message: "Failed to add item to cart", type: "error" });
+        const detail = err.response?.data?.detail;
+        setAlert({ message: typeof detail === 'string' && detail.includes('CSRF') ? 'Your session could not be verified. Refresh the page and sign in again.' : detail || 'Could not add this item. Check your connection and try again.', type: 'error' });
         console.error("addToCart:", err.response?.data || err.message);
       }
     } else{
       setShowLogin(true);
-    } 
+    }
   };
 
   const removeFromCart = async (cartItemId) => {
@@ -159,6 +164,7 @@ export default function CartProvider({ children }) {
   return (
     <CartContext.Provider
       value={{
+        discount, promotion,
         cart,
         total,
         finalTotal,

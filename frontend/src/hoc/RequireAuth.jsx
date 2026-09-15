@@ -13,6 +13,8 @@ export default function RequireAuth({ children, message = "Please Log in to view
     }, [isAuthenticated, setShowLogin]);
 
 
+    if (isAuthenticated === null) return <p>Loading account…</p>;
+
     if (isAuthenticated === false || (message === "Admin access required" && isAdmin === false )) {
         return (
             <div className="auth-blocked">

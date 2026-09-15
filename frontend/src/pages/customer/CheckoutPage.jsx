@@ -8,8 +8,11 @@ import "./CheckoutPage.css";
 import axios from "axios";
 
 export default function CheckoutPage() {
+  const [openedAt]=useState(()=>Date.now());
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
+    delivery_at: "",
+    delivery_method: "standard",
     name: "",
     line1: "",
     city: "",
@@ -19,13 +22,21 @@ export default function CheckoutPage() {
     payment: "",
   });
   const { formatPrice, setAlert } = useUI();
-  const { cart, total, SHIPPING_FEE, finalTotal } = useCart();
+  const { cart, total, SHIPPING_FEE, finalTotal, discount, promotion } = useCart();
   const { placeOrder } = useOrder();
   const navigate = useNavigate();
+  const notice = Math.max(0,...cart.map(i=>i.product.lead_hours || 24));
+  const cooking = cart.reduce((n,i)=>n+(i.product.preparation_minutes || 60),0);
+  const localInput = d=>new Date(d.getTime()+8*3600000).toISOString().slice(0,16);
+  const earliest = localInput(new Date(openedAt+(notice*60+cooking+(promotion?.delivery_buffer_minutes || 90))*60000));
+  const latest = localInput(new Date(openedAt+90*86400000));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
 
+    sessionStorage.setItem("deliveryPlan", JSON.stringify({delivery_at: form.delivery_at + ":00+08:00", delivery_method: form.delivery_method}));
     // Create address
     let data;
     try {
@@ -41,12 +52,14 @@ export default function CheckoutPage() {
       });
       data = res.data;
     } catch (err) {
+      setLoading(false);
       setAlert({ message: "Address could not be saved", type: "error" });
       console.error("createAddress:", err.response?.data || err.message);
       return;
     }
 
     if (!data.id) {
+      setLoading(false);
       setAlert({ message: "Address could not be saved", type: "error" });
       return;
     }
@@ -83,7 +96,19 @@ export default function CheckoutPage() {
           </button>
           <form className="checkout-form" onSubmit={handleSubmit}>
             <div className="form-section">
-              <h4>Shipping Info</h4>
+              <h4>Plan your delivery</h4>
+              <p>Choose a date up to 90 days ahead, 9am–9pm Malaysia time. Each menu needs advance notice, cooking time and a {promotion?.delivery_buffer_minutes || 90}-minute travel/contingency buffer. Your owner confirms fulfilment.</p>
+              <p>For this basket: {notice}h notice + {cooking} minutes cooking + {promotion?.delivery_buffer_minutes || 90} minutes delivery buffer.</p>
+              <label>Requested delivery date and time (Malaysia)
+                <input className="checkout-input" type="datetime-local" min={earliest} max={latest} required value={form.delivery_at} onChange={e => setForm({...form, delivery_at:e.target.value})}/>
+              </label>
+              <label>Delivery service
+                <select className="checkout-input" value={form.delivery_method} onChange={e => setForm({...form, delivery_method:e.target.value})}>
+                  <option value="standard">Owner delivery</option><option value="express">Request express — owner confirmation required</option>
+                </select>
+              </label>
+              <p>Express requests retain the menu lead time. Any courier arrangement or additional charge must be agreed with the owner.</p>
+              <h4>Delivery address</h4>
                 <input
                 className="checkout-input"
                 placeholder="Full Name"
@@ -132,14 +157,14 @@ export default function CheckoutPage() {
                 required
               />
             </div>
-            
+
             <div className="form-section">
               <h4>Payment</h4>
               <div className="payment-options">
                 <label>
-                  <input type="radio" 
-                  name="payment" 
-                  value="cod" 
+                  <input type="radio"
+                  name="payment"
+                  value="cod"
                   onChange={(e) => setForm(
                     { ...form, payment: e.target.value }
                   )}
@@ -149,31 +174,31 @@ export default function CheckoutPage() {
                 </label>
 
                 <label>
-                  <input 
-                  type="radio" 
-                  name="payment" 
-                  value="paypal" 
+                  <input
+                  type="radio"
+                  name="payment"
+                  value="paypal" disabled
                   onChange={
                     (e) => setForm(
                       { ...form, payment: e.target.value }
                     )}
                   required
                   />
-                  PayPal
+                  PayPal (setup required)
                 </label>
-                
+
                 <label>
-                  <input 
-                  type="radio" 
-                  name="payment" 
-                  value="wallet" 
+                  <input
+                  type="radio"
+                  name="payment"
+                  value="wallet"
                   onChange={
                     (e) => setForm(
                       { ...form, payment: e.target.value }
                     )}
                   required
                   />
-                  Crypto Wallet
+                  Demo credit wallet
                 </label>
               </div>
             </div>
@@ -203,6 +228,7 @@ export default function CheckoutPage() {
               <span>{formatPrice(total)}</span>
             </div>
 
+            <div className="summary-row"><span>Bulk discount</span><span>−{formatPrice(discount)}</span></div>
             <div className="summary-row">
               <span>Shipping Fee</span>
               <span>{SHIPPING_FEE > 0 ? formatPrice(SHIPPING_FEE) : "Free"}</span>
@@ -211,7 +237,7 @@ export default function CheckoutPage() {
 
           {total < 50 && (
             <p className="summary-note">
-              Add {formatPrice(50 - finalTotal)} more for free shipping!
+              Add {formatPrice(50 - total)} more for free shipping!
             </p>
           )}
 

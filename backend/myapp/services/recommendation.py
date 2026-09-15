@@ -10,7 +10,7 @@ def get_user_top_categories(user, days=180, top_k=5):
 
     qs = (
         OrderItem.objects
-        .filter(order__user=user, order__created_at__gte=since, product__isnull=False)
+        .exclude(order__status="cancelled").filter(order__user=user, order__created_at__gte=since, product__isnull=False)
         .values("product__category_id", "product__category__name")
         .annotate(qty=Sum("quantity"))
         .order_by("-qty")[:top_k]
@@ -31,7 +31,7 @@ def get_user_bought_product_ids(user, days=365):
 
     return set(
         OrderItem.objects
-        .filter(order__user=user, order__created_at__gte=since, product__isnull=False)
+        .exclude(order__status="cancelled").filter(order__user=user, order__created_at__gte=since, product__isnull=False)
         .values_list("product_id", flat=True)
         .distinct()
     )
@@ -41,7 +41,7 @@ def get_user_product_counts(user, days=365):
 
     qs = (
         OrderItem.objects
-        .filter(order__user=user, order__created_at__gte=since, product__isnull=False)
+        .exclude(order__status="cancelled").filter(order__user=user, order__created_at__gte=since, product__isnull=False)
         .values("product_id")
         .annotate(qty=Sum("quantity"))
         .order_by("-qty")
@@ -54,7 +54,7 @@ def get_global_product_popularity(days=30, top_n=num):
 
     qs = (
         OrderItem.objects
-        .filter(order__created_at__gte=since, product__isnull=False)
+        .exclude(order__status="cancelled").filter(order__created_at__gte=since, product__isnull=False)
         .values("product_id")
         .annotate(qty=Sum("quantity"))
         .order_by("-qty")[:top_n]
@@ -95,6 +95,8 @@ def handle_recommendation(candidates, top_category_ids, user_qty_by_product, glo
 
     items = []
     for p in candidates:
+        if p.get_available_quantity() < 1:
+            continue
         score, reasons = get_score(p, top_category_ids, user_qty_by_product, global_qty)
 
         if score > 0 :
@@ -111,57 +113,16 @@ def handle_recommendation(candidates, top_category_ids, user_qty_by_product, glo
     return items
 
 def recommend_for_user(user, limit=20, exclude_bought=True):
-    top_category_ids, _ = get_user_top_categories(user)
-    user_qty_by_product = get_user_product_counts(user)
-    global_qty = get_global_product_popularity()
-
-    excluded_ids = get_user_bought_product_ids(user) if exclude_bought else set()
-    global_ids = global_qty.keys()
-
-    global_candidates = (
-        Product.objects
-        .filter(stock__gt=0, id__in=global_ids)
-        .select_related("category")
-    )
-
-    if not top_category_ids and not user_qty_by_product:
-        global_items = handle_recommendation(
-            candidates=global_candidates, 
-            top_category_ids=set(), 
-            user_qty_by_product={}, 
-            global_qty=global_qty, 
-            excluded_ids=excluded_ids
-        )
-        return global_items[:limit]
-    
-    cat_limit = int(0.7 * limit)
-    global_limit = limit - cat_limit
-
-    recommended = []
-
-    if top_category_ids and cat_limit > 0:
-        cat_candidates = (
-            Product.objects
-            .filter(stock__gt=0,category_id__in=top_category_ids)
-            .select_related("category")
-        )
-
-        cat_items = handle_recommendation(
-            cat_candidates, top_category_ids, user_qty_by_product, global_qty, excluded_ids
-        )[:cat_limit]
-
-        recommended.extend(cat_items)
-        excluded_ids.update([x["product_id"] for x in cat_items])
-        
-    if global_qty and global_limit > 0:
-        global_items = handle_recommendation(
-            global_candidates, set(), {}, global_qty, excluded_ids
-        )[:global_limit]
-
-        recommended.extend(global_items)
-
-    return sorted(
-        recommended, 
-        key=lambda x: (x["score"], global_qty.get(x["product_id"], 0)), 
-        reverse=True
-    )[:limit]
+    categories, _ = get_user_top_categories(user)
+    counts = get_user_product_counts(user)
+    popularity = get_global_product_popularity()
+    excluded = get_user_bought_product_ids(user) if exclude_bought else set()
+    results = []
+    for product in Product.objects.select_related('category').order_by('id'):
+        if product.id in excluded or product.get_available_quantity() < 1:
+            continue
+        score, reasons = get_score(product, categories, counts, popularity)
+        results.append({'product_id': product.id, 'product_name': product.name,
+            'product_img': product.image_url, 'product_price': product.price,
+            'score': score, 'reasons': reasons or ['Explore something from our kitchen']})
+    return sorted(results, key=lambda item: (-item['score'], item['product_id']))[:limit]

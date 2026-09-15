@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUI } from "../../contexts/UIProvider";
 import { useOrder } from "../../contexts/OrderProvider";
-import { getCookie } from "../../utils/cookieUtils";
-import axios from "axios";
 import "./AdminOrdersPage.css";
 
 export default function AdminOrdersPage() {
@@ -25,7 +23,8 @@ export default function AdminOrdersPage() {
   const saveEdit = async () => {
     if (!editingOrder) return;
 
-    await updateOrder(editingOrder.id, newStatus, newPaymentStatus);
+    const saved = await updateOrder(editingOrder.id, newStatus, newPaymentStatus);
+    if (!saved) return;
 
     setEditingOrder(null);
     fetchAdminOrders();
@@ -60,6 +59,8 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
+              <p>Prepare: {order.preparation_at ? new Date(order.preparation_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Legacy order — unscheduled'}</p>
+              <p>Deliver: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Unscheduled'} · {order.delivery_method}</p>
               {/* BODY */}
               <div className="order-body">
                 {order.items.map((item) => (
@@ -117,6 +118,7 @@ export default function AdminOrdersPage() {
                 >
                   <option value="pending">Pending</option>
                   <option value="processing">Processing</option>
+                  <option value="cooked">Cooked — deduct ingredients</option>
                   <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>

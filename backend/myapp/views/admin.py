@@ -3,6 +3,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from django.db.models import Sum, F
+from django.db import transaction
+from rest_framework.exceptions import ValidationError
+from .orders import deduct_inventory
 from django.contrib.auth.models import User
 from ..models import Order, OrderItem
 from ..serializers import OrderSerializer, UserSerializer
@@ -16,22 +19,38 @@ def admin_order_list(request):
 
 @api_view(["PATCH"])
 @permission_classes([IsAdminUser])
+@transaction.atomic
 def admin_order_detail(request, pk):
     try:
-        order = Order.objects.get(pk=pk)
+        order = Order.objects.select_for_update().get(pk=pk)
     except Order.DoesNotExist:
         return Response({"detail": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
 
     new_status = request.data.get("status")
     new_payment_status = request.data.get("payment_status")
 
+    transitions = {
+        'pending': {'pending', 'processing', 'cancelled'},
+        'processing': {'processing', 'cooked', 'cancelled'},
+        'cooked': {'cooked', 'shipped', 'cancelled'},
+        'shipped': {'shipped', 'delivered'},
+        'delivered': {'delivered'}, 'cancelled': {'cancelled'},
+    }
     if new_status:
+        if new_status not in transitions.get(order.status, set()):
+            raise ValidationError('Follow pending, processing, cooked, shipped, delivered. Cancellation is allowed before dispatch.')
+        if new_status == 'cooked' and not order.inventory_deducted:
+            for item in order.items.select_related('product'):
+                if not item.product:
+                    raise ValidationError('An ordered menu was deleted; resolve its recipe before cooking.')
+                deduct_inventory(item.product, item.quantity, request.user, order)
+            order.inventory_deducted = True
         order.status = new_status
-        order.save()
-
     if new_payment_status:
+        if new_payment_status not in dict(Order.PAYMENT_STATUS):
+            raise ValidationError('Invalid payment status.')
         order.payment_status = new_payment_status
-        order.save()
+    order.save()
 
     return Response({"detail": "Order updated", "order": OrderSerializer(order).data}, status=status.HTTP_200_OK)
 
@@ -44,7 +63,7 @@ def product_sales_report(request):
     """
     sales = (
         OrderItem.objects
-        .filter(order__payment_status="paid")
+        .filter(order__payment_status="paid").exclude(order__status="cancelled")
         .values("product__id", "product_name")
         .annotate(
             total_quantity=Sum("quantity"),

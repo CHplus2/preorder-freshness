@@ -1,13 +1,14 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
-import { useEffect } from "react";
-import { User } from "lucide-react";
+import { AnimatePresence, motion, MotionConfig } from "framer-motion";
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { User, Menu, X, ShoppingBag } from "lucide-react";
 import { useAuth } from "./contexts/AuthProvider";
 import { useUI } from "./contexts/UIProvider";
 import { useProduct } from "./contexts/ProductProvider";
 import AuthProvider from "./contexts/AuthProvider";
 import UIProvider from "./contexts/UIProvider";
 import ProductProvider from "./contexts/ProductProvider";
+import { useCart } from "./contexts/CartProvider";
 import CartProvider from "./contexts/CartProvider";
 import OrderProvider from "./contexts/OrderProvider";
 import RequireAuth from "./hoc/RequireAuth";
@@ -21,15 +22,21 @@ import OrdersPage from "./pages/customer/OrdersPage";
 import CheckoutPage from "./pages/customer/CheckoutPage";
 import PaymentPage from "./pages/customer/PaymentPage";
 import AdminProductsPage from "./pages/admin/AdminProductsPage";
+import AdminInventoryPage from "./pages/admin/AdminInventoryPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminReportsPage from "./pages/admin/AdminReportsPage";
 import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
+import StoreSettingsPage from "./pages/admin/StoreSettingsPage";
+import PlannerPage from "./pages/admin/PlannerPage";
 import "./App.css";
+import "./dapur.css";
+import "./business.css";
+import StorefrontProvider, {useStorefront} from './contexts/StorefrontProvider';
+import {HomePage,StoryPage,HowItWorksPage,ContactPage} from './pages/customer/BusinessPages';
+import {BusinessFooter,PageMeta} from './components/BusinessLayout';
 
 function AnimatedRoutes() {
   const location = useLocation();
-
-  const { isAdmin } = useAuth();
 
   const page_motion = {
     initial: { opacity: 0, scale: 0.98, y: 10 },
@@ -41,27 +48,34 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route 
-          path="/" 
+        <Route path="/story" element={<StoryPage/>}/>
+        <Route path="/how-it-works" element={<HowItWorksPage/>}/>
+        <Route path="/contact" element={<ContactPage/>}/>
+        <Route path="/menu" element={<ProductsPage/>}/>
+        <Route path="*" element={<main className="dk-workspace"><PageMeta title="Page not found" description="Return to the kitchen menu."/><h1>This page isn’t on the menu.</h1><Link to="/menu">Explore the menu</Link></main>}/>
+        <Route path="/admin/settings" element={<RequireAuth message="Admin access required"><StoreSettingsPage/></RequireAuth>}/>
+        <Route path="/admin/planner" element={<RequireAuth message="Admin access required"><PlannerPage/></RequireAuth>}/>
+        <Route
+          path="/"
           element={
             <motion.div
               {...page_motion}
-            > {isAdmin ? <Navigate to="/admin/products" replace />: <ProductsPage/>}
+            > <HomePage/>
             </motion.div>
-          } 
+          }
         />
-        <Route 
-          path="/products/:id" 
+        <Route
+          path="/products/:id"
           element={
             <motion.div
               {...page_motion}
             >
               <ProductsDetailPage/>
             </motion.div>
-          } 
+          }
         />
-        <Route 
-          path="/cart" 
+        <Route
+          path="/cart"
           element={
             <motion.div
               {...page_motion}
@@ -70,10 +84,10 @@ function AnimatedRoutes() {
                 <CartPage />
               </RequireAuth>
             </motion.div>
-          } 
+          }
         />
-        <Route 
-          path="/checkout" 
+        <Route
+          path="/checkout"
           element={
             <motion.div
               {...page_motion}
@@ -84,8 +98,8 @@ function AnimatedRoutes() {
             </motion.div>
           }
         />
-        <Route 
-          path="/payment/:method" 
+        <Route
+          path="/payment/:method"
           element={
             <motion.div
               {...page_motion}
@@ -97,8 +111,8 @@ function AnimatedRoutes() {
 
           }
         />
-        <Route 
-          path="/orders" 
+        <Route
+          path="/orders"
           element={
             <motion.div
               {...page_motion}
@@ -109,8 +123,8 @@ function AnimatedRoutes() {
             </motion.div>
           }
         />
-        <Route 
-          path="/admin/products" 
+        <Route
+          path="/admin/products"
           element={
             <motion.div {...page_motion}>
               <RequireAuth message="Admin access required">
@@ -119,8 +133,18 @@ function AnimatedRoutes() {
             </motion.div>
           }
         />
-        <Route 
-          path="/admin/orders" 
+        <Route
+          path="/admin/inventory"
+          element={
+            <motion.div {...page_motion}>
+              <RequireAuth message="Admin access required">
+                <AdminInventoryPage />
+              </RequireAuth>
+            </motion.div>
+          }
+        />
+        <Route
+          path="/admin/orders"
           element={
             <motion.div {...page_motion}>
               <RequireAuth message="Admin access required">
@@ -129,8 +153,8 @@ function AnimatedRoutes() {
             </motion.div>
           }
         />
-        <Route 
-          path="/admin/reports" 
+        <Route
+          path="/admin/reports"
           element={
             <motion.div {...page_motion}>
               <RequireAuth message="Admin access required">
@@ -139,8 +163,8 @@ function AnimatedRoutes() {
             </motion.div>
           }
         />
-        <Route 
-          path="/admin/customers" 
+        <Route
+          path="/admin/customers"
           element={
             <motion.div {...page_motion}>
               <RequireAuth message="Admin access required">
@@ -155,6 +179,14 @@ function AnimatedRoutes() {
 }
 
 function AppContent() {
+  const {store}=useStorefront();
+  const {cart}=useCart();
+  const location=useLocation();
+  const [mobileOpen,setMobileOpen]=useState(false);
+  const ownerPage=location.pathname.startsWith('/admin/');
+  const publicLinks=[['/','Home'],['/story','Our story'],['/menu','Menu'],['/how-it-works','How it works'],['/contact','Contact']];
+  const closeMenu=()=>setMobileOpen(false);
+  useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[location.pathname]);
   const { showLogin, setShowLogin, showSignup, dropdownOpen, setDropdownOpen, alert, setAlert } = useUI();
   const { isAuthenticated, isAdmin, logout } = useAuth();
   const { productIdToDelete } = useProduct();
@@ -171,57 +203,28 @@ function AppContent() {
 
   return (
     <>
-      <nav>
-          <div className="nav-left">
-            <Link to="/" className="brand">
-              TokenFresh
-            </Link>
-
-            {isAdmin ? <>
-              <Link to="/admin/products">Admin Products</Link>
-              <Link to="/admin/customers">Customers</Link>
-              <Link to="/admin/orders">Orders</Link>
-              <Link to="/admin/reports">Reports</Link>
-            </> : <>
-              <Link to="/">Products</Link>
-              {isAuthenticated && <>
-                <Link to="/cart">Cart</Link>
-                <Link to="/orders">My Orders</Link>
-              </>}
-            </>}
-          </div>
-        
-          <div className="nav-right">
-            {isAuthenticated === null ? null : isAuthenticated === false ? (
-              <button className="login-btn" onClick={() => setShowLogin(true)}>
-                Log in
-              </button>
-            ) : (
-              <div className="user-dropdown">
-                <button 
-                  className="user-icon"
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                >
-                  <User size={28} color="white" />
-                </button>
-                {dropdownOpen && (
-                  <div className="dropdown-content">
-                    <button className="logout-btn" onClick={logout}>
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-      </nav>
+      <a className="skip-link" href="#page-content">Skip to content</a>
+      <header className="business-header">
+        <Link to="/" className="brand" onClick={closeMenu}>{store.name}<span>HOME KITCHEN & PREORDERS</span></Link>
+        <nav className="business-nav" aria-label="Main navigation">
+          {publicLinks.map(([url,label])=><Link key={url} to={url} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}
+        </nav>
+        <div className="business-header-actions">
+          {isAuthenticated && <Link to="/cart" className="basket-link" aria-label={`Basket, ${cart.reduce((n,i)=>n+i.quantity,0)} items`}><ShoppingBag size={19}/><span>{cart.reduce((n,i)=>n+i.quantity,0)}</span></Link>}
+          {isAuthenticated===false && <button className="login-btn" onClick={()=>setShowLogin(true)}>Sign in</button>}
+          {isAuthenticated && <div className="user-dropdown"><button className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} onClick={()=>setDropdownOpen(!dropdownOpen)}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content"><Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to="/admin/planner" onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}<button className="logout-btn" onClick={logout}>Sign out</button></div>}</div>}
+          <button className="mobile-menu-toggle" aria-label={mobileOpen?'Close navigation':'Open navigation'} aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={()=>setMobileOpen(!mobileOpen)}>{mobileOpen?<X size={23}/>:<Menu size={23}/>}</button>
+        </div>
+      </header>
+      {mobileOpen && <nav className="mobile-navigation" id="mobile-navigation" aria-label="Mobile navigation">{publicLinks.map(([url,label])=><Link key={url} to={url} onClick={closeMenu} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}{isAuthenticated && <Link to="/orders" onClick={closeMenu}>My orders</Link>}{isAdmin && <Link to="/admin/planner" onClick={closeMenu}>Kitchen dashboard</Link>}</nav>}
+      {isAdmin && <nav className="owner-nav" aria-label="Kitchen management">{[['planner','Planner'],['products','Menu management'],['inventory','Inventory'],['orders','Orders'],['reports','Sales'],['settings','Brand & settings'],['customers','Customers']].map(([path,label])=><Link key={path} to={'/admin/'+path}>{label}</Link>)}</nav>}
 
       <AnimatePresence>
         {showSignup && (
           <GrocerySignup />
         )}
       </AnimatePresence>
-      
+
       <AnimatePresence>
         {showLogin && (
           <GroceryLogin />
@@ -236,7 +239,7 @@ function AppContent() {
 
       <AnimatePresence>
         {alert?.message && (
-          <motion.div 
+          <motion.div
             className={`alert ${alert.type}`}
             initial={{ opacity: 0, y:30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -248,8 +251,9 @@ function AppContent() {
           </motion.div>
         )}
       </AnimatePresence>
-      
-      <AnimatedRoutes></AnimatedRoutes>
+
+      <div id="page-content" tabIndex="-1"><AnimatedRoutes/></div>
+      {!ownerPage && <BusinessFooter/>}
     </>
   )
 }
@@ -273,10 +277,10 @@ function AppProvider({ children }) {
 export default function App() {
 
   return (
-    <AppProvider>
+    <MotionConfig reducedMotion="user"><StorefrontProvider><AppProvider>
       <Router>
         <AppContent />
       </Router>
-    </AppProvider>
+    </AppProvider></StorefrontProvider></MotionConfig>
   );
 }

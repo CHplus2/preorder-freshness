@@ -79,10 +79,12 @@ export default function ProductProvider({ children }) {
 
             setAlert({ message: "Product created successfully", type: "success" });
             fetchProducts();
+            return true;
 
         } catch (err) {
             setAlert({ message: "Failed to add new product", type: "error"});
             console.error("addProduct:", err.response?.data || err.message);
+            return false;
         }
     }
 
@@ -94,10 +96,12 @@ export default function ProductProvider({ children }) {
             })
             setAlert({ message: "Product updated successfully", type: "success" });
             fetchProducts();
+            return true;
 
         } catch (err) {
             setAlert({ message: "Failed to save changes", type: "error"});
             console.error("updateProduct:", err.response?.data || err.message);
+            return false;
         } 
     }
 

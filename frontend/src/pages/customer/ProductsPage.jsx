@@ -1,3 +1,4 @@
+import {PageMeta} from "../../components/BusinessLayout";
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useUI } from "../../contexts/UIProvider";
@@ -24,6 +25,8 @@ export default function ProductsPage() {
 
   return (
     <div className="products-page">
+      <PageMeta title="The menu" description="Explore this kitchen’s current food menu, prices and preorder notice. Choose a favourite and schedule your delivery."/>
+      <section className="menu-intro"><span className="dk-eyebrow">FIND YOUR NEXT FAVOURITE</span><h1>What sounds <em>good?</em></h1><p>Explore the current menu. Every item shows its price, advance notice and daily portion limit.</p></section>
       {/* Recommendation */}
       {recommended?.length > 0 && (
         <div className="recommended-section">
@@ -84,7 +87,7 @@ export default function ProductsPage() {
       <div className="browse-controls">
         <input
           type="text"
-          placeholder="Search products..."
+          aria-label="Search the menu" placeholder="Search meals, kuih, cakes…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
@@ -92,7 +95,7 @@ export default function ProductsPage() {
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="category-select"
+          className="category-select" aria-label="Menu category"
         >
           <option value="">All Categories</option>
           {(Array.isArray(categories) ? categories : []).map((c) => (
@@ -122,6 +125,7 @@ export default function ProductsPage() {
                 <div className="product-info">
                   <h2 className="product-title">{p.name}</h2>
                   <p className="product-price">{formatPrice(p.price)}</p>
+                  <small>{p.lead_hours}h advance notice · {p.daily_capacity} portions/day</small>
                 </div>
               </Link>
               <button className="add-btn" onClick={() => addToCart(p.id)}>
@@ -130,9 +134,10 @@ export default function ProductsPage() {
             </div>
           ))
         ) : (
-          <p className="no-results">No products found.</p>
+          <p className="no-results">No menu items match. Try another category or check back when the kitchen updates its menu.</p>
         )}
       </div>
+
     </div>
   );
 }

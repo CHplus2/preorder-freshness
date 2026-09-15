@@ -10,3 +10,12 @@ db.sqlite3
 
 # Editor
 .vscode/
+
+backend/backups/
+
+.env.*
+!.env.example
+**/node_modules/
+**/dist/
+**/staticfiles/
+.vercel/

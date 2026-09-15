@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "django",
+  "buildCommand": "python build.py",
+  "functions": {
+    "app.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{frontend/node_modules/**,backend/venv/**,backend/backups/**,**/*.sqlite3,screenshots/**,.git/**}"
+    }
+  }
+}

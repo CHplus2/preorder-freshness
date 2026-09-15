@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useUI } from "../../contexts/UIProvider";
 import { useCart } from "../../contexts/CartProvider";
 import { useOrder } from "../../contexts/OrderProvider";
 import "./PaymentPage.css";
 
 export default function PaymentPage() {
-    const { convertToUSD, setAlert } = useUI();
-    const { total, finalTotal, wallet, walletLoading, createWallet, topupWallet } = useCart();
+    const { setAlert } = useUI();
+    const { finalTotal, wallet, walletLoading, createWallet, topupWallet } = useCart();
     const { placeOrder } = useOrder();
 
     const { method } = useParams();
@@ -59,55 +58,17 @@ export default function PaymentPage() {
                 ← Back to Checkout
             </button>
         
-            {method==="paypal" && (
-            <div className="paypal-box">
-                <h3>Complete Payment</h3>
-
-                <PayPalScriptProvider
-                    options={{
-                    "client-id": "AbRBrHIUPVKVqwCiCgpAR33f35M-gY5qN1P838rB4xaRAZLJOM3lycTlLQCRRFVOPO051TgyrZWvMHXK",
-                    currency: "USD",
-                    }}
-                >
-                    <PayPalButtons
-                        createOrder={(data, actions) =>
-                            actions.order.create({
-                                purchase_units: [
-                                {
-                                    amount: { value: convertToUSD(total) },
-                                },
-                                ],
-                            })
-                        }
-                        onApprove={async (data, actions) => {
-                        await actions.order.capture();
-                        const success = await placeOrder(addressId, method);
-
-                        if (!success) {
-                            setAlert({ message: "Payment failed. Please try again.", type: "error" });
-                            return;
-                        }
-
-                        setAlert({ message: "Payment made successfully", type: "success"});
-
-                        localStorage.removeItem("addressId");
-                        navigate("/orders", { state: { formPayment: true }});
-                        }}
-                    />
-                </PayPalScriptProvider>
-            </div>
-            )}
-
+            {method === "paypal" && <p>Online payment needs server verification setup. Return to checkout and choose cash on delivery.</p>}
             {method === "wallet" && (
             <div className="wallet-box">
-                <h3>Crypto Payment</h3>
+                <h3>Demo credit payment</h3>
 
                 <div className="payment-summary">
-                <p><strong>Total:</strong> {finalTotal.toFixed(2)} TFT</p>
+                <p><strong>Total:</strong> {finalTotal.toFixed(2)} demo credits</p>
 
                 {wallet && (
                     <p>
-                    <strong>Your Balance:</strong> {wallet.balance.toFixed(2)} TFT
+                    <strong>Your Balance:</strong> {Number(wallet.balance).toFixed(2)} demo credits
                     </p>
                 )}
                 </div>
@@ -121,7 +82,7 @@ export default function PaymentPage() {
                 ) : wallet.balance < finalTotal ? (
                 <div className="topup-section">
                     <p className="warning-text">
-                    Insufficient balance. You need {(finalTotal - wallet.balance).toFixed(2)} TFT more.
+                    Insufficient balance. You need {(finalTotal - wallet.balance).toFixed(2)} demo credits more.
                     </p>
 
                     <form onSubmit={handleSubmit}>
@@ -140,7 +101,7 @@ export default function PaymentPage() {
                 </div>
                 ) : (
                 <button className="primary-btn" onClick={handlePay} disabled={paying}>
-                    {paying ? "Processing..." : `Pay ${finalTotal.toFixed(2)} TFT`}
+                    {paying ? "Processing..." : `Pay ${finalTotal.toFixed(2)} demo credits`}
                 </button>
                 )}
             </div>

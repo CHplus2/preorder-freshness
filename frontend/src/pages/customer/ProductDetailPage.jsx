@@ -1,3 +1,4 @@
+import MenuReviews from "../../components/MenuReviews";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useUI } from "../../contexts/UIProvider"
@@ -47,7 +48,8 @@ export default function ProductDetailPage() {
         </div>
 
         <div className="meta">
-          <span>Stock: {product.stock}</span>
+          <span>{product.lead_hours} hours advance notice</span>
+          <span>{product.freshness}</span>
           <span>Category: {product.category_name}</span>
         </div>
 
@@ -57,6 +59,9 @@ export default function ProductDetailPage() {
         >
           Add to Cart
         </button>
+        <p>Ingredient dates describe current stock; future meals may use new batches. Contact the owner about allergies.</p>
+        {product.social_url && <a href={product.social_url} target="_blank" rel="noreferrer">See this food on social media ↗</a>}
+        <MenuReviews id={id}/>
       </div>
 
     </div>

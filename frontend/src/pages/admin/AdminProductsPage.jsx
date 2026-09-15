@@ -1,9 +1,7 @@
-import axios from "axios";
+import RecipeEditor from "../../components/RecipeEditor";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useUI } from "../../contexts/UIProvider";
 import { useProduct } from "../../contexts/ProductProvider";
-import { getCookie } from "../../utils/cookieUtils";
 import "./AdminProductsPage.css";
 
 export default function AdminProductsPage() {
@@ -12,10 +10,8 @@ export default function AdminProductsPage() {
   const [newProduct, setNewProduct] = useState(false);
   const [updatedProduct, setUpdatedProduct] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const { fallback_img } = useUI();
-  const { categories, products, fetchProducts, setProductIdToDelete, addProduct, updateProduct } = useProduct();
-  const navigate = useNavigate();
+  const { fallback_img, setAlert } = useUI();
+  const { categories, products, setProductIdToDelete, addProduct, updateProduct } = useProduct();
 
   const emptyForm = {
     name: "",
@@ -38,21 +34,22 @@ export default function AdminProductsPage() {
   }, [newProduct, updatedProduct]);
 
   const validateInput = (product) => {
-    if (!product.name || !product.price || !product.stock || !product.category) {
-      setAlert("Please fill all required fields");
+    if (!product.name || !product.price || !product.category) {
+      setAlert({message:"Please fill all required fields",type:"error"});
       return false;
     }
     return true;
   };
 
-  const handleAddProduct = async (e) => {
+  const handleAddProduct = async () => {
     if (!validateInput(newProduct)) {
       return;
     }
 
     setLoading(true);
 
-    await addProduct(newProduct);
+    const saved = await addProduct(newProduct);
+    if (!saved) { setLoading(false); return; }
     
     setNewProduct(null);
     setLoading(false);
@@ -65,7 +62,8 @@ export default function AdminProductsPage() {
 
     setLoading(true); 
 
-    await updateProduct(updatedProduct);
+    const saved = await updateProduct(updatedProduct);
+    if (!saved) { setLoading(false); return; }
 
     setUpdatedProduct(null);
     setLoading(false);
@@ -81,9 +79,9 @@ export default function AdminProductsPage() {
   return (
     <div className="admin-products-container">
       <div className="admin-header">
-        <h1>Product Management</h1>
+        <h1>Menu management</h1>
         <button className="add-product-btn" onClick={() => setNewProduct(emptyForm)}>
-          Create Product
+          Create menu
         </button>
       </div>
 
@@ -137,7 +135,7 @@ export default function AdminProductsPage() {
                   )}
                 </td>
                 <td>{p.name}</td>
-              <td>${p.price}</td>
+              <td>RM {p.price}</td>
               <td>{p.stock}</td>
               <td>{p.category_name}</td>
               <td>
@@ -177,12 +175,8 @@ export default function AdminProductsPage() {
             value={updatedProduct.price}
             onChange={(e) => setUpdatedProduct({ ...updatedProduct, price: e.target.value })}
           />
-          <label>Stock</label>
-          <input
-            type="number"
-            value={updatedProduct.stock}
-            onChange={(e) => setUpdatedProduct({ ...updatedProduct, stock: e.target.value })}
-          />
+
+          <RecipeEditor value={updatedProduct} onChange={setUpdatedProduct}/>
           <label>Description</label>  
           <textarea
             value={updatedProduct.description}
@@ -232,7 +226,7 @@ export default function AdminProductsPage() {
       {newProduct && (
       <div className="modal-overlay" onClick={() => setUpdatedProduct(null)}>
         <div className="modal-content form-modal" onClick={(e) => e.stopPropagation()}>
-          <h2>Create Product</h2>
+          <h2>Create menu</h2>
 
           <label>Name</label>
           <input
@@ -251,15 +245,9 @@ export default function AdminProductsPage() {
             }
           />
 
-          <label>Stock</label>
-          <input
-            type="number"
-            value={newProduct.stock}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, stock: e.target.value })
-            }
-          />
 
+
+          <RecipeEditor value={newProduct} onChange={setNewProduct}/>
           <label>Description</label>
           <textarea
             value={newProduct.description}

@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.middleware.csrf import get_token
 
 @api_view(["POST"])
 def signup_view(request):
@@ -44,6 +45,7 @@ def logout_view(request):
 
 @api_view(["GET"])
 def check_auth(request):
+    get_token(request)
     if request.user.is_authenticated:
         return Response({
             "authenticated": True,
