@@ -78,3 +78,10 @@ The connection string and API key supplied in chat are not committed. Rotate tho
 - [Django on Vercel](https://vercel.com/docs/frameworks/full-stack/django)
 - [Vercel SQLite limitations](https://vercel.com/kb/guide/is-sqlite-supported-in-vercel)
 - [Supabase PostgreSQL connections](https://supabase.com/docs/guides/database/connecting-to-postgres)
+
+
+## Entrypoint troubleshooting
+
+Both Django's `WSGI_APPLICATION` and `tool.vercel.entrypoint` must target the root `app.py` (`app.application` and `app:application`). Vercel reads Django's setting during detection. Using `config.wsgi.application` makes it look for root `config/wsgi.py`, which does not exist in this nested backend layout.
+
+`SECRET_KEY` is Django's private signing key, separate from your database password. Set it in Vercel for Production and/or Preview as appropriate. Keep it stable across deployments. The optional private `backend/.env.vercel` file can be imported into Vercel's environment-variable settings and must never be committed. After changing code or environment variables, create a new deployment; old deployment URLs retain their original build.

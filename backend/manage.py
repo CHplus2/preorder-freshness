@@ -2,6 +2,10 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path
+
+# Both management entrypoints must be able to import the root app.py WSGI module.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
 def main():

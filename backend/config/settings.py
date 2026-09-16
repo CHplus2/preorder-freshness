@@ -100,7 +100,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+# Vercel resolves this dotted module relative to the repository root, not the
+# sys.path adjustment in manage.py. Keep it aligned with tool.vercel.entrypoint.
+WSGI_APPLICATION = 'app.application'
 
 
 # Database
