@@ -38,13 +38,13 @@ class CategoryDetail(generics.RetrieveUpdateDestroyAPIView):
 # ------------------------------------------
 
 class ProductListCreate(generics.ListCreateAPIView):
-    queryset = Product.objects.all().order_by("-created_at")
+    queryset = Product.objects.select_related("category").prefetch_related("ingredients").order_by("-created_at")
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly]
 
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.select_related("category").prefetch_related("ingredients")
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly]
 

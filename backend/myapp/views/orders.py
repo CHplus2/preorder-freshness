@@ -21,7 +21,7 @@ class OrderList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).order_by("-created_at")
+        return Order.objects.filter(user=self.request.user).select_related("user", "address").prefetch_related("items").order_by("-created_at")
 
 def deduct_inventory(product, quantity, user, order):
     """
@@ -80,8 +80,10 @@ def deduct_inventory(product, quantity, user, order):
 @permission_classes([IsAuthenticated])
 @transaction.atomic
 def place_order(request):
+    from django.contrib.auth.models import User
+    User.objects.select_for_update().get(pk=request.user.pk)
     user = request.user
-    address_id = request.data.get("address_id")
+    address_id = serializers.IntegerField(min_value=1).run_validation(request.data.get("address_id"))
     payment = request.data.get("payment")
 
     if not address_id:
@@ -92,7 +94,7 @@ def place_order(request):
     except Address.DoesNotExist:
         return Response({"detail": "Invalid address"}, status=status.HTTP_404_NOT_FOUND)
 
-    cart_items = CartItem.objects.filter(user=user)
+    cart_items = CartItem.objects.filter(user=user).select_related("product")
     if not cart_items.exists():
         return Response({"detail": "Cart empty"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -100,20 +102,15 @@ def place_order(request):
         raise ValidationError('Choose a supported payment method.')
     if payment == 'paypal':
         raise ValidationError('Online payment is not configured. Choose cash on delivery.')
+    # One lock serialises scheduling across different menus in this single kitchen.
+    Storefront.objects.get_or_create(pk=1)
+    store = Storefront.objects.select_for_update().get(pk=1)
     # Lock menus so simultaneous bookings cannot exceed their daily capacity.
     list(Product.objects.select_for_update().filter(id__in=cart_items.values('product_id')).order_by('id'))
     delivery_at = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
-    store = Storefront.objects.filter(pk=1).first() or Storefront()
-    buffer = store.delivery_buffer_minutes
-    lead = max(item.product.lead_hours for item in cart_items)
-    prep = sum(item.product.preparation_minutes for item in cart_items)
-    if delivery_at < timezone.now() + timedelta(hours=lead, minutes=prep + buffer):
-        raise ValidationError(f'Allow {lead} hours advance notice plus {prep + buffer} minutes for preparation and delivery buffer.')
-    if delivery_at > timezone.now() + timedelta(days=90):
-        raise ValidationError('Choose a delivery within the next 90 days.')
+    from ..services.scheduling import schedule_order, plan_snapshot
+    plan = schedule_order(cart_items, delivery_at, store)
     local_delivery = timezone.localtime(delivery_at)
-    if not 9 <= local_delivery.hour < 21:
-        raise ValidationError('Delivery hours are 09:00–21:00 Malaysia time.')
     method = request.data.get('delivery_method', 'standard')
     if method not in ('standard', 'express'):
         raise ValidationError('Invalid delivery method.')
@@ -141,7 +138,9 @@ def place_order(request):
     order = Order.objects.create(
         user=user,
         delivery_at=delivery_at,
-        preparation_at=delivery_at - timedelta(minutes=prep + buffer),
+        preparation_at=plan['start'],
+        preparation_end_at=plan['end'],
+        preparation_plan=plan_snapshot(plan),
         delivery_method=method,
         address=address,
         delivery_address=dict(AddressSerializer(address).data),
@@ -210,3 +209,13 @@ def saved_address(request):
     serializer.is_valid(raise_exception=True)
     address = serializer.save(user=request.user, is_default=True)
     return Response(AddressSerializer(address).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def preparation_quote(request):
+    from ..services.scheduling import schedule_order, plan_snapshot
+    delivery = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
+    store = Storefront.objects.filter(pk=1).first() or Storefront()
+    plan = schedule_order(CartItem.objects.filter(user=request.user).select_related('product'), delivery, store)
+    return Response(dict(preparation_at=plan['start'], preparation_end_at=plan['end'], **plan_snapshot(plan)))

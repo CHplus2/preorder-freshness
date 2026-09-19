@@ -224,7 +224,7 @@ export default function AdminProductsPage() {
 
       {/* Add Product Modal */}
       {newProduct && (
-      <div className="modal-overlay" onClick={() => setUpdatedProduct(null)}>
+      <div className="modal-overlay" onClick={() => setNewProduct(null)}>
         <div className="modal-content form-modal" onClick={(e) => e.stopPropagation()}>
           <h2>Create menu</h2>
 

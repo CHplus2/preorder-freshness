@@ -187,3 +187,5 @@ STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
 }
+
+REST_FRAMEWORK = {**globals().get("REST_FRAMEWORK", {}), "EXCEPTION_HANDLER": "myapp.exceptions.api_exception_handler"}

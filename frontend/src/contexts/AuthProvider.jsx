@@ -1,3 +1,4 @@
+import {apiError} from '../utils/apiError';
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { getCookie } from "../utils/cookieUtils";
 import { useUI } from "./UIProvider";
@@ -42,7 +43,7 @@ export default function AuthProvider({ children }) {
         setShowSignup(false);
 
       } catch (err) {
-        setAlert({ message: "Signup failed", type: "error" });
+        setAlert({ message: apiError(err, "Signup failed"), type: "error" });
         console.error("signup:", err.response?.data || err.message);
       }
     }
@@ -57,7 +58,7 @@ export default function AuthProvider({ children }) {
         checkAuth();
         setShowLogin(false);
       } catch (err) {
-          setAlert({ message: "Invalid username or password", type: "error" });
+          setAlert({ message: apiError(err, "Invalid username or password"), type: "error" });
           console.error("login:", err.response?.data || err.message);
       }
     }
@@ -72,7 +73,7 @@ export default function AuthProvider({ children }) {
         checkAuth();
         setDropdownOpen(false);
     } catch (err) {
-      setAlert({ message: "An error occurred while logging out", type: "error" });
+      setAlert({ message: apiError(err, "An error occurred while logging out"), type: "error" });
       console.error("logout:", err.response?.data || err.message);
     }
   }

@@ -17,6 +17,12 @@ class Category(models.Model):
 class Product(models.Model):
     lead_hours = models.PositiveIntegerField(default=24, validators=[MinValueValidator(1)])
     preparation_minutes = models.PositiveIntegerField(default=60, validators=[MinValueValidator(1)])
+    preparation_tasks = models.JSONField(default=list, blank=True)
+    max_preparation_days = models.PositiveIntegerField(default=7)
+    batch_size = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+    additional_batch_minutes = models.PositiveIntegerField(default=60, validators=[MinValueValidator(1)])
+    packing_minutes_per_portion = models.PositiveIntegerField(default=1)
+    max_early_minutes = models.PositiveIntegerField(default=120)
     daily_capacity = models.PositiveIntegerField(default=30, validators=[MinValueValidator(1)])
     social_url = models.URLField(blank=True)
     name = models.CharField(max_length=200)
@@ -252,6 +258,8 @@ class CartItem(models.Model):
 
 # ============ ORDER ============
 class Order(models.Model):
+    preparation_end_at = models.DateTimeField(null=True, blank=True)
+    preparation_plan = models.JSONField(default=dict, blank=True)
     delivery_address = models.JSONField(default=dict, blank=True)
     delivery_at = models.DateTimeField(null=True, blank=True)
     preparation_at = models.DateTimeField(null=True, blank=True)
@@ -387,6 +395,8 @@ class InventoryLog(models.Model):
         )
 
 class Storefront(models.Model):
+    kitchen_open_hour = models.PositiveSmallIntegerField(default=8)
+    kitchen_close_hour = models.PositiveSmallIntegerField(default=20)
     founder_name = models.CharField(max_length=100, blank=True)
     founder_intro = models.CharField(max_length=250, blank=True)
     founding_story = models.TextField(blank=True)
@@ -424,3 +434,13 @@ class OrderReminder(models.Model):
 
     class Meta:
         unique_together = ('order', 'event')
+
+
+class KitchenBlock(models.Model):
+    start_at = models.DateTimeField()
+    end_at = models.DateTimeField()
+    reason = models.CharField(max_length=160, default='Kitchen unavailable')
+
+    class Meta:
+        ordering = ['start_at']
+        constraints = [models.CheckConstraint(condition=models.Q(end_at__gt=models.F('start_at')), name='kitchen_block_end_after_start')]

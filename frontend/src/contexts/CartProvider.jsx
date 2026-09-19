@@ -1,3 +1,4 @@
+import {apiError} from '../utils/apiError';
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { getCookie } from "../utils/cookieUtils";
 import { useAuth } from "./AuthProvider";
@@ -63,7 +64,7 @@ export default function CartProvider({ children }) {
       setCart(Array.isArray(data) ? data : data.results || []);
 
     } catch (err) {
-      setCart([]);
+      setAlert({message:apiError(err),type:"error"});
       console.error("refreshCart:", err.response?.data || err.message);
     }
   }, [isAuthenticated, setCart]);
@@ -85,7 +86,7 @@ export default function CartProvider({ children }) {
 
     } catch (err) {
       setWallet(false);
-      setAlert({ message: "Failed to create wallet", type: "error"})
+      setAlert({ message: apiError(err, "Failed to create wallet"), type: "error"})
       console.error("createWallet:", err.response?.data || err.message);
     }
   }, [])
@@ -100,7 +101,7 @@ export default function CartProvider({ children }) {
 
     } catch (err) {
       setWallet(false);
-      setAlert({ message: "Failed to top up wallet", type: "error"})
+      setAlert({ message: apiError(err, "Failed to top up wallet"), type: "error"})
       console.error("topupWallet:", err.response?.data || err.message);
     }
   }, []);
@@ -139,7 +140,7 @@ export default function CartProvider({ children }) {
       refreshCart();
     } catch (err) {
 
-      setAlert({ message: "Failed to remove item from cart", type: "error" });
+      setAlert({ message: apiError(err, "Failed to remove item from cart"), type: "error" });
       console.error("removeFromCart:", err.response?.data || err.message);
     }
   };
@@ -156,7 +157,7 @@ export default function CartProvider({ children }) {
       refreshCart();
     } catch (err) {
 
-      setAlert({ message: "Failed to update cart item quantity", type: "error" });
+      setAlert({ message: apiError(err, "Failed to update cart item quantity"), type: "error" });
       console.error("updateQuantity:", err.response?.data || err.message);
     }
   };

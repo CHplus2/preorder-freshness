@@ -1,3 +1,4 @@
+import {apiError} from '../../utils/apiError';
 import ExpiryFields from "../../components/ExpiryFields";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
@@ -254,7 +255,7 @@ export default function AdminInventoryPage() {
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-        JSON.stringify(err.response?.data || "Failed to create inventory item.")
+        apiError(err, "Failed to create inventory item.")
       );
     } finally {
       setLoading(false);
@@ -278,7 +279,7 @@ export default function AdminInventoryPage() {
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-        JSON.stringify(err.response?.data || "Failed to update inventory item.")
+        apiError(err, "Failed to update inventory item.")
       );
     } finally {
       setLoading(false);

@@ -21,13 +21,13 @@ import CartPage from "./pages/customer/CartPage";
 import OrdersPage from "./pages/customer/OrdersPage";
 import CheckoutPage from "./pages/customer/CheckoutPage";
 import PaymentPage from "./pages/customer/PaymentPage";
-import AdminProductsPage from "./pages/admin/AdminProductsPage";
-import AdminInventoryPage from "./pages/admin/AdminInventoryPage";
-import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
-import AdminReportsPage from "./pages/admin/AdminReportsPage";
-import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
-import StoreSettingsPage from "./pages/admin/StoreSettingsPage";
-import PlannerPage from "./pages/admin/PlannerPage";
+const AdminProductsPage=lazy(()=>import("./pages/admin/AdminProductsPage"));
+const AdminInventoryPage=lazy(()=>import("./pages/admin/AdminInventoryPage"));
+const AdminOrdersPage=lazy(()=>import("./pages/admin/AdminOrdersPage"));
+const AdminReportsPage=lazy(()=>import("./pages/admin/AdminReportsPage"));
+const AdminCustomersPage=lazy(()=>import("./pages/admin/AdminCustomersPage"));
+const StoreSettingsPage=lazy(()=>import("./pages/admin/StoreSettingsPage"));
+const PlannerPage=lazy(()=>import("./pages/admin/PlannerPage"));
 import "./App.css";
 import "./dapur.css";
 import "./business.css";
@@ -187,6 +187,8 @@ function AppContent() {
   const [mobileOpen,setMobileOpen]=useState(false);
   const ownerPage=location.pathname.startsWith('/admin/');
   const publicLinks=[['/','Home'],['/story','Our story'],['/menu','Menu'],['/how-it-works','How it works'],['/contact','Contact']];
+  const ownerLinks=[['/admin/planner','Planner'],['/admin/products','Menus'],['/admin/inventory','Inventory'],['/admin/orders','Orders'],['/admin/reports','Sales'],['/admin/settings','Settings'],['/admin/customers','Customers'],['/','View storefront']];
+  const navigation=ownerPage?ownerLinks:publicLinks;
   const closeMenu=()=>setMobileOpen(false);
   useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[location.pathname]);
   const { showLogin, setShowLogin, showSignup, dropdownOpen, setDropdownOpen, alert, setAlert } = useUI();
@@ -194,11 +196,11 @@ function AppContent() {
   const { productIdToDelete } = useProduct();
 
   useEffect(() => {
-    if (!alert.message) return;
+    if (!alert.message || alert.type === "error") return;
 
     const timer = setTimeout(() => {
       setAlert({ message: "", type: "" });
-    }, 2500);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [alert, setAlert]);
@@ -206,10 +208,10 @@ function AppContent() {
   return (
     <>
       <a className="skip-link" href="#page-content">Skip to content</a>
-      <header className="business-header">
+      <header className={`business-header ${ownerPage?"owner-header":""}`}>
         <Link to="/" className="brand" onClick={closeMenu}>{store.name}<span>HOME KITCHEN & PREORDERS</span></Link>
         <nav className="business-nav" aria-label="Main navigation">
-          {publicLinks.map(([url,label])=><Link key={url} to={url} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}
+          {navigation.map(([url,label])=><Link key={url} to={url} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}
         </nav>
         <div className="business-header-actions">
           {isAuthenticated && <Link to="/cart" className="basket-link" aria-label={`Basket, ${cart.reduce((n,i)=>n+i.quantity,0)} items`}><ShoppingBag size={19}/><span>{cart.reduce((n,i)=>n+i.quantity,0)}</span></Link>}
@@ -218,8 +220,7 @@ function AppContent() {
           <button className="mobile-menu-toggle" aria-label={mobileOpen?'Close navigation':'Open navigation'} aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={()=>setMobileOpen(!mobileOpen)}>{mobileOpen?<X size={23}/>:<Menu size={23}/>}</button>
         </div>
       </header>
-      {mobileOpen && <nav className="mobile-navigation" id="mobile-navigation" aria-label="Mobile navigation">{publicLinks.map(([url,label])=><Link key={url} to={url} onClick={closeMenu} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}{isAuthenticated && <Link to="/orders" onClick={closeMenu}>My orders</Link>}{isAdmin && <Link to="/admin/planner" onClick={closeMenu}>Kitchen dashboard</Link>}</nav>}
-      {isAdmin && <nav className="owner-nav" aria-label="Kitchen management">{[['planner','Planner'],['products','Menu management'],['inventory','Inventory'],['orders','Orders'],['reports','Sales'],['settings','Brand & settings'],['customers','Customers']].map(([path,label])=><Link key={path} to={'/admin/'+path}>{label}</Link>)}</nav>}
+      {mobileOpen && <nav className="mobile-navigation" id="mobile-navigation" aria-label="Mobile navigation">{navigation.map(([url,label])=><Link key={url} to={url} onClick={closeMenu} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}{isAuthenticated && <Link to="/orders" onClick={closeMenu}>My orders</Link>}{isAdmin && <Link to="/admin/planner" onClick={closeMenu}>Kitchen dashboard</Link>}</nav>}
 
       <AnimatePresence>
         {showSignup && (
@@ -242,6 +243,7 @@ function AppContent() {
       <AnimatePresence>
         {alert?.message && (
           <motion.div
+            role={alert.type === "error" ? "alert" : "status"}
             className={`alert ${alert.type}`}
             initial={{ opacity: 0, y:30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -249,12 +251,12 @@ function AppContent() {
           >
             <div>
               {alert.message}
-            </div>
+            </div><button aria-label="Dismiss notification" onClick={()=>setAlert({message:"",type:""})}><X size={18}/></button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div id="page-content" tabIndex="-1"><AnimatedRoutes/></div>
+      <div id="page-content" tabIndex="-1"><Suspense fallback={<p className="dk-workspace" role="status">Loading page...</p>}><AnimatedRoutes/></Suspense></div>
       {!ownerPage && <BusinessFooter/>}
     </>
   )

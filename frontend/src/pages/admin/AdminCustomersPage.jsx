@@ -1,67 +1,11 @@
-import { useEffect, useState } from "react";
-import { useCart } from "../../contexts/CartProvider";
-import { getCookie } from "../../utils/cookieUtils";
-import "./AdminCustomersPage.css"
-
-export default function AdminCustomersPage() {
-  const [customers, setCustomers] = useState([]);
-  const { setAlert } = useCart();
-
-  useEffect(() => {
-    fetch("/api/admin/customers/", { credentials: "include" })
-      .then((res) => res.json())
-      .then(setCustomers);
-  }, []);
-
-  const toggleActive = async (customer) => {
-    const res = await fetch(`/api/admin/customers/${customer.id}/`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
-      credentials: "include",
-      body: JSON.stringify({ is_active: !customer.is_active }),
-    });
-
-    if (!res.ok) {
-      setAlert({ message: "Failed to update customer status", type: "error" });
-      return;
-    }
-
-    const updatedCustomer = await res.json();
-
-    setCustomers((prev) =>
-      prev.map((c) =>
-        c.id === customer.id ? { ...c, is_active: updatedCustomer.is_active } : c
-      )
-    );
-  };
-
-  return (
-    <div className="admin-customers-container">
-      <h1>Manage Customers</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Active</th>
-            <th>Admin</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {customers.map((c) => (
-            <tr key={c.id}>
-              <td>{c.username}</td>
-              <td>{c.is_active ? "Yes" : "No"}</td>
-              <td>{c.is_staff ? "Yes" : "No"}</td>
-              <td>
-                <button onClick={() => toggleActive(c)}>
-                  {c.is_active ? "Deactivate" : "Activate"}
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+import {useEffect,useState} from 'react';
+import axios from 'axios';
+import {getCookie} from '../../utils/cookieUtils';
+import {apiError} from '../../utils/apiError';
+import './AdminCustomersPage.css';
+export default function AdminCustomersPage(){
+ const [customers,setCustomers]=useState([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(null),[error,setError]=useState(''),[retry,setRetry]=useState(0);
+ useEffect(()=>{const c=new AbortController();setLoading(true);setError('');axios.get('/api/admin/customers/',{signal:c.signal}).then(r=>setCustomers(r.data)).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))}).finally(()=>{if(!c.signal.aborted)setLoading(false)});return()=>c.abort();},[retry]);
+ const toggle=async customer=>{if(busy)return;setBusy(customer.id);setError('');try{const r=await axios.patch(`/api/admin/customers/${customer.id}/`,{is_active:!customer.is_active},{headers:{'X-CSRFToken':getCookie('csrftoken')}});setCustomers(rows=>rows.map(c=>c.id===r.data.id?r.data:c));}catch(e){setError(apiError(e))}finally{setBusy(null)}};
+ return <main className="dk-workspace"><h1>Customers</h1>{error && <p role="alert">{error}</p>}<button disabled={loading} onClick={()=>setRetry(n=>n+1)}>Refresh customers</button>{loading?<p role="status">Loading customers...</p>:<div style={{overflowX:'auto'}}><table><thead><tr><th>Username</th><th>Active</th><th>Role</th><th>Action</th></tr></thead><tbody>{customers.map(c=><tr key={c.id}><td>{c.username}</td><td>{c.is_active?'Yes':'No'}</td><td>{c.is_staff?'Owner':'Customer'}</td><td>{c.is_staff?'Owner account':<button disabled={busy!==null} onClick={()=>toggle(c)}>{busy===c.id?'Saving...':c.is_active?'Deactivate':'Activate'}</button>}</td></tr>)}</tbody></table></div>}</main>;
 }

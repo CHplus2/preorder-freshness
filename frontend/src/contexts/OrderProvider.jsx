@@ -1,3 +1,5 @@
+import {useUI} from './UIProvider';
+import {apiError} from '../utils/apiError';
 import { createContext, useContext, useState, useCallback } from "react";
 import { getCookie } from "../utils/cookieUtils";
 import { useCart } from "./CartProvider";
@@ -7,6 +9,7 @@ const OrderContext = createContext();
 export const useOrder = () => useContext(OrderContext);
 
 export default function OrderProvider({ children }) {
+    const {setAlert} = useUI();
     const [orders, setOrders] = useState([]);
     const [adminOrders, setAdminOrders] = useState([]);
     const { refreshCart } = useCart();
@@ -21,7 +24,7 @@ export default function OrderProvider({ children }) {
             
             setOrders(Array.isArray(data) ? data : data.results || []);
         } catch (err) {
-            console.error("fetchOrders:", err.response?.data || err.message);
+            setAlert({message:apiError(err),type:"error"});
         }
     }, []);
 
@@ -35,7 +38,7 @@ export default function OrderProvider({ children }) {
 
             setAdminOrders(Array.isArray(data) ? data : data.results || []);
         } catch (err) {
-            console.error("fetchAdminOrders:", err.response?.data || err.message);
+            setAlert({message:apiError(err),type:"error"});
         }
     }, []);
 
@@ -50,7 +53,7 @@ export default function OrderProvider({ children }) {
         } catch (err) {
             console.error("placeOrder:", err.response?.data || err.message);
             if (options.throwOnError) throw err;
-            window.alert(JSON.stringify(err.response?.data || "Order could not be placed"));
+            setAlert({message:apiError(err),type:"error"});
             return false;
         }
     }, [refreshCart]);
@@ -65,7 +68,7 @@ export default function OrderProvider({ children }) {
             })
             return true;
         } catch (err) {
-            window.alert(JSON.stringify(err.response?.data || "Update failed"));
+            setAlert({message:apiError(err),type:"error"});
             return false;
         }
     }

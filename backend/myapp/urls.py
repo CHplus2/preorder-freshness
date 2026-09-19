@@ -1,12 +1,13 @@
+from .views.kitchen import kitchen_blocks, kitchen_block_detail
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views.storefront import storefront, reviews
+from .views.storefront import storefront, reviews, review_access
 from .views.planning import planning
 from .views.auth import signup_view, login_view, logout_view, check_auth
 from .views.products import CategoryListCreate, CategoryDetail, ProductListCreate, ProductDetail, recommend
 from .views.cart import CartViewSet
-from .views.orders import OrderList, place_order, AddressListCreate, saved_address
+from .views.orders import OrderList, place_order, AddressListCreate, saved_address, preparation_quote
 from .views.wallet import get_wallet, create_wallet, topup_wallet
 from .views.admin import admin_order_list, admin_order_detail, product_sales_report, AdminCustomerViewSet
 from .views.inventory import (
@@ -19,7 +20,11 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path("admin/kitchen-blocks/", kitchen_blocks),
+    path("admin/kitchen-blocks/<int:pk>/", kitchen_block_detail),
     path("address/", saved_address),
+    path("orders/quote/", preparation_quote),
+    path("products/<int:pk>/review-access/", review_access),
     path("storefront/", storefront),
     path("products/<int:pk>/reviews/", reviews),
     path("admin/planning/", planning),

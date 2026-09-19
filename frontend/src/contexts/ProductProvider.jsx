@@ -1,3 +1,4 @@
+import {apiError} from '../utils/apiError';
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { getCookie } from "../utils/cookieUtils";
 import { useUI } from "./UIProvider";
@@ -27,7 +28,7 @@ export default function ProductProvider({ children }) {
             setCategories(Array.isArray(data) ? data : data.results || []);
 
         } catch (err) {
-            setCategories([]);
+            setAlert({message:apiError(err),type:"error"});
             console.error("fetchCategories:", err.response?.data || err.message);
         }
 
@@ -41,7 +42,7 @@ export default function ProductProvider({ children }) {
             setProducts(Array.isArray(data) ? data : data.results || []);
 
         } catch (err) {
-            setProducts([]);
+            setAlert({message:apiError(err),type:"error"});
             console.error("fetchProducts:", err.response?.data || err.message);
         }
     }, []);
@@ -82,7 +83,7 @@ export default function ProductProvider({ children }) {
             return true;
 
         } catch (err) {
-            setAlert({ message: "Failed to add new product", type: "error"});
+            setAlert({ message: apiError(err, "Failed to add new product"), type: "error"});
             console.error("addProduct:", err.response?.data || err.message);
             return false;
         }
@@ -99,7 +100,7 @@ export default function ProductProvider({ children }) {
             return true;
 
         } catch (err) {
-            setAlert({ message: "Failed to save changes", type: "error"});
+            setAlert({ message: apiError(err, "Failed to save changes"), type: "error"});
             console.error("updateProduct:", err.response?.data || err.message);
             return false;
         } 
@@ -119,7 +120,7 @@ export default function ProductProvider({ children }) {
             refreshCart();
 
         } catch (err) {
-            setAlert({ message: "Failed to delete product", type: "error" });
+            setAlert({ message: apiError(err, "Failed to delete product"), type: "error" });
             console.error("deleteProduct:", err.response?.data || err.message);
         }
     }; 

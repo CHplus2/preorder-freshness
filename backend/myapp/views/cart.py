@@ -1,3 +1,5 @@
+from django.db import transaction
+from django.contrib.auth.models import User
 from rest_framework import viewsets, status, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -8,12 +10,14 @@ class CartViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
     def list(self, request):
-        items = CartItem.objects.filter(user=request.user)
+        items = CartItem.objects.filter(user=request.user).select_related("product__category").prefetch_related("product__ingredients")
         serializer = CartItemSerializer(items, many=True)
         return Response(serializer.data)
 
+    @transaction.atomic
     def create(self, request):
-        product_id = request.data.get("product_id")
+        User.objects.select_for_update().get(pk=request.user.pk)
+        product_id = serializers.IntegerField(min_value=1).run_validation(request.data.get("product_id"))
         quantity = serializers.IntegerField(min_value=1, max_value=10000).run_validation(request.data.get("quantity", 1))
 
         if not product_id:
@@ -31,12 +35,17 @@ class CartViewSet(viewsets.ViewSet):
         )
 
         if not created: 
+            if item.quantity + quantity > 10000:
+                raise serializers.ValidationError('A basket item cannot exceed 10,000 portions.')
             item.quantity += quantity
             item.save()
 
         return Response(CartItemSerializer(item).data, status=status.HTTP_201_CREATED)
     
+    @transaction.atomic
     def partial_update(self, request, pk=None):
+        User.objects.select_for_update().get(pk=request.user.pk)
+        pk = serializers.IntegerField(min_value=1).run_validation(pk)
         try:
             item = CartItem.objects.get(pk=pk, user=request.user)
         except CartItem.DoesNotExist:
@@ -58,7 +67,10 @@ class CartViewSet(viewsets.ViewSet):
 
         return Response(CartItemSerializer(item).data, status=status.HTTP_200_OK)
 
+    @transaction.atomic
     def destroy(self, request, pk=None):
+        User.objects.select_for_update().get(pk=request.user.pk)
+        pk = serializers.IntegerField(min_value=1).run_validation(pk)
         try:
             item = CartItem.objects.get(pk=pk, user=request.user)
         except CartItem.DoesNotExist:

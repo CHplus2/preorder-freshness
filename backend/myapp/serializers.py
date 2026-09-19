@@ -21,15 +21,30 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     ingredients = RecipeSerializer(many=True, required=False)
-    stock = serializers.IntegerField(source='get_available_quantity', read_only=True)
+    stock = serializers.SerializerMethodField()
     freshness = serializers.SerializerMethodField()
 
+    def get_stock(self, obj):
+        from django.db.models import Sum
+        from django.utils import timezone
+        if not hasattr(self, '_stock_totals'):
+            self._stock_totals = dict(InventoryItem.objects.filter(quantity__gt=0, quarantined=False,
+                expiry_date__gte=timezone.localdate(), received_date__lte=timezone.localdate())
+                .values('raw_material_id').annotate(n=Sum('quantity')).values_list('raw_material_id', 'n'))
+        ingredients = list(obj.ingredients.all())
+        return int(min((self._stock_totals.get(i.raw_material_id, 0) // i.quantity_required
+                        for i in ingredients if i.quantity_required > 0), default=0))
+
     def get_freshness(self, obj):
-        if not obj.ingredients.exists():
+        if not obj.ingredients.all():
             return 'Recipe not recorded'
-        if obj.get_available_quantity() < 1:
+        if self.get_stock(obj) < 1:
             return 'Ingredients need restocking'
-        return 'Within recorded shelf life — estimate, not a safety guarantee'
+        return 'Within recorded shelf life - estimate, not a safety guarantee'
+
+    def validate_preparation_tasks(self, value):
+        from .services.scheduling import validate_tasks
+        return validate_tasks(value)
 
     def validate_ingredients(self, value):
         ids = [x['raw_material'].pk for x in value]
@@ -43,6 +58,18 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = "__all__"
         read_only_fields = ["id", "created_at", "updated_at"]
+        extra_kwargs = {
+            'price': {'min_value': Decimal('0.01')},
+            'lead_hours': {'min_value': 1, 'max_value': 2160},
+            'daily_capacity': {'min_value': 1, 'max_value': 10000},
+            'max_preparation_days': {'min_value': 1, 'max_value': 30},
+            'batch_size': {'min_value': 1, 'max_value': 5000},
+            'preparation_minutes': {'min_value': 1, 'max_value': 1440},
+            'additional_batch_minutes': {'min_value': 1, 'max_value': 1440},
+            'packing_minutes_per_portion': {'min_value': 0, 'max_value': 60},
+            'max_early_minutes': {'min_value': 0, 'max_value': 720},
+        }
+
 
     def create(self, validated_data):
         from django.db import transaction

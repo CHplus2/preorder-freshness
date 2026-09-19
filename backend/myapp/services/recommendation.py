@@ -117,9 +117,11 @@ def recommend_for_user(user, limit=20, exclude_bought=True):
     counts = get_user_product_counts(user)
     popularity = get_global_product_popularity()
     excluded = get_user_bought_product_ids(user) if exclude_bought else set()
+    from ..serializers import ProductSerializer
+    stock = ProductSerializer()
     results = []
-    for product in Product.objects.select_related('category').order_by('id'):
-        if product.id in excluded or product.get_available_quantity() < 1:
+    for product in Product.objects.select_related('category').prefetch_related('ingredients').order_by('id'):
+        if product.id in excluded or stock.get_stock(product) < 1:
             continue
         score, reasons = get_score(product, categories, counts, popularity)
         results.append({'product_id': product.id, 'product_name': product.name,
