@@ -31,6 +31,7 @@ const PlannerPage=lazy(()=>import("./pages/admin/PlannerPage"));
 import "./App.css";
 import "./dapur.css";
 import "./business.css";
+import "./admin.css";
 import StorefrontProvider, {useStorefront} from './contexts/StorefrontProvider';
 import {HomePage,StoryPage,HowItWorksPage,ContactPage} from './pages/customer/BusinessPages';
 import {BusinessFooter,PageMeta} from './components/BusinessLayout';
@@ -39,7 +40,7 @@ const EscrowDemoPage=lazy(()=>import('./pages/customer/EscrowDemoPage'));
 function AnimatedRoutes() {
   const location = useLocation();
 
-  const page_motion = {
+  const page_motion = location.pathname.startsWith('/admin/') ? {} : {
     initial: { opacity: 0, scale: 0.98, y: 10 },
     animate: { opacity: 1, scale: 1, y: 0 },
     exit: { opacity: 0, scale: 0.98, y: -10 },
@@ -210,17 +211,17 @@ function AppContent() {
       <a className="skip-link" href="#page-content">Skip to content</a>
       <header className={`business-header ${ownerPage?"owner-header":""}`}>
         <Link to="/" className="brand" onClick={closeMenu}>{store.name}<span>HOME KITCHEN & PREORDERS</span></Link>
-        <nav className="business-nav" aria-label="Main navigation">
+        {!ownerPage && <nav className="business-nav" aria-label="Main navigation">
           {navigation.map(([url,label])=><Link key={url} to={url} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}
-        </nav>
+        </nav>}
         <div className="business-header-actions">
-          {isAuthenticated && <Link to="/cart" className="basket-link" aria-label={`Basket, ${cart.reduce((n,i)=>n+i.quantity,0)} items`}><ShoppingBag size={19}/><span>{cart.reduce((n,i)=>n+i.quantity,0)}</span></Link>}
+          {isAuthenticated && !ownerPage && <Link to="/cart" className="basket-link" aria-label={`Basket, ${cart.reduce((n,i)=>n+i.quantity,0)} items`}><ShoppingBag size={19}/><span>{cart.reduce((n,i)=>n+i.quantity,0)}</span></Link>}
           {isAuthenticated===false && <button className="login-btn" onClick={()=>setShowLogin(true)}>Sign in</button>}
           {isAuthenticated && <div className="user-dropdown"><button className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} onClick={()=>setDropdownOpen(!dropdownOpen)}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content"><Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to="/admin/planner" onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}<button className="logout-btn" onClick={logout}>Sign out</button></div>}</div>}
-          <button className="mobile-menu-toggle" aria-label={mobileOpen?'Close navigation':'Open navigation'} aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={()=>setMobileOpen(!mobileOpen)}>{mobileOpen?<X size={23}/>:<Menu size={23}/>}</button>
+          {!ownerPage && <button className="mobile-menu-toggle" aria-label={mobileOpen?'Close navigation':'Open navigation'} aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={()=>setMobileOpen(!mobileOpen)}>{mobileOpen?<X size={23}/>:<Menu size={23}/>}</button>}
         </div>
       </header>
-      {mobileOpen && <nav className="mobile-navigation" id="mobile-navigation" aria-label="Mobile navigation">{navigation.map(([url,label])=><Link key={url} to={url} onClick={closeMenu} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}{isAuthenticated && <Link to="/orders" onClick={closeMenu}>My orders</Link>}{isAdmin && <Link to="/admin/planner" onClick={closeMenu}>Kitchen dashboard</Link>}</nav>}
+      {mobileOpen && !ownerPage && <nav className="mobile-navigation" id="mobile-navigation" aria-label="Mobile navigation">{navigation.map(([url,label])=><Link key={url} to={url} onClick={closeMenu} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}{isAuthenticated && <Link to="/orders" onClick={closeMenu}>My orders</Link>}{isAdmin && <Link to="/admin/planner" onClick={closeMenu}>Kitchen dashboard</Link>}</nav>}
 
       <AnimatePresence>
         {showSignup && (
@@ -256,7 +257,7 @@ function AppContent() {
         )}
       </AnimatePresence>
 
-      <div id="page-content" tabIndex="-1"><Suspense fallback={<p className="dk-workspace" role="status">Loading page...</p>}><AnimatedRoutes/></Suspense></div>
+      <div className={ownerPage?'admin-shell':''} onInvalidCapture={e=>{let node=e.target.parentElement;while(node){if(node.tagName==='DETAILS')node.open=true;node=node.parentElement}}}>{ownerPage && <aside className="admin-sidebar"><span className="admin-sidebar-label">KITCHEN WORKSPACE</span><nav aria-label="Kitchen management">{ownerLinks.map(([url,label])=><Link key={url} to={url} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}</nav></aside>}<div id="page-content" className={ownerPage?'admin-content':''} tabIndex="-1"><Suspense fallback={<p className="dk-workspace" role="status">Loading page...</p>}><AnimatedRoutes/></Suspense></div></div>
       {!ownerPage && <BusinessFooter/>}
     </>
   )

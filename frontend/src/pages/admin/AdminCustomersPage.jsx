@@ -2,7 +2,7 @@ import {useEffect,useState} from 'react';
 import axios from 'axios';
 import {getCookie} from '../../utils/cookieUtils';
 import {apiError} from '../../utils/apiError';
-import './AdminCustomersPage.css';
+
 export default function AdminCustomersPage(){
  const [customers,setCustomers]=useState([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(null),[error,setError]=useState(''),[retry,setRetry]=useState(0);
  useEffect(()=>{const c=new AbortController();setLoading(true);setError('');axios.get('/api/admin/customers/',{signal:c.signal}).then(r=>setCustomers(r.data)).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))}).finally(()=>{if(!c.signal.aborted)setLoading(false)});return()=>c.abort();},[retry]);

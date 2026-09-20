@@ -3,7 +3,7 @@ import ExpiryFields from "../../components/ExpiryFields";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { getCookie } from "../../utils/cookieUtils";
-import "./AdminInventoryPage.css";
+
 
 const API_URL = "/api/admin";
 
@@ -453,7 +453,7 @@ export default function AdminInventoryPage() {
       </div>
 
       {/* Inventory table */}
-      <table className="admin-table inventory-table">
+      <div className="admin-table-scroll"><table className="admin-table inventory-table">
 
         <thead>
           <tr>
@@ -564,7 +564,7 @@ export default function AdminInventoryPage() {
 
         </tbody>
 
-      </table>
+      </table></div>
 
       {/* Raw Material Management */}
       <div className="raw-material-section">
@@ -579,7 +579,7 @@ export default function AdminInventoryPage() {
           </div>
         </div>
 
-        <table className="admin-table">
+        <div className="admin-table-scroll"><table className="admin-table">
 
           <thead>
             <tr>
@@ -632,7 +632,7 @@ export default function AdminInventoryPage() {
 
           </tbody>
 
-        </table>
+        </table></div>
 
       </div>
 

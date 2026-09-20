@@ -1,4 +1,4 @@
-from .views.kitchen import kitchen_blocks, kitchen_block_detail
+from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_plan
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -20,6 +20,7 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path("admin/orders/<int:pk>/preparation-plan/", review_order_plan),
     path("admin/kitchen-blocks/", kitchen_blocks),
     path("admin/kitchen-blocks/<int:pk>/", kitchen_block_detail),
     path("address/", saved_address),

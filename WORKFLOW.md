@@ -46,3 +46,12 @@ The sales estimate uses completed calendar days, up to 84 days of paid, non-canc
 ## Deployment
 
 Apply migrations 0011 and 0012 before deploying this release. They add configuration/schedule fields and preserve existing preparation timestamps; they do not reschedule bookings. Configure real menu timings before relying on automatic acceptance. Credentials remain in environment variables and are not committed.
+
+
+## Daily task planner and existing orders
+
+The planner opens on today's task agenda. It shows each saved recipe step with order, menu, time, equipment and attention requirements. Long unattended steps appear on every date they occupy. Hands-on minutes are compared with opening hours minus closed periods; overlapping closures count only once. Equipment occupancy is still checked separately during booking: a daily labour total alone cannot establish feasibility.
+
+Menus display their preparation-step count or Needs setup. The owner supplies these steps; the app cannot infer recipes from dish names. Orders made before detailed scheduling are explicitly marked for review. After configuring menus, use Planner > Orders & review > Preview task plan. The preview preserves the agreed delivery date. Use this plan applies it after checking availability again; changed/expired previews and started orders are rejected. Until confirmed, no timestamps change. Replanning honours the original order's advance-notice time while never starting work in the past.
+
+This remains a conservative one-worker, one-unit-per-equipment planner. It does not combine separate orders into a shared cooking batch, even when names match. Such grouping depends on quantities, equipment volume and the owner's process. The owner defines batch sizes and safe waiting limits; the app enforces those declared rules. AI is not needed for these checks and cannot establish safe holding times.

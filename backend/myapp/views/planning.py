@@ -9,7 +9,7 @@ from ..serializers import OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from ..models import Order, InventoryItem, OrderItem
+from ..models import Order, InventoryItem, OrderItem, Storefront, Product, KitchenBlock
 
 
 @api_view(['GET'])
@@ -71,6 +71,8 @@ def planning(request):
         day = timezone.localdate() - timedelta(days=offset)
         value = by_day.get(str(day), Decimal('0'))
         trend.append({'date': str(day), 'sales': str(value)})
-    return Response({'allocations': allocations, 'orders': OrderSerializer(orders, many=True).data, 'analytics': {'net_food_sales': str(net), 'paid_orders': count,
-        'average_order_value': str(round(net/count,2) if count else 0), 'trend': trend}, 'shopping': shopping, 'forecast': {'next_7_days_portions': round(units / 4, 1),
-        'observed_portions_28_days': units, 'method': '28-day average × 7 days; planning estimate, not a guarantee.'}})
+    store = Storefront.objects.filter(pk=1).first() or Storefront()
+    setup = list(Product.objects.filter(preparation_tasks=[]).values('id', 'name'))
+    availability = dict(open_hour=store.kitchen_open_hour, close_hour=store.kitchen_close_hour, blocks=list(KitchenBlock.objects.values('start_at','end_at','reason')))
+    return Response({'setup_menus': setup, 'availability': availability, 'allocations': allocations, 'orders': OrderSerializer(orders, many=True).data, 'analytics': {'net_food_sales': str(net), 'paid_orders': count,
+        'average_order_value': str(round(net/count,2) if count else 0), 'trend': trend}, 'shopping': shopping, 'forecast': {**forecast, 'observed_portions_28_days': units}})

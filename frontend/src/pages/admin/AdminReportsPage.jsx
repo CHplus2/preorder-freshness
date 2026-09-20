@@ -1,7 +1,7 @@
 import {apiError} from '../../utils/apiError';
 import { useEffect, useState } from "react";
 import axios from 'axios';
-import "./AdminReportsPage.css";
+
 export default function AdminReportsPage() {
  const [report,setReport]=useState([]),[summary,setSummary]=useState(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[retry,setRetry]=useState(0);
  useEffect(()=>{setLoading(true);setError('');Promise.all([axios.get('/api/admin/reports/sales/'),axios.get('/api/admin/planning/')]).then(([a,b])=>{setReport(a.data);setSummary(b.data);}).catch(e=>setError(apiError(e))).finally(()=>setLoading(false));},[retry]);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUI } from "../../contexts/UIProvider";
 import { useOrder } from "../../contexts/OrderProvider";
-import "./AdminOrdersPage.css";
+
 
 export default function AdminOrdersPage() {
   const [editingOrder, setEditingOrder] = useState(null);

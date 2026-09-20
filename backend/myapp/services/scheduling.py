@@ -80,7 +80,7 @@ def booked_tasks(orders, store):
     return result
 
 
-def schedule_order(items, delivery_at, store, now=None):
+def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, notice_from=None):
     now = now or timezone.now()
     items = list(items)
     if not items:
@@ -90,16 +90,16 @@ def schedule_order(items, delivery_at, store, now=None):
         raise ValidationError('Choose delivery between 9am and 9pm Malaysia time (before 9pm).')
     if delivery_at <= now or delivery_at > now+timedelta(days=90):
         raise ValidationError('Choose a future delivery within the next 90 days.')
-    booked = dict(OrderItem.objects.filter(product_id__in=[i.product_id for i in items], order__delivery_at__date=local.date()).exclude(order__status='cancelled').values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
+    booked = dict(OrderItem.objects.filter(product_id__in=[i.product_id for i in items], order__delivery_at__date=local.date()).exclude(order__status='cancelled').exclude(order_id=exclude_order_id).values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
     for item in items:
         if booked.get(item.product_id, 0)+item.quantity > item.product.daily_capacity:
             raise ValidationError(f'{item.product.name} has insufficient capacity on this day. Choose another date.')
     lines, minutes = preparation_work(items)
-    advance = now+timedelta(hours=max(i.product.lead_hours for i in items))
+    advance = max(now, (notice_from or now)+timedelta(hours=max(i.product.lead_hours for i in items)))
     ready = delivery_at-timedelta(minutes=store.delivery_buffer_minutes)
     horizon = ready-timedelta(days=max(i.product.max_preparation_days for i in items))
     busy = [dict(start=a, end=b, resource='all', worker=True) for a,b in KitchenBlock.objects.filter(start_at__lt=ready,end_at__gt=horizon).values_list('start_at','end_at')]
-    orders = Order.objects.filter(status__in=['pending','processing'],inventory_deducted=False,preparation_at__lt=ready,delivery_at__gt=horizon).only('preparation_at','preparation_end_at','delivery_at','preparation_plan')
+    orders = Order.objects.filter(status__in=['pending','processing'],inventory_deducted=False,preparation_at__lt=ready,delivery_at__gt=horizon).exclude(pk=exclude_order_id).only('preparation_at','preparation_end_at','delivery_at','preparation_plan')
     busy.extend(booked_tasks(orders, store))
     planned = []
     # Stable ordering: long menu sequences first; tasks remain in recipe order.

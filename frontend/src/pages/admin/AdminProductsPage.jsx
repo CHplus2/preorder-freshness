@@ -2,7 +2,7 @@ import RecipeEditor from "../../components/RecipeEditor";
 import { useEffect, useState } from "react";
 import { useUI } from "../../contexts/UIProvider";
 import { useProduct } from "../../contexts/ProductProvider";
-import "./AdminProductsPage.css";
+
 
 export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,13 +89,13 @@ export default function AdminProductsPage() {
       <div className="admin-browse-controls">
         <input
           type="text"
-          className="search-input"
+          className="search-input" aria-label="Search menus"
           placeholder="Search by product name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         <select
-          className="category-select"
+          className="category-select" aria-label="Filter menu category"
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
         >
@@ -107,14 +107,15 @@ export default function AdminProductsPage() {
       </div>
     
       {/* Product List */}
-      <table className="admin-table">
+      <div className="admin-table-scroll"><table className="admin-table">
         <thead>
           <tr>
             <th>Image</th>
             <th>Name</th>
             <th>Price</th>
-            <th>Stock</th>
+            <th>Available portions</th>
             <th>Category</th>
+            <th>Preparation</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -138,8 +139,9 @@ export default function AdminProductsPage() {
               <td>RM {p.price}</td>
               <td>{p.stock}</td>
               <td>{p.category_name}</td>
+              <td><span className="status-badge">{p.preparation_tasks?.length ? `${p.preparation_tasks.length} steps` : "Needs setup"}</span></td>
               <td>
-                <button onClick={() => setUpdatedProduct({ ...p })}>Edit</button>
+                <button onClick={() => setUpdatedProduct({ ...p })}>Edit & steps</button>
                 <button
                   className="danger"
                   onClick={() => setProductIdToDelete(p.id)}
@@ -151,12 +153,12 @@ export default function AdminProductsPage() {
             ))
           ) : (
             <tr>
-              <td colSpan="6">No products found.</td>
+              <td colSpan="7">No products found.</td>
             </tr>
           )}
 
         </tbody>
-      </table>
+      </table></div>
 
       {/* Edit Product Modal */}
       {updatedProduct && (

@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node src/utils/apiError.test.js"
+    "test": "node src/utils/apiError.test.js && node src/utils/planner.test.js"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^9.1.1",

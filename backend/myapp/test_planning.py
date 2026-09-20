@@ -129,3 +129,43 @@ class PlanningTests(TestCase):
         r=self.client.get('/api/admin/planning/')
         self.assertEqual(len(r.data['shopping']),1)
         self.assertEqual(r.data['allocations'],[])
+
+    def test_owner_preview_and_confirm_existing_order(self):
+        p=self.product(daily_capacity=1,preparation_tasks=[self.task()])
+        plan=schedule_order([self.item(p)],self.delivery,self.store,now=self.now)
+        o=self.book(p,plan);o.preparation_plan={};o.save()
+        url=f'/api/admin/orders/{o.id}/preparation-plan/'
+        self.assertEqual(self.client.post(url,{},format='json').status_code,403)
+        self.client.force_authenticate(self.owner)
+        preview=self.client.post(url,{},format='json')
+        self.assertEqual(preview.status_code,200,preview.data)
+        o.refresh_from_db();self.assertEqual(o.preparation_plan,{})
+        response=self.client.post(url,{'confirm':preview.data['confirm']},format='json')
+        self.assertEqual(response.status_code,200,response.data)
+        o.refresh_from_db();self.assertTrue(o.preparation_plan['tasks']);self.assertEqual(o.delivery_at,self.delivery)
+
+    def test_replan_rejects_stale_preview_or_started_order(self):
+        p=self.product(preparation_tasks=[self.task()])
+        o=self.book(p,schedule_order([self.item(p)],self.delivery,self.store,now=self.now))
+        self.client.force_authenticate(self.owner);url=f'/api/admin/orders/{o.id}/preparation-plan/'
+        preview=self.client.post(url,{},format='json').data
+        original=o.preparation_plan
+        p.preparation_tasks=[self.task(minutes=90)];p.save()
+        self.assertEqual(self.client.post(url,{'confirm':preview['confirm']},format='json').status_code,409)
+        o.refresh_from_db();self.assertEqual(o.preparation_plan,original)
+        o.status='processing';o.save()
+        self.assertEqual(self.client.post(url,{},format='json').status_code,400)
+
+    def test_replan_requires_menu_steps(self):
+        p=self.product();o=self.book(p,schedule_order([self.item(p)],self.delivery,self.store,now=self.now))
+        self.client.force_authenticate(self.owner)
+        response=self.client.post(f'/api/admin/orders/{o.id}/preparation-plan/',{},format='json')
+        self.assertEqual(response.status_code,400);self.assertIn('Add preparation steps',str(response.data))
+
+    def test_planner_exposes_setup_and_hours(self):
+        self.product();self.client.force_authenticate(self.owner)
+        response=self.client.get('/api/admin/planning/')
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.data['availability']['open_hour'],8)
+        self.assertEqual(len(response.data['setup_menus']),1)
+        self.assertIsNone(response.data['forecast']['next_7_days_portions'])
