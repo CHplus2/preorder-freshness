@@ -74,7 +74,7 @@ export default function AdminOrdersPage() {
               {/* FOOTER */}
               <div className="order-footer">
                 <button className="edit-btn" onClick={() => startEdit(order)}>
-                  Edit
+                  Edit order
                 </button>
 
                 <div className="order-total">
@@ -137,7 +137,7 @@ export default function AdminOrdersPage() {
                   <option value="refunded">Refunded</option>
                 </select>
 
-                <div className="modal-buttons">
+                <div className="modal-actions">
                   <button className="modal-save" onClick={saveEdit}>Save</button>
                   <button className="modal-cancel" onClick={() => setEditingOrder(null)}>Close</button>
                 </div>

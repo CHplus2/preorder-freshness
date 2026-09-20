@@ -18,3 +18,16 @@
 .admin-sidebar nav{position:static;width:auto;min-height:0;backdrop-filter:none;justify-content:flex-start;align-items:stretch}.admin-shell table .image-placeholder{width:48px;height:48px;min-height:0;font-size:10px;display:grid;place-items:center;border-radius:5px;background:#edf1ee;padding:3px;text-align:center}.admin-shell .inventory-error{padding:15px;background:#fff0ec;color:#93382e;border:1px solid #e4c7c1;border-radius:6px}.admin-shell .section-header{margin-bottom:18px}
 
 .alert.alert{z-index:4000;box-shadow:0 6px 20px #1933241a;backdrop-filter:none}
+
+/* Consistent action spacing and touch targets. */
+.admin-shell button{border-radius:9px;min-height:44px}
+.admin-shell button:disabled{opacity:.55;cursor:not-allowed}
+.admin-shell .edit-btn{min-width:112px;padding-inline:18px}
+.admin-shell .modal-actions{flex-wrap:wrap;gap:12px;padding-top:20px;margin-top:28px}
+.admin-shell .edit-modal>select{display:block;margin-bottom:20px}
+.admin-shell .modal-address-block{padding:16px 18px;margin:20px 0 24px;background:#f5f7f5;border-radius:8px}
+.admin-shell .modal-address-block p{margin-bottom:0}
+.agenda-actions{margin-top:18px;display:flex;gap:12px;flex-wrap:wrap}
+.admin-order-summary{scroll-margin-top:120px}
+.admin-shell .batch-help{padding:14px 16px;background:#f0f5f1;border-radius:8px;margin:14px 0 20px}
+.admin-shell .recipe-row{margin-bottom:12px}

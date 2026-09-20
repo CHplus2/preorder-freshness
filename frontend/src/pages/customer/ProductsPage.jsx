@@ -1,5 +1,6 @@
 import {PageMeta} from "../../components/BusinessLayout";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUI } from "../../contexts/UIProvider";
 import { useProduct } from "../../contexts/ProductProvider";
@@ -14,6 +15,16 @@ export default function ProductsPage() {
   const { addToCart } = useCart();
 
   const scrollRef = useRef(null);
+  const [scrollable,setScrollable]=useState({left:false,right:false});
+  useEffect(()=>{
+    const row=scrollRef.current;if(!row)return;
+    const update=()=>setScrollable({left:row.scrollLeft>2,right:row.scrollLeft+row.clientWidth<row.scrollWidth-2});
+    update();const observer=new ResizeObserver(update);observer.observe(row);
+    row.addEventListener('scroll',update);
+    return()=>{observer.disconnect();row.removeEventListener('scroll',update)};
+  },[recommended]);
+  const scrollRecommendations=direction=>scrollRef.current?.scrollBy({left:direction*300,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+
 
   const filteredProducts = Array.isArray(products) 
     ? (products || []).filter((p) => {
@@ -30,16 +41,12 @@ export default function ProductsPage() {
       {/* Recommendation */}
       {recommended?.length > 0 && (
         <div className="recommended-section">
-          <h2 className="section-title">Based on your activity</h2>
+          <div className="recommendation-heading"><h2 className="section-title">Based on your activity</h2><div className="recommendation-controls">
+            <button className="recommendation-arrow" aria-label="Previous recommendations" disabled={!scrollable.left} onClick={()=>scrollRecommendations(-1)}><ChevronLeft size={20} aria-hidden="true"/></button>
+            <button className="recommendation-arrow" aria-label="Next recommendations" disabled={!scrollable.right} onClick={()=>scrollRecommendations(1)}><ChevronRight size={20} aria-hidden="true"/></button>
+          </div></div>
 
           <div className="recommended-wrapper">
-            
-            <button 
-              className="scroll-btn left"
-              onClick={() => scrollRef.current.scrollBy({ left: -300, behavior: "smooth" })}
-            >
-              ←
-            </button>
 
             <div className="recommended-row" ref={scrollRef}>
               {recommended.slice(0, 10).map((r) => (
@@ -71,13 +78,6 @@ export default function ProductsPage() {
                 </div>
               ))}
             </div>
-
-            <button 
-              className="scroll-btn right"
-              onClick={() => scrollRef.current.scrollBy({ left: 300, behavior: "smooth" })}
-            >
-              →
-            </button>
 
           </div>
         </div>

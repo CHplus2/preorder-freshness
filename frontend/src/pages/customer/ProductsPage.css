@@ -222,28 +222,6 @@ body {
   position: relative;
 }
 
-.scroll-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-
-  background: rgba(0,0,0,0.6);
-  border: none;
-  color: white;
-  padding: 10px;
-  cursor: pointer;
-  border-radius: 50%;
-}
-
-.scroll-btn.left {
-  left: -10px;
-}
-
-.scroll-btn.right {
-  right: -10px;
-}
-
 .recommended-row {
   display: flex;
   gap: 16px;
@@ -324,3 +302,12 @@ body {
 
   border: 1px solid rgba(124, 58, 237, 0.3);
 }
+.products-page .recommendation-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:20px}
+.products-page .recommendation-heading h2{margin:0}
+.products-page .recommendation-controls{display:flex;gap:10px;flex-shrink:0}
+.products-page .recommendation-arrow{display:grid;place-items:center;width:44px;height:44px;min-width:44px;padding:0;border:1px solid #cbd6ce;border-radius:50%;background:#fff;color:#285a3e;box-shadow:none;transform:none}
+.products-page .recommendation-arrow:hover:not(:disabled){background:#edf3ee;border-color:#285a3e}
+.products-page .recommendation-arrow:disabled{opacity:.4;cursor:not-allowed}
+.products-page .recommendation-arrow:focus-visible{outline:3px solid #417554;outline-offset:3px}
+.products-page .recommended-row{padding:2px 2px 12px}
+@media(max-width:560px){.products-page .recommendation-heading{gap:12px}.products-page .recommendation-heading h2{font-size:20px}.products-page .recommendation-controls{gap:6px}}
