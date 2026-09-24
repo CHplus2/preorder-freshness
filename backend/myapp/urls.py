@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 from .views.storefront import storefront, reviews, review_access, inventory_freshness
 from .views.planning import planning
 from .views.auth import signup_view, login_view, logout_view, check_auth
-from .views.products import CategoryListCreate, CategoryDetail, ProductListCreate, ProductDetail, recommend
+from .views.products import CategoryListCreate, CategoryDetail, ProductListCreate, ProductDetail, recommend, MenuList
 from .views.cart import CartViewSet
 from .views.orders import OrderList, place_order, AddressListCreate, saved_address, preparation_quote
 from .views.wallet import get_wallet, create_wallet, topup_wallet
@@ -20,6 +20,7 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path("menu/", MenuList.as_view()),
     path("inventory-freshness/", inventory_freshness),
     path("admin/orders/<int:pk>/preparation-plan/", review_order_plan),
     path("admin/kitchen-blocks/", kitchen_blocks),

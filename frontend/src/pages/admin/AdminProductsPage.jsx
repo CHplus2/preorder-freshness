@@ -11,8 +11,9 @@ export default function AdminProductsPage() {
   const [updatedProduct, setUpdatedProduct] = useState(false);
   const [loading, setLoading] = useState(false);
   const { fallback_img, setAlert } = useUI();
-  const { categories, products, setProductIdToDelete, addProduct, updateProduct } = useProduct();
+  const { categories, products, fetchProducts, setProductIdToDelete, addProduct, updateProduct } = useProduct();
 
+  useEffect(()=>{fetchProducts()},[fetchProducts]);
   const emptyForm = {
     name: "",
     price: "",

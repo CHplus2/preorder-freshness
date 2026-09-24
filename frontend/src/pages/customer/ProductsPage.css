@@ -325,3 +325,11 @@ body {
 .inventory-transparency[open]>summary{margin-bottom:20px}
 .inventory-status-list{padding-left:22px;margin:18px 0}
 .inventory-status-list li{padding:6px 0;font-size:14px;line-height:1.6}
+
+.menu-list-meta{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 20px;font-size:14px}
+.menu-list-meta p{margin:0;color:#53655a}
+.menu-list-meta a{text-underline-offset:4px}
+.menu-load-more{text-align:center;margin:28px 0}
+.menu-load-more button{min-height:44px}
+.menu-load-more p{margin-bottom:16px}
+.menu-load-more button:disabled{opacity:.6;cursor:wait}

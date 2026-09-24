@@ -1,3 +1,5 @@
+import axios from 'axios';
+import {apiError} from '../../utils/apiError';
 import InventoryFreshness from '../../components/InventoryFreshness';
 import {PageMeta} from "../../components/BusinessLayout";
 import { useState, useRef, useEffect } from "react";
@@ -11,7 +13,7 @@ import "./ProductsPage.css";
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const { products, recommended, categories } = useProduct();
+  const { recommended, categories } = useProduct();
   const { fallback_img, formatPrice } = useUI();
   const { addToCart } = useCart();
 
@@ -27,13 +29,24 @@ export default function ProductsPage() {
   const scrollRecommendations=direction=>scrollRef.current?.scrollBy({left:direction*300,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 
 
-  const filteredProducts = Array.isArray(products) 
-    ? (products || []).filter((p) => {
-      const matchesName = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory ? p.category === Number(selectedCategory) : true;
-      return matchesName && matchesCategory;
-    })
-    : [];
+  const [listing,setListing]=useState({rows:[],count:0,next:false});
+  const [page,setPage]=useState(1),[loading,setLoading]=useState(true),[error,setError]=useState(''),[retry,setRetry]=useState(0);
+  const generation=useRef(0);
+  useEffect(()=>{
+    const c=new AbortController(),version=++generation.current;
+    setLoading(true);setError('');
+    const timer=setTimeout(()=>{
+      axios.get('/api/menu/',{params:{page,search:searchTerm,category:selectedCategory},signal:c.signal})
+        .then(({data})=>{if(version!==generation.current || c.signal.aborted)return;
+          setListing(old=>({rows:page===1?data.results:[...old.rows,...data.results.filter(p=>!old.rows.some(o=>o.id===p.id))],count:data.count,next:!!data.next}));
+        }).catch(e=>{if(!axios.isCancel(e) && version===generation.current)setError(apiError(e))})
+        .finally(()=>{if(!c.signal.aborted && version===generation.current)setLoading(false)});
+    },page===1?250:0);
+    return()=>{clearTimeout(timer);c.abort()};
+  },[searchTerm,selectedCategory,page,retry]);
+  const changeFilter=(setter,value)=>{generation.current++;setter(value);setPage(1);setListing({rows:[],count:0,next:false});setLoading(true);setError('')};
+  const filteredProducts=listing.rows;
+  const showInventory=e=>{e.preventDefault();const section=document.getElementById('inventory-freshness');if(section){section.open=true;section.scrollIntoView({block:'start'});section.querySelector('summary')?.focus({preventScroll:true})}};
 
   return (
     <div className="products-page">
@@ -55,11 +68,11 @@ export default function ProductsPage() {
                   <Link to={`/products/${r.product_id}`} className="product-link">
                     <div className="product-image-wrapper">
                       {r.product_img ? (
-                        <img 
+                        <img loading="lazy" decoding="async"
                           src={r.product_img} 
                           alt={r.product_name} 
                           className="product-image"
-                          onError={(e) => (e.target.src = fallback_img)}
+                          onError={(e) => {e.currentTarget.onerror=null;if(e.currentTarget.getAttribute("src")!==fallback_img)e.currentTarget.src=fallback_img}}
                         />
                       ) : (
                         <div className="image-placeholder">No Image</div>
@@ -90,12 +103,12 @@ export default function ProductsPage() {
           type="text"
           aria-label="Search the menu" placeholder="Search meals, kuih, cakes…"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => changeFilter(setSearchTerm,e.target.value)}
           className="search-input"
         />
         <select
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          onChange={(e) => changeFilter(setSelectedCategory,e.target.value)}
           className="category-select" aria-label="Menu category"
         >
           <option value="">All Categories</option>
@@ -105,6 +118,7 @@ export default function ProductsPage() {
         </select>
       </div>
 
+      <div className="menu-list-meta"><p role="status">{loading && !listing.rows.length?'Loading meals...':listing.count+' meals found'}</p><a href="#inventory-freshness" onClick={showInventory}>View ingredient storage records</a></div>
       {/* Products Grid */}
       <div className="products-container">
         {filteredProducts.length > 0 ? (
@@ -113,11 +127,11 @@ export default function ProductsPage() {
               <Link to={`/products/${p.id}`} className="product-link">
                 <div className="product-image-wrapper">
                   {p.image_url ? (
-                    <img 
+                    <img loading="lazy" decoding="async"
                       src={p.image_url} 
                       alt={p.name} 
                       className="product-image" 
-                      onError={(e) => (e.target.src = fallback_img)}
+                      onError={(e) => {e.currentTarget.onerror=null;if(e.currentTarget.getAttribute("src")!==fallback_img)e.currentTarget.src=fallback_img}}
                     />
                   ) : (
                     <div className="image-placeholder">No Image</div>
@@ -134,9 +148,14 @@ export default function ProductsPage() {
               </button>
             </div>
           ))
-        ) : (
+        ) : !loading && !error ? (
           <p className="no-results">No menu items match. Try another category or check back when the kitchen updates its menu.</p>
-        )}
+        ) : null}
+      </div>
+      <div className="menu-load-more">
+        {error && <p role="alert">{error} <button onClick={()=>setRetry(n=>n+1)}>Try again</button></p>}
+        {listing.rows.length>0 && <p role="status">Showing {listing.rows.length} of {listing.count} meals</p>}
+        {listing.next && !error && <button className="dk-primary" disabled={loading} onClick={()=>{if(!loading){setLoading(true);setPage(n=>n+1)}}}>{loading?'Loading meals...':'Load more meals'}</button>}
       </div>
       <InventoryFreshness/>
     </div>

@@ -57,3 +57,35 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
 @permission_classes([IsAuthenticated])
 def recommend(request):
     return Response(recommend_for_user(user=request.user, exclude_bought=False), status=status.HTTP_200_OK)
+
+# A bounded public listing; management and product detail keep their full records.
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
+class MenuPagination(PageNumberPagination):
+    page_size = 12
+
+class MenuCardSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price', 'image_url', 'category', 'category_name',
+                  'lead_hours', 'daily_capacity']
+
+class MenuList(generics.ListAPIView):
+    serializer_class = MenuCardSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    pagination_class = MenuPagination
+
+    def get_queryset(self):
+        rows = Product.objects.select_related('category').order_by('-created_at', '-id')
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            rows = rows.filter(name__icontains=search[:200])
+        category = self.request.query_params.get('category', '')
+        if category:
+            if not category.isascii() or not category.isdigit() or len(category) > 10:
+                raise ValidationError({'category': 'Choose a valid menu category.'})
+            rows = rows.filter(category_id=int(category))
+        return rows

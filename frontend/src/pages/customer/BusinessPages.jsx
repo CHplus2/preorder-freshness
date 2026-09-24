@@ -1,11 +1,12 @@
-import {useState} from 'react';
+import {useState,useEffect} from 'react';
 import {Link} from 'react-router-dom';
 import {ArrowUpRight,CalendarDays,Heart,ChefHat,Clock,ShoppingBag,Mail,MapPin,MessageCircle} from 'lucide-react';
 import {useStorefront} from '../../contexts/StorefrontProvider';
 import {useProduct} from '../../contexts/ProductProvider';
 import {Reveal,PageMeta,PrimaryLink,FAQ} from '../../components/BusinessLayout';
 export function HomePage(){
- const {store}=useStorefront();const {products}=useProduct();const [occasion,setOccasion]=useState('Everyday favourites');
+ const {store}=useStorefront();const {products,fetchProducts}=useProduct();const [occasion,setOccasion]=useState('Everyday favourites');
+ useEffect(()=>{fetchProducts(true)},[fetchProducts]);
  const occasions={'Everyday favourites':'Give your next meal a place in the diary. Browse what this kitchen is offering and choose a delivery date that works for you.','A little treat':'Make room for something to look forward to. Explore the current menu for a snack, a sweet bite, or a favourite worth ordering again.','Something to share':'Planning for more than one? Check portion availability, explore any bulk offer, and speak to the owner about your gathering.'};
  const featured=products.slice(0,3);
  return <main className="business-page"><PageMeta title="Food worth planning for" description="Discover a home kitchen, explore the menu and preorder food with a delivery date that fits your plans."/>

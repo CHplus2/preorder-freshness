@@ -34,9 +34,9 @@ export default function ProductProvider({ children }) {
 
     }, []);
 
-    const fetchProducts = useCallback(async () => {
+    const fetchProducts = useCallback(async (preview = false) => {
         try {
-            const res = await axios.get("/api/products/");
+            const res = await axios.get(preview ? "/api/menu/" : "/api/products/");
             const data = res.data;
 
             setProducts(Array.isArray(data) ? data : data.results || []);
@@ -64,8 +64,7 @@ export default function ProductProvider({ children }) {
 
     useEffect(() => {
         fetchCategories();
-        fetchProducts();
-    }, [fetchProducts, fetchCategories]);
+    }, [fetchCategories]);
 
     useEffect(() => {
         fetchRecommendation();
