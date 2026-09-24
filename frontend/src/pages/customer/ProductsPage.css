@@ -316,3 +316,5 @@ body {
 .inventory-transparency h2{font-size:20px;margin:0 0 14px}
 .inventory-transparency p{font-size:14px;line-height:1.7}
 .inventory-transparency summary{cursor:pointer;font-weight:600;padding:8px 0}
+
+#inventory-freshness{scroll-margin-top:120px}
