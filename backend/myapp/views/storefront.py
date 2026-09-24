@@ -70,3 +70,15 @@ def review_access(request, pk):
         return Response({'eligible': False, 'reason': 'Thank you — you have already reviewed this menu.'})
     eligible = OrderItem.objects.filter(product_id=pk, order__user=request.user, order__status='delivered').exists()
     return Response({'eligible': eligible, 'reason': '' if eligible else 'You can leave a review once an order containing this menu has been delivered.'})
+
+
+@api_view(['GET'])
+def inventory_freshness(request):
+    from django.utils import timezone
+    from ..models import InventoryItem
+    from ..services.freshness import inventory_summary
+    today = timezone.localdate()
+    lots = InventoryItem.objects.filter(quantity__gt=0, received_date__lte=today).only(
+        'quantity', 'received_date', 'expiry_date', 'expiry_basis',
+        'manufactured_date', 'guidance_note', 'quarantined')
+    return Response(inventory_summary(lots, today))

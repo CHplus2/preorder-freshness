@@ -1,3 +1,4 @@
+import InventoryFreshness from '../../components/InventoryFreshness';
 import {PageMeta} from "../../components/BusinessLayout";
 import { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -83,6 +84,7 @@ export default function ProductsPage() {
         </div>
       )}
 
+      <InventoryFreshness/>
       {/* Search & Filter */}
       <div className="browse-controls">
         <input

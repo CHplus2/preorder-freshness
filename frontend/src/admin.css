@@ -31,3 +31,12 @@
 .admin-order-summary{scroll-margin-top:120px}
 .admin-shell .batch-help{padding:14px 16px;background:#f0f5f1;border-radius:8px;margin:14px 0 20px}
 .admin-shell .recipe-row{margin-bottom:12px}
+
+.planner-calendar{background:#fff;border:1px solid #dce2df;border-radius:10px;padding:20px;margin:24px 0}
+.planner-calendar .admin-page-heading{margin-bottom:12px}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.calendar-weekday{text-align:center;font-size:12px;padding:8px 0;color:#53655a}
+.admin-shell .calendar-grid button{min-height:86px;display:flex;align-items:flex-start;flex-direction:column;gap:4px;padding:10px;font-weight:400}
+.calendar-grid button[aria-pressed=true]{background:#e6f1e9;border-color:#285a3e;box-shadow:inset 0 0 0 1px #285a3e}
+.calendar-grid small{font-size:11px}
+@media(max-width:560px){.planner-calendar{padding:10px}.calendar-grid{gap:3px}.admin-shell .calendar-grid button{padding:5px;min-height:76px}.calendar-grid small{font-size:9px;overflow-wrap:anywhere}}

@@ -2,7 +2,7 @@ from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_pl
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views.storefront import storefront, reviews, review_access
+from .views.storefront import storefront, reviews, review_access, inventory_freshness
 from .views.planning import planning
 from .views.auth import signup_view, login_view, logout_view, check_auth
 from .views.products import CategoryListCreate, CategoryDetail, ProductListCreate, ProductDetail, recommend
@@ -20,6 +20,7 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path("inventory-freshness/", inventory_freshness),
     path("admin/orders/<int:pk>/preparation-plan/", review_order_plan),
     path("admin/kitchen-blocks/", kitchen_blocks),
     path("admin/kitchen-blocks/<int:pk>/", kitchen_block_detail),

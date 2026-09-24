@@ -311,3 +311,8 @@ body {
 .products-page .recommendation-arrow:focus-visible{outline:3px solid #417554;outline-offset:3px}
 .products-page .recommended-row{padding:2px 2px 12px}
 @media(max-width:560px){.products-page .recommendation-heading{gap:12px}.products-page .recommendation-heading h2{font-size:20px}.products-page .recommendation-controls{gap:6px}}
+
+.inventory-transparency{border:1px solid #d4dfd6;border-radius:12px;background:#f5f8f4;padding:24px;margin:28px 0;color:#294331}
+.inventory-transparency h2{font-size:20px;margin:0 0 14px}
+.inventory-transparency p{font-size:14px;line-height:1.7}
+.inventory-transparency summary{cursor:pointer;font-weight:600;padding:8px 0}
