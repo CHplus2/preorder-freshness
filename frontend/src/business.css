@@ -16,5 +16,30 @@ button:disabled{cursor:not-allowed;opacity:.6}button:focus-visible,a:focus-visib
 @media(max-width:1200px){.owner-header .business-nav{display:none}.owner-header .mobile-menu-toggle{display:flex}}
 @media(max-width:600px){.task-fields{grid-template-columns:1fr}.recipe-row{display:flex;flex-wrap:wrap}.recipe-row select{flex:1 1 100%}.recipe-row input{min-width:0;flex:1}.owner-header{padding-inline:18px}.dk-calendar-grid button{padding:8px 2px}.dk-calendar-grid small{font-size:10px}.dk-actions>label{width:100%}}
 
-.business-page .contact-menu-cta>p{margin:0 0 28px;line-height:1.65}
+.business-page .contact-menu-cta>h2{margin:0 0 10px}
+.business-page .contact-menu-cta>p{margin:0 0 24px;line-height:1.65}
 .business-page .contact-menu-cta>.dk-primary{margin:0;max-width:100%;box-sizing:border-box}
+
+/* Shared customer action rhythm: text stays grouped; actions have breathing room. */
+.dk-primary{box-sizing:border-box;min-height:48px;padding:12px 22px;gap:10px;border-radius:10px;font-size:14px;line-height:1.5;text-align:center;max-width:100%;white-space:normal}
+.dk-primary svg,.dk-help-toggle svg{flex-shrink:0}
+.dk-primary:hover{transform:none}
+.dk-actions{gap:12px 20px;align-items:center;margin:24px 0}
+.business-page .business-section>p+.dk-primary{margin-top:8px}
+.business-page .contact-menu-cta>p+.dk-primary{margin-top:0}
+.business-page .text-link{min-height:44px;box-sizing:border-box;align-items:center}
+.dk-help-toggle{min-height:48px;min-width:48px;padding:12px 18px;border:1px solid #285a3e;border-radius:999px;line-height:1.5;gap:10px;box-shadow:0 4px 16px #183a251a;bottom:calc(20px + env(safe-area-inset-bottom));right:20px}
+.dk-help{box-sizing:border-box;bottom:calc(84px + env(safe-area-inset-bottom));max-height:min(65vh,560px);padding:22px}
+.dk-help h3{margin:0 0 12px;line-height:1.4}
+.dk-help p{line-height:1.65;margin:0 0 18px}
+.dk-help button{min-height:44px;padding:12px 14px;margin-top:10px;border-radius:9px;line-height:1.5;white-space:normal}
+.dk-help>a{display:inline-flex;align-items:center;min-height:44px;margin-top:16px;line-height:1.5;text-underline-offset:4px}
+.business-footer{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+.business-page .occasion-tabs button,.mobile-menu-toggle,.business-header .login-btn{min-height:44px}
+@media(max-width:560px){
+ .dk-help-toggle{right:16px;bottom:calc(16px + env(safe-area-inset-bottom))}
+ .dk-help{right:16px;bottom:calc(80px + env(safe-area-inset-bottom));width:calc(100vw - 32px);padding:18px}
+ .business-page .contact-menu-cta>h2{margin-bottom:10px}
+ .business-page .contact-menu-cta>p{margin-bottom:20px}
+ .business-footer-top>.dk-primary{align-self:flex-start}
+}
