@@ -84,7 +84,6 @@ export default function ProductsPage() {
         </div>
       )}
 
-      <InventoryFreshness/>
       {/* Search & Filter */}
       <div className="browse-controls">
         <input
@@ -139,7 +138,7 @@ export default function ProductsPage() {
           <p className="no-results">No menu items match. Try another category or check back when the kitchen updates its menu.</p>
         )}
       </div>
-
+      <InventoryFreshness/>
     </div>
   );
 }

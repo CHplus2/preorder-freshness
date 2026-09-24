@@ -318,3 +318,10 @@ body {
 .inventory-transparency summary{cursor:pointer;font-weight:600;padding:8px 0}
 
 #inventory-freshness{scroll-margin-top:120px}
+
+.products-page .inventory-transparency{background:transparent;padding:18px 20px;margin-top:36px}
+.inventory-transparency>summary{font-size:16px;line-height:1.5}
+.inventory-transparency>summary span{display:block;font-size:13px;font-weight:400;color:#53655a;margin-top:5px}
+.inventory-transparency[open]>summary{margin-bottom:20px}
+.inventory-status-list{padding-left:22px;margin:18px 0}
+.inventory-status-list li{padding:6px 0;font-size:14px;line-height:1.6}
