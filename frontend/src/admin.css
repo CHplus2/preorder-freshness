@@ -59,3 +59,10 @@
  .admin-shell .responsive-records .status-badge,.admin-shell .responsive-records .freshness-badge{justify-self:start;white-space:normal}
  .admin-shell .inventory-controls>*{min-width:0;max-width:100%}
 }
+
+.cost-workspace{margin-top:36px;padding-top:24px;border-top:1px solid #dce2df}
+.cost-input-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+.cost-input-row label{flex:1;min-width:180px}
+.cost-input-row button{margin-bottom:8px}
+.cost-workspace .settings-group{margin:20px 0}
+.cost-workspace form>button{margin-top:20px}

@@ -333,3 +333,10 @@ body {
 .menu-load-more button{min-height:44px}
 .menu-load-more p{margin-bottom:16px}
 .menu-load-more button:disabled{opacity:.6;cursor:wait}
+
+.products-page .menu-list-meta{padding:12px 0;margin:0 0 20px;min-height:44px}
+.menu-skeleton{border:1px solid #e0e7df;border-radius:12px;padding:16px;background:#fff;min-height:310px}
+.menu-skeleton>div{height:200px;background:#e9eee8;border-radius:8px;margin-bottom:20px}
+.menu-skeleton>span{display:block;height:16px;width:70%;background:#edf1ec;border-radius:4px;margin-top:12px}
+.menu-skeleton>span:last-child{width:40%}
+.menu-video-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:12px;font-size:13px;line-height:1.5;text-underline-offset:4px}

@@ -127,3 +127,24 @@ Only events within the next 24 hours or overdue by at most 24 hours are included
 SMTP delivery and database recording cannot be atomic: a process crash after sending can still
 cause a duplicate on retry. Keep credentials in the hosting environment, never in Git.
 Settings shows configuration readiness, not a guarantee that a scheduler or SMTP delivery works.
+
+
+### Ingredient evidence and costing (migration 0014)
+Inventory now records source, supplier, label meaning, original printed deadline, opening/thawing dates
+and their documented day limits, handling evidence and batch unit purchase cost.
+The effective deadline is the earliest applicable date. Uncertain handling / known breaches force a hold.
+The system does not infer microbiological safety from dates, AI or a single temperature reading.
+It does not model a continuous time-temperature history. Hourly/same-day rules require owner review.
+
+Sales > Costs, wastage and pricing provides current recipe contribution estimates:
+menu price minus recipe quantities times ingredient unit-cost assumptions minus per-portion packaging.
+These are current estimates, not historical or net profit. Missing costs remain unknown.
+The selected date range filters operating expenses and waste; it does not change current recipe costs.
+Wastage reduces inventory atomically and freezes its estimated cost. Void incorrect expenses instead
+of deleting the ledger. Use one inventory unit consistently; RM/kg and RM/g must not be confused.
+Do not count stock purchases as overhead and again as consumed recipe cost in your own calculations.
+
+The scheduler continues to assume one worker and one unit of each named equipment type.
+Each step runs continuously. Zero allowed wait joins consecutive steps within one menu; separate
+menus can overlap when equipment and worker time allow. Extra batches extend each step; the
+scheduler does not yet pipeline individual batches or reserve a continuous whole-order block.

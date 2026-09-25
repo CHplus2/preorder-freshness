@@ -44,6 +44,11 @@ class InventoryItemListCreate(generics.ListCreateAPIView):
 
 
 class InventoryItemDetail(generics.RetrieveUpdateDestroyAPIView):
+    def perform_destroy(self, instance):
+        if instance.wasterecord_set.exists():
+            raise ValidationError("This batch has recorded wastage. Keep it for the accounting history.")
+        instance.delete()
+
     queryset = InventoryItem.objects.all()
     serializer_class = InventoryItemSerializer
     permission_classes = [IsAdminUser]

@@ -1,3 +1,4 @@
+from .views.costs import expenses, void_expense, record_waste, cost_report
 from .views.reminders import reminder_status, run_reminders
 from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_plan
 from django.urls import include, path
@@ -21,6 +22,10 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path("admin/costs/", cost_report),
+    path("admin/expenses/", expenses),
+    path("admin/expenses/<int:pk>/void/", void_expense),
+    path("admin/waste/", record_waste),
     path("admin/reminder-status/", reminder_status),
     path("reminders/run/", run_reminders),
     path("menu/", MenuList.as_view()),

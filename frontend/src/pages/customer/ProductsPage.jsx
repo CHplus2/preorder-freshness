@@ -120,7 +120,8 @@ export default function ProductsPage() {
 
       <div className="menu-list-meta"><p role="status">{loading && !listing.rows.length?'Loading meals...':listing.count+' meals found'}</p><a href="#inventory-freshness" onClick={showInventory}>View ingredient storage records</a></div>
       {/* Products Grid */}
-      <div className="products-container">
+      <div className="products-container" aria-busy={loading}>
+        {loading && !filteredProducts.length && Array.from({length:6},(_,i)=><div className="menu-skeleton" aria-hidden="true" key={i}><div/><span/><span/></div>)}
         {filteredProducts.length > 0 ? (
           filteredProducts.map((p) => (
             <div key={p.id} className="product-card">
@@ -143,6 +144,7 @@ export default function ProductsPage() {
                   <small>{p.lead_hours}h advance notice · {p.daily_capacity} portions/day</small>
                 </div>
               </Link>
+              {p.social_url && <a className="menu-video-link" href={p.social_url} target="_blank" rel="noreferrer">Watch this food being made <span aria-hidden="true">↗</span></a>}
               <button className="add-btn" onClick={() => addToCart(p.id)}>
                 Add to Cart
               </button>

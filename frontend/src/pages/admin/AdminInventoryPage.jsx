@@ -907,18 +907,18 @@ export default function AdminInventoryPage() {
             />
 
             <ExpiryFields value={newInventoryItem} onChange={setNewInventoryItem}/>
-            <label>Expiry date (required for printed expiry only)</label>
+            <label>Original printed date (leave blank for calculated shelf life)</label>
 
             <input
               type="date"
               value={
-                newInventoryItem.expiry_date
+                newInventoryItem.original_expiry_date || newInventoryItem.expiry_date
               }
               onChange={(e) =>
                 setNewInventoryItem({
                   ...newInventoryItem,
-                  expiry_date:
-                    e.target.value,
+                  expiry_date: e.target.value,
+                  original_expiry_date: e.target.value || null,
                 })
               }
             />
@@ -1061,18 +1061,18 @@ export default function AdminInventoryPage() {
             />
 
             <ExpiryFields value={editingInventoryItem} onChange={setEditingInventoryItem}/>
-            <label>Expiry date (calculated for shelf-life methods)</label>
+            <label>Original printed date / calculated shelf-life deadline</label>
 
             <input
               type="date"
               value={
-                editingInventoryItem.expiry_date
+                editingInventoryItem.original_expiry_date || editingInventoryItem.expiry_date
               }
               onChange={(e) =>
                 setEditingInventoryItem({
                   ...editingInventoryItem,
-                  expiry_date:
-                    e.target.value,
+                  expiry_date: e.target.value,
+                  original_expiry_date: e.target.value || null,
                 })
               }
             />

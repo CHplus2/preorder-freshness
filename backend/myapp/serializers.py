@@ -20,6 +20,13 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get('request')
+        if request and not request.user.is_staff:
+            fields.pop('packaging_cost', None)
+        return fields
+
     ingredients = RecipeSerializer(many=True, required=False)
     stock = serializers.SerializerMethodField()
     freshness = serializers.SerializerMethodField()
@@ -182,6 +189,29 @@ class InventoryItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('An expiry date is required.')
         if received and expiry < received:
             raise serializers.ValidationError('Expiry must not be before receipt.')
+        # Keep the original label date separate from shorter opened/thawed deadlines.
+        if basis == 'label':
+            original = value('original_expiry_date') or expiry
+            if received and original < received:
+                raise serializers.ValidationError('Original printed date must not precede receipt.')
+            attrs['original_expiry_date'] = original
+            expiry = original
+        deadlines = [expiry]
+        for field, days_field in [('opened_date', 'after_open_days'), ('thawed_date', 'after_thaw_days')]:
+            event, days = value(field), value(days_field)
+            if bool(event) != bool(days):
+                raise serializers.ValidationError('Provide both the event date and its documented storage duration.')
+            if event:
+                if event > timezone.localdate() or (received and event < received):
+                    raise serializers.ValidationError('Opening/thawing dates must be between receipt and today.')
+                if not value('guidance_note', '').strip():
+                    raise serializers.ValidationError('Document the source for opened/thawed storage limits.')
+                deadlines.append(event + timedelta(days=days))
+        if value('handling_history') == 'documented' and not value('handling_note', '').strip():
+            raise serializers.ValidationError('Describe the documented storage history and conditions.')
+        if value('handling_history') in ('unknown', 'breach'):
+            attrs['quarantined'] = True
+        attrs['expiry_date'] = min(deadlines)
         return attrs
 
     raw_material_name = serializers.CharField(source="raw_material.name", read_only=True)

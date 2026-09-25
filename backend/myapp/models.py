@@ -15,6 +15,7 @@ class Category(models.Model):
 
 # ============ PRODUCT / MENU ============
 class Product(models.Model):
+    packaging_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     lead_hours = models.PositiveIntegerField(default=24, validators=[MinValueValidator(1)])
     preparation_minutes = models.PositiveIntegerField(default=60, validators=[MinValueValidator(1)])
     preparation_tasks = models.JSONField(default=list, blank=True)
@@ -76,6 +77,7 @@ class Product(models.Model):
 
 # ============ RAW MATERIAL ============
 class RawMaterial(models.Model):
+    estimated_unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True, blank=True, validators=[MinValueValidator(0)])
     UNIT_CHOICES = [
         ("g", "Gram"),
         ("kg", "Kilogram"),
@@ -125,6 +127,18 @@ class ProductIngredient(models.Model):
 
 # ============ INVENTORY ITEM / BATCH ============
 class InventoryItem(models.Model):
+    supplier = models.CharField(max_length=160, blank=True)
+    source_type = models.CharField(max_length=20, choices=[('packaged','Packaged retail'),('market','Wet market / unpackaged'),('other','Other / not recorded')], default='other')
+    label_date_type = models.CharField(max_length=20, choices=[('use_by','Use by / expiry'),('best_before','Best before'),('not_recorded','Not recorded')], default='not_recorded')
+    original_expiry_date = models.DateField(null=True, blank=True)
+    opened_date = models.DateField(null=True, blank=True)
+    after_open_days = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1)])
+    thawed_date = models.DateField(null=True, blank=True)
+    after_thaw_days = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1)])
+    handling_history = models.CharField(max_length=20, choices=[('not_recorded','Not recorded'),('documented','Storage history documented'),('unknown','Uncertain handling'),('breach','Known storage breach')], default='not_recorded')
+    handling_note = models.CharField(max_length=500, blank=True)
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True, blank=True, validators=[MinValueValidator(0)])
+
     expiry_basis = models.CharField(max_length=20, choices=[("label", "Printed expiry"), ("manufactured", "Manufacture + shelf life"), ("storage", "Received + storage life")], default="label")
     manufactured_date = models.DateField(null=True, blank=True)
     shelf_life_days = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1)])
@@ -449,3 +463,21 @@ class KitchenBlock(models.Model):
     class Meta:
         ordering = ['start_at']
         constraints = [models.CheckConstraint(condition=models.Q(end_at__gt=models.F('start_at')), name='kitchen_block_end_after_start')]
+
+
+class OperatingExpense(models.Model):
+    request_id = models.UUIDField(unique=True)
+    voided = models.BooleanField(default=False)
+    date = models.DateField()
+    category = models.CharField(max_length=20, choices=[('utilities','Utilities'),('delivery','Courier / transport'),('labour','Labour'),('marketing','Marketing'),('other','Other overhead')])
+    amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0.01)])
+    note = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class WasteRecord(models.Model):
+    request_id = models.UUIDField(unique=True)
+    inventory_item = models.ForeignKey(InventoryItem, on_delete=models.PROTECT)
+    quantity = models.DecimalField(max_digits=12, decimal_places=3)
+    estimated_cost = models.DecimalField(max_digits=14, decimal_places=2, null=True)
+    reason = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
