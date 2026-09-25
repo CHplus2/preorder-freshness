@@ -1,0 +1,10 @@
+.admin-shell .menu-photo-field { margin-top: 24px; min-width: 0; }
+.admin-shell .menu-photo-field > label { display: block; margin: 0 0 8px; }
+.admin-shell .menu-photo-field > input { display: block; width: 100%; box-sizing: border-box; margin: 0; }
+.admin-shell .menu-photo-field .menu-photo-help { margin: 8px 0 0; font-size: 13px; line-height: 1.6; color: #53645a; }
+.admin-shell .menu-photo-preview { margin: 20px 0 0; }
+.admin-shell .menu-photo-frame { display: grid; place-items: center; width: 100%; min-height: 160px; padding: 16px; box-sizing: border-box; background: #f4f7f3; border: 1px solid #d5dfd7; border-radius: 10px; overflow: hidden; }
+.admin-shell .menu-photo-frame img { display: block; width: 100%; height: 200px; object-fit: contain; border-radius: 6px; }
+.admin-shell .menu-photo-frame p { max-width: 42ch; margin: 0; text-align: center; color: #53645a; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.admin-shell .menu-photo-preview figcaption { margin-top: 10px; font-size: 12px; line-height: 1.6; color: #53645a; }
+@media (max-width: 560px) { .admin-shell .menu-photo-frame { padding: 12px; } .admin-shell .menu-photo-frame img { height: 160px; } }

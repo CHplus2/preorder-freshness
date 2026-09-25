@@ -1,3 +1,4 @@
+import MenuPhotoField from "../../components/MenuPhotoField";
 import RecipeEditor from "../../components/RecipeEditor";
 import { useEffect, useState } from "react";
 import { useUI } from "../../contexts/UIProvider";
@@ -196,24 +197,7 @@ export default function AdminProductsPage() {
             ))}
           </select>
 
-          <label>Image URL</label>
-          <input
-            value={updatedProduct.image_url || ""}
-            onChange={(e) =>
-              setUpdatedProduct({ ...updatedProduct, image_url: e.target.value })
-            }
-          />
-
-          {updatedProduct.image_url ? (
-            <img
-              src={updatedProduct.image_url}
-              alt="Preview"
-              className="image-preview"
-              onError={(e) => (e.target.src = fallback_img)}
-            />
-          ) : (
-            <div className="image-placeholder">No Image</div>
-          )}
+          <MenuPhotoField value={updatedProduct.image_url || ""} onChange={url => setUpdatedProduct({ ...updatedProduct, image_url: url })} />
 
           <div className="modal-actions">  
             <button onClick={handleUpdateProduct} disabled={loading}>
@@ -274,24 +258,7 @@ export default function AdminProductsPage() {
             ))}
           </select>
 
-          <label>Image URL</label>
-          <input
-            value={newProduct.image_url}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, image_url: e.target.value })
-            }
-          />
-
-          {newProduct.image_url ? (
-            <img
-              src={newProduct.image_url}
-              alt="Preview"
-              className="image-preview"
-              onError={(e) => (e.target.src = fallback_img)}
-            />
-          ) : (
-            <div className="image-placeholder">No Image</div>
-          )}
+          <MenuPhotoField value={newProduct.image_url || ""} onChange={url => setNewProduct({ ...newProduct, image_url: url })} />
 
           <div className="modal-actions">
             <button onClick={handleAddProduct} disabled={loading}>
