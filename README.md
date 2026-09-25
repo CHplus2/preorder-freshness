@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Testing and FYP evidence](docs/TESTING.md): existing tests, safe execution, report evidence and manual UI checks.
+
 - [Preparation planning explained](docs/PREPARATION-PLANNING.md): inputs, formulas, overlap examples, batch limits, troubleshooting and a reusable chatbot prompt.
 - [Operations and feature status](docs/OPERATIONS-AND-FEATURE-STATUS.md): accounting, supplier-management status, photos, freshness and integration limits.
 - [Vercel + Supabase deployment](DEPLOYMENT.md) and the [five-page business content brief](WEBSITE-CONTENT.md).

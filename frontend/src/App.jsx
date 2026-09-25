@@ -1,3 +1,4 @@
+import PageLoading from "./components/PageLoading";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
@@ -257,7 +258,7 @@ function AppContent() {
         )}
       </AnimatePresence>
 
-      <div className={ownerPage?'admin-shell':''} onInvalidCapture={e=>{let node=e.target.parentElement;while(node){if(node.tagName==='DETAILS')node.open=true;node=node.parentElement}}}>{ownerPage && <aside className="admin-sidebar"><span className="admin-sidebar-label">KITCHEN WORKSPACE</span><nav aria-label="Kitchen management">{ownerLinks.map(([url,label])=><Link key={url} to={url} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}</nav></aside>}<div id="page-content" className={ownerPage?'admin-content':''} tabIndex="-1"><Suspense fallback={<p className="dk-workspace" role="status">Loading page...</p>}><AnimatedRoutes/></Suspense></div></div>
+      <div className={ownerPage?'admin-shell':''} onInvalidCapture={e=>{let node=e.target.parentElement;while(node){if(node.tagName==='DETAILS')node.open=true;node=node.parentElement}}}>{ownerPage && <aside className="admin-sidebar"><span className="admin-sidebar-label">KITCHEN WORKSPACE</span><nav aria-label="Kitchen management">{ownerLinks.map(([url,label])=><Link key={url} to={url} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}</nav></aside>}<div id="page-content" className={ownerPage?'admin-content':''} tabIndex="-1"><Suspense fallback={<PageLoading />}><AnimatedRoutes/></Suspense></div></div>
       {!ownerPage && <BusinessFooter/>}
     </>
   )

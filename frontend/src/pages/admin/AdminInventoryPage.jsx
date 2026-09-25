@@ -1,3 +1,4 @@
+import PageLoading from "../../components/PageLoading";
 import {apiError} from '../../utils/apiError';
 import ExpiryFields from "../../components/ExpiryFields";
 import axios from "axios";
@@ -38,6 +39,9 @@ export default function AdminInventoryPage() {
   const [editingRawMaterial, setEditingRawMaterial] =
     useState(null);
 
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [initialError, setInitialError] = useState("");
+  const [retry, setRetry] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -75,9 +79,22 @@ export default function AdminInventoryPage() {
   };
 
   useEffect(() => {
-    fetchRawMaterials();
-    fetchInventoryItems();
-  }, []);
+    const controller = new AbortController();
+    setInitialLoading(true);
+    setInitialError("");
+    Promise.all([
+      axios.get(API_URL + "/raw-materials/", { ...getAuthConfig(), signal: controller.signal }),
+      axios.get(API_URL + "/inventory-items/", { ...getAuthConfig(), signal: controller.signal })
+    ]).then(([materials, inventory]) => {
+      setRawMaterials(materials.data);
+      setInventoryItems(inventory.data);
+    }).catch(err => {
+      if (!axios.isCancel(err)) setInitialError(apiError(err));
+    }).finally(() => {
+      if (!controller.signal.aborted) setInitialLoading(false);
+    });
+    return () => controller.abort();
+  }, [retry]);
 
   useEffect(() => {
     if (
@@ -312,6 +329,12 @@ export default function AdminInventoryPage() {
 
     return material?.unit || "";
   };
+
+  if (initialLoading) return <PageLoading label="Loading inventory..." />;
+  if (initialError) return <div className="admin-inventory-container">
+    <h1>Inventory</h1><p role="alert">{initialError}</p>
+    <button type="button" onClick={() => setRetry(n => n + 1)}>Try again</button>
+  </div>;
 
   return (
     <div className="admin-inventory-container">

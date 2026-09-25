@@ -1,0 +1,10 @@
+.page-loading { width: 100%; max-width: 1440px; margin: 0 auto; padding: 34px 36px; box-sizing: border-box; min-height: 360px; }
+.page-loading > p { margin: 0 0 24px; color: #53655a; font: 500 14px/1.6 system-ui; }
+.page-loading-preview { display: grid; gap: 24px; }
+.page-loading-heading { width: 45%; max-width: 240px; height: 24px; background: #e3e9e4; border-radius: 6px; }
+.page-loading-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.page-loading-cards > div { min-height: 84px; border: 1px solid #dce2df; border-radius: 8px; background: #f0f3f0; }
+.page-loading-rows { padding: 20px; border: 1px solid #dce2df; border-radius: 8px; background: #fff; display: grid; gap: 20px; }
+.page-loading-rows > div { height: 16px; border-radius: 4px; background: #edf1ec; }
+.page-loading-rows > div:last-child { width: 65%; }
+@media (max-width: 600px) { .page-loading { padding: 24px 16px; } .page-loading-cards { gap: 10px; } .page-loading-cards > div { min-height: 64px; } }
