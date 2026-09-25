@@ -144,13 +144,13 @@ class KitchenTests(TestCase):
         from unittest.mock import patch
         from io import StringIO
         from .models import OrderReminder
-        order=self.order();order.preparation_at=timezone.now()+timedelta(hours=2);order.save()
+        order=self.order();order.status="pending";order.preparation_at=timezone.now()+timedelta(hours=2);order.save()
         output=StringIO()
         call_command('send_order_reminders',stdout=output)
         self.assertIn('PREVIEW',output.getvalue())
         self.assertFalse(OrderReminder.objects.exists())
-        with override_settings(OWNER_NOTIFICATION_EMAIL='owner@example.test',EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'):
-            with patch('myapp.management.commands.send_order_reminders.send_mail',return_value=1) as send:
+        with override_settings(OWNER_NOTIFICATION_EMAIL='owner@example.test',EMAIL_HOST='smtp.example.test',EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'):
+            with patch('myapp.services.reminders.send_mail',return_value=1) as send:
                 call_command('send_order_reminders',send=True,stdout=StringIO())
                 call_command('send_order_reminders',send=True,stdout=StringIO())
                 self.assertEqual(send.call_count,1)

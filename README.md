@@ -77,7 +77,7 @@ DEFAULT_FROM_EMAIL=your-verified-sender
 OWNER_NOTIFICATION_EMAIL=your-owner-address
 ```
 
-Then schedule one worker every 15 minutes to run `manage.py send_order_reminders --send`. It sends at most one successful reminder per order/event when the event is within 24 hours or overdue. Failed sends can be retried. Sending and recording are not a distributed atomic operation, so a crash immediately after delivery may produce a duplicate on retry. No scheduler, SMTP account or Telegram integration is configured automatically. No external messages were sent during development.
+Then schedule one worker every 15 minutes to run `manage.py send_order_reminders --send`. Each run attempts up to 3 emails for events within the next 24 hours or overdue by at most 24 hours, skipping recorded successes. Failed sends can be retried. Sending and recording are not a distributed atomic operation, so a crash immediately after delivery may produce a duplicate on retry. No scheduler, SMTP account or Telegram integration is configured automatically. No external messages were sent during development.
 
 ## Storefront, recommendations and marketing
 
@@ -110,3 +110,20 @@ Migrations 0006–0008 extend the existing ingredient work. Migration 0006 marks
 ## Project scope
 
 The strongest target is sellers preparing food in batches: lunch boxes, family meals, kuih, baked goods and celebrations. Home-based food includes both meals and snacks. Whether customers want weekly lunch plans should be established through interviews; the app currently supports separate dated orders, not recurring meal subscriptions. Competitor scheduling limits and claims that no other platform offers freshness monitoring need current evidence before being used in an academic report.
+
+
+### Hosted reminder trigger and manual payments
+Apply migration 0013 before deploying this version (python manage.py migrate).
+In Settings, enter your business bank transfer instructions and/or a DuitNow QR image URL,
+then enable manual payments. Checkout snapshots these details on each order. Transfers remain
+unpaid until an owner verifies their bank records and marks the order paid. This is not bank API verification.
+
+For hosted email reminders, configure the SMTP variables above and a random CRON_SECRET
+of at least 32 characters. Configure an external scheduler to GET /api/reminders/run/ with
+Authorization: Bearer followed by CRON_SECRET every 15 minutes (or more often for higher volumes).
+Do not include the secret in the URL. No scheduler is automatically installed.
+Each invocation attempts up to 3 messages; failures return HTTP 503 so the scheduler can retry.
+Only events within the next 24 hours or overdue by at most 24 hours are included.
+SMTP delivery and database recording cannot be atomic: a process crash after sending can still
+cause a duplicate on retry. Keep credentials in the hosting environment, never in Git.
+Settings shows configuration readiness, not a guarantee that a scheduler or SMTP delivery works.

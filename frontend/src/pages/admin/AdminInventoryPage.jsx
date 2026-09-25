@@ -453,7 +453,7 @@ export default function AdminInventoryPage() {
       </div>
 
       {/* Inventory table */}
-      <div className="admin-table-scroll"><table className="admin-table inventory-table">
+      <div className="admin-table-scroll responsive-records"><table className="admin-table inventory-table">
 
         <thead>
           <tr>
@@ -482,33 +482,33 @@ export default function AdminInventoryPage() {
               return (
                 <tr key={item.id}>
 
-                  <td>
+                  <td data-label="Raw material">
                     <strong>
                       {item.raw_material_name}
                     </strong>
                   </td>
 
-                  <td>
+                  <td data-label="Batch">
                     {item.batch_code || "—"}{item.quarantined && " · HELD"}
                   </td>
 
-                  <td>
+                  <td data-label="Quantity">
                     {item.quantity} {item.unit}
                   </td>
 
-                  <td>
+                  <td data-label="Storage location">
                     {item.storage_location}
                   </td>
 
-                  <td>
+                  <td data-label="Received">
                     {item.received_date}
                   </td>
 
-                  <td>
+                  <td data-label="Expiry">
                     {item.expiry_date}
                   </td>
 
-                  <td>
+                  <td data-label="Recorded status">
                     <span
                       className={`freshness-badge ${freshness}`}
                     >
@@ -523,7 +523,7 @@ export default function AdminInventoryPage() {
                     </span>
                   </td>
 
-                  <td className="table-actions">
+                  <td className="table-actions" data-label="Actions">
 
                     <button
                       onClick={() =>
@@ -579,7 +579,7 @@ export default function AdminInventoryPage() {
           </div>
         </div>
 
-        <div className="admin-table-scroll"><table className="admin-table">
+        <div className="admin-table-scroll responsive-records"><table className="admin-table">
 
           <thead>
             <tr>
@@ -595,13 +595,13 @@ export default function AdminInventoryPage() {
 
               <tr key={material.id}>
 
-                <td>{material.name}</td>
+                <td data-label="Name">{material.name}</td>
 
-                <td>
+                <td data-label="Unit">
                   {material.unit_display}
                 </td>
 
-                <td className="table-actions">
+                <td className="table-actions" data-label="Actions">
 
                   <button
                     onClick={() =>

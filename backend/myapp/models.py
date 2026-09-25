@@ -258,6 +258,8 @@ class CartItem(models.Model):
 
 # ============ ORDER ============
 class Order(models.Model):
+    payment_method = models.CharField(max_length=20, blank=True)
+    payment_instructions = models.JSONField(default=dict, blank=True)
     preparation_end_at = models.DateTimeField(null=True, blank=True)
     preparation_plan = models.JSONField(default=dict, blank=True)
     delivery_address = models.JSONField(default=dict, blank=True)
@@ -395,6 +397,9 @@ class InventoryLog(models.Model):
         )
 
 class Storefront(models.Model):
+    manual_payment_enabled = models.BooleanField(default=False)
+    bank_transfer_instructions = models.TextField(blank=True, max_length=1000)
+    duitnow_qr_url = models.URLField(blank=True)
     kitchen_open_hour = models.PositiveSmallIntegerField(default=8)
     kitchen_close_hour = models.PositiveSmallIntegerField(default=20)
     founder_name = models.CharField(max_length=100, blank=True)

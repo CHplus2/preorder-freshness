@@ -98,13 +98,15 @@ def place_order(request):
     if not cart_items.exists():
         return Response({"detail": "Cart empty"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if payment not in ('cod', 'wallet', 'paypal'):
+    if payment not in ('cod', 'wallet', 'paypal', 'manual'):
         raise ValidationError('Choose a supported payment method.')
     if payment == 'paypal':
         raise ValidationError('Online payment is not configured. Choose cash on delivery.')
     # One lock serialises scheduling across different menus in this single kitchen.
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
+    if payment == 'manual' and not (store.manual_payment_enabled and (store.bank_transfer_instructions.strip() or store.duitnow_qr_url)):
+        raise ValidationError('Manual payment is unavailable. Choose another payment method.')
     # Lock menus so simultaneous bookings cannot exceed their daily capacity.
     list(Product.objects.select_for_update().filter(id__in=cart_items.values('product_id')).order_by('id'))
     delivery_at = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
@@ -147,6 +149,8 @@ def place_order(request):
         total_amount=0,
         status="pending",
         payment_status=is_paid,
+        payment_method=payment,
+        payment_instructions={'instructions': store.bank_transfer_instructions, 'qr_url': store.duitnow_qr_url} if payment == 'manual' else {},
     )
 
     total = 0

@@ -108,7 +108,7 @@ export default function AdminProductsPage() {
       </div>
     
       {/* Product List */}
-      <div className="admin-table-scroll"><table className="admin-table">
+      <div className="admin-table-scroll responsive-records"><table className="admin-table">
         <thead>
           <tr>
             <th>Image</th>
@@ -124,7 +124,7 @@ export default function AdminProductsPage() {
           {filteredProducts.length > 0 ? (
             filteredProducts.map((p) => (
               <tr key={p.id}>
-                <td>
+                <td data-label="Image">
                   {p.image_url ? (
                     <img 
                       src={p.image_url} 
@@ -136,12 +136,12 @@ export default function AdminProductsPage() {
                     <div className="image-placeholder">No Image</div>
                   )}
                 </td>
-                <td>{p.name}</td>
-              <td>RM {p.price}</td>
-              <td>{p.stock}</td>
-              <td>{p.category_name}</td>
-              <td><span className="status-badge">{p.preparation_tasks?.length ? `${p.preparation_tasks.length} steps` : "Needs setup"}</span></td>
-              <td>
+                <td data-label="Name">{p.name}</td>
+              <td data-label="Price">RM {p.price}</td>
+              <td data-label="Available portions">{p.stock}</td>
+              <td data-label="Category">{p.category_name}</td>
+              <td data-label="Preparation"><span className="status-badge">{p.preparation_tasks?.length ? `${p.preparation_tasks.length} steps` : "Needs setup"}</span></td>
+              <td data-label="Actions">
                 <button onClick={() => setUpdatedProduct({ ...p })}>Edit & steps</button>
                 <button
                   className="danger"

@@ -126,7 +126,7 @@ export default function AdminOrdersPage() {
                 </select>
 
                 {/* Payment Status Select */}
-                <label htmlFor="payment-select">Payment Status:</label>
+                <p>Payment method: {editingOrder.payment_method || "Earlier order: not recorded"}. For bank transfers, verify funds in your bank account before selecting Paid. A screenshot alone is not confirmation.</p><label htmlFor="payment-select">Payment Status:</label>
                 <select
                   id="payment-select"
                   value={newPaymentStatus}

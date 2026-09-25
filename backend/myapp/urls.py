@@ -1,3 +1,4 @@
+from .views.reminders import reminder_status, run_reminders
 from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_plan
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
@@ -20,6 +21,8 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path("admin/reminder-status/", reminder_status),
+    path("reminders/run/", run_reminders),
     path("menu/", MenuList.as_view()),
     path("inventory-freshness/", inventory_freshness),
     path("admin/orders/<int:pk>/preparation-plan/", review_order_plan),

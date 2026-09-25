@@ -179,7 +179,7 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'kitchen@localhost')
 OWNER_NOTIFICATION_EMAIL = os.getenv('OWNER_NOTIFICATION_EMAIL', '')
-EMAIL_TIMEOUT = 15
+EMAIL_TIMEOUT = 10
 
 FRONTEND_DIST = BASE_DIR.parent / 'frontend' / 'dist'
 STATICFILES_DIRS = [FRONTEND_DIST] if FRONTEND_DIST.exists() else []
@@ -189,3 +189,5 @@ STORAGES = {
 }
 
 REST_FRAMEWORK = {**globals().get("REST_FRAMEWORK", {}), "EXCEPTION_HANDLER": "myapp.exceptions.api_exception_handler"}
+
+CRON_SECRET = os.getenv('CRON_SECRET', '')

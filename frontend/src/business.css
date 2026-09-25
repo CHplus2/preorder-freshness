@@ -43,3 +43,8 @@ button:disabled{cursor:not-allowed;opacity:.6}button:focus-visible,a:focus-visib
  .business-page .contact-menu-cta>p{margin-bottom:20px}
  .business-footer-top>.dk-primary{align-self:flex-start}
 }
+
+.business-header .dropdown-content{background:#fff;border:1px solid #d5dfd7;box-shadow:0 8px 28px #203c2824;top:calc(100% + 10px);width:min(220px,calc(100vw - 32px));box-sizing:border-box}
+.business-header .dropdown-content a{display:flex;align-items:center;min-height:44px;padding:10px 12px;border-radius:8px;text-decoration:none;color:#294733;box-sizing:border-box;line-height:1.4;white-space:normal}
+.business-header .dropdown-content a:hover,.business-header .dropdown-content a:focus-visible{background:#edf3ee;text-decoration:none}
+.business-header .dropdown-content .logout-btn{min-height:44px;border-radius:8px;padding:10px 12px;margin-top:6px}

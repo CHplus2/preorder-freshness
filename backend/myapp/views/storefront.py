@@ -9,6 +9,11 @@ from ..models import Storefront, Review, Product, OrderItem
 
 class StoreSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
+        enabled = attrs.get('manual_payment_enabled', getattr(self.instance, 'manual_payment_enabled', False))
+        instructions = attrs.get('bank_transfer_instructions', getattr(self.instance, 'bank_transfer_instructions', ''))
+        qr = attrs.get('duitnow_qr_url', getattr(self.instance, 'duitnow_qr_url', ''))
+        if enabled and not (instructions.strip() or qr):
+            raise serializers.ValidationError('Add bank transfer instructions or a DuitNow QR image before enabling manual payments.')
         opening = attrs.get('kitchen_open_hour', getattr(self.instance, 'kitchen_open_hour', 8))
         closing = attrs.get('kitchen_close_hour', getattr(self.instance, 'kitchen_close_hour', 20))
         if not 0 <= opening < closing <= 23:
