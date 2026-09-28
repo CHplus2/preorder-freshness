@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [UI/UX, accessibility and performance audit](docs/AUDIT-2026-09-28.md): baseline evidence, implemented fixes, tests, remaining issues and FYP reporting limits.
+
 - [Multilingual Kitchen Help](docs/KITCHEN-HELP.md): features, Groq setup, privacy and limits.
 
 - [Testing and FYP evidence](docs/TESTING.md): existing tests, safe execution, report evidence and manual UI checks.

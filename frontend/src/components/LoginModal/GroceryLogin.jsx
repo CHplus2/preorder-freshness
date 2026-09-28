@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { getCookie } from "../../utils/cookieUtils";
+import ModalDialog from '../ModalDialog';
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useUI } from "../../contexts/UIProvider";
 import { useAuth } from "../../contexts/AuthProvider";
-import axios from "axios"
 import "./GroceryLogin.css";
 
 function GroceryLogin() {
@@ -12,28 +11,38 @@ function GroceryLogin() {
     const { setShowSignup, setShowLogin, modalMotion } = useUI();
     const { login } = useAuth();
 
+    const [pending, setPending] = useState(false);
+    const [error, setError] = useState("");
+    const submitting = useRef(false);
+
     const handleChange = (e) => {
         setFormData({ ...account, [e.target.name]: e.target.value});
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        login(account);
+        if (submitting.current) return;
+        submitting.current = true;
+        setPending(true);
+        setError("");
+        try { setError(await login(account) || ""); }
+        finally { submitting.current = false; setPending(false); }
     }
 
     return (
+        <ModalDialog label="Sign in" onDismiss={() => setShowLogin(false)}>
         <div className="modal-overlay">
             <motion.div
                 className="modal-content"
-                role="dialog" aria-modal="true" aria-label="Account access"
                 {...modalMotion}
                 transition= {{ ...modalMotion.transition, duration: 0.25 }}
                 onClick={(e) => e.stopPropagation()}
             >
                 <button className="close-btn" aria-label="Close account dialog" onClick={() => setShowLogin(false)}>✖</button>
                 <h2>Access Your Account</h2>
+                {error && <p className="account-error" role="alert">{error}</p>}
                 <form onSubmit={handleSubmit} className="login-form">
-                <input
+                <label>Username<input
                         type="text"
                         name="username"
                         aria-label="Username" autoComplete="username"
@@ -41,8 +50,8 @@ function GroceryLogin() {
                         value={account.username}
                         onChange={handleChange}
                         required
-                    />
-                    <input
+                    /></label>
+                    <label>Password<input
                         type="password"
                         name="password"
                         aria-label="Password" autoComplete="current-password"
@@ -50,8 +59,8 @@ function GroceryLogin() {
                         value={account.password}
                         onChange={handleChange}
                         required
-                    />
-                    <button type="submit">Login</button>
+                    /></label>
+                    <button type="submit" disabled={pending}>{pending ? "Signing in..." : "Sign in"}</button>
                 </form>
                 <p>
                     Don't have an account?{" "}
@@ -67,6 +76,7 @@ function GroceryLogin() {
                 </p>
             </motion.div>
         </div>
+        </ModalDialog>
     )
 }
 

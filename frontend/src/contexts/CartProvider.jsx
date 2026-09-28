@@ -4,6 +4,7 @@ import { getCookie } from "../utils/cookieUtils";
 import { useAuth } from "./AuthProvider";
 import { useUI } from "./UIProvider";
 import axios from "axios";
+import { useStorefront } from "./StorefrontProvider";
 
 export const CartContext = createContext();
 
@@ -18,8 +19,7 @@ export const useCart = () => {
 }
 
 export default function CartProvider({ children }) {
-  const [promotion, setPromotion] = useState(null);
-  useEffect(()=>{axios.get("/api/storefront/").then(r=>setPromotion(r.data)).catch(()=>{});},[]);
+  const { store: promotion } = useStorefront();
   const [wallet, setWallet] = useState(null);
   const [walletLoading, setWalletLoading] = useState(true);
 

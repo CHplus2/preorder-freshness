@@ -1,3 +1,5 @@
+import DialogFeedback from '../../components/DialogFeedback';
+import ModalDialog from '../../components/ModalDialog';
 import MenuPhotoField from "../../components/MenuPhotoField";
 import RecipeEditor from "../../components/RecipeEditor";
 import { useEffect, useState } from "react";
@@ -164,30 +166,32 @@ export default function AdminProductsPage() {
 
       {/* Edit Product Modal */}
       {updatedProduct && (
-      <div className="modal-overlay" onClick={() => setUpdatedProduct(null)}>
+      <ModalDialog label="Update Product" onDismiss={() => setUpdatedProduct(null)}>
+<div className="modal-overlay" onClick={() => setUpdatedProduct(null)}>
         <div className="modal-content form-modal" onClick={(e) => e.stopPropagation()}>
           <h2>Update Product</h2>
+          <DialogFeedback/>
 
-          <label>Product Name</label>
-          <input
+          <label htmlFor="adminproductspage-field-1">Product Name</label>
+          <input id="adminproductspage-field-1"
             value={updatedProduct.name}
             onChange={(e) => setUpdatedProduct({ ...updatedProduct, name: e.target.value })}
           />
-          <label>Price</label>
-          <input
+          <label htmlFor="adminproductspage-field-2">Price</label>
+          <input id="adminproductspage-field-2"
             type="number"
             value={updatedProduct.price}
             onChange={(e) => setUpdatedProduct({ ...updatedProduct, price: e.target.value })}
           />
 
           <RecipeEditor value={updatedProduct} onChange={setUpdatedProduct}/>
-          <label>Description</label>  
-          <textarea
+          <label htmlFor="adminproductspage-field-3">Description</label>
+          <textarea id="adminproductspage-field-3"
             value={updatedProduct.description}
             onChange={(e) => setUpdatedProduct({ ...updatedProduct, description: e.target.value })}
           />
-          <label>Category</label>
-          <select
+          <label htmlFor="adminproductspage-field-4">Category</label>
+          <select id="adminproductspage-field-4"
             value={updatedProduct.category || ""}
             onChange={(e) => setUpdatedProduct({ ...updatedProduct, category: Number(e.target.value) })}
           >
@@ -207,24 +211,27 @@ export default function AdminProductsPage() {
           </div>
         </div>
       </div>
+</ModalDialog>
       )}
 
       {/* Add Product Modal */}
       {newProduct && (
-      <div className="modal-overlay" onClick={() => setNewProduct(null)}>
+      <ModalDialog label="Create menu" onDismiss={() => setNewProduct(null)}>
+<div className="modal-overlay" onClick={() => setNewProduct(null)}>
         <div className="modal-content form-modal" onClick={(e) => e.stopPropagation()}>
           <h2>Create menu</h2>
+          <DialogFeedback/>
 
-          <label>Name</label>
-          <input
+          <label htmlFor="adminproductspage-field-5">Name</label>
+          <input id="adminproductspage-field-5"
             value={newProduct.name}
             onChange={(e) =>
               setNewProduct({ ...newProduct, name: e.target.value })
             }
           />
 
-          <label>Price</label>
-          <input
+          <label htmlFor="adminproductspage-field-6">Price</label>
+          <input id="adminproductspage-field-6"
             type="number"
             value={newProduct.price}
             onChange={(e) =>
@@ -235,16 +242,16 @@ export default function AdminProductsPage() {
 
 
           <RecipeEditor value={newProduct} onChange={setNewProduct}/>
-          <label>Description</label>
-          <textarea
+          <label htmlFor="adminproductspage-field-7">Description</label>
+          <textarea id="adminproductspage-field-7"
             value={newProduct.description}
             onChange={(e) =>
               setNewProduct({ ...newProduct, description: e.target.value })
             }
           />
 
-          <label>Category</label>
-          <select
+          <label htmlFor="adminproductspage-field-8">Category</label>
+          <select id="adminproductspage-field-8"
             value={newProduct.category}
             onChange={(e) =>
               setNewProduct({ ...newProduct, category: Number(e.target.value) })
@@ -268,6 +275,7 @@ export default function AdminProductsPage() {
           </div>
         </div>
       </div>
+</ModalDialog>
       )}
     </div>
   );

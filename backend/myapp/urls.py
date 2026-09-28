@@ -6,7 +6,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views.storefront import storefront, reviews, review_access, inventory_freshness
-from .views.planning import planning
+from .views.planning import planning, sales_analytics
 from .views.auth import signup_view, login_view, logout_view, check_auth
 from .views.products import CategoryListCreate, CategoryDetail, ProductListCreate, ProductDetail, recommend, MenuList
 from .views.cart import CartViewSet
@@ -41,6 +41,7 @@ urlpatterns = [
     path("storefront/", storefront),
     path("products/<int:pk>/reviews/", reviews),
     path("admin/planning/", planning),
+    path("admin/analytics/", sales_analytics),
     # Categories
     path("categories/", CategoryListCreate.as_view()),
     path("categories/<int:pk>/", CategoryDetail.as_view()),

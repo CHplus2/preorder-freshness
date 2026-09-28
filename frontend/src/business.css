@@ -48,3 +48,9 @@ button:disabled{cursor:not-allowed;opacity:.6}button:focus-visible,a:focus-visib
 .business-header .dropdown-content a{display:flex;align-items:center;min-height:44px;padding:10px 12px;border-radius:8px;text-decoration:none;color:#294733;box-sizing:border-box;line-height:1.4;white-space:normal}
 .business-header .dropdown-content a:hover,.business-header .dropdown-content a:focus-visible{background:#edf3ee;text-decoration:none}
 .business-header .dropdown-content .logout-btn{min-height:44px;border-radius:8px;padding:10px 12px;margin-top:6px}
+@media (max-width: 360px) {
+  .business-header { gap: 8px; padding-inline: 16px; }
+  .business-header .brand { font-size: 23px; }
+  .business-header-actions { gap: 5px; flex-shrink: 0; }
+  .business-header .mobile-menu-toggle { padding-inline: 8px; min-width: 44px; }
+}

@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import DialogFeedback from '../../components/DialogFeedback';
+import ModalDialog from '../../components/ModalDialog';
+import { useEffect, useRef, useState } from "react";
 import { useUI } from "../../contexts/UIProvider";
 import { useOrder } from "../../contexts/OrderProvider";
 
@@ -7,6 +9,8 @@ export default function AdminOrdersPage() {
   const [editingOrder, setEditingOrder] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const [newPaymentStatus, setNewPaymentStatus] = useState("");
+  const [saving, setSaving] = useState(false);
+  const submitting = useRef(false);
   const { formatOrderNumber } = useUI();
   const { adminOrders, fetchAdminOrders, updateOrder } = useOrder();
 
@@ -21,13 +25,18 @@ export default function AdminOrdersPage() {
   };
 
   const saveEdit = async () => {
-    if (!editingOrder) return;
-
-    const saved = await updateOrder(editingOrder.id, newStatus, newPaymentStatus);
-    if (!saved) return;
-
-    setEditingOrder(null);
-    fetchAdminOrders();
+    if (!editingOrder || submitting.current) return;
+    submitting.current = true;
+    setSaving(true);
+    try {
+      const saved = await updateOrder(editingOrder.id, newStatus, newPaymentStatus);
+      if (!saved) return;
+      setEditingOrder(null);
+      await fetchAdminOrders();
+    } finally {
+      submitting.current = false;
+      setSaving(false);
+    }
   };
 
   return (
@@ -86,16 +95,17 @@ export default function AdminOrdersPage() {
           ))}
 
           {editingOrder && (
-            <>
+            <ModalDialog label={"Edit order " + editingOrder.id} onDismiss={() => setEditingOrder(null)}>
               <div className="modal-overlay" onClick={() => setEditingOrder(null)}></div>
 
               <div className="edit-modal">
                 <h2>Order #{editingOrder.id}</h2>
+          <DialogFeedback/>
 
                 {/* Address Section */}
                 <div className="modal-address-block">
                   <strong>Shipping Address:</strong>
-                  <p>
+                  {editingOrder.address ? <p>
                     {editingOrder.address?.recipient_name}<br />
                     {editingOrder.address?.line1}<br />
                     {editingOrder.address?.line2 && (
@@ -107,7 +117,7 @@ export default function AdminOrdersPage() {
                     {editingOrder.address?.postal_code}<br />
                     {editingOrder.address?.country}<br />
                     Phone: {editingOrder.address?.phone}
-                  </p>
+                  </p> : <p>No delivery address recorded for this order. Confirm the address with the customer before dispatch.</p>}
                 </div>
 
                 {/* Status Select */}
@@ -138,11 +148,11 @@ export default function AdminOrdersPage() {
                 </select>
 
                 <div className="modal-actions">
-                  <button className="modal-save" onClick={saveEdit}>Save</button>
+                  <button className="modal-save" disabled={saving} onClick={saveEdit}>{saving ? 'Saving...' : 'Save'}</button>
                   <button className="modal-cancel" onClick={() => setEditingOrder(null)}>Close</button>
                 </div>
               </div>
-            </>
+            </ModalDialog>
           )}
         </>
       ) : (

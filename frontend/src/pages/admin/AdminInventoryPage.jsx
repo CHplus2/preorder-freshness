@@ -1,3 +1,4 @@
+import ModalDialog from '../../components/ModalDialog';
 import PageLoading from "../../components/PageLoading";
 import {apiError} from '../../utils/apiError';
 import ExpiryFields from "../../components/ExpiryFields";
@@ -661,7 +662,8 @@ export default function AdminInventoryPage() {
 
       {/* CREATE RAW MATERIAL MODAL */}
       {newRawMaterial && (
-        <div
+        <ModalDialog label="Create Raw Material" onDismiss={() => setNewRawMaterial(null)}>
+<div
           className="modal-overlay"
           onClick={() =>
             setNewRawMaterial(null)
@@ -675,10 +677,11 @@ export default function AdminInventoryPage() {
           >
 
             <h2>Create Raw Material</h2>
+            {error && <p className="account-error" role="alert">{error}</p>}
 
-            <label>Name</label>
+            <label htmlFor="admininventorypage-field-1">Name</label>
 
-            <input
+            <input id="admininventorypage-field-1"
               value={newRawMaterial.name}
               placeholder="e.g. Chicken"
               onChange={(e) =>
@@ -689,9 +692,9 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label>Unit</label>
+            <label htmlFor="admininventorypage-field-2">Unit</label>
 
-            <select
+            <select id="admininventorypage-field-2"
               value={newRawMaterial.unit}
               onChange={(e) =>
                 setNewRawMaterial({
@@ -734,11 +737,13 @@ export default function AdminInventoryPage() {
 
           </div>
         </div>
+</ModalDialog>
       )}
 
       {/* EDIT RAW MATERIAL MODAL */}
       {editingRawMaterial && (
-        <div
+        <ModalDialog label="Edit Raw Material" onDismiss={() => setEditingRawMaterial(null)}>
+<div
           className="modal-overlay"
           onClick={() =>
             setEditingRawMaterial(null)
@@ -752,10 +757,11 @@ export default function AdminInventoryPage() {
           >
 
             <h2>Edit Raw Material</h2>
+            {error && <p className="account-error" role="alert">{error}</p>}
 
-            <label>Name</label>
+            <label htmlFor="admininventorypage-field-3">Name</label>
 
-            <input
+            <input id="admininventorypage-field-3"
               value={editingRawMaterial.name}
               onChange={(e) =>
                 setEditingRawMaterial({
@@ -765,9 +771,9 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label>Unit</label>
+            <label htmlFor="admininventorypage-field-4">Unit</label>
 
-            <select
+            <select id="admininventorypage-field-4"
               value={editingRawMaterial.unit}
               onChange={(e) =>
                 setEditingRawMaterial({
@@ -812,11 +818,13 @@ export default function AdminInventoryPage() {
 
           </div>
         </div>
+</ModalDialog>
       )}
 
       {/* CREATE INVENTORY MODAL */}
       {newInventoryItem && (
-        <div
+        <ModalDialog label="Add Inventory Item" onDismiss={() => setNewInventoryItem(null)}>
+<div
           className="modal-overlay"
           onClick={() =>
             setNewInventoryItem(null)
@@ -830,10 +838,11 @@ export default function AdminInventoryPage() {
           >
 
             <h2>Add Inventory Item</h2>
+            {error && <p className="account-error" role="alert">{error}</p>}
 
-            <label>Raw Material</label>
+            <label htmlFor="admininventorypage-field-5">Raw Material</label>
 
-            <select
+            <select id="admininventorypage-field-5"
               value={
                 newInventoryItem.raw_material
               }
@@ -859,7 +868,7 @@ export default function AdminInventoryPage() {
               ))}
             </select>
 
-            <label>
+            <label htmlFor="admininventorypage-field-6">
               Quantity
               {newInventoryItem.raw_material &&
                 ` (${getUnit(
@@ -867,7 +876,7 @@ export default function AdminInventoryPage() {
                 )})`}
             </label>
 
-            <input
+            <input id="admininventorypage-field-6"
               type="number"
               min="0"
               step="0.001"
@@ -882,9 +891,9 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label>Batch Code</label>
+            <label htmlFor="admininventorypage-field-7">Batch Code</label>
 
-            <input
+            <input id="admininventorypage-field-7"
               value={
                 newInventoryItem.batch_code
               }
@@ -897,9 +906,9 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label>Storage Location</label>
+            <label htmlFor="admininventorypage-field-8">Storage Location</label>
 
-            <input
+            <input id="admininventorypage-field-8"
               value={
                 newInventoryItem.storage_location
               }
@@ -913,9 +922,9 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label>Received Date</label>
+            <label htmlFor="admininventorypage-field-9">Received Date</label>
 
-            <input
+            <input id="admininventorypage-field-9"
               type="date"
               value={
                 newInventoryItem.received_date
@@ -930,9 +939,9 @@ export default function AdminInventoryPage() {
             />
 
             <ExpiryFields value={newInventoryItem} onChange={setNewInventoryItem}/>
-            <label>Original printed date (leave blank for calculated shelf life)</label>
+            <label htmlFor="admininventorypage-field-10">Original printed date (leave blank for calculated shelf life)</label>
 
-            <input
+            <input id="admininventorypage-field-10"
               type="date"
               value={
                 newInventoryItem.original_expiry_date || newInventoryItem.expiry_date
@@ -971,11 +980,13 @@ export default function AdminInventoryPage() {
 
           </div>
         </div>
+</ModalDialog>
       )}
 
       {/* EDIT INVENTORY MODAL */}
       {editingInventoryItem && (
-        <div
+        <ModalDialog label="Edit Inventory Item" onDismiss={() => setEditingInventoryItem(null)}>
+<div
           className="modal-overlay"
           onClick={() =>
             setEditingInventoryItem(null)
@@ -989,10 +1000,19 @@ export default function AdminInventoryPage() {
           >
 
             <h2>Edit Inventory Item</h2>
+            {error && <div role="alert" className="error-message"><p>{error}</p><button type="button" disabled={loading} onClick={async () => {
+              setLoading(true);
+              try {
+                const response = await axios.get(`${API_URL}/inventory-items/${editingInventoryItem.id}/`, getAuthConfig());
+                setEditingInventoryItem(response.data);
+                setError("");
+              } catch (err) { setError(apiError(err, "Could not reload this batch.")); }
+              finally { setLoading(false); }
+            }}>Reload latest batch (discards edits)</button></div>}
 
-            <label>Raw Material</label>
+            <label htmlFor="admininventorypage-field-11">Raw Material</label>
 
-            <select
+            <select id="admininventorypage-field-11"
               value={
                 editingInventoryItem.raw_material
               }
@@ -1016,13 +1036,13 @@ export default function AdminInventoryPage() {
 
             </select>
 
-            <label>
+            <label htmlFor="admininventorypage-field-12">
               Quantity (
               {editingInventoryItem.unit}
               )
             </label>
 
-            <input
+            <input id="admininventorypage-field-12"
               type="number"
               min="0"
               step="0.001"
@@ -1037,9 +1057,9 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label>Batch Code</label>
+            <label htmlFor="admininventorypage-field-13">Batch Code</label>
 
-            <input
+            <input id="admininventorypage-field-13"
               value={
                 editingInventoryItem.batch_code ||
                 ""
@@ -1052,9 +1072,9 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label>Storage Location</label>
+            <label htmlFor="admininventorypage-field-14">Storage Location</label>
 
-            <input
+            <input id="admininventorypage-field-14"
               value={
                 editingInventoryItem.storage_location
               }
@@ -1067,9 +1087,9 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label>Received Date</label>
+            <label htmlFor="admininventorypage-field-15">Received Date</label>
 
-            <input
+            <input id="admininventorypage-field-15"
               type="date"
               value={
                 editingInventoryItem.received_date
@@ -1084,9 +1104,9 @@ export default function AdminInventoryPage() {
             />
 
             <ExpiryFields value={editingInventoryItem} onChange={setEditingInventoryItem}/>
-            <label>Original printed date / calculated shelf-life deadline</label>
+            <label htmlFor="admininventorypage-field-16">Original printed date / calculated shelf-life deadline</label>
 
-            <input
+            <input id="admininventorypage-field-16"
               type="date"
               value={
                 editingInventoryItem.original_expiry_date || editingInventoryItem.expiry_date
@@ -1125,6 +1145,7 @@ export default function AdminInventoryPage() {
 
           </div>
         </div>
+</ModalDialog>
       )}
 
     </div>

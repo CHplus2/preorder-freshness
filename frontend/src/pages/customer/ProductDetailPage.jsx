@@ -1,6 +1,8 @@
 import MenuReviews from "../../components/MenuReviews";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import PageLoading from "../../components/PageLoading";
+import { apiError } from "../../utils/apiError";
 import { useUI } from "../../contexts/UIProvider"
 import { useCart } from "../../contexts/CartProvider";
 import axios from "axios";
@@ -9,16 +11,25 @@ import "./ProductDetailPage.css";
 export default function ProductDetailPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [failure, setFailure] = useState(null);
+  const [attempt, setAttempt] = useState(0);
   const { formatPrice } = useUI();
   const { addToCart } = useCart();
 
   useEffect(() => {
-    axios.get(`/api/products/${id}/`)
-      .then(res => setProduct(res.data));
-  }, [id]);
+    const controller = new AbortController();
+    axios.get(`/api/products/${id}/`, { signal: controller.signal })
+      .then(res => { if (!controller.signal.aborted) { setProduct({ id, attempt, data: res.data }); setFailure(null); } })
+      .catch(err => { if (!controller.signal.aborted) setFailure({ id, attempt, message: err.response?.status === 404 ? 'This menu item is no longer available.' : apiError(err, 'Unable to load this meal. Please try again.') }); });
+    return () => controller.abort();
+  }, [id, attempt]);
 
-  if (!product) return <p>Loading...</p>;
+  if (failure?.id === id && failure.attempt === attempt) return <section className="product-detail-container"><div><h1>Meal unavailable</h1><p role="alert">{failure.message}</p><div className="detail-recovery"><button onClick={() => setAttempt(n => n + 1)}>Try again</button><Link to="/menu">Back to menu</Link></div></div></section>;
+  if (product?.id !== id || product.attempt !== attempt) return <PageLoading label="Loading meal..." />;
+  return <ProductContent product={product.data} id={id} formatPrice={formatPrice} addToCart={addToCart}/>;
+}
 
+function ProductContent({product, id, formatPrice, addToCart}) {
   return (
     <div className="product-detail-container">
       

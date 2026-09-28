@@ -66,3 +66,8 @@
 .cost-input-row button{margin-bottom:8px}
 .cost-workspace .settings-group{margin:20px 0}
 .cost-workspace form>button{margin-top:20px}
+@media (max-width: 400px) {
+  .admin-shell .inventory-summary { grid-template-columns: minmax(0, 1fr); }
+  .admin-shell .summary-card { min-width: 0; overflow-wrap: anywhere; }
+  .admin-shell .dk-sales-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+}

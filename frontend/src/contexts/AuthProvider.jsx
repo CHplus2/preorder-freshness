@@ -41,10 +41,12 @@ export default function AuthProvider({ children }) {
 
         checkAuth();
         setShowSignup(false);
+        return null;
 
       } catch (err) {
         setAlert({ message: apiError(err, "Signup failed"), type: "error" });
         console.error("signup:", err.response?.data || err.message);
+        return apiError(err, "Signup failed. Please try again.");
       }
     }
 
@@ -57,9 +59,11 @@ export default function AuthProvider({ children }) {
 
         checkAuth();
         setShowLogin(false);
+        return null;
       } catch (err) {
           setAlert({ message: apiError(err, "Invalid username or password"), type: "error" });
           console.error("login:", err.response?.data || err.message);
+          return apiError(err, "Invalid username or password");
       }
     }
 
