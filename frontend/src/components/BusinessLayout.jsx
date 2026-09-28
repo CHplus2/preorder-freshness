@@ -1,7 +1,8 @@
+import KitchenHelp from './KitchenHelp';
 import {useEffect,useState} from 'react';
 import {Link,useLocation} from 'react-router-dom';
 import {motion,useReducedMotion} from 'framer-motion';
-import {ArrowUpRight,Plus,Minus,MessageCircle} from 'lucide-react';
+import {ArrowUpRight,Plus,Minus} from 'lucide-react';
 import {useStorefront} from '../contexts/StorefrontProvider';
 export function Reveal({children,className=''}){
  const reduced=useReducedMotion();
@@ -31,6 +32,6 @@ export function FAQ({limit=questions.length}){
  return <div className="business-faq">{questions.slice(0,limit).map(([q,a],i)=><section key={q}><button aria-expanded={open===i} aria-controls={`faq-${i}`} onClick={()=>setOpen(open===i?null:i)}>{q}{open===i?<Minus size={18}/>:<Plus size={18}/>}</button><div id={`faq-${i}`} hidden={open!==i}><p>{a}</p></div></section>)}</div>;
 }
 export function BusinessFooter(){
- const {store}=useStorefront();const [help,setHelp]=useState(false),[answer,setAnswer]=useState('Choose a topic below. For personal requests, contact the kitchen.');
- return <><footer className="business-footer"><div className="business-footer-top"><div><span className="dk-eyebrow">MAKE ROOM FOR SOMETHING GOOD</span><h2>Your next meal.<br/>One less thing to plan.</h2></div><PrimaryLink>Find your favourite</PrimaryLink></div><div className="business-footer-grid"><div><Link className="brand" to="/">{store.name}</Link><p>{store.tagline}</p></div><div><h3>Explore</h3><Link to="/story">Our story</Link><Link to="/menu">The menu</Link><Link to="/how-it-works">How it works</Link></div><div><h3>Let’s talk food</h3><Link to="/contact">Contact the kitchen</Link>{store.contact_email && <a href={`mailto:${store.contact_email}`}>{store.contact_email}</a>}{store.social_url && <a href={store.social_url} target="_blank" rel="noreferrer">Follow the kitchen ↗</a>}</div></div><div className="business-footer-bottom"><span>© {new Date().getFullYear()} {store.name}</span><span>A home kitchen storefront · Prices in MYR</span></div></footer><button className="dk-help-toggle" onClick={()=>setHelp(!help)} aria-expanded={help} aria-controls="kitchen-help-panel"><MessageCircle size={18} aria-hidden="true"/> {help ? 'Close kitchen help' : 'Kitchen help'}</button>{help && <aside id="kitchen-help-panel" className="dk-help" aria-label="Kitchen help"><h3>A little help?</h3><p role="status">{answer}</p>{questions.map(([q,a])=><button key={q} onClick={()=>setAnswer(a)}>{q}</button>)}<Link to="/contact" onClick={()=>setHelp(false)}>Speak to the owner ↗</Link></aside>}</>;
+ const {store}=useStorefront();
+ return <><footer className="business-footer"><div className="business-footer-top"><div><span className="dk-eyebrow">MAKE ROOM FOR SOMETHING GOOD</span><h2>Your next meal.<br/>One less thing to plan.</h2></div><PrimaryLink>Find your favourite</PrimaryLink></div><div className="business-footer-grid"><div><Link className="brand" to="/">{store.name}</Link><p>{store.tagline}</p></div><div><h3>Explore</h3><Link to="/story">Our story</Link><Link to="/menu">The menu</Link><Link to="/how-it-works">How it works</Link></div><div><h3>Let’s talk food</h3><Link to="/contact">Contact the kitchen</Link>{store.contact_email && <a href={`mailto:${store.contact_email}`}>{store.contact_email}</a>}{store.social_url && <a href={store.social_url} target="_blank" rel="noreferrer">Follow the kitchen ↗</a>}</div></div><div className="business-footer-bottom"><span>© {new Date().getFullYear()} {store.name}</span><span>A home kitchen storefront · Prices in MYR</span></div></footer><KitchenHelp/></>;
 }

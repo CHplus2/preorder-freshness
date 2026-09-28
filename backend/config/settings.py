@@ -191,3 +191,7 @@ STORAGES = {
 REST_FRAMEWORK = {**globals().get("REST_FRAMEWORK", {}), "EXCEPTION_HANDLER": "myapp.exceptions.api_exception_handler"}
 
 CRON_SECRET = os.getenv('CRON_SECRET', '')
+
+# Optional question classification; no database records are sent to Groq.
+GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
+GROQ_CHAT_MODEL = os.getenv('GROQ_CHAT_MODEL', 'llama-3.3-70b-versatile')

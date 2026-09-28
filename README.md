@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Multilingual Kitchen Help](docs/KITCHEN-HELP.md): features, Groq setup, privacy and limits.
+
 - [Testing and FYP evidence](docs/TESTING.md): existing tests, safe execution, report evidence and manual UI checks.
 
 - [Preparation planning explained](docs/PREPARATION-PLANNING.md): inputs, formulas, overlap examples, batch limits, troubleshooting and a reusable chatbot prompt.
@@ -90,7 +92,7 @@ Then schedule one worker every 15 minutes to run `manage.py send_order_reminders
 ## Storefront, recommendations and marketing
 
 - Five public pages: Home, Our Story, Menu, How It Works and Contact, with mobile navigation, occasion tabs, scroll reveals and guided customer help.
-- English UI; full Malay translation is not yet implemented.
+- English storefront UI; Kitchen Help supports English, Bahasa Melayu and Simplified Chinese. Full-site translation is not implemented.
 - Customer reviews require a delivered order and allow one review per menu/customer.
 - Owner-configured social links and automatic bulk discounts. Discounts apply to food, not delivery fees; shipping thresholds use the pre-discount subtotal.
 - Local recommendations rank prior purchases, preferred categories and popularity, exclude unavailable current recipes and provide a cold-start fallback. No paid AI API is required.

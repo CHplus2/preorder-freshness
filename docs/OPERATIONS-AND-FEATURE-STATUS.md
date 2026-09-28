@@ -77,7 +77,7 @@ Code: backend/myapp/services/freshness.py; inventory serializer validation; fron
 - Recommendations: local purchase/category/popularity rules; no paid AI required.
 - Forecast: historical-data baseline/trend comparison, not a guarantee of demand. Confirmed preorders should guide immediate production.
 - Testnet escrow: see the separate escrow README and deployment guide; never represent demo/testnet money as real payment protection.
-- Language: English UI; full Malay localisation remains future work.
+- Language: English UI; Kitchen Help now supports English, Bahasa Melayu and Simplified Chinese. Full-site localisation remains future work. See KITCHEN-HELP.md for optional Groq setup and limitations.
 
 ## Maintenance and safe handover
 

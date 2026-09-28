@@ -1,3 +1,4 @@
+from .views.help import KitchenHelp
 from .views.costs import expenses, void_expense, record_waste, cost_report
 from .views.reminders import reminder_status, run_reminders
 from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_plan
@@ -22,6 +23,7 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path("help/", KitchenHelp.as_view()),
     path("admin/costs/", cost_report),
     path("admin/expenses/", expenses),
     path("admin/expenses/<int:pk>/void/", void_expense),
