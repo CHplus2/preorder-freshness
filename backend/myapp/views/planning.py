@@ -51,7 +51,7 @@ def planning(request):
                     remaining[batch.id] -= used
                     need -= used
             if need > 0:
-                shopping.append({'order': order.id, 'material': materials[key].material_name,
+                shopping.append({'order': order.id, 'material_id': key, 'material': materials[key].material_name,
                     'quantity': str(need), 'unit': materials[key].unit, 'needed_by': str(day)})
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     setup = list(Product.objects.filter(preparation_tasks=[]).values('id', 'name'))

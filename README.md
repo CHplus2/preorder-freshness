@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Stage 6 consolidated shopping list](docs/FYP-IMPLEMENTATION-STAGE-6.md): ingredient totals, earliest needed dates and per-order shortages.
+
 - [Database release repair](docs/RELEASE-REPAIR-2026-09-30.md): production migrations applied, preserved orders, backup evidence and the Vercel migration check.
 
 - [Stage 5 pricing simulator](docs/FYP-IMPLEMENTATION-STAGE-5.md): compare prices, bulk discounts and ingredient-cost increases without changing live offers.
