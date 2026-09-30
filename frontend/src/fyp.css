@@ -11,3 +11,9 @@
 .dk-panel details {padding:.8rem 0;border-bottom:1px solid #d9ddd5}
 .dk-panel summary {cursor:pointer;line-height:1.6}
 .slot-suggestions {margin:1rem 0}
+.setup-checklist {margin-top:2rem;scroll-margin-top:6rem}
+.setup-checklist progress {width:100%;max-width:32rem;accent-color:#477b4f}
+.setup-steps {display:grid;gap:1rem;padding-left:1.5rem}
+.setup-steps li {padding:.5rem;overflow-wrap:anywhere}
+.setup-steps h3 {margin:.3rem 0}
+#store-identity {scroll-margin-top:6rem}

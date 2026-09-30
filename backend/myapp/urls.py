@@ -1,4 +1,5 @@
 from .views.help import KitchenHelp
+from .views.setup import setup_checklist
 from .views.rescheduling import reschedule_order
 from .views.payments import payments
 from .views.outcomes import contribution_report, batch_trace
@@ -28,6 +29,7 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path('admin/setup-checklist/', setup_checklist),
     path('orders/<int:pk>/reschedule/', reschedule_order),
     path('auth/recovery/', recovery_request),
     path('auth/recovery/confirm/', recovery_confirm),
