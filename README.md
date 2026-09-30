@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Stage 5 pricing simulator](docs/FYP-IMPLEMENTATION-STAGE-5.md): compare prices, bulk discounts and ingredient-cost increases without changing live offers.
+
 - [Stage 4 contribution CSV export](docs/FYP-IMPLEMENTATION-STAGE-4.md): complete bounded date-range exports, missing-cost handling, privacy and verification.
 
 - [Stage 3 owner setup checklist](docs/FYP-IMPLEMENTATION-STAGE-3.md): saved-data checks for branding, contact, recipes, preparation, costs and inventory follow-up.

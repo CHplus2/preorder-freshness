@@ -3,6 +3,7 @@ import axios from 'axios';
 import {apiError} from '../utils/apiError';
 import {getCookie} from '../utils/cookieUtils';
 import {malaysiaDate} from '../utils/planner';
+import PricingPreview from './PricingPreview';
 const money=v=>v==null?'Not recorded':'RM '+Number(v).toFixed(2);
 export default function CostPanel(){
  const [report,setReport]=useState(null),[materials,setMaterials]=useState([]),[lots,setLots]=useState([]),[expenses,setExpenses]=useState([]);
@@ -20,6 +21,7 @@ export default function CostPanel(){
  {!report && !error && <p role="status">Loading costs...</p>}
  {report && <><div className="admin-metrics"><article><span>Operating expenses in period</span><strong>{money(report.operating_expenses)}</strong></article><article><span>Recorded wastage cost in period</span><strong>{money(report.known_waste_cost)}</strong><small>{report.unpriced_waste_records} waste records have unknown costs, excluded from this total.</small></article></div>
  <h3>Current menu contribution estimates · per portion</h3><p>Contribution = menu price minus ingredient estimate minus packaging. Dates above filter expenses and wastage, not these current recipe estimates.</p>
+ <PricingPreview key={retry} menus={report.menus}/>
  {report.menus.map(m=><article className="admin-order-summary" key={m.id}><h3>{m.name}</h3><p>Price {money(m.price)} / Ingredients {money(m.ingredient_cost)} / Packaging {money(m.packaging_cost)}</p>{m.missing.length?<p>Complete these costs first: {m.missing.join(', ')}.</p>:<p><strong>Estimated contribution: {money(m.estimated_contribution)} ({m.estimated_margin_percent}%)</strong> before other costs and discounts.</p>}</article>)}
  <details className="settings-group"><summary>Ingredient cost assumptions</summary><p>Enter RM per ingredient inventory unit. RM 12 per kg is RM 0.012 per gram. Update these when supplier prices change. Set packaging costs in Menus.</p>{materials.map(m=><form className="cost-input-row" key={m.id} onSubmit={e=>{e.preventDefault();mutate('/api/admin/raw-materials/'+m.id+'/',{estimated_unit_cost:m.estimated_unit_cost===''?null:m.estimated_unit_cost},'patch')}}><label>{m.name} · RM/{m.unit}<input type="number" min="0" step="0.000001" value={m.estimated_unit_cost ?? ''} onChange={e=>setMaterials(rows=>rows.map(x=>x.id===m.id?{...x,estimated_unit_cost:e.target.value}:x))}/></label><button disabled={busy}>Save cost</button></form>)}</details>
  <details className="settings-group"><summary>Record an operating expense</summary><p>Use for overhead, courier fees, labour or marketing. Do not enter ingredient purchases or packaging here and also count them as recipe costs when calculating a margin.</p>
