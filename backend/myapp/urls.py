@@ -2,7 +2,7 @@ from .views.help import KitchenHelp
 from .views.setup import setup_checklist
 from .views.rescheduling import reschedule_order
 from .views.payments import payments
-from .views.outcomes import contribution_report, batch_trace
+from .views.outcomes import contribution_report, contribution_export, batch_trace
 from .views.discovery import guided_menu, basket_slots, recommendation_event, recommendation_metrics
 from .views.auth import recovery_request, recovery_confirm
 from .views.costs import expenses, void_expense, record_waste, cost_report
@@ -38,6 +38,7 @@ urlpatterns = [
     path('recommendation/events/', recommendation_event),
     path('admin/recommendation-metrics/', recommendation_metrics),
     path('admin/contribution/', contribution_report),
+    path('admin/contribution/export/', contribution_export),
     path('admin/inventory-items/<int:pk>/trace/', batch_trace),
     path('admin/orders/<int:pk>/payments/', payments),
     path('admin/orders/<int:pk>/accepted-recipe/', accepted_recipe),

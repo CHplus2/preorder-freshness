@@ -1,5 +1,7 @@
 from datetime import timedelta
 from decimal import Decimal
+import csv
+from django.http import HttpResponse
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -55,9 +57,7 @@ def contribution(order):
         'realised': realised, 'missing': sorted(set(missing)), 'trace': trace}
 
 
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def contribution_report(request):
+def contribution_cohort(request):
     field = serializers.DateField()
     today = timezone.localdate()
     start = field.run_validation(request.query_params.get('start', str(today-timedelta(days=27))))
@@ -65,7 +65,14 @@ def contribution_report(request):
     if start > end or (end-start).days > 366:
         raise serializers.ValidationError('Choose an ordered date range of at most 367 days.')
     orders = Order.objects.filter(created_at__date__range=(start,end)).prefetch_related(
-        'items__accepted_ingredients', 'items__consumption__inventory_item').order_by('-created_at')
+        'items__accepted_ingredients', 'items__consumption__inventory_item').order_by('-created_at', '-pk')
+    return start, end, orders
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def contribution_report(request):
+    start, end, orders = contribution_cohort(request)
     count = orders.count()
     rows = [contribution(o) for o in orders[:200]]
     complete = [r for r in rows if r['food_contribution'] is not None]
@@ -73,6 +80,43 @@ def contribution_report(request):
         'known_contribution': money(sum((Decimal(r['food_contribution']) for r in complete), ZERO)),
         'complete_orders': len(complete),
         'definition': 'Cohort: order placement dates; latest 200 orders. Totals cover shown orders only. Realised food contribution = paid, delivered food revenue after discounts (zero for full refunds or cooked cancellations), minus actual batch ingredient costs and packaging cost frozen at acceptance. Excludes delivery income/cost, payment fees, labour and overhead. Not net profit. Unknown costs stay unknown; packaging is an accepted estimate.'})
+
+
+def csv_text(value):
+    """Keep owner-entered text from becoming a spreadsheet formula."""
+    text = str(value)
+    if text.lstrip().startswith(('=', '+', '-', '@')) or text.startswith(('\t', '\r', '\n')):
+        return "'" + text
+    return text
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def contribution_export(request):
+    start, end, orders = contribution_cohort(request)
+    # Fetch the bounded cohort once; never silently export only the dashboard's 200 rows.
+    orders = list(orders[:5001])
+    if len(orders) > 5000:
+        raise serializers.ValidationError('This range contains more than 5,000 orders. Choose a shorter date range to export all matching orders.')
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="food-contribution-{start}-to-{end}.csv"'
+    response['Cache-Control'] = 'private, no-store'
+    response.write('\ufeff')
+    writer = csv.writer(response)
+    writer.writerow(['order_id', 'placed_at_malaysia', 'delivery_at_malaysia', 'status',
+        'payment_status', 'realised', 'currency', 'net_realised_food_revenue',
+        'known_ingredient_cost_subtotal', 'known_accepted_packaging_estimate_subtotal',
+        'food_contribution', 'missing_data', 'cohort_start', 'cohort_end', 'basis'])
+    for order in orders:
+        row = contribution(order)
+        writer.writerow([row['order'], timezone.localtime(order.created_at).isoformat(),
+            timezone.localtime(order.delivery_at).isoformat() if order.delivery_at else '',
+            row['status'], row['payment_status'], row['realised'], 'MYR',
+            row['net_food_revenue'], row['known_ingredient_cost'], row['accepted_packaging_cost'],
+            row['food_contribution'] if row['food_contribution'] is not None else '',
+            csv_text('; '.join(row['missing'])), start, end,
+            'Order placement dates; food contribution, not net profit; excludes delivery, fees, labour and overhead; packaging is an accepted estimate; blank contribution means unavailable'])
+    return response
 
 
 @api_view(['GET'])

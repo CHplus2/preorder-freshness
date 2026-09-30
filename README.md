@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Stage 4 contribution CSV export](docs/FYP-IMPLEMENTATION-STAGE-4.md): complete bounded date-range exports, missing-cost handling, privacy and verification.
+
 - [Stage 3 owner setup checklist](docs/FYP-IMPLEMENTATION-STAGE-3.md): saved-data checks for branding, contact, recipes, preparation, costs and inventory follow-up.
 
 - [Stage 2 delivery rescheduling](docs/FYP-IMPLEMENTATION-STAGE-2.md): customer/owner preview and confirmation, cutoff policy, preserved order terms, change history and verification.
