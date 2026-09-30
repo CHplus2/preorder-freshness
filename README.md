@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Stage 8 daily packing list](docs/FYP-IMPLEMENTATION-STAGE-8.md): date-based quantities, per-order checks and a printable dispatch preparation sheet.
+
 - [Stage 7 owner order queue](docs/FYP-IMPLEMENTATION-STAGE-7.md): combined search/filters, delivery sorting and overdue indicators.
 
 - [Stage 6 consolidated shopping list](docs/FYP-IMPLEMENTATION-STAGE-6.md): ingredient totals, earliest needed dates and per-order shortages.
