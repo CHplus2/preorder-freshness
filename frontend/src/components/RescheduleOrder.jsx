@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useId, useState} from 'react';
 import axios from 'axios';
 import {apiError} from '../utils/apiError';
 import {getCookie} from '../utils/cookieUtils';
@@ -6,7 +6,8 @@ import {getCookie} from '../utils/cookieUtils';
 const when = value => new Date(value).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'});
 
 export default function RescheduleOrder({order, onSaved}) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(null);
+  const panelId = useId();
   const [policy, setPolicy] = useState(null);
   const [delivery, setDelivery] = useState('');
   const [reason, setReason] = useState('');
@@ -43,37 +44,46 @@ export default function RescheduleOrder({order, onSaved}) {
     } finally { setBusy(false); }
   }
 
-  return <section className="dk-panel">
-    <button type="button" aria-expanded={open} disabled={busy} onClick={() => {
-      setOpen(!open); if (!open) {setPreview(null); load();}
-    }}>Delivery changes and history</button>
-    {open && <div>
-      <p>Online changes are available while the order is pending, more than 24 hours before preparation starts. New times must meet the same cutoff and kitchen availability. All times are Malaysia time.</p>
+  const toggle = mode => {
+    setOpen(open === mode ? null : mode);
+    setPreview(null); setError('');
+    if (open !== mode) load();
+  };
+  return <section className="delivery-change">
+    <div className="delivery-change-actions">
+      {order.status === 'pending' && order.payment_status !== 'refunded' && <button type="button" aria-expanded={open === 'change'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('change')}>Change delivery time</button>}
+      <button type="button" className="delivery-history-toggle" aria-expanded={open === 'history'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('history')}>Delivery history</button>
+    </div>
+    {open && <div id={panelId} className="delivery-change-panel">
+      <div className="delivery-change-heading"><h3>{open === 'change' ? 'Choose a new delivery time' : 'Delivery history'}</h3><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Close</button></div>
       {busy && <p role="status">Checking…</p>}
       {error && <p role="alert">{error} {!policy && <button type="button" disabled={busy} onClick={load}>Try again</button>}</p>}
-      {message && <p role="status">{message}</p>}
-      {policy && !policy.eligible && <p>{policy.reason}</p>}
-      {policy?.eligible && <form className="fyp-form" onSubmit={submit}>
-        <p>Changes for this booking close at {when(policy.cutoff)}. Your address, portions, recipe and price stay the same.</p>
-        <label>New delivery date and time (Malaysia)
-          <input type="datetime-local" required value={delivery} disabled={busy} onChange={e=>{setDelivery(e.target.value);setPreview(null);setMessage('');}}/>
-        </label>
-        <label>Reason for changing the time
-          <textarea required maxLength={300} value={reason} disabled={busy} onChange={e=>{setReason(e.target.value);setPreview(null);setMessage('');}}/>
-        </label>
-        <button disabled={busy}>Preview available time</button>
-        {preview && <div>
-          <p>Change delivery from <strong>{when(preview.preview.previous_delivery)}</strong> to <strong>{when(preview.preview.delivery_at)}</strong>?</p>
+      {message && <p className="delivery-change-success" role="status">{message}</p>}
+      {open === 'change' && policy && !policy.eligible && <p>{policy.reason}</p>}
+      {open === 'change' && policy?.eligible && <form className="fyp-form" onSubmit={submit}>
+        <p className="delivery-change-hint">Change by <strong>{when(policy.cutoff)}</strong>. All times are Malaysia time.</p>
+        {!preview ? <>
+          <label>New date and time
+            <input type="datetime-local" required value={delivery} disabled={busy} onChange={e=>{setDelivery(e.target.value);setMessage('');}}/>
+          </label>
+          <label>Reason for the change
+            <textarea rows={2} required maxLength={300} value={reason} disabled={busy} onChange={e=>{setReason(e.target.value);setMessage('');}}/>
+          </label>
+          <details className="delivery-change-rules"><summary>How delivery changes work</summary><p>Changes close 24 hours before preparation starts. The new time must meet this cutoff and kitchen availability. Your items, address and price stay the same.</p></details>
+          <div className="delivery-change-actions"><button disabled={busy}>Check new time</button><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Cancel</button></div>
+        </> : <div className="delivery-change-review">
+          <h4>Confirm your new time</h4>
+          <dl><div><dt>Current delivery</dt><dd>{when(preview.preview.previous_delivery)}</dd></div><div><dt>New delivery</dt><dd><strong>{when(preview.preview.delivery_at)}</strong></dd></div></dl>
           <p>Reason: {preview.preview.reason}</p>
-          <p>Further online changes would close at {when(preview.preview.change_closes_at)}. This preview holds no capacity and expires after 10 minutes; availability is checked again when you confirm.</p>
-          <button type="button" disabled={busy} onClick={e=>submit(e,true)}>Confirm delivery change</button>
-          <button type="button" disabled={busy} onClick={()=>setPreview(null)}>Keep current delivery</button>
+          <p className="delivery-change-hint">Confirm within 10 minutes. Availability is checked again when you confirm.</p>
+          <details className="delivery-change-rules"><summary>Deadline for any further changes</summary><p>{when(preview.preview.change_closes_at)}. This preview does not reserve kitchen capacity.</p></details>
+          <div className="delivery-change-actions"><button type="button" disabled={busy} onClick={e=>submit(e,true)}>Confirm new time</button><button type="button" disabled={busy} onClick={()=>setPreview(null)}>Back</button></div>
         </div>}
       </form>}
-      {policy && <div><h3>Recent delivery changes</h3>
-        {policy.history.length ? <ol>{policy.history.map(change=><li key={change.id}>
-          <p>{when(change.previous_delivery)} → {when(change.delivery_at)}</p>
-          <p>{change.reason} · Changed by {change.by} on {when(change.at)}</p>
+      {open === 'history' && policy && <div>
+        {policy.history.length ? <ol className="delivery-change-history">{policy.history.map(change=><li key={change.id}>
+          <strong>{when(change.delivery_at)}</strong><p>Previously {when(change.previous_delivery)}</p>
+          <p>{change.reason}</p><small>Changed by {change.by} · {when(change.at)}</small>
         </li>)}</ol> : <p>No delivery changes recorded.</p>}
       </div>}
     </div>}
