@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Stage 7 owner order queue](docs/FYP-IMPLEMENTATION-STAGE-7.md): combined search/filters, delivery sorting and overdue indicators.
+
 - [Stage 6 consolidated shopping list](docs/FYP-IMPLEMENTATION-STAGE-6.md): ingredient totals, earliest needed dates and per-order shortages.
 
 - [Database release repair](docs/RELEASE-REPAIR-2026-09-30.md): production migrations applied, preserved orders, backup evidence and the Vercel migration check.

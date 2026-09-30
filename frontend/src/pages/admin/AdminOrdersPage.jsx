@@ -6,9 +6,14 @@ import ModalDialog from '../../components/ModalDialog';
 import { useEffect, useRef, useState } from "react";
 import { useUI } from "../../contexts/UIProvider";
 import { useOrder } from "../../contexts/OrderProvider";
+import {filterOrders,overdueOrder} from '../../utils/orderQueue';
 
 
 export default function AdminOrdersPage() {
+  const emptyFilters={search:'',status:'',payment:'',date:'',overdue:false,sort:'newest'};
+  const [filters,setFilters]=useState(emptyFilters);
+  const [now,setNow]=useState(()=>Date.now());
+  useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
   const [editingOrder, setEditingOrder] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const [paymentOrder, setPaymentOrder] = useState(null);
@@ -16,6 +21,7 @@ export default function AdminOrdersPage() {
   const submitting = useRef(false);
   const { formatOrderNumber } = useUI();
   const { adminOrders, fetchAdminOrders, updateOrder, adminOrdersLoading, adminOrdersError } = useOrder();
+  const visibleOrders=filterOrders(adminOrders,filters,now);
 
   useEffect(() => {
     fetchAdminOrders();
@@ -44,12 +50,22 @@ export default function AdminOrdersPage() {
   return (
     <div className="orders-container">
       <h1 className="orders-title">All Orders</h1>
+      <div className="fyp-form inline" aria-label="Filter orders">
+        <label>Search order, customer or menu<input type="search" value={filters.search} onChange={e=>setFilters({...filters,search:e.target.value})}/></label>
+        <label>Order status<select value={filters.status} onChange={e=>setFilters({...filters,status:e.target.value})}><option value="">All statuses</option>{['pending','processing','cooked','shipped','delivered','cancelled'].map(s=><option key={s} value={s}>{s}</option>)}</select></label>
+        <label>Payment<select value={filters.payment} onChange={e=>setFilters({...filters,payment:e.target.value})}><option value="">All payments</option>{['unpaid','paid','refunded'].map(s=><option key={s} value={s}>{s}</option>)}</select></label>
+        <label>Delivery date (Malaysia)<input type="date" value={filters.date} onChange={e=>setFilters({...filters,date:e.target.value})}/></label>
+        <label>Sort by<select value={filters.sort} onChange={e=>setFilters({...filters,sort:e.target.value})}><option value="newest">Newest order</option><option value="delivery">Earliest delivery</option></select></label>
+      </div>
+      <div className="admin-toolbar"><label><input type="checkbox" checked={filters.overdue} onChange={e=>setFilters({...filters,overdue:e.target.checked})}/> Overdue deliveries only</label><button onClick={()=>setFilters(emptyFilters)}>Clear filters</button><button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Refresh orders</button></div>
+      {!adminOrdersLoading && !adminOrdersError && <p role="status">Showing {visibleOrders.length} of {adminOrders.length} orders. {adminOrders.filter(o=>overdueOrder(o,now)).length} open orders are past their requested delivery time.</p>}
 
       {adminOrdersError && <p role="alert">{adminOrdersError} <button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Retry loading orders</button></p>}
       {adminOrdersLoading && <p role="status">Loading orders…</p>}
       {adminOrdersError ? null : adminOrders.length > 0 ? (
         <>
-          {adminOrders.map((order) => (
+          {!visibleOrders.length && <p>No orders match these filters. Clear filters to see all orders.</p>}
+          {visibleOrders.map((order) => (
             <div key={order.id} className="order-card">
 
               {/* HEADER */}
@@ -74,6 +90,7 @@ export default function AdminOrdersPage() {
 
               <p>Prepare: {order.preparation_at ? new Date(order.preparation_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Legacy order — unscheduled'}</p>
               <p>Deliver: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Unscheduled'} · {order.delivery_method}</p>
+              {overdueOrder(order,now) && <p className="admin-notice error">Past requested delivery time — confirm fulfilment and update this order.</p>}
               {/* BODY */}
               <div className="order-body">
                 {order.items.map((item) => (
