@@ -19,7 +19,7 @@ export default function RescheduleOrder({order, onSaved}) {
 
   async function load() {
     setBusy(true); setError('');
-    try { setPolicy((await axios.get(url)).data); }
+    try { setPolicy((await axios.get(url,{timeout:30000})).data); }
     catch (e) { setError(apiError(e)); }
     finally { setBusy(false); }
   }
@@ -27,15 +27,19 @@ export default function RescheduleOrder({order, onSaved}) {
   async function submit(event, confirm = false) {
     event.preventDefault();
     if (busy) return;
+    if (!confirm && (!delivery || !reason.trim())) {
+      setError(!delivery ? 'Choose a complete delivery date and time.' : 'Enter a reason for the delivery change.');
+      return;
+    }
     setBusy(true); setError(''); setMessage('');
     try {
       const body = confirm ? {confirm:preview.confirm} : {delivery_at:`${delivery}:00+08:00`, reason};
-      const response = await axios.post(url, body, {headers:{'X-CSRFToken':getCookie('csrftoken')}});
+      const response = await axios.post(url, body, {timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
       if (confirm) {
         setPreview(null);
         setMessage('Delivery time updated. Your order total and accepted menu remain unchanged.');
         await onSaved();
-        setPolicy((await axios.get(url)).data);
+        setPolicy((await axios.get(url,{timeout:30000})).data);
       } else setPreview(response.data);
     } catch (e) {
       setError(apiError(e));
@@ -60,7 +64,7 @@ export default function RescheduleOrder({order, onSaved}) {
       {error && <p role="alert">{error} {!policy && <button type="button" disabled={busy} onClick={load}>Try again</button>}</p>}
       {message && <p className="delivery-change-success" role="status">{message}</p>}
       {open === 'change' && policy && !policy.eligible && <p>{policy.reason}</p>}
-      {open === 'change' && policy?.eligible && <form className="fyp-form" onSubmit={submit}>
+      {open === 'change' && policy?.eligible && <form className="fyp-form" noValidate onSubmit={submit}>
         <p className="delivery-change-hint">Change by <strong>{when(policy.cutoff)}</strong>. All times are Malaysia time.</p>
         {!preview ? <>
           <label>New date and time

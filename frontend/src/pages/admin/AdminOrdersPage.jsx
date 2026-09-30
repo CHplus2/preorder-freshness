@@ -46,7 +46,8 @@ export default function AdminOrdersPage() {
       <h1 className="orders-title">All Orders</h1>
 
       {adminOrdersError && <p role="alert">{adminOrdersError} <button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Retry loading orders</button></p>}
-      {adminOrdersLoading ? <p role="status">Loading orders…</p> : adminOrdersError ? null : adminOrders.length > 0 ? (
+      {adminOrdersLoading && <p role="status">Loading orders…</p>}
+      {adminOrdersError ? null : adminOrders.length > 0 ? (
         <>
           {adminOrders.map((order) => (
             <div key={order.id} className="order-card">
@@ -155,7 +156,7 @@ export default function AdminOrdersPage() {
           )}
         </>
       ) : (
-        <p className="orders-empty">You have no orders yet.</p>
+        !adminOrdersLoading && <p className="orders-empty">You have no orders yet.</p>
       )}
     </div>
   );

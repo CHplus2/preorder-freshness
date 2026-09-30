@@ -29,7 +29,8 @@ export default function OrdersPage() {
       <h1 className="orders-title">My Orders</h1>
 
       {ordersError && <p role="alert">{ordersError} <button disabled={ordersLoading} onClick={fetchOrders}>Retry loading orders</button></p>}
-      {ordersLoading ? <p role="status">Loading your orders…</p> : ordersError ? null : orders.length > 0 ? (
+      {ordersLoading && <p role="status">Loading your orders…</p>}
+      {ordersError ? null : orders.length > 0 ? (
         orders.map((order) => (
           <div key={order.id} className="order-card">
 
@@ -72,7 +73,7 @@ export default function OrdersPage() {
           </div>
         ))
       ) : (
-        <p className="orders-empty">You have no orders yet.</p>
+        !ordersLoading && <p className="orders-empty">You have no orders yet.</p>
       )}
     </div>
   );
