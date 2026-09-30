@@ -195,3 +195,8 @@ CRON_SECRET = os.getenv('CRON_SECRET', '')
 # Optional question classification; no database records are sent to Groq.
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
 GROQ_CHAT_MODEL = os.getenv('GROQ_CHAT_MODEL', 'llama-3.3-70b-versatile')
+
+# Explicit origin prevents password-reset links trusting an incoming Host header.
+PUBLIC_APP_URL = os.getenv('PUBLIC_APP_URL', '')
+PASSWORD_RESET_TIMEOUT = 3600
+RECOMMENDATION_EXPERIMENT = os.getenv('RECOMMENDATION_EXPERIMENT', 'False') == 'True'

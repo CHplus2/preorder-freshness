@@ -39,7 +39,7 @@ class InventoryAuditTests(TestCase):
 
     def test_fresh_edit_accepted_and_version_advanced(self):
         version = self.lot.updated_at
-        response = self.patch({'quantity': 80, 'updated_at': version.isoformat()})
+        response = self.patch({'quantity': 80, 'updated_at': version.isoformat(), 'adjustment_reason': 'Physical stock count correction'})
         self.assertEqual(response.status_code, 200)
         self.lot.refresh_from_db()
         self.assertEqual(self.lot.quantity, 80)

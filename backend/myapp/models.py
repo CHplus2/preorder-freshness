@@ -272,6 +272,7 @@ class CartItem(models.Model):
 
 # ============ ORDER ============
 class Order(models.Model):
+    checkout_request_id = models.UUIDField(null=True, blank=True, unique=True)
     payment_method = models.CharField(max_length=20, blank=True)
     payment_instructions = models.JSONField(default=dict, blank=True)
     preparation_end_at = models.DateTimeField(null=True, blank=True)
@@ -296,7 +297,7 @@ class Order(models.Model):
         ("refunded", "Refunded"),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
 
     address = models.ForeignKey(
         Address,
@@ -339,6 +340,9 @@ class Order(models.Model):
 
 # ============ ORDER ITEMS ============
 class OrderItem(models.Model):
+    recipe_source = models.CharField(max_length=30, default='accepted')
+    preparation_snapshot = models.JSONField(default=dict, blank=True)
+    packaging_unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,
@@ -364,6 +368,25 @@ class OrderItem(models.Model):
         max_digits=10,
         decimal_places=2
     )
+
+    def save(self, *args, **kwargs):
+        # Capture accepted terms once. Editing a menu cannot rewrite an order.
+        from django.db import transaction
+        from .services.commitments import preparation_snapshot
+        creating = self._state.adding
+        with transaction.atomic():
+            recipe = []
+            if creating and self.product_id:
+                self.preparation_snapshot = preparation_snapshot(self.product)
+                self.packaging_unit_cost = self.product.packaging_cost
+                recipe = list(self.product.ingredients.select_related('raw_material'))
+            super().save(*args, **kwargs)
+            if creating:
+                OrderIngredient.objects.bulk_create([
+                    OrderIngredient(order_item=self, raw_material=i.raw_material,
+                        material_name=i.raw_material.name, unit=i.raw_material.unit,
+                        quantity_per_portion=i.quantity_required) for i in recipe
+                ])
 
     def __str__(self):
         return (
@@ -480,4 +503,70 @@ class WasteRecord(models.Model):
     quantity = models.DecimalField(max_digits=12, decimal_places=3)
     estimated_cost = models.DecimalField(max_digits=14, decimal_places=2, null=True)
     reason = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class OrderIngredient(models.Model):
+    order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name='accepted_ingredients')
+    raw_material = models.ForeignKey(RawMaterial, on_delete=models.PROTECT)
+    material_name = models.CharField(max_length=100)
+    unit = models.CharField(max_length=10)
+    quantity_per_portion = models.DecimalField(max_digits=10, decimal_places=3)
+
+
+class IngredientConsumption(models.Model):
+    order_item = models.ForeignKey(OrderItem, on_delete=models.PROTECT, related_name='consumption')
+    inventory_item = models.ForeignKey(InventoryItem, on_delete=models.PROTECT, related_name='consumption')
+    material_name = models.CharField(max_length=100)
+    batch_code = models.CharField(max_length=100, blank=True)
+    unit = models.CharField(max_length=10)
+    quantity = models.DecimalField(max_digits=12, decimal_places=3)
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True)
+    recorded_expiry = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class PaymentEvent(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name='payment_events')
+    request_id = models.UUIDField(unique=True)
+    kind = models.CharField(max_length=10, choices=[('receipt','Receipt'),('refund','Refund')])
+    outcome = models.CharField(max_length=12, choices=[('completed','Completed'),('pending','Pending'),('failed','Failed')])
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    method = models.CharField(max_length=20)
+    reference = models.CharField(max_length=200)
+    note = models.CharField(max_length=500, blank=True)
+    source = models.CharField(max_length=30, default='owner_verified')
+    resolves = models.OneToOneField('self', null=True, blank=True, on_delete=models.PROTECT, related_name='resolution')
+    actor = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class AuthAttempt(models.Model):
+    key = models.CharField(max_length=64, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+
+class OrderAmendment(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name='amendments')
+    actor = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    before = models.JSONField()
+    after = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class RecommendationSession(models.Model):
+    id = models.UUIDField(primary_key=True, editable=False)
+    owner_key = models.CharField(max_length=64, db_index=True)
+    variant = models.CharField(max_length=20)
+    context = models.JSONField(default=dict)
+    products = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class RecommendationEvent(models.Model):
+    session = models.ForeignKey(RecommendationSession, on_delete=models.CASCADE, related_name='events')
+    event = models.CharField(max_length=20)
+    product = models.ForeignKey(Product, null=True, on_delete=models.SET_NULL)
+    order = models.OneToOneField(Order, null=True, on_delete=models.SET_NULL)
+    request_id = models.UUIDField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)

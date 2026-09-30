@@ -10,7 +10,7 @@ def get_user_top_categories(user, days=180, top_k=5):
 
     qs = (
         OrderItem.objects
-        .exclude(order__status="cancelled").filter(order__user=user, order__created_at__gte=since, product__isnull=False)
+        .exclude(order__status="cancelled").filter(order__payment_status='paid', order__user=user, order__created_at__gte=since, product__isnull=False)
         .values("product__category_id", "product__category__name")
         .annotate(qty=Sum("quantity"))
         .order_by("-qty")[:top_k]
@@ -31,7 +31,7 @@ def get_user_bought_product_ids(user, days=365):
 
     return set(
         OrderItem.objects
-        .exclude(order__status="cancelled").filter(order__user=user, order__created_at__gte=since, product__isnull=False)
+        .exclude(order__status="cancelled").filter(order__payment_status='paid', order__user=user, order__created_at__gte=since, product__isnull=False)
         .values_list("product_id", flat=True)
         .distinct()
     )
@@ -41,7 +41,7 @@ def get_user_product_counts(user, days=365):
 
     qs = (
         OrderItem.objects
-        .exclude(order__status="cancelled").filter(order__user=user, order__created_at__gte=since, product__isnull=False)
+        .exclude(order__status="cancelled").filter(order__payment_status='paid', order__user=user, order__created_at__gte=since, product__isnull=False)
         .values("product_id")
         .annotate(qty=Sum("quantity"))
         .order_by("-qty")
@@ -54,7 +54,7 @@ def get_global_product_popularity(days=30, top_n=num):
 
     qs = (
         OrderItem.objects
-        .exclude(order__status="cancelled").filter(order__created_at__gte=since, product__isnull=False)
+        .exclude(order__status="cancelled").filter(order__payment_status='paid', order__created_at__gte=since, product__isnull=False)
         .values("product_id")
         .annotate(qty=Sum("quantity"))
         .order_by("-qty")[:top_n]

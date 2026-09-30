@@ -1012,7 +1012,7 @@ export default function AdminInventoryPage() {
 
             <label htmlFor="admininventorypage-field-11">Raw Material</label>
 
-            <select id="admininventorypage-field-11"
+            <select id="admininventorypage-field-11" disabled
               value={
                 editingInventoryItem.raw_material
               }
@@ -1036,7 +1036,8 @@ export default function AdminInventoryPage() {
 
             </select>
 
-            <label htmlFor="admininventorypage-field-12">
+            <label>Reason for quantity adjustment<input maxLength={200} value={editingInventoryItem.adjustment_reason || ''} onChange={e=>setEditingInventoryItem({...editingInventoryItem,adjustment_reason:e.target.value})}/></label>
+              <label htmlFor="admininventorypage-field-12">
               Quantity (
               {editingInventoryItem.unit}
               )

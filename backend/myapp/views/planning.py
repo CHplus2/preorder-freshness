@@ -15,7 +15,7 @@ from ..models import Order, InventoryItem, OrderItem, Storefront, Product, Kitch
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def planning(request):
-    orders = list(Order.objects.exclude(status__in=['cancelled', 'delivered']).select_related('user', 'address').prefetch_related('items__product', Prefetch('items__product__ingredients', queryset=ProductIngredient.objects.select_related('raw_material'))).order_by('preparation_at', 'id'))
+    orders = list(Order.objects.exclude(status__in=['cancelled', 'delivered']).select_related('user', 'address').prefetch_related('items__accepted_ingredients', 'items__product').order_by('preparation_at', 'id'))
     batches = list(InventoryItem.objects.filter(quantity__gt=0, quarantined=False,
         expiry_date__gte=timezone.localdate(), received_date__lte=timezone.localdate()).order_by('expiry_date','id'))
     by_material = defaultdict(list)
@@ -24,6 +24,7 @@ def planning(request):
     remaining = {b.id: b.quantity for b in batches}
     shopping = []
     allocations = []
+    missing_recipes = []
     for order in orders:
         if order.inventory_deducted:
             continue
@@ -32,11 +33,13 @@ def planning(request):
         needs = defaultdict(Decimal)
         materials = {}
         for item in order.items.all():
-            if item.product:
-                for ingredient in item.product.ingredients.all():
-                    key = ingredient.raw_material_id
-                    materials[key] = ingredient.raw_material
-                    needs[key] += ingredient.quantity_required * item.quantity
+            ingredients = list(item.accepted_ingredients.all())
+            if not ingredients:
+                missing_recipes.append({'order': order.pk, 'menu': item.product_name})
+            for ingredient in ingredients:
+                key = ingredient.raw_material_id
+                materials[key] = ingredient
+                needs[key] += ingredient.quantity_per_portion * item.quantity
         for key, need in needs.items():
             for batch in by_material[key]:
                 if need <= 0:
@@ -44,16 +47,16 @@ def planning(request):
                 if batch.raw_material_id == key and batch.expiry_date >= use_by:
                     used = min(remaining[batch.id], need)
                     if used > 0:
-                        allocations.append({'order':order.id,'batch':batch.id,'material':materials[key].name,'quantity':str(used),'unit':materials[key].unit,'expiry_date':str(batch.expiry_date)})
+                        allocations.append({'order':order.id,'batch':batch.id,'material':materials[key].material_name,'quantity':str(used),'unit':materials[key].unit,'expiry_date':str(batch.expiry_date)})
                     remaining[batch.id] -= used
                     need -= used
             if need > 0:
-                shopping.append({'order': order.id, 'material': materials[key].name,
+                shopping.append({'order': order.id, 'material': materials[key].material_name,
                     'quantity': str(need), 'unit': materials[key].unit, 'needed_by': str(day)})
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     setup = list(Product.objects.filter(preparation_tasks=[]).values('id', 'name'))
     availability = dict(open_hour=store.kitchen_open_hour, close_hour=store.kitchen_close_hour, blocks=list(KitchenBlock.objects.values('start_at','end_at','reason')))
-    return Response({'setup_menus': setup, 'availability': availability, 'allocations': allocations, 'orders': OrderSerializer(orders, many=True).data, 'shopping': shopping, **sales_summary()})
+    return Response({'missing_recipes': missing_recipes, 'setup_menus': setup, 'availability': availability, 'allocations': allocations, 'orders': OrderSerializer(orders, many=True).data, 'shopping': shopping, **sales_summary()})
 
 
 def sales_summary():

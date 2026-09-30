@@ -119,6 +119,7 @@ export default function CartProvider({ children }) {
 
         setAlert({ message: "Item added to cart", type: "success" });
         refreshCart();
+        return true;
 
       } catch (err) {
         const detail = err.response?.data?.detail;
@@ -128,6 +129,7 @@ export default function CartProvider({ children }) {
     } else{
       setShowLogin(true);
     }
+    return false;
   };
 
   const removeFromCart = async (cartItemId) => {

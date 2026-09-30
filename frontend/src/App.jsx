@@ -21,6 +21,8 @@ import ProductsDetailPage from "./pages/customer/ProductDetailPage";
 import CartPage from "./pages/customer/CartPage";
 import OrdersPage from "./pages/customer/OrdersPage";
 import CheckoutPage from "./pages/customer/CheckoutPage";
+import RecoveryPage from './pages/customer/RecoveryPage';
+import './fyp.css';
 import PaymentPage from "./pages/customer/PaymentPage";
 const AdminProductsPage=lazy(()=>import("./pages/admin/AdminProductsPage"));
 const AdminInventoryPage=lazy(()=>import("./pages/admin/AdminInventoryPage"));
@@ -51,6 +53,7 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        <Route path="/recover" element={<RecoveryPage/>}/>
         <Route path="/escrow-demo" element={<Suspense fallback={<p className="dk-workspace">Loading escrow lab…</p>}><EscrowDemoPage/></Suspense>}/>
         <Route path="/story" element={<StoryPage/>}/>
         <Route path="/how-it-works" element={<HowItWorksPage/>}/>

@@ -12,7 +12,7 @@ export default function OrderProvider({ children }) {
     const {setAlert} = useUI();
     const [orders, setOrders] = useState([]);
     const [adminOrders, setAdminOrders] = useState([]);
-    const { refreshCart } = useCart();
+    const { refreshCart, cart } = useCart();
     
     const fetchOrders = useCallback(async () => {
         try {
@@ -44,10 +44,16 @@ export default function OrderProvider({ children }) {
 
     const placeOrder = useCallback(async (addressId, payment, options = {}) => {
         try {
-            await axios.post("/api/orders/place/", { address_id: addressId, payment, ...JSON.parse(sessionStorage.getItem("deliveryPlan") || "{}") }, {
+            const body={address_id:addressId,payment,...JSON.parse(sessionStorage.getItem('deliveryPlan') || '{}')};
+            const key=JSON.stringify([body,cart.map(i=>[i.product.id,i.quantity])]);
+            let attempt=JSON.parse(sessionStorage.getItem('checkoutAttempt') || 'null');
+            if(!attempt || attempt.key!==key){attempt={key,id:crypto.randomUUID()};sessionStorage.setItem('checkoutAttempt',JSON.stringify(attempt))}
+            await axios.post("/api/orders/place/", { ...body, request_id:attempt.id, recommendation_session:sessionStorage.getItem('recommendationSession') }, {
                 withCredentials: true,
                 headers: { "X-CSRFToken": getCookie("csrftoken") },
             })
+            sessionStorage.removeItem('checkoutAttempt');
+            sessionStorage.removeItem('recommendationSession');
             refreshCart();
             return true;
         } catch (err) {
@@ -56,12 +62,12 @@ export default function OrderProvider({ children }) {
             setAlert({message:apiError(err),type:"error"});
             return false;
         }
-    }, [refreshCart]);
+    }, [refreshCart,cart]);
 
-    const updateOrder = async (orderId, newStatus, newPaymentStatus) => {
+    const updateOrder = async (orderId, newStatus) => {
         try {
             await axios.patch(`/api/admin/orders/${orderId}/`, { 
-                status: newStatus, payment_status: newPaymentStatus
+                status: newStatus
             }, {
                 withCredentials: true,
                 headers: { "X-CSRFToken": getCookie("csrftoken") },

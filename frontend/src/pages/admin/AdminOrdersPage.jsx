@@ -1,4 +1,7 @@
 import DialogFeedback from '../../components/DialogFeedback';
+import PaymentRecords from '../../components/PaymentRecords';
+import AcceptedRecipe from '../../components/AcceptedRecipe';
+import RescheduleOrder from '../../components/RescheduleOrder';
 import ModalDialog from '../../components/ModalDialog';
 import { useEffect, useRef, useState } from "react";
 import { useUI } from "../../contexts/UIProvider";
@@ -8,7 +11,7 @@ import { useOrder } from "../../contexts/OrderProvider";
 export default function AdminOrdersPage() {
   const [editingOrder, setEditingOrder] = useState(null);
   const [newStatus, setNewStatus] = useState("");
-  const [newPaymentStatus, setNewPaymentStatus] = useState("");
+  const [paymentOrder, setPaymentOrder] = useState(null);
   const [saving, setSaving] = useState(false);
   const submitting = useRef(false);
   const { formatOrderNumber } = useUI();
@@ -21,7 +24,6 @@ export default function AdminOrdersPage() {
   const startEdit = (order) => {
     setEditingOrder(order);
     setNewStatus(order.status || "pending");
-    setNewPaymentStatus(order.payment_status || "unpaid");
   };
 
   const saveEdit = async () => {
@@ -29,7 +31,7 @@ export default function AdminOrdersPage() {
     submitting.current = true;
     setSaving(true);
     try {
-      const saved = await updateOrder(editingOrder.id, newStatus, newPaymentStatus);
+      const saved = await updateOrder(editingOrder.id, newStatus);
       if (!saved) return;
       setEditingOrder(null);
       await fetchAdminOrders();
@@ -85,11 +87,16 @@ export default function AdminOrdersPage() {
                 <button className="edit-btn" onClick={() => startEdit(order)}>
                   Edit order
                 </button>
+                <button onClick={()=>setPaymentOrder(paymentOrder?.id===order.id?null:order)}>Payment records</button>
 
                 <div className="order-total">
                   RM {(Number(order.total_amount)+Number(order.shipping_fee)).toFixed(2)}
                 </div>
               </div>
+              {order.items.some(i=>i.recipe_source?.startsWith('legacy')) && <p>Earlier order: recipe history is a legacy baseline or unknown. Review pending orders in Planner before preparation.</p>}
+              {paymentOrder?.id===order.id && <PaymentRecords order={order} onSaved={fetchAdminOrders}/>}
+              <AcceptedRecipe order={order}/>
+              <RescheduleOrder order={order} onSaved={fetchAdminOrders}/>
 
             </div>
           ))}
@@ -136,16 +143,7 @@ export default function AdminOrdersPage() {
                 </select>
 
                 {/* Payment Status Select */}
-                <p>Payment method: {editingOrder.payment_method || "Earlier order: not recorded"}. For bank transfers, verify funds in your bank account before selecting Paid. A screenshot alone is not confirmation.</p><label htmlFor="payment-select">Payment Status:</label>
-                <select
-                  id="payment-select"
-                  value={newPaymentStatus}
-                  onChange={(e) => setNewPaymentStatus(e.target.value)}
-                >
-                  <option value="unpaid">Unpaid</option>
-                  <option value="paid">Paid</option>
-                  <option value="refunded">Refunded</option>
-                </select>
+                <p>Payment: {editingOrder.payment_status}. Close this dialog and open Payment records to record verified receipts or refunds. Cancelling an order does not refund it automatically.</p>
 
                 <div className="modal-actions">
                   <button className="modal-save" disabled={saving} onClick={saveEdit}>{saving ? 'Saving...' : 'Save'}</button>

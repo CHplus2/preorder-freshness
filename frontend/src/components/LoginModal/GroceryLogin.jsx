@@ -1,4 +1,5 @@
 import ModalDialog from '../ModalDialog';
+import {Link} from 'react-router-dom';
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useUI } from "../../contexts/UIProvider";
@@ -62,6 +63,7 @@ function GroceryLogin() {
                     /></label>
                     <button type="submit" disabled={pending}>{pending ? "Signing in..." : "Sign in"}</button>
                 </form>
+                <p><Link to="/recover" onClick={()=>setShowLogin(false)}>Forgot your password?</Link></p>
                 <p>
                     Don't have an account?{" "}
                     <button type="button"

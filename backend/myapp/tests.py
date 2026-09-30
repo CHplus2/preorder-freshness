@@ -173,7 +173,8 @@ class BrowserCartTests(TestCase):
         user=User.objects.create_user('browser-user',password='test-browser-password')
         product=Product.objects.create(name='Meal',price='10.00')
         client=APIClient(enforce_csrf_checks=True)
-        response=client.post('/api/login/',{'username':user.username,'password':'test-browser-password'},HTTP_HOST='127.0.0.1:8000')
+        client.get('/api/check-auth/')
+        response=client.post('/api/login/',{'username':user.username,'password':'test-browser-password'},HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value,HTTP_HOST='127.0.0.1:8000')
         self.assertEqual(response.status_code,200)
         token=client.cookies['csrftoken'].value
         response=client.post('/api/cart/',{'product_id':product.id,'quantity':1},HTTP_X_CSRFTOKEN=token,HTTP_ORIGIN='http://127.0.0.1:5173',HTTP_HOST='127.0.0.1:8000')
@@ -183,7 +184,8 @@ class BrowserCartTests(TestCase):
         user=User.objects.create_user('csrf-user',password='test-browser-password')
         product=Product.objects.create(name='Meal',price='10.00')
         client=APIClient(enforce_csrf_checks=True)
-        client.post('/api/login/',{'username':user.username,'password':'test-browser-password'},HTTP_HOST='127.0.0.1:8000')
+        client.get('/api/check-auth/')
+        client.post('/api/login/',{'username':user.username,'password':'test-browser-password'},HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value,HTTP_HOST='127.0.0.1:8000')
         response=client.post('/api/cart/',{'product_id':product.id},HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value,HTTP_ORIGIN='https://untrusted.example',HTTP_HOST='127.0.0.1:8000')
         self.assertEqual(response.status_code,403)
 

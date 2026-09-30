@@ -48,6 +48,7 @@ export default function ProductProvider({ children }) {
     }, []);
 
     const fetchRecommendation = useCallback(async () => {
+        if (!isAuthenticated) { setRecommended([]); return; }
         if (isAuthenticated) {
             try {
                 const res = await axios.get("/api/recommendation");
@@ -66,9 +67,6 @@ export default function ProductProvider({ children }) {
         fetchCategories();
     }, [fetchCategories]);
 
-    useEffect(() => {
-        fetchRecommendation();
-    }, [fetchRecommendation]);
 
     const addProduct = async (product) => {
         try {

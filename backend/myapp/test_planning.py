@@ -148,10 +148,10 @@ class PlanningTests(TestCase):
         p=self.product(preparation_tasks=[self.task()])
         o=self.book(p,schedule_order([self.item(p)],self.delivery,self.store,now=self.now))
         self.client.force_authenticate(self.owner);url=f'/api/admin/orders/{o.id}/preparation-plan/'
-        preview=self.client.post(url,{},format='json').data
+        preview=self.client.post(url,{'adopt_current': True},format='json').data
         original=o.preparation_plan
         p.preparation_tasks=[self.task(minutes=90)];p.save()
-        self.assertEqual(self.client.post(url,{'confirm':preview['confirm']},format='json').status_code,409)
+        self.assertEqual(self.client.post(url,{'confirm':preview['confirm'], 'adopt_current': True},format='json').status_code,409)
         o.refresh_from_db();self.assertEqual(o.preparation_plan,original)
         o.status='processing';o.save()
         self.assertEqual(self.client.post(url,{},format='json').status_code,400)

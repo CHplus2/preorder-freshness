@@ -91,6 +91,7 @@ class ProductSerializer(serializers.ModelSerializer):
         from django.db import transaction
         recipe = validated_data.pop('ingredients', None)
         with transaction.atomic():
+            instance = Product.objects.select_for_update().get(pk=instance.pk)
             instance = super().update(instance, validated_data)
             if recipe is not None:
                 instance.ingredients.all().delete()
@@ -127,7 +128,7 @@ class AddressSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = "__all__"
+        fields = ['id', 'order', 'product', 'product_name', 'unit_price', 'quantity', 'subtotal', 'recipe_source']
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -147,7 +148,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class RawMaterialSerializer(serializers.ModelSerializer):
     def validate_unit(self, value):
-        if self.instance and value != self.instance.unit and (self.instance.inventory_items.exists() or self.instance.product_ingredients.exists()):
+        if self.instance and value != self.instance.unit and (self.instance.inventory_items.exists() or self.instance.product_ingredients.exists() or self.instance.orderingredient_set.exists()):
             raise serializers.ValidationError('Create a new material to change units once batches or recipes use this material.')
         return value
 
@@ -222,7 +223,14 @@ class InventoryItemSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class UserSerializer(serializers.ModelSerializer):
+    def validate(self, attrs):
+        if set(self.initial_data) - {'is_active'}:
+            raise serializers.ValidationError('Only customer activation may be changed here.')
+        if self.instance and (self.instance.is_staff or self.instance.is_superuser):
+            raise serializers.ValidationError('Owner accounts cannot be changed here.')
+        return attrs
+
     class Meta:
         model = User
         fields = ["id", "username", "is_staff", "is_active"]
-        read_only_fields = ["id", "username"]
+        read_only_fields = ["id", "username", "is_staff"]

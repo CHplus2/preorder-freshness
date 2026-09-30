@@ -10,6 +10,7 @@ function GrocerySignup() {
         "username": "",
         "password": "",
         "confirmPassword": "",
+        "email": "",
     });
     const { setShowSignup, setShowLogin, modalMotion } = useUI();
     const { signup } = useAuth();
@@ -60,6 +61,8 @@ function GrocerySignup() {
                         onChange={handleChange}
                         required
                     /></label>
+                    <label>Recovery email (optional)<input type="email" name="email" autoComplete="email" maxLength={254} value={account.email} onChange={handleChange}/></label>
+                    <p>Add an email if you want to reset a forgotten password.</p>
                     <label>Password<input
                         type="password"
                         name="password"

@@ -2,6 +2,10 @@
 
 ## Documentation
 
+- [Stage 2 delivery rescheduling](docs/FYP-IMPLEMENTATION-STAGE-2.md): customer/owner preview and confirmation, cutoff policy, preserved order terms, change history and verification.
+
+- [Stage 1 FYP implementation and rollout](docs/FYP-IMPLEMENTATION-STAGE-1.md): accepted recipes, payment records, date-aware discovery, batch traceability, contribution reporting, migration requirements and test limits. This supersedes older descriptions of mutable accepted recipes and editable payment-status flags below.
+
 - [UI/UX, accessibility and performance audit](docs/AUDIT-2026-09-28.md): baseline evidence, implemented fixes, tests, remaining issues and FYP reporting limits.
 
 - [Multilingual Kitchen Help](docs/KITCHEN-HELP.md): features, Groq setup, privacy and limits.

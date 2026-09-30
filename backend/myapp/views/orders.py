@@ -9,7 +9,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from ..models import Product, Storefront
 from decimal import Decimal
-from ..models import CartItem, Address, Wallet, WalletTransaction, Order, OrderItem, InventoryItem, InventoryLog
+from ..models import CartItem, Address, Wallet, WalletTransaction, Order, OrderItem, InventoryItem, InventoryLog, IngredientConsumption, PaymentEvent
 from ..serializers import OrderSerializer, AddressSerializer
 
 # ------------------------------------------
@@ -23,18 +23,18 @@ class OrderList(generics.ListAPIView):
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user).select_related("user", "address").prefetch_related("items").order_by("-created_at")
 
-def deduct_inventory(product, quantity, user, order):
+def deduct_inventory(item, user, order):
     """
     Deduct raw materials required to produce the ordered quantity
     of a product using FEFO (First Expired, First Out).
     """
 
-    if not product.ingredients.exists():
-        raise ValidationError("Record the recipe before marking this menu cooked.")
-    for ingredient in product.ingredients.select_related("raw_material"):
+    if not item.accepted_ingredients.exists():
+        raise ValidationError("This order has no recorded recipe. Review its accepted recipe before cooking.")
+    for ingredient in item.accepted_ingredients.select_related("raw_material").order_by('raw_material_id'):
 
         required_quantity = (
-            ingredient.quantity_required * quantity
+            ingredient.quantity_per_portion * item.quantity
         )
 
         inventory_items = InventoryItem.objects.select_for_update().filter(
@@ -63,17 +63,21 @@ def deduct_inventory(product, quantity, user, order):
             InventoryLog.objects.create(
                 inventory_item=inventory_item,
                 change=-deduction,
-                reason=f"Used for {product.name}",
+                reason=f"Used for {item.product_name}",
                 reference=f"Order #{order.id}",
                 admin=user,
             )
+            IngredientConsumption.objects.create(order_item=item, inventory_item=inventory_item,
+                material_name=ingredient.material_name, unit=ingredient.unit,
+                batch_code=inventory_item.batch_code, quantity=deduction,
+                unit_cost=inventory_item.unit_cost, recorded_expiry=inventory_item.expiry_date)
 
             remaining -= deduction
 
         if remaining > 0:
             raise ValidationError(
                 f"Insufficient {ingredient.raw_material.name} "
-                f"for {product.name}"
+                f"for {item.product_name}"
             )
 
 @api_view(["POST"])
@@ -83,6 +87,13 @@ def place_order(request):
     from django.contrib.auth.models import User
     User.objects.select_for_update().get(pk=request.user.pk)
     user = request.user
+    request_id = serializers.UUIDField(required=False).run_validation(request.data['request_id']) if 'request_id' in request.data else None
+    if request_id:
+        previous = Order.objects.filter(checkout_request_id=request_id).first()
+        if previous:
+            if previous.user_id != user.pk:
+                raise ValidationError('This checkout reference is unavailable. Start a new checkout.')
+            return Response({'detail': 'Order already placed', 'order_id': previous.pk})
     address_id = serializers.IntegerField(min_value=1).run_validation(request.data.get("address_id"))
     payment = request.data.get("payment")
 
@@ -138,6 +149,7 @@ def place_order(request):
 
     # --- Create order ---
     order = Order.objects.create(
+        checkout_request_id=request_id,
         user=user,
         delivery_at=delivery_at,
         preparation_at=plan['start'],
@@ -178,6 +190,11 @@ def place_order(request):
     cart_items.delete()
 
     if payment == "wallet":
+        import uuid
+        PaymentEvent.objects.create(order=order, request_id=uuid.uuid4(), kind='receipt',
+            outcome='completed', amount=order.total_amount+order.shipping_fee,
+            method='wallet', reference=f'Order #{order.pk} demo wallet debit',
+            source='demo_wallet', actor=user)
         WalletTransaction.objects.create(
             wallet=wallet,
             amount=order.total_amount + order.shipping_fee,
@@ -185,6 +202,8 @@ def place_order(request):
             reference=f"Order #{order.id}"
         )
 
+    from ..services.discovery import attribute_order
+    attribute_order(request, order)
     return Response({"detail": "Order placed", "order_id": order.id}, status=status.HTTP_201_CREATED)
 
 
@@ -221,5 +240,8 @@ def preparation_quote(request):
     from ..services.scheduling import schedule_order, plan_snapshot
     delivery = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
     store = Storefront.objects.filter(pk=1).first() or Storefront()
-    plan = schedule_order(CartItem.objects.filter(user=request.user).select_related('product'), delivery, store)
-    return Response(dict(preparation_at=plan['start'], preparation_end_at=plan['end'], **plan_snapshot(plan)))
+    items = list(CartItem.objects.filter(user=request.user).select_related('product'))
+    plan = schedule_order(items, delivery, store)
+    from ..services.discovery import shopping_preview
+    return Response(dict(preparation_at=plan['start'], preparation_end_at=plan['end'],
+        procurement_required=bool(shopping_preview(items, plan['start'], plan['end'])), **plan_snapshot(plan)))

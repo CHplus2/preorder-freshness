@@ -1,7 +1,12 @@
 from .views.help import KitchenHelp
+from .views.rescheduling import reschedule_order
+from .views.payments import payments
+from .views.outcomes import contribution_report, batch_trace
+from .views.discovery import guided_menu, basket_slots, recommendation_event, recommendation_metrics
+from .views.auth import recovery_request, recovery_confirm
 from .views.costs import expenses, void_expense, record_waste, cost_report
 from .views.reminders import reminder_status, run_reminders
-from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_plan
+from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_plan, accepted_recipe
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -23,6 +28,17 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path('orders/<int:pk>/reschedule/', reschedule_order),
+    path('auth/recovery/', recovery_request),
+    path('auth/recovery/confirm/', recovery_confirm),
+    path('menu/guide/', guided_menu),
+    path('orders/slots/', basket_slots),
+    path('recommendation/events/', recommendation_event),
+    path('admin/recommendation-metrics/', recommendation_metrics),
+    path('admin/contribution/', contribution_report),
+    path('admin/inventory-items/<int:pk>/trace/', batch_trace),
+    path('admin/orders/<int:pk>/payments/', payments),
+    path('admin/orders/<int:pk>/accepted-recipe/', accepted_recipe),
     path("help/", KitchenHelp.as_view()),
     path("admin/costs/", cost_report),
     path("admin/expenses/", expenses),

@@ -1,0 +1,13 @@
+.fyp-form {display:grid;gap:1rem;max-width:44rem;margin:1rem 0}
+.fyp-form.inline {max-width:none;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));align-items:end}
+.fyp-form label {display:grid;gap:.4rem;font-size:.9rem}
+.fyp-form input,.fyp-form select,.fyp-form textarea {width:100%;min-width:0;padding:.7rem;border:1px solid #b8beb5;border-radius:6px;background:#fff;color:#243328;font:inherit;box-sizing:border-box}
+.fyp-form button,.guide-results button,.slot-suggestions button {padding:.7rem 1rem;min-height:44px;border:1px solid #477b4f;border-radius:6px;background:#edf3eb;color:#243328;cursor:pointer}
+.fyp-form button:disabled {opacity:.65;cursor:wait}
+.guide-results {display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.5rem;margin:1rem 0}
+.guide-results article {padding:1rem;border:1px solid #d9ddd5;border-radius:8px}
+.guide-results button,.slot-suggestions button {margin:.3rem .4rem .3rem 0}
+.guided-menu {margin:1.5rem 0}
+.dk-panel details {padding:.8rem 0;border-bottom:1px solid #d9ddd5}
+.dk-panel summary {cursor:pointer;line-height:1.6}
+.slot-suggestions {margin:1rem 0}

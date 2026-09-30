@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -41,15 +41,11 @@ def admin_order_detail(request, pk):
             raise ValidationError('Follow pending, processing, cooked, shipped, delivered. Cancellation is allowed before dispatch.')
         if new_status == 'cooked' and not order.inventory_deducted:
             for item in order.items.select_related('product'):
-                if not item.product:
-                    raise ValidationError('An ordered menu was deleted; resolve its recipe before cooking.')
-                deduct_inventory(item.product, item.quantity, request.user, order)
+                deduct_inventory(item, request.user, order)
             order.inventory_deducted = True
         order.status = new_status
-    if new_payment_status:
-        if new_payment_status not in dict(Order.PAYMENT_STATUS):
-            raise ValidationError('Invalid payment status.')
-        order.payment_status = new_payment_status
+    if new_payment_status and new_payment_status != order.payment_status:
+        raise ValidationError('Record a verified payment or refund in Payment records; status cannot be changed directly.')
     order.save()
 
     return Response({"detail": "Order updated", "order": OrderSerializer(order).data}, status=status.HTTP_200_OK)
@@ -73,10 +69,16 @@ def product_sales_report(request):
     )
     return Response(sales, status=status.HTTP_200_OK)
 
-class AdminCustomerViewSet(viewsets.ModelViewSet):
+class AdminCustomerViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                           mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdminUser]
+
+    def perform_update(self, serializer):
+        if serializer.instance.is_staff or serializer.instance.is_superuser:
+            raise ValidationError('Owner accounts cannot be modified from customer management.')
+        serializer.save()
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
