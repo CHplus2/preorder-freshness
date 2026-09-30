@@ -7,3 +7,11 @@
 .checkout-section>button {margin:0 0 12px}
 .checkout-section>.checkout-hint[role=status] {padding:16px;background:#eef5e8;border:1px solid #b6caaa;border-radius:8px;margin:4px 0 20px}
 .checkout-section>.checkout-error {margin:4px 0 20px}
+
+.availability-result{margin:4px 0 24px;padding:18px;border-radius:10px;border:1px solid #b6caaa;background:#eef5e8;color:#25442d;font-size:14px;line-height:1.6}
+.availability-result strong{display:block;font-size:16px;color:inherit}
+.availability-result p{margin:8px 0 0}
+.availability-result details{margin-top:14px}
+.availability-result summary{cursor:pointer;font-weight:600}
+.availability-result--pending{background:#f3f5ef;border-color:#cdd6c8}
+.availability-result--error{background:#fff1ed;border-color:#d9a795;color:#873a22}
