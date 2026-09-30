@@ -12,9 +12,14 @@ export default function OrderProvider({ children }) {
     const {setAlert} = useUI();
     const [orders, setOrders] = useState([]);
     const [adminOrders, setAdminOrders] = useState([]);
+    const [ordersLoading, setOrdersLoading] = useState(true);
+    const [ordersError, setOrdersError] = useState('');
+    const [adminOrdersLoading, setAdminOrdersLoading] = useState(true);
+    const [adminOrdersError, setAdminOrdersError] = useState('');
     const { refreshCart, cart } = useCart();
     
     const fetchOrders = useCallback(async () => {
+        setOrdersLoading(true); setOrdersError('');
         try {
             const res = await axios.get("/api/orders/", { 
                 withCredentials: true,
@@ -24,11 +29,14 @@ export default function OrderProvider({ children }) {
             
             setOrders(Array.isArray(data) ? data : data.results || []);
         } catch (err) {
-            setAlert({message:apiError(err),type:"error"});
+            setOrdersError(apiError(err));
+        } finally {
+            setOrdersLoading(false);
         }
     }, []);
 
     const fetchAdminOrders = useCallback(async () => {
+        setAdminOrdersLoading(true); setAdminOrdersError('');
         try {
             const res = await axios.get("/api/admin/orders/", {
                 withCredentials: true,
@@ -38,7 +46,9 @@ export default function OrderProvider({ children }) {
 
             setAdminOrders(Array.isArray(data) ? data : data.results || []);
         } catch (err) {
-            setAlert({message:apiError(err),type:"error"});
+            setAdminOrdersError(apiError(err));
+        } finally {
+            setAdminOrdersLoading(false);
         }
     }, []);
 
@@ -80,7 +90,8 @@ export default function OrderProvider({ children }) {
     }
 
     const value = {
-        orders, adminOrders, setOrders, setAdminOrders, fetchOrders, fetchAdminOrders, placeOrder, updateOrder
+        orders, adminOrders, ordersLoading, ordersError, adminOrdersLoading, adminOrdersError,
+        setOrders, setAdminOrders, fetchOrders, fetchAdminOrders, placeOrder, updateOrder
     }
     
     return <OrderContext.Provider value={value}>

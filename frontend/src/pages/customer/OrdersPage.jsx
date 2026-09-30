@@ -9,7 +9,7 @@ import "./OrdersPage.css";
 export default function OrdersPage() {
   const location = useLocation();
   const { formatOrderNumber, setAlert } = useUI();
-  const { orders,  fetchOrders } = useOrder();
+  const { orders, fetchOrders, ordersLoading, ordersError } = useOrder();
 
   useEffect(() => {
     if (location.state?.formPayment) {
@@ -28,7 +28,8 @@ export default function OrdersPage() {
     <div className="orders-container">
       <h1 className="orders-title">My Orders</h1>
 
-      {orders.length > 0 ? (
+      {ordersError && <p role="alert">{ordersError} <button disabled={ordersLoading} onClick={fetchOrders}>Retry loading orders</button></p>}
+      {ordersLoading ? <p role="status">Loading your orders…</p> : ordersError ? null : orders.length > 0 ? (
         orders.map((order) => (
           <div key={order.id} className="order-card">
 

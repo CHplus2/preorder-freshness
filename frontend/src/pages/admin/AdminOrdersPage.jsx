@@ -15,7 +15,7 @@ export default function AdminOrdersPage() {
   const [saving, setSaving] = useState(false);
   const submitting = useRef(false);
   const { formatOrderNumber } = useUI();
-  const { adminOrders, fetchAdminOrders, updateOrder } = useOrder();
+  const { adminOrders, fetchAdminOrders, updateOrder, adminOrdersLoading, adminOrdersError } = useOrder();
 
   useEffect(() => {
     fetchAdminOrders();
@@ -45,7 +45,8 @@ export default function AdminOrdersPage() {
     <div className="orders-container">
       <h1 className="orders-title">All Orders</h1>
 
-      {adminOrders.length > 0 ? (
+      {adminOrdersError && <p role="alert">{adminOrdersError} <button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Retry loading orders</button></p>}
+      {adminOrdersLoading ? <p role="status">Loading orders…</p> : adminOrdersError ? null : adminOrders.length > 0 ? (
         <>
           {adminOrders.map((order) => (
             <div key={order.id} className="order-card">

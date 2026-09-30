@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Database release repair](docs/RELEASE-REPAIR-2026-09-30.md): production migrations applied, preserved orders, backup evidence and the Vercel migration check.
+
 - [Stage 5 pricing simulator](docs/FYP-IMPLEMENTATION-STAGE-5.md): compare prices, bulk discounts and ingredient-cost increases without changing live offers.
 
 - [Stage 4 contribution CSV export](docs/FYP-IMPLEMENTATION-STAGE-4.md): complete bounded date-range exports, missing-cost handling, privacy and verification.
