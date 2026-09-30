@@ -22,6 +22,8 @@ export default function CartProvider({ children }) {
   const { store: promotion } = useStorefront();
   const [wallet, setWallet] = useState(null);
   const [walletLoading, setWalletLoading] = useState(true);
+  const [cartLoading, setCartLoading] = useState(true);
+  const [cartError, setCartError] = useState('');
 
   const { isAuthenticated, cart, setCart } = useAuth();
   const { setAlert, setShowLogin } = useUI();
@@ -54,18 +56,23 @@ export default function CartProvider({ children }) {
   const refreshCart = useCallback(async () => {
     if (!isAuthenticated) {
       setCart([]);
+      setCartLoading(false);
       return;
     }
 
+    setCartLoading(true); setCartError('');
     try {
-      const res = await axios.get("/api/cart/", { withCredentials: true });
+      const res = await axios.get("/api/cart/", { withCredentials: true, timeout:30000 });
       const data = res.data;
 
       setCart(Array.isArray(data) ? data : data.results || []);
 
     } catch (err) {
+      setCartError(apiError(err));
       setAlert({message:apiError(err),type:"error"});
       console.error("refreshCart:", err.response?.data || err.message);
+    } finally {
+      setCartLoading(false);
     }
   }, [isAuthenticated, setCart]);
 
@@ -169,6 +176,7 @@ export default function CartProvider({ children }) {
       value={{
         discount, promotion,
         cart,
+        cartLoading, cartError,
         total,
         finalTotal,
         SHIPPING_FEE,

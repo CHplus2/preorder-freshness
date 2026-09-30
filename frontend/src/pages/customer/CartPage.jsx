@@ -1,14 +1,11 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthProvider";
 import { useUI } from "../../contexts/UIProvider";
 import { useCart } from "../../contexts/CartProvider";
 import "./CartPage.css";
 
 export default function CartPage() { 
-  const { cart } = useAuth();
   const { formatPrice } = useUI();
-  const { removeFromCart, updateQuantity } = useCart();
+  const { cart, cartLoading, cartError, refreshCart, removeFromCart, updateQuantity } = useCart();
   const navigate = useNavigate();
 
   const total = cart.reduce(
@@ -18,7 +15,9 @@ export default function CartPage() {
 
   return (
     <div className="cart-container">
-      <h1 className="cart-title">Your Cart</h1>
+      <h1 className="cart-title">Your basket</h1>
+      {cartLoading && <p role="status">Loading your basket…</p>}
+      {cartError && <p role="alert">{cartError} <button onClick={refreshCart}>Try again</button></p>}
 
       {cart.length > 0 ? (
         <>
@@ -83,12 +82,12 @@ export default function CartPage() {
           ))}
         </>
       ) : (
-        <p>Your cart is empty.</p>
+        !cartLoading && !cartError && <p>Your basket is empty. Add a meal from the menu to get started.</p>
       )}
 
-      <div className="cart-total">
+      {cart.length > 0 && <div className="cart-total">
         Total: <strong>{formatPrice(total)}</strong>
-      </div>
+      </div>}
 
       {cart.length > 0 && (
         <button
