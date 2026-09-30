@@ -1,3 +1,6 @@
+import InventoryAttention from '../../components/InventoryAttention';
+import {expiryStatus} from '../../utils/inventoryAttention';
+import {malaysiaDate} from '../../utils/planner';
 import ModalDialog from '../../components/ModalDialog';
 import PageLoading from "../../components/PageLoading";
 import {apiError} from '../../utils/apiError';
@@ -24,6 +27,8 @@ const emptyInventoryItem = {
 };
 
 export default function AdminInventoryPage() {
+  const [today,setToday]=useState(()=>malaysiaDate(new Date()));
+  useEffect(()=>{const timer=setInterval(()=>setToday(malaysiaDate(new Date())),60000);return()=>clearInterval(timer)},[]);
   const [rawMaterials, setRawMaterials] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
 
@@ -119,27 +124,6 @@ export default function AdminInventoryPage() {
     editingRawMaterial,
   ]);
 
-  const getFreshnessStatus = (expiryDate) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const expiry = new Date(expiryDate);
-    expiry.setHours(0, 0, 0, 0);
-
-    const difference =
-      (expiry - today) / (1000 * 60 * 60 * 24);
-
-    if (difference < 0) {
-      return "expired";
-    }
-
-    if (difference <= 3) {
-      return "expiring";
-    }
-
-    return "fresh";
-  };
-
   const filteredInventory = useMemo(() => {
     return inventoryItems.filter((item) => {
       const search = searchQuery.toLowerCase();
@@ -162,7 +146,7 @@ export default function AdminInventoryPage() {
 
       const matchesFreshness =
         freshnessFilter
-          ? getFreshnessStatus(item.expiry_date) ===
+          ? expiryStatus(item.expiry_date,today) ===
             freshnessFilter
           : true;
 
@@ -177,6 +161,7 @@ export default function AdminInventoryPage() {
     searchQuery,
     selectedRawMaterial,
     freshnessFilter,
+    today,
   ]);
 
   const handleCreateRawMaterial = async () => {
@@ -399,9 +384,9 @@ export default function AdminInventoryPage() {
           <strong>
             {
               inventoryItems.filter(
-                (item) =>
-                  getFreshnessStatus(
-                    item.expiry_date
+                (item) => Number(item.quantity)>0 &&
+                  expiryStatus(
+                    item.expiry_date,today
                   ) === "expiring"
               ).length
             }
@@ -413,9 +398,9 @@ export default function AdminInventoryPage() {
           <strong>
             {
               inventoryItems.filter(
-                (item) =>
-                  getFreshnessStatus(
-                    item.expiry_date
+                (item) => Number(item.quantity)>0 &&
+                  expiryStatus(
+                    item.expiry_date,today
                   ) === "expired"
               ).length
             }
@@ -423,6 +408,8 @@ export default function AdminInventoryPage() {
         </div>
 
       </div>
+
+      <InventoryAttention items={inventoryItems} today={today} onReview={id=>setEditingInventoryItem({...inventoryItems.find(item=>item.id===id)})}/>
 
       {/* Filters */}
       <div className="inventory-controls">
@@ -499,8 +486,8 @@ export default function AdminInventoryPage() {
             filteredInventory.map((item) => {
 
               const freshness =
-                getFreshnessStatus(
-                  item.expiry_date
+                expiryStatus(
+                  item.expiry_date,today
                 );
 
               return (
@@ -542,6 +529,7 @@ export default function AdminInventoryPage() {
                       {freshness === "expiring" &&
                         "Expiring Soon"}
 
+                      {freshness === "unknown" && "Date missing"}
                       {freshness === "expired" &&
                         "Expired"}
                     </span>
