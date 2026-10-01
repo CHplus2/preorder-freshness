@@ -1,3 +1,5 @@
+import OrderProgress from '../../components/OrderProgress';
+import {orderProgress} from '../../utils/orderProgress';
 import ManualPayment from '../../components/ManualPayment';
 import RescheduleOrder from '../../components/RescheduleOrder';
 import { useEffect } from "react";
@@ -26,7 +28,7 @@ export default function OrdersPage() {
 
   return (
     <div className="orders-container">
-      <h1 className="orders-title">My Orders</h1>
+      <div className="customer-orders-heading"><h1 className="orders-title">My Orders</h1><button type="button" disabled={ordersLoading} onClick={fetchOrders}>{ordersLoading?"Refreshing…":"Refresh order status"}</button></div>
 
       {ordersError && <p role="alert">{ordersError} <button disabled={ordersLoading} onClick={fetchOrders}>Retry loading orders</button></p>}
       {ordersLoading && <p role="status">Loading your orders…</p>}
@@ -41,10 +43,11 @@ export default function OrdersPage() {
               </div>
 
               <span className={`status-badge status-${order.status}`}>
-                {order.status}
+                {orderProgress(order.status).label}
               </span>
             </div>
 
+            <OrderProgress order={order}/>
             <p>Delivery: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Contact owner to arrange'} · {order.delivery_method}</p>
             <p>Bulk discount: RM {order.discount_amount} · Delivery fee: RM {order.shipping_fee}</p>
             <ManualPayment order={order}/>{order.address && <details className="dk-panel"><summary>Delivery address used for this order</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}

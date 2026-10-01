@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Stage 10 batch planning and order progress](docs/FYP-IMPLEMENTATION-STAGE-10.md): opt-in independent recipe batches, scheduling retries and customer fulfilment stages.
+
 - [Stage 9 inventory attention list](docs/FYP-IMPLEMENTATION-STAGE-9.md): held/expiring batches, recorded stock value and Malaysia date consistency.
 
 - [Stage 8 daily packing list](docs/FYP-IMPLEMENTATION-STAGE-8.md): date-based quantities, per-order checks and a printable dispatch preparation sheet.

@@ -36,6 +36,80 @@ class PlanningTests(TestCase):
         p=self.product(batch_size=10,preparation_minutes=45,additional_batch_minutes=30)
         lines,total=preparation_work([self.item(p,25)])
         self.assertEqual(total,130);self.assertEqual(lines[0]['batches'],3)
+
+    def test_independent_batches_repeat_full_recipe_including_partial_batch(self):
+        p=self.product(batch_size=10,preparation_tasks=[self.task(minutes=40,independent_batches=True)])
+        lines,total=preparation_work([self.item(p,25)])
+        self.assertEqual(total,120)
+        self.assertEqual([r['portions'] for r in lines],[10,10,5])
+        self.assertEqual([r['batch_number'] for r in lines],[1,2,3])
+
+    def test_independent_batches_can_use_multiple_days_without_splitting_steps(self):
+        p=self.product(batch_size=1,max_early_minutes=3*1440,preparation_tasks=[self.task(minutes=400,worker=True,independent_batches=True)])
+        plan=schedule_order([self.item(p,3)],self.delivery,self.store,now=self.now)
+        self.assertEqual(plan['minutes'],1200)
+        self.assertEqual(plan['hands_on_minutes'],1200)
+        self.assertGreater(len({t['start'][:10] for t in plan['tasks']}),1)
+        from django.utils.dateparse import parse_datetime
+        previous=None
+        for t in plan['tasks']:
+            start,end=parse_datetime(t['start']),parse_datetime(t['end'])
+            self.assertEqual((end-start).total_seconds()/60,400)
+            self.assertEqual(start.date(),end.date())
+            self.assertGreaterEqual(start.hour,8);self.assertLessEqual(end.hour,20)
+            if previous:self.assertGreaterEqual(start,previous)
+            previous=end
+
+    def test_independent_batches_do_not_override_early_finish_limit(self):
+        p=self.product(max_early_minutes=0,preparation_tasks=[self.task(minutes=400,worker=True,independent_batches=True)])
+        with self.assertRaises(ValidationError):schedule_order([self.item(p,3)],self.delivery,self.store,now=self.now)
+
+    def test_twenty_two_step_batches_keep_dependencies_and_resource_limits(self):
+        from django.utils.dateparse import parse_datetime
+        p=self.product(max_early_minutes=4*1440,preparation_tasks=[
+            self.task(name='Mix',resource='prep_table',worker=True,minutes=20,independent_batches=True),
+            self.task(minutes=100,independent_batches=True)])
+        plan=schedule_order([self.item(p,20)],self.delivery,self.store,now=self.now)
+        self.assertEqual(plan['minutes'],2400);self.assertEqual(plan['hands_on_minutes'],400)
+        self.assertEqual(len(plan['tasks']),40)
+        for batch in range(1,21):
+            steps=sorted([t for t in plan['tasks'] if t['batch_number']==batch],key=lambda t:t['sequence'])
+            self.assertEqual(steps[0]['end'],steps[1]['start'])
+        for i,a in enumerate(plan['tasks']):
+            for b in plan['tasks'][i+1:]:
+                if a['resource']==b['resource'] or (a['worker'] and b['worker']):
+                    self.assertTrue(parse_datetime(a['end'])<=parse_datetime(b['start']) or parse_datetime(b['end'])<=parse_datetime(a['start']))
+
+    def test_batch_mode_is_preserved_in_accepted_preparation_snapshot(self):
+        from .services.commitments import preparation_snapshot,scheduled_item
+        p=self.product(preparation_tasks=[self.task(independent_batches=True)])
+        saved=preparation_snapshot(p)
+        p.preparation_tasks=[self.task(minutes=99)]
+        item=SimpleNamespace(product_id=p.pk,product=p,product_name=p.name,quantity=2,preparation_snapshot=saved)
+        lines,total=preparation_work([scheduled_item(item)])
+        self.assertEqual(len(lines),2);self.assertEqual(total,80)
+
+    def test_upstream_conflict_retries_whole_sequence_without_leaking_trial_slots(self):
+        delivery=self.delivery.replace(hour=16,minute=30) # ready at 15:00
+        p=self.product(max_early_minutes=180,preparation_tasks=[self.task(name='Mix',resource='prep_table',worker=True,minutes=60),self.task(minutes=60)])
+        # Latest mix would overlap 13:30–14:00; both steps must move earlier.
+        KitchenBlock.objects.create(start_at=delivery.replace(hour=13,minute=30),end_at=delivery.replace(hour=14,minute=0),reason='Break')
+        plan=schedule_order([self.item(p)],delivery,self.store,now=self.now)
+        self.assertEqual(len(plan['tasks']),2)
+        tasks=sorted(plan['tasks'],key=lambda t:t['sequence'])
+        self.assertEqual(tasks[0]['end'],tasks[1]['start'])
+        self.assertLessEqual(plan['end'],delivery.replace(hour=13,minute=30))
+
+    def test_oversized_unsplit_step_explains_why_later_date_will_not_help(self):
+        p=self.product(preparation_tasks=[self.task(minutes=721)])
+        with self.assertRaisesMessage(ValidationError,'uninterrupted minutes'):
+            schedule_order([self.item(p)],self.delivery,self.store,now=self.now)
+
+    def test_independent_mode_must_be_consistent_and_is_bounded(self):
+        from .services.scheduling import validate_tasks
+        with self.assertRaises(ValidationError):validate_tasks([self.task(independent_batches=True),self.task()])
+        p=self.product(preparation_tasks=[self.task(independent_batches=True)])
+        with self.assertRaises(ValidationError):preparation_work([self.item(p,101)])
     def test_distinct_unattended_resources_overlap(self):
         p=self.product(preparation_tasks=[self.task()]);a=schedule_order([self.item(p)],self.delivery,self.store,now=self.now);self.book(p,a)
         q=self.product('Rice',preparation_tasks=[self.task(resource='rice_cooker')]);b=schedule_order([self.item(q)],self.delivery,self.store,now=self.now)

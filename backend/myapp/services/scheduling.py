@@ -31,7 +31,7 @@ def validate_tasks(value):
             if type(v) is not int or not low <= v <= high:
                 raise ValidationError(f'{name}: {key.replace("_", " ")} must be a whole number between {low} and {high}.')
             row[key] = v
-        for key, default in [('worker', True), ('overnight', False)]:
+        for key, default in [('worker', True), ('overnight', False), ('independent_batches', False)]:
             v = task.get(key, default)
             if type(v) is not bool:
                 raise ValidationError(f'{name}: choose yes or no for {key}.')
@@ -39,6 +39,8 @@ def validate_tasks(value):
         if row['overnight'] and (row['worker'] or row['resource'] not in {'fridge', 'none'}):
             raise ValidationError('Only unattended fridge/rest steps can run outside working hours. Split setup and finishing into attended steps.')
         clean.append(row)
+    if len({t["independent_batches"] for t in clean}) > 1:
+        raise ValidationError("Choose the same batch scheduling mode for every recipe step.")
     return clean
 
 
@@ -52,10 +54,17 @@ def preparation_work(items):
             tasks = [dict(name='Cook', minutes=p.preparation_minutes, additional_batch_minutes=p.additional_batch_minutes, resource='prep_table', worker=True, overnight=False, max_wait_minutes=0)]
             if p.packing_minutes_per_portion:
                 tasks.append(dict(name='Pack', minutes=item.quantity*p.packing_minutes_per_portion, additional_batch_minutes=0, resource='packing_area', worker=True, overnight=False, max_wait_minutes=0))
-        steps = [dict(t, minutes=t['minutes']+(batches-1)*t['additional_batch_minutes']) for t in tasks]
-        lines.append(dict(product_id=p.id, menu=p.name, portions=item.quantity, batches=batches,
-                          batch_size=p.batch_size, minutes=sum(t['minutes'] for t in steps), tasks=steps,
-                          max_preparation_days=p.max_preparation_days, max_early_minutes=p.max_early_minutes))
+        independent = bool(tasks[0].get('independent_batches'))
+        if independent and batches > 100:
+            raise ValidationError(f'{p.name}: automatic planning supports up to 100 independent batches per menu. Contact the kitchen to review this quantity.')
+        runs = range(batches) if independent else range(1)
+        for batch_index in runs:
+            steps = [dict(t, minutes=t['minutes'] if independent else t['minutes']+(batches-1)*t['additional_batch_minutes']) for t in tasks]
+            portions = min(p.batch_size, item.quantity-batch_index*p.batch_size) if independent else item.quantity
+            lines.append(dict(product_id=p.id, menu=p.name, portions=portions, batches=1 if independent else batches,
+                              batch_number=batch_index+1 if independent else None,
+                              batch_size=p.batch_size, minutes=sum(t['minutes'] for t in steps), tasks=steps,
+                              max_preparation_days=p.max_preparation_days, max_early_minutes=p.max_early_minutes))
     return lines, sum(line['minutes'] for line in lines)
 
 
@@ -80,6 +89,59 @@ def booked_tasks(orders, store):
     return result
 
 
+def place_line(line, ready, advance, busy, store):
+    earliest = max(advance, ready-timedelta(days=line['max_preparation_days']))
+    finish_limit = ready-timedelta(minutes=line['max_early_minutes'])
+    working_minutes = (store.kitchen_close_hour-store.kitchen_open_hour)*60
+    for task in line['tasks']:
+        if not task['overnight'] and task['minutes'] > working_minutes:
+            raise ValidationError(f'{line["menu"]}: {task["name"]} needs {task["minutes"]} uninterrupted minutes, '
+                f'but kitchen hours allow {working_minutes} minutes per day. A later date alone will not fix this. '
+                'Ask the owner to review portions per batch, durations or independent-batch planning.')
+    candidate = ready
+    for attempt in range(200):
+        trial = []
+        next_start = candidate
+        shift = None
+        for index in range(len(line['tasks'])-1, -1, -1):
+            task = line['tasks'][index]
+            duration = timedelta(minutes=task['minutes'])
+            end = next_start
+            earliest_end = finish_limit if index == len(line['tasks'])-1 else next_start-timedelta(minutes=task['max_wait_minutes'])
+            while True:
+                if not task['overnight']:
+                    day = timezone.localtime(end).date()
+                    opening = timezone.make_aware(datetime.combine(day,time(store.kitchen_open_hour)))
+                    closing = timezone.make_aware(datetime.combine(day,time(store.kitchen_close_hour)))
+                    end = min(end, closing)
+                    if end-duration < opening:
+                        end = timezone.make_aware(datetime.combine(day-timedelta(days=1),time(store.kitchen_close_hour)))
+                start = end-duration
+                if start < earliest or end < earliest_end:
+                    if index < len(line['tasks'])-1 and start >= earliest and end < earliest_end:
+                        shift = max(timedelta(minutes=1), earliest_end-end)
+                        break
+                    raise ValidationError(f'{line["menu"]}: cannot fit {task["name"]} ({task["minutes"]} minutes) within '
+                        f'kitchen hours {store.kitchen_open_hour}:00–{store.kitchen_close_hour}:00, existing bookings, '
+                        f'the {line["max_early_minutes"]}-minute early-finish limit and permitted step gaps. '
+                        'Try a later delivery time, fewer portions or contact the owner to review the recipe plan. '
+                        'Changing only the date may not help; no booking or handling limit has been overridden.')
+                conflicts = [b for b in busy if b['start'] < end and b['end'] > start and
+                    (b['resource']=='all' or (task['resource']!='none' and task['resource']==b['resource']) or (task['worker'] and b['worker']))]
+                if not conflicts:
+                    break
+                end = min(b['start'] for b in conflicts)
+            if shift is not None:
+                break
+            trial.append(dict(task, start=start, end=end, menu=line['menu'], product_id=line['product_id'],
+                sequence=index+1, portions=line['portions'], batch_number=line.get('batch_number')))
+            next_start = start
+        if shift is None:
+            return trial
+        candidate -= shift
+    raise ValidationError(f'{line["menu"]}: automatic planning reached its search limit. Contact the owner to review the plan; availability has not been confirmed.')
+
+
 def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, notice_from=None):
     now = now or timezone.now()
     items = list(items)
@@ -102,43 +164,12 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
     orders = Order.objects.filter(status__in=['pending','processing'],inventory_deducted=False,preparation_at__lt=ready,delivery_at__gt=horizon).exclude(pk=exclude_order_id).only('preparation_at','preparation_end_at','delivery_at','preparation_plan')
     busy.extend(booked_tasks(orders, store))
     planned = []
-    # Stable ordering: long menu sequences first; tasks remain in recipe order.
+    # Retry the whole new sequence when an upstream step cannot meet its gap.
+    # Existing bookings never move; failed trial steps never reserve resources.
     for line in sorted(lines, key=lambda x: (-x['minutes'], x['product_id'])):
-        next_start = ready
-        earliest = max(advance, ready-timedelta(days=line['max_preparation_days']))
-        for index in range(len(line['tasks'])-1,-1,-1):
-            task = line['tasks'][index]
-            end = next_start
-            wait = line['max_early_minutes'] if index == len(line['tasks'])-1 else task['max_wait_minutes']
-            earliest_end = next_start-timedelta(minutes=wait)
-            duration = timedelta(minutes=task['minutes'])
-            while True:
-                if not task['overnight']:
-                    day = timezone.localtime(end).date()
-                    opening = timezone.make_aware(datetime.combine(day,time(store.kitchen_open_hour)))
-                    closing = timezone.make_aware(datetime.combine(day,time(store.kitchen_close_hour)))
-                    end = min(end, closing)
-                    if end-duration < opening:
-                        end = timezone.make_aware(datetime.combine(day-timedelta(days=1),time(store.kitchen_close_hour)))
-                        continue_check = True
-                    else:
-                        continue_check = False
-                else:
-                    continue_check = False
-                start = end-duration
-                if start < earliest or end < earliest_end:
-                    raise ValidationError(f'No available slot for {line["menu"]}: {task["name"]}. Choose a later delivery or contact the kitchen. Working hours, equipment, worker time and permitted gaps are checked; existing orders will not be moved.')
-                if continue_check:
-                    continue
-                conflicts = [b for b in busy if b['start'] < end and b['end'] > start and
-                    (b['resource']=='all' or (task['resource']!='none' and task['resource']==b['resource']) or (task['worker'] and b['worker']))]
-                if not conflicts:
-                    break
-                end = min(b['start'] for b in conflicts)
-            step = dict(task, start=start, end=end, menu=line['menu'], product_id=line['product_id'], sequence=index+1, portions=line['portions'])
-            busy.append(step)
-            planned.append(step)
-            next_start = start
+        placed = place_line(line, ready, advance, busy, store)
+        busy.extend(placed)
+        planned.extend(placed)
     planned.sort(key=lambda t:t['start'])
     return dict(start=min(t['start'] for t in planned), end=max(t['end'] for t in planned),
                 minutes=minutes, hands_on_minutes=sum(t['minutes'] for t in planned if t['worker']),
