@@ -1,0 +1,12 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {preparationEstimate} from './preparationEstimate.js';
+const step={name:'Mix',minutes:20,additional_batch_minutes:25,worker:true,overnight:false};
+const menu={batch_size:1,preparation_tasks:[step,{...step,name:'Bake',minutes:100,additional_batch_minutes:15,worker:false}]};
+const store={kitchen_open_hour:8,kitchen_close_hour:20};
+test('combined timing reproduces the ten-bar example',()=>{const p=preparationEstimate(menu,10,store);assert.equal(p.total,480);assert.equal(p.handsOn,245);assert.deepEqual(p.steps.map(s=>s.uninterrupted),[245,235]);});
+test('independent mode repeats full duration including a partial batch',()=>{const p=preparationEstimate({...menu,batch_size:10,preparation_tasks:menu.preparation_tasks.map(t=>({...t,independent_batches:true}))},25,store);assert.equal(p.total,360);assert.equal(p.handsOn,60);assert.equal(p.partial,5);});
+test('basic cook/pack formula matches backend example',()=>{const p=preparationEstimate({batch_size:10,preparation_minutes:45,additional_batch_minutes:30,packing_minutes_per_portion:1},25);assert.equal(p.total,130);assert.equal(p.handsOn,130);});
+test('incomplete inputs do not produce misleading zero estimates',()=>{for(const q of ['',0,'bad','1.5'])assert.ok(preparationEstimate(menu,q).error);assert.ok(preparationEstimate({...menu,batch_size:''},10).error);assert.ok(preparationEstimate({...menu,preparation_tasks:[{...step,minutes:''}]},10).error);});
+test('unattended overnight steps are exempt from work-window warning',()=>{const p=preparationEstimate({...menu,preparation_tasks:[{...step,minutes:1440,worker:false,overnight:true}]},1,store);assert.equal(p.warnings.length,1);assert.match(p.warnings[0],/worker time/);});
+test('warns about oversized steps and capacity, without assuming unknown hours',()=>{const m={...menu,daily_capacity:1,preparation_tasks:[{...step,minutes:800}]};assert.equal(preparationEstimate(m,2,store).warnings.length,2);assert.equal(preparationEstimate(m,2).warnings.length,1);});

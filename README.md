@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Stage 11 preparation-time preview](docs/FYP-IMPLEMENTATION-STAGE-11.md): sample quantities, batch duration breakdown and configuration warnings in the menu editor.
+
 - [Stage 10 batch planning and order progress](docs/FYP-IMPLEMENTATION-STAGE-10.md): opt-in independent recipe batches, scheduling retries and customer fulfilment stages.
 
 - [Stage 9 inventory attention list](docs/FYP-IMPLEMENTATION-STAGE-9.md): held/expiring batches, recorded stock value and Malaysia date consistency.
