@@ -1,0 +1,17 @@
+.settings-page .dk-settings{display:grid;gap:24px;margin:0 0 36px}
+.settings-page .settings-group{padding:24px;margin:0 0 24px;border:1px solid #dce2df;border-radius:10px;background:#fff}
+.settings-page .dk-settings>.settings-group{margin:0}
+.settings-page .settings-group>h2{margin:0 0 12px}
+.settings-page .settings-group>summary{font-weight:650;line-height:1.5;cursor:pointer}
+.settings-page .settings-group[open]>summary{margin-bottom:18px}
+.settings-page .settings-group>p{margin:12px 0 20px;line-height:1.65}
+.settings-page .admin-fields{column-gap:24px;row-gap:16px}
+.settings-page .admin-fields>label{margin:0;display:flex;flex-direction:column;gap:8px}
+.settings-page .admin-fields>label>input,.settings-page .admin-fields>label>textarea{margin:0}
+.settings-page .settings-payment-toggle{display:flex;align-items:flex-start;gap:12px;margin:0;padding:4px 0;line-height:1.6}
+.settings-page .settings-payment-toggle>input{width:18px;min-height:18px;height:18px;flex-shrink:0;margin:3px 0 0}
+.settings-page .settings-save-actions{display:flex;align-items:center;flex-wrap:wrap;gap:16px;padding-top:8px;margin:0}
+.settings-page .settings-save-actions>button{margin:0;min-height:46px}
+.settings-page .settings-save-actions>[role=status]:empty{display:none}
+.settings-page .admin-page-heading a{display:inline-block;margin-top:12px}
+@media(max-width:600px){.settings-page .settings-group{padding:20px}.settings-page .settings-save-actions{align-items:stretch;flex-direction:column}.settings-page .settings-save-actions>button{width:100%}}

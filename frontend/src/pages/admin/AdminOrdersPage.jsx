@@ -1,3 +1,4 @@
+import './OrderCardSpacing.css';
 import DialogFeedback from '../../components/DialogFeedback';
 import PaymentRecords from '../../components/PaymentRecords';
 import AcceptedRecipe from '../../components/AcceptedRecipe';
@@ -102,17 +103,17 @@ export default function AdminOrdersPage() {
               </div>
 
               {/* FOOTER */}
-              <div className="order-footer">
+              <div className="order-footer owner-order-footer"><div className="owner-order-actions">
                 <button className="edit-btn" onClick={() => startEdit(order)}>
                   Edit order
                 </button>
                 <button onClick={()=>setPaymentOrder(paymentOrder?.id===order.id?null:order)}>Payment records</button>
 
-                <div className="order-total">
+                </div><div className="order-total">
                   RM {(Number(order.total_amount)+Number(order.shipping_fee)).toFixed(2)}
                 </div>
               </div>
-              {order.items.some(i=>i.recipe_source?.startsWith('legacy')) && <p>Earlier order: recipe history is a legacy baseline or unknown. Review pending orders in Planner before preparation.</p>}
+              {order.items.some(i=>i.recipe_source?.startsWith('legacy')) && <p className="owner-order-note">Earlier order: recipe history is a legacy baseline or unknown. Review pending orders in Planner before preparation.</p>}
               {paymentOrder?.id===order.id && <PaymentRecords order={order} onSaved={fetchAdminOrders}/>}
               <AcceptedRecipe order={order}/>
               <RescheduleOrder order={order} onSaved={fetchAdminOrders}/>
