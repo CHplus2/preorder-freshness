@@ -126,10 +126,11 @@ def recommendation_metrics(request):
         if not exposed:
             continue
         clicked = sessions.filter(events__event='click').distinct().count()
+        added = sessions.filter(events__event='added').distinct().count()
         ordered = sessions.filter(events__event='order', events__order__status__in=['pending','processing','cooked','shipped','delivered']).distinct().count()
         paid = sessions.filter(events__event='order', events__order__payment_status='paid',
             events__order__status__in=['pending','processing','cooked','shipped','delivered']).distinct().count()
         rows.append({'variant': variant, 'exposed_sessions': exposed, 'clicked_sessions': clicked,
-            'ordered_sessions': ordered, 'paid_sessions': paid, 'paid_percent': round(100*paid/exposed, 1)})
+            'added_sessions': added, 'ordered_sessions': ordered, 'paid_sessions': paid, 'paid_percent': round(100*paid/exposed, 1)})
     return Response({'days': 28, 'rows': rows, 'experiment_enabled': settings.RECOMMENDATION_EXPERIMENT,
         'definition': 'Denominator: recommendation requests with rendered results (one exposure per request). Purchase attribution: matching recommended product within 24 hours, same browser session key. Paid excludes cancelled/refunded orders. Repeat visitors may create multiple sessions. These are observed outcomes, not proof of causal conversion lift.'})

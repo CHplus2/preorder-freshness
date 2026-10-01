@@ -180,12 +180,16 @@ class CommitmentTests(TestCase):
         self.assertEqual(stranger.post('/api/recommendation/events/',event,format='json').status_code,400)
         self.assertEqual(self.client.post('/api/recommendation/events/',event,format='json').status_code,200)
         self.client.post('/api/recommendation/events/',event,format='json')
+        added={'session':sid,'event':'added','product':self.product.pk,'request_id':str(uuid.uuid4())}
+        self.assertEqual(self.client.post('/api/recommendation/events/',added,format='json').status_code,200)
+        self.client.post('/api/recommendation/events/',{**added,'request_id':str(uuid.uuid4())},format='json')
         CartItem.objects.create(user=self.buyer,product=self.product,quantity=1)
         placed=self.client.post('/api/orders/place/',{'address_id':self.address.pk,'payment':'cod','delivery_at':self.delivery.isoformat(),'recommendation_session':sid},format='json')
         self.assertEqual(placed.status_code,201,placed.data)
         self.client.force_authenticate(self.owner)
         rows=self.client.get('/api/admin/recommendation-metrics/').data['rows']
         self.assertEqual(rows[0]['exposed_sessions'],1)
+        self.assertEqual(rows[0]['added_sessions'],1)
         self.assertEqual(rows[0]['ordered_sessions'],1)
         self.assertEqual(rows[0]['paid_sessions'],0)
         self.payment(Order.objects.get(pk=placed.data['order_id']))
