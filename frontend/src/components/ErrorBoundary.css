@@ -1,0 +1,11 @@
+.page-error{box-sizing:border-box;max-width:640px;margin:clamp(32px,10vh,96px) auto;padding:32px 24px;color:#263e2e;font-family:system-ui,sans-serif}
+.page-error h1{font:600 clamp(24px,4vw,32px)/1.25 system-ui,sans-serif;letter-spacing:-.5px;margin:0 0 20px;color:#263e2e}
+.page-error p{font-size:15px;line-height:1.65;margin:0 0 12px;color:#52634f}
+.page-error .page-error-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px;align-items:stretch}
+.page-error-actions>button,.page-error-actions>a{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 20px;margin:0;border:1px solid #285a3e;border-radius:8px;font:600 15px/1.4 system-ui,sans-serif;text-decoration:none;cursor:pointer;box-shadow:none;transform:none;transition:background-color .15s}
+.page-error-actions>button{background:#285a3e;color:#fff}
+.page-error-actions>a{background:#fff;color:#285a3e}
+.page-error-actions>button:hover{background:#204b33;transform:none;box-shadow:none}
+.page-error-actions>a:hover{background:#edf4eb;text-decoration:none}
+.page-error-actions>button:focus-visible,.page-error-actions>a:focus-visible{outline:3px solid #62884f;outline-offset:3px}
+@media(max-width:420px){.page-error{padding:24px 20px}.page-error-actions>button,.page-error-actions>a{width:100%}}
