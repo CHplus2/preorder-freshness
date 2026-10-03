@@ -9,3 +9,5 @@
 .accepted-recipe>button{margin:0 0 12px}
 .accepted-recipe>section,.accepted-recipe>details{margin-top:20px}
 @media(max-width:480px){.owner-order-actions{width:100%}.owner-order-actions>button{flex:1 1 130px}.owner-order-footer .order-total{width:100%;margin:0;text-align:right}}
+.admin-shell .owner-overdue-filter{display:inline-flex;align-items:center;gap:10px;margin:0;line-height:1.5}
+.admin-shell .owner-overdue-filter>input[type=checkbox]{width:18px;height:18px;min-height:18px;margin:0;flex-shrink:0}

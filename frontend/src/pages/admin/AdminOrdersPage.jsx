@@ -58,7 +58,7 @@ export default function AdminOrdersPage() {
         <label>Delivery date (Malaysia)<input type="date" value={filters.date} onChange={e=>setFilters({...filters,date:e.target.value})}/></label>
         <label>Sort by<select value={filters.sort} onChange={e=>setFilters({...filters,sort:e.target.value})}><option value="newest">Newest order</option><option value="delivery">Earliest delivery</option></select></label>
       </div>
-      <div className="admin-toolbar"><label><input type="checkbox" checked={filters.overdue} onChange={e=>setFilters({...filters,overdue:e.target.checked})}/> Overdue deliveries only</label><button onClick={()=>setFilters(emptyFilters)}>Clear filters</button><button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Refresh orders</button></div>
+      <div className="admin-toolbar"><label className="owner-overdue-filter"><input type="checkbox" checked={filters.overdue} onChange={e=>setFilters({...filters,overdue:e.target.checked})}/> Overdue deliveries only</label><button onClick={()=>setFilters(emptyFilters)}>Clear filters</button><button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Refresh orders</button></div>
       {!adminOrdersLoading && !adminOrdersError && <p role="status">Showing {visibleOrders.length} of {adminOrders.length} orders. {adminOrders.filter(o=>overdueOrder(o,now)).length} open orders are past their requested delivery time.</p>}
 
       {adminOrdersError && <p role="alert">{adminOrdersError} <button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Retry loading orders</button></p>}
