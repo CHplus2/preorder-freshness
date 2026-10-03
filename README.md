@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Stage 14 planner reliability](docs/FYP-IMPLEMENTATION-STAGE-14.md): loading/error states prevent stale operational views and calendar exports.
+
 - [Stage 13 recommendation evidence export](docs/FYP-IMPLEMENTATION-STAGE-13.md): downloadable engagement figures with timestamped reporting windows and interpretation notes.
 
 - [Stage 12 recommendation engagement](docs/FYP-IMPLEMENTATION-STAGE-12.md): independent reporting, basket-add counts and explicit interpretation limits.
