@@ -1,0 +1,1449 @@
+{
+  "purpose": "Manual-entry planning reference only. Not an import fixture. Stock templates are incomplete and held pending real evidence.",
+  "menus": [
+    {
+      "name": "Nasi Lemak Telur",
+      "price": "7.50",
+      "description": "One box of coconut rice with sambal, one boiled egg, cucumber, roasted peanuts and anchovies.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 15,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 90,
+      "additional_batch_minutes": 90,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Coconut milk UHT",
+          "quantity_required": "35.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cucumber",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Roasted peanuts",
+          "quantity_required": "10.000"
+        },
+        {
+          "raw_material": "Dried anchovies",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "3.000"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Tamarind paste",
+          "quantity_required": "2.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.500"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Pandan leaf",
+          "quantity_required": "1.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 20,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load coconut rice into cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook coconut rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Prepare sambal, boil eggs and fry anchovies",
+          "minutes": 35,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 35,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, peanut and fish. Check chilli paste and cross-contact."
+    },
+    {
+      "name": "Nasi Ayam Kunyit",
+      "price": "12.00",
+      "description": "One box of white rice, turmeric chicken, long beans and carrots.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 15,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 90,
+      "additional_batch_minutes": 90,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "180.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Turmeric powder",
+          "quantity_required": "2.000"
+        },
+        {
+          "raw_material": "Long bean",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "2.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "18.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and cut ingredients",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook turmeric chicken and vegetables",
+          "minutes": 30,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "No major allergen intentionally added in this proposed recipe; not an allergen-free claim. Check ingredient brands and shared equipment."
+    },
+    {
+      "name": "Nasi Ayam Kicap",
+      "price": "12.50",
+      "description": "One box of white rice and ginger soy chicken with carrots and cucumber.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 15,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 95,
+      "additional_batch_minutes": 95,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "180.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Ginger",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "20.000"
+        },
+        {
+          "raw_material": "Oyster sauce",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Black pepper",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Cucumber",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "3.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "12.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and cut ingredients",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook and finish chicken and vegetables",
+          "minutes": 35,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 35,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Soy, usually wheat, and mollusc from oyster sauce; verify actual brands."
+    },
+    {
+      "name": "Bihun Goreng Telur",
+      "price": "8.50",
+      "description": "One box of stir-fried rice vermicelli with egg, cabbage and carrot.",
+      "category": "Noodles",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 12,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 45,
+      "additional_batch_minutes": 45,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Dried rice vermicelli",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cabbage",
+          "quantity_required": "60.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Oyster sauce",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "15.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, cut vegetables and soak noodles",
+          "minutes": 20,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Stir-fry noodles, egg and vegetables",
+          "minutes": 25,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, soy, usually wheat, and mollusc from oyster sauce; verify actual brands."
+    },
+    {
+      "name": "Fudgy Brownies - Box of 6",
+      "price": "15.00",
+      "description": "Six small fudgy chocolate brownie squares, approximately 30-35 g each after baking. One ordered unit is one box.",
+      "category": "Bakes",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "1.20",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 8,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 150,
+      "additional_batch_minutes": 150,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Plain flour",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Butter",
+          "quantity_required": "35.000"
+        },
+        {
+          "raw_material": "Dark cooking chocolate",
+          "quantity_required": "50.000"
+        },
+        {
+          "raw_material": "Cocoa powder",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "55.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Vanilla extract",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "0.300"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, melt chocolate and mix batter",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Preheat oven, line pan and load batter",
+          "minutes": 15,
+          "resource": "oven",
+          "worker": true,
+          "additional_batch_minutes": 15,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Bake brownies",
+          "minutes": 30,
+          "resource": "oven",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Unload and check bake",
+          "minutes": 5,
+          "resource": "oven",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cool on a clean rack",
+          "minutes": 75,
+          "resource": "none",
+          "worker": false,
+          "additional_batch_minutes": 75,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cut, check yield and box",
+          "minutes": 15,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 15,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Wheat, milk, egg and possibly soy in chocolate; check nut cross-contact."
+    }
+  ],
+  "raw_materials": [
+    {
+      "name": "Rice",
+      "unit": "g",
+      "estimated_unit_cost": "0.004000"
+    },
+    {
+      "name": "Coconut milk UHT",
+      "unit": "ml",
+      "estimated_unit_cost": "0.012000"
+    },
+    {
+      "name": "Egg",
+      "unit": "unit",
+      "estimated_unit_cost": "0.500000"
+    },
+    {
+      "name": "Cucumber",
+      "unit": "g",
+      "estimated_unit_cost": "0.004000"
+    },
+    {
+      "name": "Roasted peanuts",
+      "unit": "g",
+      "estimated_unit_cost": "0.012000"
+    },
+    {
+      "name": "Dried anchovies",
+      "unit": "g",
+      "estimated_unit_cost": "0.045000"
+    },
+    {
+      "name": "Onion",
+      "unit": "g",
+      "estimated_unit_cost": "0.005000"
+    },
+    {
+      "name": "Garlic",
+      "unit": "g",
+      "estimated_unit_cost": "0.009000"
+    },
+    {
+      "name": "Chilli paste plain",
+      "unit": "g",
+      "estimated_unit_cost": "0.012000"
+    },
+    {
+      "name": "Tamarind paste",
+      "unit": "g",
+      "estimated_unit_cost": "0.015000"
+    },
+    {
+      "name": "Sugar",
+      "unit": "g",
+      "estimated_unit_cost": "0.003000"
+    },
+    {
+      "name": "Salt",
+      "unit": "g",
+      "estimated_unit_cost": "0.002000"
+    },
+    {
+      "name": "Cooking oil",
+      "unit": "ml",
+      "estimated_unit_cost": "0.007000"
+    },
+    {
+      "name": "Pandan leaf",
+      "unit": "g",
+      "estimated_unit_cost": "0.012000"
+    },
+    {
+      "name": "Chicken boneless trimmed",
+      "unit": "g",
+      "estimated_unit_cost": "0.020000"
+    },
+    {
+      "name": "Turmeric powder",
+      "unit": "g",
+      "estimated_unit_cost": "0.025000"
+    },
+    {
+      "name": "Long bean",
+      "unit": "g",
+      "estimated_unit_cost": "0.008000"
+    },
+    {
+      "name": "Carrot",
+      "unit": "g",
+      "estimated_unit_cost": "0.004000"
+    },
+    {
+      "name": "Ginger",
+      "unit": "g",
+      "estimated_unit_cost": "0.010000"
+    },
+    {
+      "name": "Sweet soy sauce",
+      "unit": "ml",
+      "estimated_unit_cost": "0.009000"
+    },
+    {
+      "name": "Oyster sauce",
+      "unit": "ml",
+      "estimated_unit_cost": "0.014000"
+    },
+    {
+      "name": "Black pepper",
+      "unit": "g",
+      "estimated_unit_cost": "0.040000"
+    },
+    {
+      "name": "Dried rice vermicelli",
+      "unit": "g",
+      "estimated_unit_cost": "0.007000"
+    },
+    {
+      "name": "Cabbage",
+      "unit": "g",
+      "estimated_unit_cost": "0.004000"
+    },
+    {
+      "name": "Plain flour",
+      "unit": "g",
+      "estimated_unit_cost": "0.004000"
+    },
+    {
+      "name": "Butter",
+      "unit": "g",
+      "estimated_unit_cost": "0.040000"
+    },
+    {
+      "name": "Dark cooking chocolate",
+      "unit": "g",
+      "estimated_unit_cost": "0.030000"
+    },
+    {
+      "name": "Cocoa powder",
+      "unit": "g",
+      "estimated_unit_cost": "0.035000"
+    },
+    {
+      "name": "Vanilla extract",
+      "unit": "ml",
+      "estimated_unit_cost": "0.080000"
+    }
+  ],
+  "inventory_templates": [
+    {
+      "raw_material": "Rice",
+      "quantity": "5000.000",
+      "unit": "g",
+      "batch_code": "DK-START-01",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.004000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Coconut milk UHT",
+      "quantity": "1000.000",
+      "unit": "ml",
+      "batch_code": "DK-START-02",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.012000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Egg",
+      "quantity": "60.000",
+      "unit": "unit",
+      "batch_code": "DK-START-03",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.500000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Cucumber",
+      "quantity": "1000.000",
+      "unit": "g",
+      "batch_code": "DK-START-04",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - segregated covered container",
+      "source_type": "market",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "storage",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.004000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Roasted peanuts",
+      "quantity": "250.000",
+      "unit": "g",
+      "batch_code": "DK-START-05",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.012000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Dried anchovies",
+      "quantity": "250.000",
+      "unit": "g",
+      "batch_code": "DK-START-06",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.045000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Onion",
+      "quantity": "2000.000",
+      "unit": "g",
+      "batch_code": "DK-START-07",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "market",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "storage",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.005000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Garlic",
+      "quantity": "500.000",
+      "unit": "g",
+      "batch_code": "DK-START-08",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "market",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "storage",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.009000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Chilli paste plain",
+      "quantity": "500.000",
+      "unit": "g",
+      "batch_code": "DK-START-09",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - segregated covered container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.012000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Tamarind paste",
+      "quantity": "100.000",
+      "unit": "g",
+      "batch_code": "DK-START-10",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.015000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Sugar",
+      "quantity": "1000.000",
+      "unit": "g",
+      "batch_code": "DK-START-11",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.003000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Salt",
+      "quantity": "500.000",
+      "unit": "g",
+      "batch_code": "DK-START-12",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.002000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Cooking oil",
+      "quantity": "2000.000",
+      "unit": "ml",
+      "batch_code": "DK-START-13",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.007000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Pandan leaf",
+      "quantity": "50.000",
+      "unit": "g",
+      "batch_code": "DK-START-14",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - segregated covered container",
+      "source_type": "market",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "storage",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.012000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Chicken boneless trimmed",
+      "quantity": "4000.000",
+      "unit": "g",
+      "batch_code": "DK-START-15",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - segregated covered container",
+      "source_type": "market",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "storage",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.020000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Turmeric powder",
+      "quantity": "100.000",
+      "unit": "g",
+      "batch_code": "DK-START-16",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.025000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Long bean",
+      "quantity": "500.000",
+      "unit": "g",
+      "batch_code": "DK-START-17",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - segregated covered container",
+      "source_type": "market",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "storage",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.008000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Carrot",
+      "quantity": "1000.000",
+      "unit": "g",
+      "batch_code": "DK-START-18",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - segregated covered container",
+      "source_type": "market",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "storage",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.004000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Ginger",
+      "quantity": "250.000",
+      "unit": "g",
+      "batch_code": "DK-START-19",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - segregated covered container",
+      "source_type": "market",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "storage",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.010000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Sweet soy sauce",
+      "quantity": "500.000",
+      "unit": "ml",
+      "batch_code": "DK-START-20",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.009000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Oyster sauce",
+      "quantity": "300.000",
+      "unit": "ml",
+      "batch_code": "DK-START-21",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.014000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Black pepper",
+      "quantity": "50.000",
+      "unit": "g",
+      "batch_code": "DK-START-22",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.040000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Dried rice vermicelli",
+      "quantity": "1000.000",
+      "unit": "g",
+      "batch_code": "DK-START-23",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.007000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Cabbage",
+      "quantity": "1000.000",
+      "unit": "g",
+      "batch_code": "DK-START-24",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - segregated covered container",
+      "source_type": "market",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "storage",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.004000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Plain flour",
+      "quantity": "1000.000",
+      "unit": "g",
+      "batch_code": "DK-START-25",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.004000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Butter",
+      "quantity": "500.000",
+      "unit": "g",
+      "batch_code": "DK-START-26",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - segregated covered container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.040000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Dark cooking chocolate",
+      "quantity": "1000.000",
+      "unit": "g",
+      "batch_code": "DK-START-27",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.030000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Cocoa powder",
+      "quantity": "250.000",
+      "unit": "g",
+      "batch_code": "DK-START-28",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.035000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Vanilla extract",
+      "quantity": "50.000",
+      "unit": "ml",
+      "batch_code": "DK-START-29",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled sealed container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.080000",
+      "quarantined": true
+    }
+  ]
+}
