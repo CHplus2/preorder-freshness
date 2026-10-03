@@ -1,6 +1,35 @@
 # Dapur Kita: manual replacement catalogue
 
-Prepared 3 October 2026. Five proposed products for one Malaysian home kitchen: everyday rice meals, noodles and one preorder bake. Prices, purchase costs, quantities and timings below are planning assumptions, not supplier quotes or tested recipes. Trial yields and timed production before live acceptance. No existing records have been changed.
+Prepared 3 October 2026. 24 proposed products for one Malaysian home kitchen: everyday rice meals, noodles and preorder bakes. Prices, purchase costs, quantities and timings below are planning assumptions, not supplier quotes or tested recipes. Trial yields and timed production before live acceptance. No existing records have been changed.
+
+## Full catalogue index
+
+1. Nasi Lemak Telur — RM 7.50
+2. Nasi Ayam Kunyit — RM 12.00
+3. Nasi Ayam Kicap — RM 12.50
+4. Bihun Goreng Telur — RM 8.50
+5. Fudgy Brownies - Box of 6 — RM 15.00
+6. Nasi Goreng Kampung — RM 9.00
+7. Nasi Goreng Ayam — RM 11.00
+8. Nasi Goreng Telur — RM 8.00
+9. Bihun Goreng Ayam — RM 10.50
+10. Bihun Goreng Sayur — RM 7.50
+11. Mee Goreng Telur — RM 9.00
+12. Mee Goreng Ayam — RM 11.00
+13. Kuey Teow Goreng Telur — RM 9.00
+14. Nasi Ayam Halia — RM 12.50
+15. Nasi Ayam Sambal — RM 12.50
+16. Nasi Ayam Black Pepper — RM 13.00
+17. Nasi Ayam Masak Lemak — RM 13.00
+18. Nasi Telur Kicap — RM 8.50
+19. Nasi Lemak Ayam Kunyit — RM 14.00
+20. Nasi Lemak Ayam Sambal — RM 14.50
+21. Nasi Lemak Ayam Kicap — RM 14.50
+22. Walnut Brownies - Box of 6 — RM 18.00
+23. Chocolate Chip Cookies - Pack of 6 — RM 10.00
+24. Banana Cake - Box of 4 Slices — RM 12.00
+
+The expanded catalogue contains 24 menus, 35 raw materials and 35 stock templates. The illustrative full stock basket totals RM 350.05. All 24 step lists and ingredient references were validated; all 48 individual one/two-batch empty-kitchen scheduling scenarios passed. This is not a combined-capacity test or a measured kitchen trial. Additional menu entries and six additional raw materials appear after the original entry guide.
 
 ## Enter in this order
 
@@ -408,7 +437,7 @@ Each entry gives the raw-material unit, estimated cost per that unit, and one pr
 
 ## Entry checks before accepting orders
 
-Validation performed: all five step lists pass the application's task validator. Each menu separately fits one and two batches in an empty 08:00-18:00 kitchen for 16:00 delivery with a 60-minute buffer. This exercises the real scheduling functions with an isolated SQLite configuration and no live database access; it does not establish that all five menus fit together or that the kitchen timings have been measured. Material references, positive recipe quantities and duplicate ingredients were checked. The proposed stock basket totals RM 302.30 at the illustrative unit costs.
+Initial five-menu validation: all five step lists pass the application's task validator. Each menu separately fits one and two batches in an empty 08:00-18:00 kitchen for 16:00 delivery with a 60-minute buffer. This exercises the real scheduling functions with an isolated SQLite configuration and no live database access; it does not establish that all five menus fit together or that the kitchen timings have been measured. Material references, positive recipe quantities and duplicate ingredients were checked. The original 29-material stock basket totals RM 302.30 at the illustrative unit costs.
 
 - Trial one batch of each dish. Weigh yield, time each step and revise the estimates. Brownies need a pan/oven trial for the stated 24-piece batch.
 - In Preparation preview, one batch should show 100 min nasi lemak, 100 min ayam kunyit, 105 min ayam kicap, 55 min bihun and 165 min brownies. A two-batch combined order doubles every step in this starting model.
@@ -425,3 +454,689 @@ Menu direction was checked against Malaysian operators offering rice meals and h
 - https://hq.moh.gov.my/fsq/garis-panduan-keselamatan-makanan-homebased — KKM home-based food guidance; use applicable guidance and actual supplier evidence for operations.
 
 Companion JSON: DAPUR-KITA-STARTER-DATA.json. It uses material/category names for manual lookup, not database IDs, and is not directly importable. `allergen_review` is an advisory field to append to Description; `unit` on inventory is a reference to the raw-material unit. No live data has been inserted.
+
+## Additional menus: expanded catalogue
+
+Offer a rotating subset each day. These 24 menu objects are a catalogue, not a claim that one worker can produce every item daily. Similar dishes intentionally share ingredients; the scheduler still treats separate orders separately. All common settings and evidence requirements earlier in this guide apply. Fried-rice plans here use freshly cooked rice in a continuous workflow, not undocumented overnight leftover rice.
+
+### Nasi Goreng Kampung
+
+- Category: Rice meals; price: RM 9.00; packaging: RM 0.70.
+- Description: One box of freshly cooked rice stir-fried with egg, anchovies, long beans and chilli. Allergen information: Egg, fish, soy and usually wheat.
+- Portions per batch: 4; daily maximum: 12. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 80 min; extra batch 80 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 2.90; price less these costs: RM 6.10, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Egg: 1.000 unit
+- Onion: 25.000 g
+- Garlic: 5.000 g
+- Carrot: 30.000 g
+- Cabbage: 40.000 g
+- Sweet soy sauce: 10.000 ml
+- Salt: 1.000 g
+- Cooking oil: 15.000 ml
+- Dried anchovies: 8.000 g
+- Long bean: 30.000 g
+- Chilli paste plain: 8.000 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 20 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Stir-fry rice and accompaniments: 25 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 90 min; hands-on: 60 min.
+
+### Nasi Goreng Ayam
+
+- Category: Rice meals; price: RM 11.00; packaging: RM 0.70.
+- Description: One box of freshly cooked rice stir-fried with chicken, egg and vegetables. Allergen information: Egg, soy and usually wheat.
+- Portions per batch: 4; daily maximum: 12. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 80 min; extra batch 80 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 4.61; price less these costs: RM 6.39, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Egg: 1.000 unit
+- Onion: 25.000 g
+- Garlic: 5.000 g
+- Carrot: 30.000 g
+- Cabbage: 40.000 g
+- Sweet soy sauce: 10.000 ml
+- Salt: 1.000 g
+- Cooking oil: 15.000 ml
+- Chicken boneless trimmed: 120.000 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 20 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Stir-fry rice and accompaniments: 25 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 90 min; hands-on: 60 min.
+
+### Nasi Goreng Telur
+
+- Category: Rice meals; price: RM 8.00; packaging: RM 0.70.
+- Description: One box of freshly cooked rice stir-fried with egg and vegetables. Allergen information: Egg, soy and usually wheat.
+- Portions per batch: 4; daily maximum: 12. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 80 min; extra batch 80 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 2.21; price less these costs: RM 5.79, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Egg: 1.000 unit
+- Onion: 25.000 g
+- Garlic: 5.000 g
+- Carrot: 30.000 g
+- Cabbage: 40.000 g
+- Sweet soy sauce: 10.000 ml
+- Salt: 1.000 g
+- Cooking oil: 15.000 ml
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 20 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Stir-fry rice and accompaniments: 25 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 90 min; hands-on: 60 min.
+
+### Bihun Goreng Ayam
+
+- Category: Noodles; price: RM 10.50; packaging: RM 0.70.
+- Description: One box of rice vermicelli with chicken, egg and vegetables. Allergen information: Egg, soy, usually wheat and mollusc.
+- Portions per batch: 4; daily maximum: 12. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 50 min; extra batch 50 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 4.74; price less these costs: RM 5.76, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Dried rice vermicelli: 90.000 g
+- Egg: 1.000 unit
+- Cabbage: 60.000 g
+- Carrot: 30.000 g
+- Onion: 25.000 g
+- Garlic: 5.000 g
+- Sweet soy sauce: 12.000 ml
+- Oyster sauce: 5.000 ml
+- Chilli paste plain: 8.000 g
+- Salt: 1.000 g
+- Cooking oil: 15.000 ml
+- Chicken boneless trimmed: 100.000 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh and prepare noodles and vegetables: 20 min; prep_table; worker Yes.
+2. Stir-fry noodles and accompaniments: 30 min; stove; worker Yes.
+3. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 60 min; hands-on: 60 min.
+
+### Bihun Goreng Sayur
+
+- Category: Noodles; price: RM 7.50; packaging: RM 0.70.
+- Description: One box of rice vermicelli with cabbage and carrot. Prepared in a shared kitchen. Allergen information: Soy and usually wheat. No vegetarian or allergen-free certification implied.
+- Portions per batch: 4; daily maximum: 12. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 50 min; extra batch 50 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 2.29; price less these costs: RM 5.21, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Dried rice vermicelli: 90.000 g
+- Cabbage: 90.000 g
+- Carrot: 30.000 g
+- Onion: 25.000 g
+- Garlic: 5.000 g
+- Sweet soy sauce: 12.000 ml
+- Chilli paste plain: 8.000 g
+- Salt: 1.000 g
+- Cooking oil: 15.000 ml
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh and prepare noodles and vegetables: 20 min; prep_table; worker Yes.
+2. Stir-fry noodles and accompaniments: 30 min; stove; worker Yes.
+3. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 60 min; hands-on: 60 min.
+
+### Mee Goreng Telur
+
+- Category: Noodles; price: RM 9.00; packaging: RM 0.70.
+- Description: One box of yellow noodles stir-fried with egg and vegetables. Allergen information: Wheat, egg, soy and mollusc.
+- Portions per batch: 4; daily maximum: 12. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 50 min; extra batch 50 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 3.19; price less these costs: RM 5.81, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Egg: 1.000 unit
+- Cabbage: 60.000 g
+- Carrot: 30.000 g
+- Onion: 25.000 g
+- Garlic: 5.000 g
+- Sweet soy sauce: 12.000 ml
+- Oyster sauce: 5.000 ml
+- Chilli paste plain: 8.000 g
+- Salt: 1.000 g
+- Cooking oil: 15.000 ml
+- Fresh yellow noodles: 180.000 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh and prepare noodles and vegetables: 20 min; prep_table; worker Yes.
+2. Stir-fry noodles and accompaniments: 30 min; stove; worker Yes.
+3. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 60 min; hands-on: 60 min.
+
+### Mee Goreng Ayam
+
+- Category: Noodles; price: RM 11.00; packaging: RM 0.70.
+- Description: One box of yellow noodles stir-fried with chicken, egg and vegetables. Allergen information: Wheat, egg, soy and mollusc.
+- Portions per batch: 4; daily maximum: 12. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 50 min; extra batch 50 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 5.19; price less these costs: RM 5.81, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Egg: 1.000 unit
+- Cabbage: 60.000 g
+- Carrot: 30.000 g
+- Onion: 25.000 g
+- Garlic: 5.000 g
+- Sweet soy sauce: 12.000 ml
+- Oyster sauce: 5.000 ml
+- Chilli paste plain: 8.000 g
+- Salt: 1.000 g
+- Cooking oil: 15.000 ml
+- Fresh yellow noodles: 180.000 g
+- Chicken boneless trimmed: 100.000 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh and prepare noodles and vegetables: 20 min; prep_table; worker Yes.
+2. Stir-fry noodles and accompaniments: 30 min; stove; worker Yes.
+3. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 60 min; hands-on: 60 min.
+
+### Kuey Teow Goreng Telur
+
+- Category: Noodles; price: RM 9.00; packaging: RM 0.70.
+- Description: One box of flat rice noodles stir-fried with egg, cabbage and carrot. Allergen information: Egg, soy, usually wheat and mollusc.
+- Portions per batch: 4; daily maximum: 12. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 50 min; extra batch 50 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 3.19; price less these costs: RM 5.81, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Egg: 1.000 unit
+- Cabbage: 60.000 g
+- Carrot: 30.000 g
+- Onion: 25.000 g
+- Garlic: 5.000 g
+- Sweet soy sauce: 12.000 ml
+- Oyster sauce: 5.000 ml
+- Chilli paste plain: 8.000 g
+- Salt: 1.000 g
+- Cooking oil: 15.000 ml
+- Fresh flat rice noodles: 180.000 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh and prepare noodles and vegetables: 20 min; prep_table; worker Yes.
+2. Stir-fry noodles and accompaniments: 30 min; stove; worker Yes.
+3. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 60 min; hands-on: 60 min.
+
+### Nasi Ayam Halia
+
+- Category: Rice meals; price: RM 12.50; packaging: RM 0.70.
+- Description: One box of rice with ginger chicken, carrot and cucumber. Allergen information: Soy, usually wheat and mollusc.
+- Portions per batch: 5; daily maximum: 15. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 95 min; extra batch 95 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 5.62; price less these costs: RM 6.88, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Chicken boneless trimmed: 180.000 g
+- Onion: 30.000 g
+- Garlic: 5.000 g
+- Ginger: 15.000 g
+- Sweet soy sauce: 12.000 ml
+- Oyster sauce: 8.000 ml
+- Black pepper: 0.500 g
+- Carrot: 40.000 g
+- Cucumber: 30.000 g
+- Sugar: 3.000 g
+- Salt: 0.500 g
+- Cooking oil: 12.000 ml
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 25 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Cook main dish and vegetables: 35 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 105 min; hands-on: 75 min.
+
+### Nasi Ayam Sambal
+
+- Category: Rice meals; price: RM 12.50; packaging: RM 0.70.
+- Description: One box of rice with sambal chicken, carrot and cucumber. Allergen information: Verify chilli paste ingredients and shared-kitchen cross-contact.
+- Portions per batch: 5; daily maximum: 15. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 95 min; extra batch 95 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 5.66; price less these costs: RM 6.84, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Chicken boneless trimmed: 180.000 g
+- Onion: 30.000 g
+- Garlic: 5.000 g
+- Ginger: 8.000 g
+- Carrot: 40.000 g
+- Cucumber: 30.000 g
+- Sugar: 6.000 g
+- Salt: 1.500 g
+- Cooking oil: 12.000 ml
+- Chilli paste plain: 25.000 g
+- Tamarind paste: 3.000 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 25 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Cook main dish and vegetables: 35 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 105 min; hands-on: 75 min.
+
+### Nasi Ayam Black Pepper
+
+- Category: Rice meals; price: RM 13.00; packaging: RM 0.70.
+- Description: One box of rice with black-pepper chicken, carrot and cucumber. Allergen information: Soy, usually wheat and mollusc.
+- Portions per batch: 5; daily maximum: 15. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 95 min; extra batch 95 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 5.68; price less these costs: RM 7.32, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Chicken boneless trimmed: 180.000 g
+- Onion: 30.000 g
+- Garlic: 5.000 g
+- Ginger: 8.000 g
+- Sweet soy sauce: 20.000 ml
+- Oyster sauce: 8.000 ml
+- Black pepper: 2.000 g
+- Carrot: 40.000 g
+- Cucumber: 30.000 g
+- Sugar: 3.000 g
+- Salt: 0.500 g
+- Cooking oil: 12.000 ml
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 25 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Cook main dish and vegetables: 35 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 105 min; hands-on: 75 min.
+
+### Nasi Ayam Masak Lemak
+
+- Category: Rice meals; price: RM 13.00; packaging: RM 0.70.
+- Description: One box of rice with a home-style coconut turmeric chicken gravy, carrot and cucumber. Allergen information: Check actual brands and shared-kitchen cross-contact.
+- Portions per batch: 5; daily maximum: 15. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 95 min; extra batch 95 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 6.18; price less these costs: RM 6.82, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Chicken boneless trimmed: 180.000 g
+- Onion: 30.000 g
+- Garlic: 5.000 g
+- Ginger: 8.000 g
+- Carrot: 40.000 g
+- Cucumber: 30.000 g
+- Salt: 1.500 g
+- Cooking oil: 12.000 ml
+- Chilli paste plain: 10.000 g
+- Coconut milk UHT: 60.000 ml
+- Turmeric powder: 1.500 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 25 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Cook main dish and vegetables: 35 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 105 min; hands-on: 75 min.
+
+### Nasi Telur Kicap
+
+- Category: Rice meals; price: RM 8.50; packaging: RM 0.70.
+- Description: One box of rice with two eggs in ginger soy sauce, carrot and cucumber. Allergen information: Egg, soy, usually wheat and mollusc.
+- Portions per batch: 5; daily maximum: 15. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 95 min; extra batch 95 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 3.02; price less these costs: RM 5.48, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Onion: 30.000 g
+- Garlic: 5.000 g
+- Ginger: 8.000 g
+- Sweet soy sauce: 20.000 ml
+- Oyster sauce: 8.000 ml
+- Black pepper: 0.500 g
+- Carrot: 40.000 g
+- Cucumber: 30.000 g
+- Sugar: 3.000 g
+- Salt: 0.500 g
+- Cooking oil: 12.000 ml
+- Egg: 2.000 unit
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 25 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Cook main dish and vegetables: 35 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 105 min; hands-on: 75 min.
+
+### Nasi Lemak Ayam Kunyit
+
+- Category: Rice meals; price: RM 14.00; packaging: RM 0.70.
+- Description: One coconut-rice box with chicken, sambal, boiled egg, cucumber, peanuts and anchovies. Allergen information: Egg, peanut, fish; soy, wheat and mollusc where sauces are used. Check brands.
+- Portions per batch: 5; daily maximum: 10. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 110 min; extra batch 110 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 6.32; price less these costs: RM 7.68, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Coconut milk UHT: 35.000 ml
+- Egg: 1.000 unit
+- Cucumber: 30.000 g
+- Roasted peanuts: 10.000 g
+- Dried anchovies: 8.000 g
+- Onion: 43.750 g
+- Garlic: 6.750 g
+- Chilli paste plain: 15.000 g
+- Tamarind paste: 2.000 g
+- Sugar: 5.000 g
+- Salt: 3.000 g
+- Cooking oil: 25.500 ml
+- Pandan leaf: 1.000 g
+- Chicken boneless trimmed: 150.000 g
+- Turmeric powder: 1.500 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 25 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Cook main dish and vegetables: 50 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 120 min; hands-on: 90 min.
+
+### Nasi Lemak Ayam Sambal
+
+- Category: Rice meals; price: RM 14.50; packaging: RM 0.70.
+- Description: One coconut-rice box with chicken, sambal, boiled egg, cucumber, peanuts and anchovies. Allergen information: Egg, peanut, fish; soy, wheat and mollusc where sauces are used. Check brands.
+- Portions per batch: 5; daily maximum: 10. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 110 min; extra batch 110 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 6.60; price less these costs: RM 7.90, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Coconut milk UHT: 35.000 ml
+- Egg: 1.000 unit
+- Cucumber: 30.000 g
+- Roasted peanuts: 10.000 g
+- Dried anchovies: 8.000 g
+- Onion: 47.500 g
+- Garlic: 6.750 g
+- Chilli paste plain: 33.750 g
+- Tamarind paste: 4.250 g
+- Sugar: 9.500 g
+- Salt: 2.625 g
+- Cooking oil: 21.000 ml
+- Pandan leaf: 1.000 g
+- Chicken boneless trimmed: 150.000 g
+- Ginger: 6.000 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 25 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Cook main dish and vegetables: 50 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 120 min; hands-on: 90 min.
+
+### Nasi Lemak Ayam Kicap
+
+- Category: Rice meals; price: RM 14.50; packaging: RM 0.70.
+- Description: One coconut-rice box with chicken, sambal, boiled egg, cucumber, peanuts and anchovies. Allergen information: Egg, peanut, fish; soy, wheat and mollusc where sauces are used. Check brands.
+- Portions per batch: 5; daily maximum: 10. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 110 min; extra batch 110 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 6.57; price less these costs: RM 7.93, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Rice: 90.000 g
+- Coconut milk UHT: 35.000 ml
+- Egg: 1.000 unit
+- Cucumber: 30.000 g
+- Roasted peanuts: 10.000 g
+- Dried anchovies: 8.000 g
+- Onion: 47.500 g
+- Garlic: 6.750 g
+- Chilli paste plain: 15.000 g
+- Tamarind paste: 2.000 g
+- Sugar: 7.250 g
+- Salt: 1.875 g
+- Cooking oil: 21.000 ml
+- Pandan leaf: 1.000 g
+- Chicken boneless trimmed: 150.000 g
+- Ginger: 6.000 g
+- Sweet soy sauce: 15.000 ml
+- Oyster sauce: 6.000 ml
+- Black pepper: 0.375 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, wash and prepare ingredients: 25 min; prep_table; worker Yes.
+2. Load rice cooker: 5 min; rice_cooker; worker Yes.
+3. Cook rice: 30 min; rice_cooker; worker No.
+4. Cook main dish and vegetables: 50 min; stove; worker Yes.
+5. Portion, label and pack: 10 min; packing_area; worker Yes.
+
+One-batch step total: 120 min; hands-on: 90 min.
+
+### Walnut Brownies - Box of 6
+
+- Category: Bakes; price: RM 18.00; packaging: RM 1.20.
+- Description: Six small chocolate brownie squares with walnuts. One sold unit is one six-piece box. Allergen information: Wheat, milk, egg, walnut and possibly soy.
+- Portions per batch: 4; daily maximum: 8. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 150 min; extra batch 150 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 6.10; price less these costs: RM 11.90, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Plain flour: 30.000 g
+- Butter: 35.000 g
+- Dark cooking chocolate: 50.000 g
+- Cocoa powder: 8.000 g
+- Sugar: 55.000 g
+- Egg: 0.500 unit
+- Vanilla extract: 1.000 ml
+- Salt: 0.300 g
+- Walnut kernels: 20.000 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, melt chocolate and mix batter: 25 min; prep_table; worker Yes.
+2. Preheat oven, line pan and load batter: 15 min; oven; worker Yes.
+3. Bake brownies: 30 min; oven; worker No.
+4. Unload and check bake: 5 min; oven; worker Yes.
+5. Cool on a clean rack: 75 min; none; worker No.
+6. Cut, check yield and box: 15 min; packing_area; worker Yes.
+
+One-batch step total: 165 min; hands-on: 60 min.
+
+### Chocolate Chip Cookies - Pack of 6
+
+- Category: Bakes; price: RM 10.00; packaging: RM 1.20.
+- Description: Six small chocolate-chip cookies, approximately 20-25 g each. One sold unit is one pack. Allergen information: Wheat, milk, egg and possibly soy.
+- Portions per batch: 5; daily maximum: 10. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 110 min; extra batch 110 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 3.64; price less these costs: RM 6.36, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Plain flour: 55.000 g
+- Butter: 30.000 g
+- Sugar: 30.000 g
+- Egg: 0.200 unit
+- Chocolate chips: 30.000 g
+- Vanilla extract: 0.500 ml
+- Baking powder: 0.500 g
+- Salt: 0.300 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh and mix cookie dough: 25 min; prep_table; worker Yes.
+2. Preheat oven, portion dough and load trays: 15 min; oven; worker Yes.
+3. Bake cookies: 20 min; oven; worker No.
+4. Unload and check bake: 5 min; oven; worker Yes.
+5. Cool cookies on rack: 45 min; none; worker No.
+6. Count, label and pack: 15 min; packing_area; worker Yes.
+
+One-batch step total: 125 min; hands-on: 60 min.
+
+### Banana Cake - Box of 4 Slices
+
+- Category: Bakes; price: RM 12.00; packaging: RM 1.20.
+- Description: Four small banana-cake slices. One sold unit is one box; weigh trial yield before setting final portion claims. Allergen information: Wheat, milk and egg.
+- Portions per batch: 4; daily maximum: 8. A bake portion means the named box/pack.
+- Advance notice: 24 h; preparation span: 1 day; early finish: 0 min; independent batches: Off. Image/social links blank pending your own content.
+- Basic fallback: first batch 165 min; extra batch 165 min; packing 2 min/unit. Detailed steps take precedence.
+- Estimated ingredient plus packaging cost: RM 4.05; price less these costs: RM 7.95, before labour, wastage, delivery and overhead.
+
+Ingredients per sold unit:
+
+- Plain flour: 65.000 g
+- Banana peeled: 100.000 g
+- Egg: 0.500 unit
+- Sugar: 40.000 g
+- Butter: 35.000 g
+- Baking powder: 2.000 g
+- Vanilla extract: 1.000 ml
+- Salt: 0.500 g
+
+Steps in order; each has 0 allowed wait, overnight No and extra-batch minutes equal to the stated duration:
+
+1. Weigh, mash banana and mix batter: 25 min; prep_table; worker Yes.
+2. Preheat oven, prepare tin and load: 15 min; oven; worker Yes.
+3. Bake banana cake: 45 min; oven; worker No.
+4. Unload and check bake: 5 min; oven; worker Yes.
+5. Cool cake on rack: 75 min; none; worker No.
+6. Slice, label and box: 15 min; packing_area; worker Yes.
+
+One-batch step total: 180 min; hands-on: 60 min.
+
+## Additional raw materials and stock templates
+
+These six entries extend the original 29 to 35. Use all mandatory actual-date and evidence fields above; templates remain held until verified. Banana quantity and cost refer to peeled usable yield, not whole unpeeled purchase weight.
+
+### Fresh yellow noodles
+
+- Unit: g; estimated cost: RM 0.006000 per g.
+- Proposed quantity: 1000.000 g; batch code: DK-START-30.
+- Storage starting choice: chilled; location: Fridge - covered separate shelf; follow supplier instructions.
+- Source: packaged; expiry basis: label. Supplier and actual dates must be completed. Handling Unknown; Hold Yes pending evidence.
+
+### Fresh flat rice noodles
+
+- Unit: g; estimated cost: RM 0.006000 per g.
+- Proposed quantity: 1000.000 g; batch code: DK-START-31.
+- Storage starting choice: chilled; location: Fridge - covered separate shelf; follow supplier instructions.
+- Source: packaged; expiry basis: label. Supplier and actual dates must be completed. Handling Unknown; Hold Yes pending evidence.
+
+### Walnut kernels
+
+- Unit: g; estimated cost: RM 0.055000 per g.
+- Proposed quantity: 250.000 g; batch code: DK-START-32.
+- Storage starting choice: ambient; location: Dry store - labelled container; follow supplier instructions.
+- Source: packaged; expiry basis: label. Supplier and actual dates must be completed. Handling Unknown; Hold Yes pending evidence.
+
+### Chocolate chips
+
+- Unit: g; estimated cost: RM 0.026000 per g.
+- Proposed quantity: 500.000 g; batch code: DK-START-33.
+- Storage starting choice: ambient; location: Dry store - labelled container; follow supplier instructions.
+- Source: packaged; expiry basis: label. Supplier and actual dates must be completed. Handling Unknown; Hold Yes pending evidence.
+
+### Banana peeled
+
+- Unit: g; estimated cost: RM 0.007000 per g.
+- Proposed quantity: 1000.000 g; batch code: DK-START-34.
+- Storage starting choice: ambient; location: Dry store - labelled container; follow supplier instructions.
+- Source: market; expiry basis: storage. Supplier and actual dates must be completed. Handling Unknown; Hold Yes pending evidence.
+
+### Baking powder
+
+- Unit: g; estimated cost: RM 0.020000 per g.
+- Proposed quantity: 100.000 g; batch code: DK-START-35.
+- Storage starting choice: ambient; location: Dry store - labelled container; follow supplier instructions.
+- Source: packaged; expiry basis: label. Supplier and actual dates must be completed. Handling Unknown; Hold Yes pending evidence.

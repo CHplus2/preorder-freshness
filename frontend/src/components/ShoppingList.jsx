@@ -1,10 +1,14 @@
+import {createPortal} from 'react-dom';
+import ShoppingSheet from './ShoppingSheet';
+import './ShoppingSheet.css';
 import {Link} from 'react-router-dom';
 import {shoppingList} from '../utils/shopping';
 
-export default function ShoppingList({rows,through,missingRecipes}) {
+export default function ShoppingList({rows,through,missingRecipes,loadedAt}) {
   const groups=shoppingList(rows,through);
   return <section aria-label="Shopping needs">
     <h2>Shopping list</h2><p>Shortages needed by {through}, combined by ingredient. Includes overdue requirements.</p>
+    <div className="shopping-print-actions"><button type="button" disabled={!groups.length} onClick={()=>window.print()}>Print shopping checklist</button><span>Paper checklist only; stock changes when you record received ingredients.</span></div>
     <p>Existing stock is allocated once across orders. Refresh the planner after receiving ingredients or changing orders.</p>
     {missingRecipes && <p role="alert">Some orders have no accepted recipe. This list is incomplete until those recipes are resolved.</p>}
     {!groups.length ? <div className="admin-empty">No recorded shortfalls due by this date.</div> : groups.map(group=><article className="admin-order-summary" key={group.key}>
@@ -13,6 +17,7 @@ export default function ShoppingList({rows,through,missingRecipes}) {
       <details><summary>See quantities by order and date</summary><ul>{group.requirements.map((r,i)=><li key={`${r.order}-${i}`}>{r.quantity} {r.unit} · {r.needed_by} · order #{r.order}</li>)}</ul></details>
     </article>)}
     <p>Buy in stages where dates differ, and check that each batch lasts through preparation. These totals do not reserve stock or confirm a supplier purchase.</p>
+    {createPortal(<div className="shopping-print-sheet"><ShoppingSheet groups={groups} through={through} missingRecipes={missingRecipes} loadedAt={loadedAt}/></div>,document.body)}
     <Link to="/admin/inventory">Record received ingredients in Inventory</Link>
   </section>;
 }

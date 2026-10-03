@@ -570,6 +570,2204 @@
         }
       ],
       "allergen_review": "Wheat, milk, egg and possibly soy in chocolate; check nut cross-contact."
+    },
+    {
+      "name": "Nasi Goreng Kampung",
+      "price": "9.00",
+      "description": "One box of freshly cooked rice stir-fried with egg, anchovies, long beans and chilli.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 12,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 80,
+      "additional_batch_minutes": 80,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Cabbage",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "10.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Dried anchovies",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Long bean",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "8.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 20,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Stir-fry rice and accompaniments",
+          "minutes": 25,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, fish, soy and usually wheat."
+    },
+    {
+      "name": "Nasi Goreng Ayam",
+      "price": "11.00",
+      "description": "One box of freshly cooked rice stir-fried with chicken, egg and vegetables.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 12,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 80,
+      "additional_batch_minutes": 80,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Cabbage",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "10.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "120.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 20,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Stir-fry rice and accompaniments",
+          "minutes": 25,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, soy and usually wheat."
+    },
+    {
+      "name": "Nasi Goreng Telur",
+      "price": "8.00",
+      "description": "One box of freshly cooked rice stir-fried with egg and vegetables.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 12,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 80,
+      "additional_batch_minutes": 80,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Cabbage",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "10.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "15.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 20,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Stir-fry rice and accompaniments",
+          "minutes": 25,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, soy and usually wheat."
+    },
+    {
+      "name": "Bihun Goreng Ayam",
+      "price": "10.50",
+      "description": "One box of rice vermicelli with chicken, egg and vegetables.",
+      "category": "Noodles",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 12,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 50,
+      "additional_batch_minutes": 50,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Dried rice vermicelli",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cabbage",
+          "quantity_required": "60.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Oyster sauce",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "100.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh and prepare noodles and vegetables",
+          "minutes": 20,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Stir-fry noodles and accompaniments",
+          "minutes": 30,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, soy, usually wheat and mollusc."
+    },
+    {
+      "name": "Bihun Goreng Sayur",
+      "price": "7.50",
+      "description": "One box of rice vermicelli with cabbage and carrot. Prepared in a shared kitchen.",
+      "category": "Noodles",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 12,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 50,
+      "additional_batch_minutes": 50,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Dried rice vermicelli",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Cabbage",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "15.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh and prepare noodles and vegetables",
+          "minutes": 20,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Stir-fry noodles and accompaniments",
+          "minutes": 30,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Soy and usually wheat. No vegetarian or allergen-free certification implied."
+    },
+    {
+      "name": "Mee Goreng Telur",
+      "price": "9.00",
+      "description": "One box of yellow noodles stir-fried with egg and vegetables.",
+      "category": "Noodles",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 12,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 50,
+      "additional_batch_minutes": 50,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cabbage",
+          "quantity_required": "60.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Oyster sauce",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Fresh yellow noodles",
+          "quantity_required": "180.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh and prepare noodles and vegetables",
+          "minutes": 20,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Stir-fry noodles and accompaniments",
+          "minutes": 30,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Wheat, egg, soy and mollusc."
+    },
+    {
+      "name": "Mee Goreng Ayam",
+      "price": "11.00",
+      "description": "One box of yellow noodles stir-fried with chicken, egg and vegetables.",
+      "category": "Noodles",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 12,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 50,
+      "additional_batch_minutes": 50,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cabbage",
+          "quantity_required": "60.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Oyster sauce",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Fresh yellow noodles",
+          "quantity_required": "180.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "100.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh and prepare noodles and vegetables",
+          "minutes": 20,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Stir-fry noodles and accompaniments",
+          "minutes": 30,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Wheat, egg, soy and mollusc."
+    },
+    {
+      "name": "Kuey Teow Goreng Telur",
+      "price": "9.00",
+      "description": "One box of flat rice noodles stir-fried with egg, cabbage and carrot.",
+      "category": "Noodles",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 12,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 50,
+      "additional_batch_minutes": 50,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cabbage",
+          "quantity_required": "60.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Oyster sauce",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Fresh flat rice noodles",
+          "quantity_required": "180.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh and prepare noodles and vegetables",
+          "minutes": 20,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Stir-fry noodles and accompaniments",
+          "minutes": 30,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, soy, usually wheat and mollusc."
+    },
+    {
+      "name": "Nasi Ayam Halia",
+      "price": "12.50",
+      "description": "One box of rice with ginger chicken, carrot and cucumber.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 15,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 95,
+      "additional_batch_minutes": 95,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "180.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Ginger",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Oyster sauce",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Black pepper",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Cucumber",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "3.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "12.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook main dish and vegetables",
+          "minutes": 35,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 35,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Soy, usually wheat and mollusc."
+    },
+    {
+      "name": "Nasi Ayam Sambal",
+      "price": "12.50",
+      "description": "One box of rice with sambal chicken, carrot and cucumber.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 15,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 95,
+      "additional_batch_minutes": 95,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "180.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Ginger",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Cucumber",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "6.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.500"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "25.000"
+        },
+        {
+          "raw_material": "Tamarind paste",
+          "quantity_required": "3.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook main dish and vegetables",
+          "minutes": 35,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 35,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Verify chilli paste ingredients and shared-kitchen cross-contact."
+    },
+    {
+      "name": "Nasi Ayam Black Pepper",
+      "price": "13.00",
+      "description": "One box of rice with black-pepper chicken, carrot and cucumber.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 15,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 95,
+      "additional_batch_minutes": 95,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "180.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Ginger",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "20.000"
+        },
+        {
+          "raw_material": "Oyster sauce",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Black pepper",
+          "quantity_required": "2.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Cucumber",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "3.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "12.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook main dish and vegetables",
+          "minutes": 35,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 35,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Soy, usually wheat and mollusc."
+    },
+    {
+      "name": "Nasi Ayam Masak Lemak",
+      "price": "13.00",
+      "description": "One box of rice with a home-style coconut turmeric chicken gravy, carrot and cucumber.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 15,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 95,
+      "additional_batch_minutes": 95,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "180.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Ginger",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Cucumber",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.500"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "10.000"
+        },
+        {
+          "raw_material": "Coconut milk UHT",
+          "quantity_required": "60.000"
+        },
+        {
+          "raw_material": "Turmeric powder",
+          "quantity_required": "1.500"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook main dish and vegetables",
+          "minutes": 35,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 35,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Check actual brands and shared-kitchen cross-contact."
+    },
+    {
+      "name": "Nasi Telur Kicap",
+      "price": "8.50",
+      "description": "One box of rice with two eggs in ginger soy sauce, carrot and cucumber.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 15,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 95,
+      "additional_batch_minutes": 95,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Ginger",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "20.000"
+        },
+        {
+          "raw_material": "Oyster sauce",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Black pepper",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Carrot",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Cucumber",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "3.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "12.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "2.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook main dish and vegetables",
+          "minutes": 35,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 35,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, soy, usually wheat and mollusc."
+    },
+    {
+      "name": "Nasi Lemak Ayam Kunyit",
+      "price": "14.00",
+      "description": "One coconut-rice box with chicken, sambal, boiled egg, cucumber, peanuts and anchovies.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 10,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 110,
+      "additional_batch_minutes": 110,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Coconut milk UHT",
+          "quantity_required": "35.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cucumber",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Roasted peanuts",
+          "quantity_required": "10.000"
+        },
+        {
+          "raw_material": "Dried anchovies",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "43.750"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "6.750"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Tamarind paste",
+          "quantity_required": "2.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "5.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "3.000"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "25.500"
+        },
+        {
+          "raw_material": "Pandan leaf",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "150.000"
+        },
+        {
+          "raw_material": "Turmeric powder",
+          "quantity_required": "1.500"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook main dish and vegetables",
+          "minutes": 50,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 50,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, peanut, fish; soy, wheat and mollusc where sauces are used. Check brands."
+    },
+    {
+      "name": "Nasi Lemak Ayam Sambal",
+      "price": "14.50",
+      "description": "One coconut-rice box with chicken, sambal, boiled egg, cucumber, peanuts and anchovies.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 10,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 110,
+      "additional_batch_minutes": 110,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Coconut milk UHT",
+          "quantity_required": "35.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cucumber",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Roasted peanuts",
+          "quantity_required": "10.000"
+        },
+        {
+          "raw_material": "Dried anchovies",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "47.500"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "6.750"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "33.750"
+        },
+        {
+          "raw_material": "Tamarind paste",
+          "quantity_required": "4.250"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "9.500"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "2.625"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "21.000"
+        },
+        {
+          "raw_material": "Pandan leaf",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "150.000"
+        },
+        {
+          "raw_material": "Ginger",
+          "quantity_required": "6.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook main dish and vegetables",
+          "minutes": 50,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 50,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, peanut, fish; soy, wheat and mollusc where sauces are used. Check brands."
+    },
+    {
+      "name": "Nasi Lemak Ayam Kicap",
+      "price": "14.50",
+      "description": "One coconut-rice box with chicken, sambal, boiled egg, cucumber, peanuts and anchovies.",
+      "category": "Rice meals",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "0.70",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 10,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 110,
+      "additional_batch_minutes": 110,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Rice",
+          "quantity_required": "90.000"
+        },
+        {
+          "raw_material": "Coconut milk UHT",
+          "quantity_required": "35.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Cucumber",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Roasted peanuts",
+          "quantity_required": "10.000"
+        },
+        {
+          "raw_material": "Dried anchovies",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Onion",
+          "quantity_required": "47.500"
+        },
+        {
+          "raw_material": "Garlic",
+          "quantity_required": "6.750"
+        },
+        {
+          "raw_material": "Chilli paste plain",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Tamarind paste",
+          "quantity_required": "2.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "7.250"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "1.875"
+        },
+        {
+          "raw_material": "Cooking oil",
+          "quantity_required": "21.000"
+        },
+        {
+          "raw_material": "Pandan leaf",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Chicken boneless trimmed",
+          "quantity_required": "150.000"
+        },
+        {
+          "raw_material": "Ginger",
+          "quantity_required": "6.000"
+        },
+        {
+          "raw_material": "Sweet soy sauce",
+          "quantity_required": "15.000"
+        },
+        {
+          "raw_material": "Oyster sauce",
+          "quantity_required": "6.000"
+        },
+        {
+          "raw_material": "Black pepper",
+          "quantity_required": "0.375"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, wash and prepare ingredients",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Load rice cooker",
+          "minutes": 5,
+          "resource": "rice_cooker",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook rice",
+          "minutes": 30,
+          "resource": "rice_cooker",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cook main dish and vegetables",
+          "minutes": 50,
+          "resource": "stove",
+          "worker": true,
+          "additional_batch_minutes": 50,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Portion, label and pack",
+          "minutes": 10,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 10,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Egg, peanut, fish; soy, wheat and mollusc where sauces are used. Check brands."
+    },
+    {
+      "name": "Walnut Brownies - Box of 6",
+      "price": "18.00",
+      "description": "Six small chocolate brownie squares with walnuts. One sold unit is one six-piece box.",
+      "category": "Bakes",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "1.20",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 8,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 150,
+      "additional_batch_minutes": 150,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Plain flour",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Butter",
+          "quantity_required": "35.000"
+        },
+        {
+          "raw_material": "Dark cooking chocolate",
+          "quantity_required": "50.000"
+        },
+        {
+          "raw_material": "Cocoa powder",
+          "quantity_required": "8.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "55.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Vanilla extract",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "0.300"
+        },
+        {
+          "raw_material": "Walnut kernels",
+          "quantity_required": "20.000"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, melt chocolate and mix batter",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Preheat oven, line pan and load batter",
+          "minutes": 15,
+          "resource": "oven",
+          "worker": true,
+          "additional_batch_minutes": 15,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Bake brownies",
+          "minutes": 30,
+          "resource": "oven",
+          "worker": false,
+          "additional_batch_minutes": 30,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Unload and check bake",
+          "minutes": 5,
+          "resource": "oven",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cool on a clean rack",
+          "minutes": 75,
+          "resource": "none",
+          "worker": false,
+          "additional_batch_minutes": 75,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cut, check yield and box",
+          "minutes": 15,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 15,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Wheat, milk, egg, walnut and possibly soy."
+    },
+    {
+      "name": "Chocolate Chip Cookies - Pack of 6",
+      "price": "10.00",
+      "description": "Six small chocolate-chip cookies, approximately 20-25 g each. One sold unit is one pack.",
+      "category": "Bakes",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "1.20",
+      "lead_hours": 24,
+      "batch_size": 5,
+      "daily_capacity": 10,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 110,
+      "additional_batch_minutes": 110,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Plain flour",
+          "quantity_required": "55.000"
+        },
+        {
+          "raw_material": "Butter",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "0.200"
+        },
+        {
+          "raw_material": "Chocolate chips",
+          "quantity_required": "30.000"
+        },
+        {
+          "raw_material": "Vanilla extract",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Baking powder",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "0.300"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh and mix cookie dough",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Preheat oven, portion dough and load trays",
+          "minutes": 15,
+          "resource": "oven",
+          "worker": true,
+          "additional_batch_minutes": 15,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Bake cookies",
+          "minutes": 20,
+          "resource": "oven",
+          "worker": false,
+          "additional_batch_minutes": 20,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Unload and check bake",
+          "minutes": 5,
+          "resource": "oven",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cool cookies on rack",
+          "minutes": 45,
+          "resource": "none",
+          "worker": false,
+          "additional_batch_minutes": 45,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Count, label and pack",
+          "minutes": 15,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 15,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Wheat, milk, egg and possibly soy."
+    },
+    {
+      "name": "Banana Cake - Box of 4 Slices",
+      "price": "12.00",
+      "description": "Four small banana-cake slices. One sold unit is one box; weigh trial yield before setting final portion claims.",
+      "category": "Bakes",
+      "image_url": "",
+      "social_url": "",
+      "packaging_cost": "1.20",
+      "lead_hours": 24,
+      "batch_size": 4,
+      "daily_capacity": 8,
+      "max_preparation_days": 1,
+      "max_early_minutes": 0,
+      "preparation_minutes": 165,
+      "additional_batch_minutes": 165,
+      "packing_minutes_per_portion": 2,
+      "ingredients": [
+        {
+          "raw_material": "Plain flour",
+          "quantity_required": "65.000"
+        },
+        {
+          "raw_material": "Banana peeled",
+          "quantity_required": "100.000"
+        },
+        {
+          "raw_material": "Egg",
+          "quantity_required": "0.500"
+        },
+        {
+          "raw_material": "Sugar",
+          "quantity_required": "40.000"
+        },
+        {
+          "raw_material": "Butter",
+          "quantity_required": "35.000"
+        },
+        {
+          "raw_material": "Baking powder",
+          "quantity_required": "2.000"
+        },
+        {
+          "raw_material": "Vanilla extract",
+          "quantity_required": "1.000"
+        },
+        {
+          "raw_material": "Salt",
+          "quantity_required": "0.500"
+        }
+      ],
+      "preparation_tasks": [
+        {
+          "name": "Weigh, mash banana and mix batter",
+          "minutes": 25,
+          "resource": "prep_table",
+          "worker": true,
+          "additional_batch_minutes": 25,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Preheat oven, prepare tin and load",
+          "minutes": 15,
+          "resource": "oven",
+          "worker": true,
+          "additional_batch_minutes": 15,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Bake banana cake",
+          "minutes": 45,
+          "resource": "oven",
+          "worker": false,
+          "additional_batch_minutes": 45,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Unload and check bake",
+          "minutes": 5,
+          "resource": "oven",
+          "worker": true,
+          "additional_batch_minutes": 5,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Cool cake on rack",
+          "minutes": 75,
+          "resource": "none",
+          "worker": false,
+          "additional_batch_minutes": 75,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        },
+        {
+          "name": "Slice, label and box",
+          "minutes": 15,
+          "resource": "packing_area",
+          "worker": true,
+          "additional_batch_minutes": 15,
+          "max_wait_minutes": 0,
+          "overnight": false,
+          "independent_batches": false
+        }
+      ],
+      "allergen_review": "Wheat, milk and egg."
     }
   ],
   "raw_materials": [
@@ -717,6 +2915,36 @@
       "name": "Vanilla extract",
       "unit": "ml",
       "estimated_unit_cost": "0.080000"
+    },
+    {
+      "name": "Fresh yellow noodles",
+      "unit": "g",
+      "estimated_unit_cost": "0.006000"
+    },
+    {
+      "name": "Fresh flat rice noodles",
+      "unit": "g",
+      "estimated_unit_cost": "0.006000"
+    },
+    {
+      "name": "Walnut kernels",
+      "unit": "g",
+      "estimated_unit_cost": "0.055000"
+    },
+    {
+      "name": "Chocolate chips",
+      "unit": "g",
+      "estimated_unit_cost": "0.026000"
+    },
+    {
+      "name": "Banana peeled",
+      "unit": "g",
+      "estimated_unit_cost": "0.007000"
+    },
+    {
+      "name": "Baking powder",
+      "unit": "g",
+      "estimated_unit_cost": "0.020000"
     }
   ],
   "inventory_templates": [
@@ -1443,6 +3671,156 @@
       "handling_history": "unknown",
       "handling_note": "Replace with actual receipt and storage observations.",
       "unit_cost": "0.080000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Fresh yellow noodles",
+      "quantity": "1000.000",
+      "unit": "g",
+      "batch_code": "DK-START-30",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - covered separate shelf",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.006000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Fresh flat rice noodles",
+      "quantity": "1000.000",
+      "unit": "g",
+      "batch_code": "DK-START-31",
+      "storage_type": "chilled",
+      "storage_location": "Fridge - covered separate shelf",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.006000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Walnut kernels",
+      "quantity": "250.000",
+      "unit": "g",
+      "batch_code": "DK-START-32",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.055000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Chocolate chips",
+      "quantity": "500.000",
+      "unit": "g",
+      "batch_code": "DK-START-33",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.026000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Banana peeled",
+      "quantity": "1000.000",
+      "unit": "g",
+      "batch_code": "DK-START-34",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled container",
+      "source_type": "market",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "storage",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.007000",
+      "quarantined": true
+    },
+    {
+      "raw_material": "Baking powder",
+      "quantity": "100.000",
+      "unit": "g",
+      "batch_code": "DK-START-35",
+      "storage_type": "ambient",
+      "storage_location": "Dry store - labelled container",
+      "source_type": "packaged",
+      "supplier": "ENTER ACTUAL SHOP",
+      "received_date": null,
+      "expiry_basis": "label",
+      "original_expiry_date": null,
+      "manufactured_date": null,
+      "shelf_life_days": null,
+      "label_date_type": "not_recorded",
+      "guidance_note": "ENTER VERIFIED LABEL OR SUPPLIER GUIDANCE AND CONDITIONS",
+      "opened_date": null,
+      "after_open_days": null,
+      "thawed_date": null,
+      "after_thaw_days": null,
+      "handling_history": "unknown",
+      "handling_note": "Replace with actual receipt and storage observations.",
+      "unit_cost": "0.020000",
       "quarantined": true
     }
   ]

@@ -24,5 +24,8 @@ try {
   assert.match(availability,/Loading unavailable time/);
   assert.match(availability,/<fieldset disabled=""/);
   assert.doesNotMatch(availability,/No unavailable time recorded/);
+  const {default:ShoppingSheet}=await server.ssrLoadModule('/src/components/ShoppingSheet.jsx');
+  const sheet=renderToStaticMarkup(createElement(ShoppingSheet,{through:'2026-10-10',missingRecipes:true,loadedAt:'2026-10-03T01:00:00Z',groups:[{key:'1:g',material:'Rice',quantity:'300.000',unit:'g',earliest:'2026-10-08',requirements:[{needed_by:'2026-10-08',order:21,quantity:'300.000'}]}]}));
+  for(const text of ['INCOMPLETE','Rice','300.000','2026-10-08','order #21','Plan loaded','Paper ticks do not change the app'])assert.ok(sheet.includes(text),text);
   console.log('Planner snapshot: initial loading, refresh with cached data, failed refresh, missing response and ready state passed.');
 } finally {await server.close();}

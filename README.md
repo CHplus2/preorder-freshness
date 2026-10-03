@@ -2,7 +2,9 @@
 
 ## Documentation
 
-- [Dapur Kita manual-entry catalogue](docs/DAPUR-KITA-MANUAL-ENTRY.md): five Malaysian home-kitchen menus, recipes, preparation settings, 29 raw materials and matching stock templates. No automatic import or live replacement.
+- [Stage 15 printable shopping checklist](docs/FYP-IMPLEMENTATION-STAGE-15.md): ingredient totals, need dates, order references and incomplete-recipe warnings.
+
+- [Dapur Kita manual-entry catalogue](docs/DAPUR-KITA-MANUAL-ENTRY.md): 24 Malaysian home-kitchen menus, recipes, preparation settings, 35 raw materials and matching stock templates. No automatic import or live replacement.
 
 - [Stage 14 planner reliability](docs/FYP-IMPLEMENTATION-STAGE-14.md): loading/error states prevent stale operational views and calendar exports.
 
