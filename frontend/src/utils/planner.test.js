@@ -30,3 +30,18 @@ test('legacy whole-kitchen reservations conflict with unattended equipment',()=>
  assert.equal(dailyWork(p,date).equipmentConflictMinutes,60);
  p.orders[0].status='cooked';assert.equal(dailyWork(p,date).equipmentConflictMinutes,0);
 });
+
+test('conflict details identify both orders and worker-only overlap',()=>{
+ const p=plan([task('09:00','11:00')]);
+ p.orders.push({id:21,status:'processing',items:[],preparation_plan:{tasks:[{...task('10:00','12:00'),resource:'prep_table',name:'Mix batter'}]}});
+ const d=dailyWork(p,date);
+ assert.equal(d.tasks[0].conflicts[0].orderId,21);assert.equal(d.tasks[0].conflicts[0].name,'Mix batter');
+ assert.equal(d.tasks[0].conflicts[0].kind,'Worker');assert.equal(d.tasks[1].conflicts[0].orderId,1);
+ assert.equal((d.tasks[0].conflicts[0].end-d.tasks[0].conflicts[0].start)/60000,60);
+});
+test('closure details preserve the reason and clip overlap to selected day',()=>{
+ const p=plan([{...task('01:00','02:00',false),start:'2026-09-19T23:00:00+08:00'}]);
+ p.availability.blocks=[{reason:'Fridge maintenance',start_at:'2026-09-19T22:00:00+08:00',end_at:date+'T01:00:00+08:00'}];
+ const c=dailyWork(p,date).tasks[0].conflicts[0];assert.equal(c.name,'Fridge maintenance');assert.equal(c.kind,'closure');
+ assert.equal(c.start,Date.parse(date+'T00:00:00+08:00'));assert.equal((c.end-c.start)/60000,60);
+});

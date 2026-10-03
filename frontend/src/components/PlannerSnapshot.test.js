@@ -19,6 +19,10 @@ try {
   assert.match(ready,/<button>Export calendar<\/button>/);
   assert.match(ready,/Plan loaded/);
   assert.match(ready,/Malaysia/);
+  const {default:TaskConflicts}=await server.ssrLoadModule('/src/components/TaskConflicts.jsx');
+  const conflictHtml=renderToStaticMarkup(createElement(TaskConflicts,{onReview:()=>{},conflicts:[{kind:'Worker',name:'Mix batter',orderId:21,start:Date.parse('2026-10-03T10:00:00+08:00'),end:Date.parse('2026-10-03T11:00:00+08:00')}]}));
+  for(const value of ['Mix batter','Review order #21','10:00','11:00','Worker'])assert.ok(conflictHtml.includes(value));
+  assert.equal(renderToStaticMarkup(createElement(TaskConflicts,{conflicts:[]})),'');
   const {default:KitchenAvailability}=await server.ssrLoadModule('/src/components/KitchenAvailability.jsx');
   const availability=renderToStaticMarkup(createElement(KitchenAvailability));
   assert.match(availability,/Loading unavailable time/);

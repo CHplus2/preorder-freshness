@@ -13,19 +13,25 @@ export function dailyWork(plan,date){
  for(const order of orders.filter(o=>['pending','processing'].includes(o.status))){
   const saved=order.preparation_plan?.tasks || [];
   const rows=saved.length?saved:order.preparation_at && order.preparation_end_at?[{name:'Preparation window needs review',menu:order.items.map(i=>i.product_name).join(', '),start:order.preparation_at,end:order.preparation_end_at,worker:true,resource:'all',legacy:true}]:[];
-  rows.forEach((task,index)=>{const a=Date.parse(task.start),b=Date.parse(task.end);if(overlap(a,b,start,end)>0)tasks.push({...task,orderId:order.id,key:`${order.id}-${index}`,dayMinutes:overlap(a,b,start,end)/60000});});
+  rows.forEach((task,index)=>{const a=Date.parse(task.start),b=Date.parse(task.end);if(overlap(a,b,start,end)>0)tasks.push({...task,orderId:order.id,key:`${order.id}-${index}`,conflicts:[],dayMinutes:overlap(a,b,start,end)/60000});});
  }
  tasks.sort((a,b)=>Date.parse(a.start)-Date.parse(b.start));
  const equipmentConflicts=[],closureConflicts=[];
- const closures=(plan?.availability?.blocks || []).map(b=>[Math.max(start,Date.parse(b.start_at)),Math.min(end,Date.parse(b.end_at))]).filter(([a,b])=>b>a);
+ const closures=(plan?.availability?.blocks || []).map(b=>({start:Math.max(start,Date.parse(b.start_at)),end:Math.min(end,Date.parse(b.end_at)),reason:b.reason || 'Blocked kitchen time'})).filter(b=>b.end>b.start);
  for(let i=0;i<tasks.length;i++){
   const task=tasks[i],a=Math.max(start,Date.parse(task.start)),b=Math.min(end,Date.parse(task.end));
-  for(const [c,d] of closures){
-   if(overlap(a,b,c,d)>0){task.closureConflict=true;closureConflicts.push([Math.max(a,c),Math.min(b,d)])}
+  for(const closure of closures){
+   const c=closure.start,d=closure.end;
+   if(overlap(a,b,c,d)>0){task.closureConflict=true;task.conflicts.push({kind:'closure',name:closure.reason,start:Math.max(a,c),end:Math.min(b,d)});closureConflicts.push([Math.max(a,c),Math.min(b,d)])}
   }
   for(let j=i+1;j<tasks.length;j++){
    const other=tasks[j],c=Math.max(start,Date.parse(other.start)),d=Math.min(end,Date.parse(other.end));
    const sameEquipment=task.resource==='all' || other.resource==='all' || (task.resource && task.resource!=='none' && task.resource===other.resource);
+   if(overlap(a,b,c,d)>0 && (sameEquipment || (task.worker && other.worker))){
+    const kind=sameEquipment && task.worker && other.worker?'Equipment and worker':sameEquipment?'Equipment':'Worker';
+    task.conflicts.push({kind,name:other.name,orderId:other.orderId,start:Math.max(a,c),end:Math.min(b,d)});
+    other.conflicts.push({kind,name:task.name,orderId:task.orderId,start:Math.max(a,c),end:Math.min(b,d)});
+   }
    if(sameEquipment && overlap(a,b,c,d)>0){task.equipmentConflict=true;other.equipmentConflict=true;equipmentConflicts.push([Math.max(a,c),Math.min(b,d)])}
   }
  }
