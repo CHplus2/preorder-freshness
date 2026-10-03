@@ -16,8 +16,21 @@ export function dailyWork(plan,date){
   rows.forEach((task,index)=>{const a=Date.parse(task.start),b=Date.parse(task.end);if(overlap(a,b,start,end)>0)tasks.push({...task,orderId:order.id,key:`${order.id}-${index}`,dayMinutes:overlap(a,b,start,end)/60000});});
  }
  tasks.sort((a,b)=>Date.parse(a.start)-Date.parse(b.start));
+ const equipmentConflicts=[],closureConflicts=[];
+ const closures=(plan?.availability?.blocks || []).map(b=>[Math.max(start,Date.parse(b.start_at)),Math.min(end,Date.parse(b.end_at))]).filter(([a,b])=>b>a);
+ for(let i=0;i<tasks.length;i++){
+  const task=tasks[i],a=Math.max(start,Date.parse(task.start)),b=Math.min(end,Date.parse(task.end));
+  for(const [c,d] of closures){
+   if(overlap(a,b,c,d)>0){task.closureConflict=true;closureConflicts.push([Math.max(a,c),Math.min(b,d)])}
+  }
+  for(let j=i+1;j<tasks.length;j++){
+   const other=tasks[j],c=Math.max(start,Date.parse(other.start)),d=Math.min(end,Date.parse(other.end));
+   const sameEquipment=task.resource==='all' || other.resource==='all' || (task.resource && task.resource!=='none' && task.resource===other.resource);
+   if(sameEquipment && overlap(a,b,c,d)>0){task.equipmentConflict=true;other.equipmentConflict=true;equipmentConflicts.push([Math.max(a,c),Math.min(b,d)])}
+  }
+ }
  const blocks=(plan?.availability?.blocks || []).map(b=>[Math.max(open,Date.parse(b.start_at)),Math.min(close,Date.parse(b.end_at))]).filter(([a,b])=>b>a);
  const hands=tasks.filter(t=>t.worker),handsMinutes=hands.reduce((n,t)=>n+t.dayMinutes,0);
  const intervals=hands.map(t=>[Math.max(start,Date.parse(t.start)),Math.min(end,Date.parse(t.end))]);
- return {tasks,handsMinutes,outsideHoursMinutes:hands.reduce((n,t)=>n+t.dayMinutes-overlap(Date.parse(t.start),Date.parse(t.end),open,close)/60000,0),availableMinutes:Math.max(0,(close-open)/60000-unionMinutes(blocks)),conflictingMinutes:Math.max(0,handsMinutes-unionMinutes(intervals)),deliveries:orders.filter(o=>o.delivery_at && malaysiaDate(o.delivery_at)===date),unscheduled:orders.filter(o=>['pending','processing'].includes(o.status) && !o.preparation_plan?.tasks?.length)};
+ return {tasks,equipmentConflictMinutes:unionMinutes(equipmentConflicts),closureConflictMinutes:unionMinutes(closureConflicts),handsMinutes,outsideHoursMinutes:hands.reduce((n,t)=>n+t.dayMinutes-overlap(Date.parse(t.start),Date.parse(t.end),open,close)/60000,0),availableMinutes:Math.max(0,(close-open)/60000-unionMinutes(blocks)),conflictingMinutes:Math.max(0,handsMinutes-unionMinutes(intervals)),deliveries:orders.filter(o=>o.delivery_at && malaysiaDate(o.delivery_at)===date),unscheduled:orders.filter(o=>['pending','processing'].includes(o.status) && !o.preparation_plan?.tasks?.length)};
 }

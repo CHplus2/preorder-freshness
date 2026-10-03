@@ -10,3 +10,23 @@ test('overlapping closures are not double counted',()=>{const p=plan([]);p.avail
 test('legacy overlap is flagged and never fabricated into recipe steps',()=>{const p=plan([task('10:00','12:00'),task('11:00','13:00')]);assert.equal(dailyWork(p,date).conflictingMinutes,60);p.orders[0].preparation_plan={};p.orders[0].preparation_at=date+'T10:00:00+08:00';p.orders[0].preparation_end_at=date+'T11:00:00+08:00';const d=dailyWork(p,date);assert.equal(d.unscheduled.length,1);assert.equal(d.tasks[0].legacy,true)});
 test('cooked orders do not reserve future hands-on work',()=>{const p=plan([task('10:00','12:00')]);p.orders[0].status='cooked';assert.equal(dailyWork(p,date).handsMinutes,0)});
 test('changed hours flag previously accepted early work',()=>{const p=plan([task('09:00','10:00')]);p.availability.open_hour=10;assert.equal(dailyWork(p,date).outsideHoursMinutes,60)});
+
+test('unattended equipment conflicts are detected without worker conflicts',()=>{
+ const p=plan([task('09:00','11:00',false),task('10:00','12:00',false),task('10:30','11:30',false)]);
+ const d=dailyWork(p,date);assert.equal(d.equipmentConflictMinutes,90);assert.equal(d.conflictingMinutes,0);
+ assert.ok(d.tasks.every(t=>t.equipmentConflict));assert.equal(p.orders[0].preparation_plan.tasks[0].equipmentConflict,undefined);
+});
+test('different equipment, no equipment and touching endpoints remain valid',()=>{
+ const p=plan([task('09:00','10:00',false),{...task('09:00','10:00',false),resource:'oven'},task('10:00','11:00',false),{...task('09:00','11:00',false),resource:'none'},{...task('09:00','11:00',false),resource:'none'}]);
+ assert.equal(dailyWork(p,date).equipmentConflictMinutes,0);
+});
+test('closures include unattended work outside hours and union overlapping intervals',()=>{
+ const p=plan([task('06:00','10:00',false),task('07:00','09:00',false)]);
+ p.availability.blocks=[{start_at:date+'T06:30:00+08:00',end_at:date+'T08:00:00+08:00'},{start_at:date+'T07:00:00+08:00',end_at:date+'T09:00:00+08:00'}];
+ const d=dailyWork(p,date);assert.equal(d.closureConflictMinutes,150);assert.ok(d.tasks.every(t=>t.closureConflict));
+});
+test('legacy whole-kitchen reservations conflict with unattended equipment',()=>{
+ const p=plan([{...task('09:00','11:00'),resource:'all'},task('10:00','12:00',false)]);
+ assert.equal(dailyWork(p,date).equipmentConflictMinutes,60);
+ p.orders[0].status='cooked';assert.equal(dailyWork(p,date).equipmentConflictMinutes,0);
+});

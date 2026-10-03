@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Stage 16 saved-plan conflict warnings](docs/FYP-IMPLEMENTATION-STAGE-16.md): equipment and closure overlaps, including unattended work, shown on affected planner tasks.
+
 - [Stage 15 printable shopping checklist](docs/FYP-IMPLEMENTATION-STAGE-15.md): ingredient totals, need dates, order references and incomplete-recipe warnings.
 
 - [Dapur Kita manual-entry catalogue](docs/DAPUR-KITA-MANUAL-ENTRY.md): 24 Malaysian home-kitchen menus, recipes, preparation settings, 35 raw materials and matching stock templates. No automatic import or live replacement.
