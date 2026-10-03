@@ -19,5 +19,10 @@ try {
   assert.match(ready,/<button>Export calendar<\/button>/);
   assert.match(ready,/Plan loaded/);
   assert.match(ready,/Malaysia/);
+  const {default:KitchenAvailability}=await server.ssrLoadModule('/src/components/KitchenAvailability.jsx');
+  const availability=renderToStaticMarkup(createElement(KitchenAvailability));
+  assert.match(availability,/Loading unavailable time/);
+  assert.match(availability,/<fieldset disabled=""/);
+  assert.doesNotMatch(availability,/No unavailable time recorded/);
   console.log('Planner snapshot: initial loading, refresh with cached data, failed refresh, missing response and ready state passed.');
 } finally {await server.close();}
