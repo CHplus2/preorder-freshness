@@ -187,7 +187,11 @@ class CommitmentTests(TestCase):
         placed=self.client.post('/api/orders/place/',{'address_id':self.address.pk,'payment':'cod','delivery_at':self.delivery.isoformat(),'recommendation_session':sid},format='json')
         self.assertEqual(placed.status_code,201,placed.data)
         self.client.force_authenticate(self.owner)
-        rows=self.client.get('/api/admin/recommendation-metrics/').data['rows']
+        report=self.client.get('/api/admin/recommendation-metrics/').data
+        from datetime import datetime
+        self.assertEqual(datetime.fromisoformat(report['window_end'])-datetime.fromisoformat(report['window_start']), timedelta(days=28))
+        self.assertEqual(report['generated_at'],report['window_end'])
+        rows=report['rows']
         self.assertEqual(rows[0]['exposed_sessions'],1)
         self.assertEqual(rows[0]['added_sessions'],1)
         self.assertEqual(rows[0]['ordered_sessions'],1)

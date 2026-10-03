@@ -2,6 +2,8 @@
 
 ## Documentation
 
+- [Stage 13 recommendation evidence export](docs/FYP-IMPLEMENTATION-STAGE-13.md): downloadable engagement figures with timestamped reporting windows and interpretation notes.
+
 - [Stage 12 recommendation engagement](docs/FYP-IMPLEMENTATION-STAGE-12.md): independent reporting, basket-add counts and explicit interpretation limits.
 
 - [Stage 11 preparation-time preview](docs/FYP-IMPLEMENTATION-STAGE-11.md): sample quantities, batch duration breakdown and configuration warnings in the menu editor.

@@ -118,10 +118,11 @@ def recommendation_event(request):
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def recommendation_metrics(request):
-    since = timezone.now()-timedelta(days=28)
+    generated_at = timezone.now()
+    since = generated_at-timedelta(days=28)
     rows = []
     for variant in ['popularity', 'personalised']:
-        sessions = RecommendationSession.objects.filter(created_at__gte=since, variant=variant, events__event='impression').distinct()
+        sessions = RecommendationSession.objects.filter(created_at__gte=since, created_at__lte=generated_at, variant=variant, events__event='impression').distinct()
         exposed = sessions.count()
         if not exposed:
             continue
@@ -133,4 +134,5 @@ def recommendation_metrics(request):
         rows.append({'variant': variant, 'exposed_sessions': exposed, 'clicked_sessions': clicked,
             'added_sessions': added, 'ordered_sessions': ordered, 'paid_sessions': paid, 'paid_percent': round(100*paid/exposed, 1)})
     return Response({'days': 28, 'rows': rows, 'experiment_enabled': settings.RECOMMENDATION_EXPERIMENT,
+        'window_start': since.isoformat(), 'window_end': generated_at.isoformat(), 'generated_at': generated_at.isoformat(),
         'definition': 'Denominator: recommendation requests with rendered results (one exposure per request). Purchase attribution: matching recommended product within 24 hours, same browser session key. Paid excludes cancelled/refunded orders. Repeat visitors may create multiple sessions. These are observed outcomes, not proof of causal conversion lift.'})
