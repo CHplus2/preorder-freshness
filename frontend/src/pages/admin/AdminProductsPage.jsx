@@ -1,3 +1,4 @@
+import './MenuSellingStatus.css';
 import DialogFeedback from '../../components/DialogFeedback';
 import ModalDialog from '../../components/ModalDialog';
 import MenuPhotoField from "../../components/MenuPhotoField";
@@ -8,13 +9,16 @@ import { useProduct } from "../../contexts/ProductProvider";
 
 
 export default function AdminProductsPage() {
+  const [statusFilter,setStatusFilter]=useState('current');
+  const [statusBusy,setStatusBusy]=useState(false);
+  const [statusMessage,setStatusMessage]=useState('');
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [newProduct, setNewProduct] = useState(false);
   const [updatedProduct, setUpdatedProduct] = useState(false);
   const [loading, setLoading] = useState(false);
   const { fallback_img, setAlert } = useUI();
-  const { categories, products, fetchProducts, setProductIdToDelete, addProduct, updateProduct } = useProduct();
+  const { categories, products, fetchProducts, addProduct, updateProduct } = useProduct();
 
   useEffect(()=>{fetchProducts()},[fetchProducts]);
   const emptyForm = {
@@ -66,18 +70,26 @@ export default function AdminProductsPage() {
 
     setLoading(true); 
 
-    const saved = await updateProduct(updatedProduct);
+    const {selling_status: ignoredStatus, ...edits} = updatedProduct;
+    void ignoredStatus;
+    const saved = await updateProduct(edits);
     if (!saved) { setLoading(false); return; }
 
     setUpdatedProduct(null);
     setLoading(false);
   };
 
+  const changeStatus=async(product,selling_status)=>{
+    if(statusBusy)return;
+    setStatusBusy(true);setStatusMessage('');
+    try{if(await updateProduct({id:product.id,selling_status})){await fetchProducts();setStatusMessage(`${product.name}: ${selling_status==='active'?'accepting new orders':selling_status}. Existing orders are unchanged.`);}}finally{setStatusBusy(false);}
+  };
+
   // Filter products
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory ? p.category === Number(selectedCategory) : true;
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && (statusFilter==='all' || (statusFilter==='current'?p.selling_status!=='archived':p.selling_status===statusFilter));
   });
 
   return (
@@ -89,6 +101,8 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
+<p className="menu-state-intro">Pause a menu to stop new orders. Archive it to remove it from your current menu list. Existing orders keep their recipes and delivery plans.</p>
+      {statusMessage && <p className="menu-state-feedback" role="status">{statusMessage}</p>}
       {/* Search & Filter */}
       <div className="admin-browse-controls">
         <input
@@ -108,6 +122,7 @@ export default function AdminProductsPage() {
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
+<select aria-label="Filter selling status" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="current">Current menus</option><option value="active">Accepting orders</option><option value="paused">Paused</option><option value="archived">Archived</option><option value="all">All menus</option></select>
       </div>
     
       {/* Product List */}
@@ -139,19 +154,19 @@ export default function AdminProductsPage() {
                     <div className="image-placeholder">No Image</div>
                   )}
                 </td>
-                <td data-label="Name">{p.name}</td>
+                <td data-label="Name"><strong>{p.name}</strong><span className="menu-state-label">{p.selling_status==='archived'?'Archived':p.selling_status==='paused'?'Paused':'Accepting orders'}</span></td>
               <td data-label="Price">RM {p.price}</td>
               <td data-label="Available portions">{p.stock}</td>
               <td data-label="Category">{p.category_name}</td>
               <td data-label="Preparation"><span className="status-badge">{p.preparation_tasks?.length ? `${p.preparation_tasks.length} steps` : "Needs setup"}</span></td>
               <td data-label="Actions">
-                <button onClick={() => setUpdatedProduct({ ...p })}>Edit & steps</button>
-                <button
-                  className="danger"
-                  onClick={() => setProductIdToDelete(p.id)}
-                >
-                  Delete
-                </button>
+                <div className="menu-state-actions">
+                  <button disabled={statusBusy} onClick={() => setUpdatedProduct({ ...p })}>Edit & steps</button>
+                  {p.selling_status==='archived'?<button disabled={statusBusy} onClick={()=>changeStatus(p,'paused')}>Restore as paused</button>:<>
+                    <button disabled={statusBusy} onClick={()=>changeStatus(p,p.selling_status==='active'?'paused':'active')}>{p.selling_status==='active'?'Pause orders':'Resume orders'}</button>
+                    <button disabled={statusBusy} onClick={()=>changeStatus(p,'archived')}>Archive</button>
+                  </>}
+                </div>
               </td>
             </tr>
             ))

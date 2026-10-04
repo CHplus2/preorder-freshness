@@ -40,7 +40,7 @@ def guided_menu(request):
         categories, _ = get_user_top_categories(request.user)
         counts = get_user_product_counts(request.user)
     popularity = get_global_product_popularity()
-    products = Product.objects.select_related('category').prefetch_related('ingredients__raw_material').order_by('id')
+    products = Product.objects.filter(selling_status='active').select_related('category').prefetch_related('ingredients__raw_material').order_by('id')
     if data.get('category'):
         products = products.filter(category_id=data['category'])
     if data.get('budget'):

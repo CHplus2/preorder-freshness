@@ -15,6 +15,7 @@ class Category(models.Model):
 
 # ============ PRODUCT / MENU ============
 class Product(models.Model):
+    selling_status = models.CharField(max_length=10, choices=[("active", "Accepting orders"), ("paused", "Paused"), ("archived", "Archived")], default="active")
     packaging_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     lead_hours = models.PositiveIntegerField(default=24, validators=[MinValueValidator(1)])
     preparation_minutes = models.PositiveIntegerField(default=60, validators=[MinValueValidator(1)])

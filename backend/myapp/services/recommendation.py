@@ -120,7 +120,7 @@ def recommend_for_user(user, limit=20, exclude_bought=True):
     from ..serializers import ProductSerializer
     stock = ProductSerializer()
     results = []
-    for product in Product.objects.select_related('category').prefetch_related('ingredients').order_by('id'):
+    for product in Product.objects.filter(selling_status='active').select_related('category').prefetch_related('ingredients').order_by('id'):
         if product.id in excluded or stock.get_stock(product) < 1:
             continue
         score, reasons = get_score(product, categories, counts, popularity)

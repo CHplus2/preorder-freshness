@@ -65,10 +65,11 @@ function ProductContent({product, id, formatPrice, addToCart}) {
         </div>
 
         <button
+          disabled={product.selling_status && product.selling_status!=='active'}
           onClick={() => addToCart(product.id)}
           className="add-btn"
         >
-          Add to Cart
+          {product.selling_status==='archived'?'No longer offered':product.selling_status==='paused'?'Orders paused':'Add to basket'}
         </button>
         <p>Ingredient dates describe current stock; future meals may use new batches. Contact the owner about allergies.</p>
         {product.social_url && <a href={product.social_url} target="_blank" rel="noreferrer">See this food on social media ↗</a>}

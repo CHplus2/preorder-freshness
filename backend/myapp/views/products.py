@@ -43,6 +43,11 @@ class ProductListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAdminOrReadOnly]
 
 
+    def get_queryset(self):
+        rows = super().get_queryset()
+        return rows if self.request.user.is_staff else rows.filter(selling_status="active")
+
+
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.select_related("category").prefetch_related("ingredients")
     serializer_class = ProductSerializer
@@ -79,7 +84,7 @@ class MenuList(generics.ListAPIView):
     pagination_class = MenuPagination
 
     def get_queryset(self):
-        rows = Product.objects.select_related('category').order_by('-created_at', '-id')
+        rows = Product.objects.filter(selling_status='active').select_related('category').order_by('-created_at', '-id')
         search = self.request.query_params.get('search', '').strip()
         if search:
             rows = rows.filter(name__icontains=search[:200])

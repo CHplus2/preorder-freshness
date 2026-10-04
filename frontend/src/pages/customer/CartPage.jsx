@@ -8,6 +8,7 @@ export default function CartPage() {
   const { cart, cartLoading, cartError, refreshCart, removeFromCart, updateQuantity } = useCart();
   const navigate = useNavigate();
 
+  const unavailable = cart.some(item => item.product.selling_status && item.product.selling_status !== "active");
   const total = cart.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
@@ -19,6 +20,7 @@ export default function CartPage() {
       {cartLoading && <p role="status">Loading your basket…</p>}
       {cartError && <p role="alert">{cartError} <button onClick={refreshCart}>Try again</button></p>}
 
+      {unavailable && <p role="alert" className="cart-unavailable">Some items are no longer accepting orders. Remove the marked items to continue to checkout.</p>}
       {cart.length > 0 ? (
         <>
           {cart.map((item) => (
@@ -40,6 +42,7 @@ export default function CartPage() {
 
                 <div className="cart-item-info">
                   <p className="cart-item-name">{item.product.name}</p>
+                  {item.product.selling_status && item.product.selling_status !== "active" && <p className="cart-unavailable-label">Orders unavailable · Please remove this item</p>}
                   <p className="cart-item-price">
                     {formatPrice(item.product.price)}
                   </p>
@@ -62,6 +65,7 @@ export default function CartPage() {
 
                   <button
                     className="qty-btn"
+                    disabled={Boolean(item.product.selling_status && item.product.selling_status !== "active")}
                     onClick={() =>
                       updateQuantity(item.id, item.quantity + 1)
                     }
@@ -92,6 +96,7 @@ export default function CartPage() {
       {cart.length > 0 && (
         <button
           className="checkout-btn"
+          disabled={unavailable || cartLoading || Boolean(cartError)}
           onClick={() => navigate("/checkout")}
         >
           Proceed to Checkout

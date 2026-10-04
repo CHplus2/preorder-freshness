@@ -54,7 +54,7 @@ class KitchenHelp(APIView):
         answer = text[topic].format(buffer=store.delivery_buffer_minutes)
         menus = []
         if topic == 'menu':
-            rows = Product.objects.filter(daily_capacity__gte=data['portions']).order_by('price', 'id')
+            rows = Product.objects.filter(selling_status='active', daily_capacity__gte=data['portions']).order_by('price', 'id')
             if data.get('search'):
                 rows = rows.filter(name__icontains=data['search'])
             if data.get('budget'):

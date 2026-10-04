@@ -147,6 +147,10 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
     items = list(items)
     if not items:
         raise ValidationError('Your basket is empty.')
+    if exclude_order_id is None:
+        for item in items:
+            if getattr(item.product, 'selling_status', 'active') != 'active':
+                raise ValidationError(f'{item.product.name} is not accepting new orders. Remove it from your basket before continuing.')
     local = timezone.localtime(delivery_at)
     if not 9 <= local.hour < 21:
         raise ValidationError('Choose delivery between 9am and 9pm Malaysia time (before 9pm).')

@@ -24,9 +24,12 @@ class CartViewSet(viewsets.ViewSet):
             return Response({"detail": "product_id required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            product = Product.objects.get(pk=product_id)
+            product = Product.objects.select_for_update().get(pk=product_id)
         except Product.DoesNotExist:
             return Response({"detail": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if product.selling_status != 'active':
+            raise serializers.ValidationError(f'{product.name} is not accepting new orders.')
 
         item, created = CartItem.objects.get_or_create(
             user=request.user,
@@ -62,6 +65,9 @@ class CartViewSet(viewsets.ViewSet):
             item.delete()
             return Response({"detail": "Item removed"}, status=status.HTTP_200_OK)
 
+        product = Product.objects.select_for_update().get(pk=item.product_id)
+        if quantity > item.quantity and product.selling_status != 'active':
+            raise serializers.ValidationError(f'{product.name} is not accepting new orders. Remove it from your basket or reduce the quantity.')
         item.quantity = quantity
         item.save()
 
