@@ -7,7 +7,7 @@ Customers cannot add or increase inactive items. Existing baskets display the un
 No delivery-date restrictions were added. Flexible preorders remain the default. Future date availability should be optional per menu, with explicit fulfilment dates separate from order-collection deadlines.
 
 ## Release
-Migration myapp.0017_product_selling_status adds a selling_status column with active as default. Apply the migration to the deployment database before deploying this code. The existing Vercel migration check prevents deployment with missing schema. No production migration was run in this batch.
+Migration myapp.0017_product_selling_status adds a selling_status column with active as default. Apply the migration to the deployment database before deploying this code. The existing Vercel migration check prevents deployment with missing schema. Production migration 0017 was applied on 2026-10-04 after explicit owner approval. A PostgreSQL custom-format schema backup was created and its archive catalogue verified before migration (stored locally under ignored backend/backups). Post-migration checks confirmed no pending migrations, 20 active menus, 21 orders and 44 order items, matching pre-migration counts. No menu was paused automatically.
 
 ## Validation
 31 distinct backend tests passed: lifecycle (5), pagination (3), commitments (23). Changed React pages passed targeted ESLint. Vite production build passed. Repository-wide lint still reports 23 errors and 7 warnings outside the changed pages.
