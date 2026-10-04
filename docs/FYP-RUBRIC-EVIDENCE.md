@@ -85,4 +85,8 @@ Reproduce using installed PostgreSQL binaries and the backend virtual environmen
 
 Override the PostgreSQL executable directory with `--pg-bin` if needed. The runner creates a random-password cluster on a dynamically selected loopback port, forces dotenv off, sets an isolated Django test database and stops the server after testing. Local SSL is disabled only in this test process; production settings are unchanged. Temporary stopped cluster files remain in the OS temporary directory for troubleshooting. No credentials are included in the evidence.
 
-The ordinary SQLite suite still skips PostgreSQL-only tests by design; use this separate run as the evidence for these concurrency cases. Full authenticated browser verification and participant validation remain outstanding.
+The ordinary SQLite suite still skips PostgreSQL-only tests by design; use this separate run as the evidence for these concurrency cases.
+
+## Authenticated browser walkthrough — 5 October 2026
+
+[Browser evidence and limitations](evidence/browser-20261005/README.md) records synthetic customer checkout, an unpaid cash-on-delivery order, owner settings save and field navigation, and the customer-facing admin-access boundary. The walkthrough found and verified a fix for notifications leaking across account changes. Remaining browser scenarios and participant validation are explicitly pending; this is partial developer verification, not a completed user study.

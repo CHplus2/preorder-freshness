@@ -40,6 +40,7 @@ export default function AuthProvider({ children }) {
             headers: { "X-CSRFToken": getCookie("csrftoken") }, 
         });
 
+        setAlert({ message: "", type: "" });
         checkAuth();
         setShowSignup(false);
         return null;
@@ -58,6 +59,7 @@ export default function AuthProvider({ children }) {
             headers: { "X-CSRFToken": getCookie("csrftoken") }, 
         });
 
+        setAlert({ message: "", type: "" });
         checkAuth();
         setShowLogin(false);
         return null;
@@ -75,6 +77,7 @@ export default function AuthProvider({ children }) {
           headers: { "X-CSRFToken": getCookie("csrftoken") },
         });
         setCart([]);
+        setAlert({ message: "", type: "" });
         checkAuth();
         setDropdownOpen(false);
     } catch (err) {
