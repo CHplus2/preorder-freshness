@@ -54,3 +54,6 @@ button:disabled{cursor:not-allowed;opacity:.6}button:focus-visible,a:focus-visib
   .business-header-actions { gap: 5px; flex-shrink: 0; }
   .business-header .mobile-menu-toggle { padding-inline: 8px; min-width: 44px; }
 }
+
+.business-app .text-link,.business-page .text-link,.dk-actions .text-link,.occasion-section .text-link{border-bottom:0;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
+.setup-checklist a{ text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px; }

@@ -31,7 +31,7 @@ def setup_checklist(request):
     def menu_check(key, title, missing, detail):
         return {'id': key, 'title': title, 'complete': bool(products) and not missing,
             'detail': detail if products else 'Add your first menu to start this step.',
-            'href': '/admin/products', 'action': 'Review menus',
+            'href': '/admin/products', 'action': {'recipes':'Review menu ingredients', 'preparation':'Review preparation steps', 'costs':'Review menu costs'}[key],
             'affected_count': len(missing),
             'examples': [{'id': p.pk, 'name': p.name} for p in missing[:10]]}
 

@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {responseList,responseSlots} from './apiResponse.js';
+import {apiError} from './apiError.js';
+for(const data of [null,undefined,'<html>Unavailable</html>',{}, {results:null},[null]])assert.throws(()=>responseList(data),{code:'INVALID_RESPONSE'});
+assert.deepEqual(responseList([]),[]);
+assert.deepEqual(responseList({results:[{id:1}]}),[{id:1}]);
+for(const data of [null,{}, {slots:{}},{slots:[{}]},{slots:[{delivery_at:'bad date'}]}])assert.throws(()=>responseSlots(data),{code:'INVALID_RESPONSE'});
+assert.deepEqual(responseSlots({slots:[]}),[]);
+assert.equal(responseSlots({slots:[{delivery_at:'2026-10-10T16:00:00+08:00'}]}).length,1);
+assert.match(apiError({code:'INVALID_RESPONSE'}),/unexpected response/);
+console.log('Malformed list and slot response recovery checks passed.');

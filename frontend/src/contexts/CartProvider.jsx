@@ -1,3 +1,4 @@
+import {responseList} from '../utils/apiResponse';
 import {apiError} from '../utils/apiError';
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { getCookie } from "../utils/cookieUtils";
@@ -65,7 +66,7 @@ export default function CartProvider({ children }) {
       const res = await axios.get("/api/cart/", { withCredentials: true, timeout:30000 });
       const data = res.data;
 
-      setCart(Array.isArray(data) ? data : data.results || []);
+      setCart(responseList(data));
 
     } catch (err) {
       setCartError(apiError(err));

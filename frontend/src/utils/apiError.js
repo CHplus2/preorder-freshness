@@ -1,4 +1,5 @@
 export function apiError(error, fallback = 'The request could not be completed.') {
+  if (error?.code === 'INVALID_RESPONSE') return 'The kitchen returned an unexpected response. Please reload and try again. If you submitted an order, check My orders first.';
   if (!error?.response) {
     if (error?.code === 'ECONNABORTED') return 'The request took too long. Check your connection. If you submitted an order, check My orders before trying again.';
     return 'Could not reach the kitchen. Check your connection and try again. If you submitted an order, check My orders first.';

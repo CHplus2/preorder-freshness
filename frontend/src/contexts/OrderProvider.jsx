@@ -1,3 +1,4 @@
+import {responseList,invalidResponse} from '../utils/apiResponse';
 import {useUI} from './UIProvider';
 import {apiError} from '../utils/apiError';
 import { createContext, useContext, useState, useCallback } from "react";
@@ -27,7 +28,7 @@ export default function OrderProvider({ children }) {
             });
             const data = res.data;
             
-            setOrders(Array.isArray(data) ? data : data.results || []);
+            setOrders(responseList(data));
         } catch (err) {
             setOrdersError(apiError(err));
         } finally {
@@ -44,7 +45,7 @@ export default function OrderProvider({ children }) {
             })
             const data = res.data;
 
-            setAdminOrders(Array.isArray(data) ? data : data.results || []);
+            setAdminOrders(responseList(data));
         } catch (err) {
             setAdminOrdersError(apiError(err));
         } finally {
@@ -58,12 +59,16 @@ export default function OrderProvider({ children }) {
             const key=JSON.stringify([body,cart.map(i=>[i.product.id,i.quantity])]);
             let attempt=JSON.parse(sessionStorage.getItem('checkoutAttempt') || 'null');
             if(!attempt || attempt.key!==key){attempt={key,id:crypto.randomUUID()};sessionStorage.setItem('checkoutAttempt',JSON.stringify(attempt))}
-            await axios.post("/api/orders/place/", { ...body, request_id:attempt.id, recommendation_session:sessionStorage.getItem('recommendationSession') }, {
+            const placed = await axios.post("/api/orders/place/", { ...body, request_id:attempt.id, recommendation_session:sessionStorage.getItem('recommendationSession') }, {
                 withCredentials: true,
                 headers: { "X-CSRFToken": getCookie("csrftoken") },
             })
-            sessionStorage.removeItem('checkoutAttempt');
-            sessionStorage.removeItem('recommendationSession');
+            if(!Number.isInteger(placed.data?.order_id) || placed.data.order_id<1)throw invalidResponse();
+            // A local storage failure after server success must not report a failed order.
+            try {
+                sessionStorage.removeItem('checkoutAttempt');
+                sessionStorage.removeItem('recommendationSession');
+            } catch { /* The retained request ID is safe to replay server-side. */ }
             refreshCart();
             return true;
         } catch (err) {
