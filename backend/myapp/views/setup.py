@@ -43,7 +43,7 @@ def setup_checklist(request):
         {'id': 'contact', 'title': 'Explain your service area and contact route',
          'complete': bool(store and store.service_area.strip() and (store.contact_email.strip() or store.whatsapp_number.strip())),
          'detail': 'Add a service area and either an email or WhatsApp number. This describes your area; it does not enforce delivery zones.',
-         'href': '/admin/settings#store-identity', 'action': 'Edit contact details'},
+         'href': '/admin/settings#store-contact', 'action': 'Edit contact details'},
         menu_check('recipes', 'Record ingredients for every menu', missing_recipes,
                    'Each menu needs a recipe with positive quantities to support shopping and ingredient deductions.'),
         menu_check('preparation', 'Describe actual preparation steps', missing_steps,

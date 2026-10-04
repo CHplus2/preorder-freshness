@@ -15,3 +15,7 @@
 .settings-page .settings-save-actions>[role=status]:empty{display:none}
 .settings-page .admin-page-heading a{display:inline-block;margin-top:12px}
 @media(max-width:600px){.settings-page .settings-group{padding:20px}.settings-page .settings-save-actions{align-items:stretch;flex-direction:column}.settings-page .settings-save-actions>button{width:100%}}
+
+.settings-page #store-identity,.settings-page #store-contact{scroll-margin-top:7rem}
+.settings-page .setup-steps a{display:inline-flex;align-items:center;min-height:44px;margin-top:8px;text-decoration:underline;text-underline-offset:4px}
+.settings-page .setup-steps a:focus-visible{outline:2px solid currentColor;outline-offset:4px}

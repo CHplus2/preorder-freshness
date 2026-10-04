@@ -29,7 +29,11 @@ export default function SetupChecklist() {
         <h3>{step.complete?'Complete':'To do'}: {step.title}</h3>
         <p>{step.detail}</p>
         {step.affected_count > 0 && <p>{step.affected_count} menus need attention: {step.examples.map(p=>p.name).join(', ')}{step.affected_count>step.examples.length?' (first 10 shown)':''}.</p>}
-        <Link to={step.href}>{step.action}</Link>
+        {step.href.startsWith('/admin/settings#') ? <a href={step.href} onClick={event=>{
+          if(event.button!==0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)return;
+          const target=document.getElementById(step.href.split('#')[1]);
+          if(target){event.preventDefault();target.scrollIntoView({block:'start'});(target.matches('input,textarea')?target:target.querySelector('input,textarea'))?.focus({preventScroll:true});}
+        }}>{step.action}</a> : <Link to={step.href}>{step.action}</Link>}
       </li>)}</ol>
       <h3>Inventory follow-up</h3>
       <p>{data.inventory.received_batches} non-empty received batches; {data.inventory.usable_by_recorded_date} within their recorded dates and not held.</p>
