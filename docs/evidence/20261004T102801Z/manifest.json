@@ -1,0 +1,126 @@
+{
+  "started_utc": "20261004T102801Z",
+  "base_commit": "50efc7eb4ab8f1ce6131faf1abea6c3d9f05ecb0",
+  "working_tree_dirty": true,
+  "database": "isolated in-memory SQLite",
+  "email": "in-memory; no delivery",
+  "limitations": [
+    "PostgreSQL locking tests skip on SQLite",
+    "No real user study, external payments or email delivery tested",
+    "Lint failures remain failures, not overridden"
+  ],
+  "steps": [
+    {
+      "name": "backend",
+      "command": [
+        "C:\\Users\\DELL\\Documents\\IT Personal Projects\\preorder-freshness\\backend\\venv\\Scripts\\python.exe",
+        "manage.py",
+        "test",
+        "myapp",
+        "--noinput",
+        "--verbosity",
+        "2"
+      ],
+      "cwd": "backend",
+      "exit_code": 0,
+      "status": "passed",
+      "log": "backend.log",
+      "sha256": "0ba5adfbecfe64d0fba39d874624e56c69b83141ed363bcf7de06abb3e1d5f5b"
+    },
+    {
+      "name": "release",
+      "command": [
+        "C:\\Users\\DELL\\Documents\\IT Personal Projects\\preorder-freshness\\backend\\venv\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "cwd": ".",
+      "exit_code": 0,
+      "status": "passed",
+      "log": "release.log",
+      "sha256": "5a428c0c28747acdc5d4eadc22d890ed882d52a440c9655021de8cc3121f8df9"
+    },
+    {
+      "name": "test",
+      "command": [
+        "C:\\Program Files\\nodejs\\npm.CMD",
+        "run",
+        "test"
+      ],
+      "cwd": "frontend",
+      "exit_code": 0,
+      "status": "passed",
+      "log": "test.log",
+      "sha256": "6a26ae95ec45ef7135fd84c22487859967c3d9f92f5621ea49741a818cf25fbf"
+    },
+    {
+      "name": "test:ux",
+      "command": [
+        "C:\\Program Files\\nodejs\\npm.CMD",
+        "run",
+        "test:ux"
+      ],
+      "cwd": "frontend",
+      "exit_code": 0,
+      "status": "passed",
+      "log": "test-ux.log",
+      "sha256": "54377bd759494e2707c99cc9353baf0b76782e74280ced0fae486f35cd9b8e51"
+    },
+    {
+      "name": "test:checkout",
+      "command": [
+        "C:\\Program Files\\nodejs\\npm.CMD",
+        "run",
+        "test:checkout"
+      ],
+      "cwd": "frontend",
+      "exit_code": 0,
+      "status": "passed",
+      "log": "test-checkout.log",
+      "sha256": "f390060a48398885e3617e2237b1f602941148eee8586fd261c0c52c9c7f99e7"
+    },
+    {
+      "name": "test:planner",
+      "command": [
+        "C:\\Program Files\\nodejs\\npm.CMD",
+        "run",
+        "test:planner"
+      ],
+      "cwd": "frontend",
+      "exit_code": 0,
+      "status": "passed",
+      "log": "test-planner.log",
+      "sha256": "0c087023aad54dd6f558828495bcbf8efd42cc8189afe106b384b6697eaf38d7"
+    },
+    {
+      "name": "lint",
+      "command": [
+        "C:\\Program Files\\nodejs\\npm.CMD",
+        "run",
+        "lint"
+      ],
+      "cwd": "frontend",
+      "exit_code": 1,
+      "status": "failed",
+      "log": "lint.log",
+      "sha256": "0f52435f96c140f62f352c127c8302b9254f554ec08e629bcb49f07990659390"
+    },
+    {
+      "name": "build",
+      "command": [
+        "C:\\Program Files\\nodejs\\npm.CMD",
+        "run",
+        "build"
+      ],
+      "cwd": "frontend",
+      "exit_code": 0,
+      "status": "passed",
+      "log": "build.log",
+      "sha256": "67cc787169472a42437f8e051693f61430710b53e693a49279b0d38ac4ceba62"
+    }
+  ]
+}

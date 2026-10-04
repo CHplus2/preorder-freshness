@@ -41,7 +41,7 @@ export default function UIProvider({ children }) {
         showSignup, setShowSignup,
         dropdownOpen, setDropdownOpen,
         alert, setAlert,
-        fallback_img, modalMotion,
+        fallback_img,
         formatOrderNumber, convertToUSD,
         formatPrice
     }

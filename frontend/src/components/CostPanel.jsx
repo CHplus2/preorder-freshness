@@ -8,7 +8,7 @@ const money=v=>v==null?'Not recorded':'RM '+Number(v).toFixed(2);
 export default function CostPanel(){
  const [report,setReport]=useState(null),[materials,setMaterials]=useState([]),[lots,setLots]=useState([]),[expenses,setExpenses]=useState([]);
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);
- const [range,setRange]=useState({start:malaysiaDate(new Date(Date.now()-27*86400000)),end:malaysiaDate(new Date())});
+ const [range,setRange]=useState(()=>({start:malaysiaDate(new Date(Date.now()-27*86400000)),end:malaysiaDate(new Date())}));
  const [expense,setExpense]=useState({date:malaysiaDate(new Date()),category:'utilities',amount:'',note:''});
  const [waste,setWaste]=useState({inventory_item:'',quantity:'',reason:''});
  const expenseKey=useRef(crypto.randomUUID()),wasteKey=useRef(crypto.randomUUID());

@@ -1,0 +1,5 @@
+
+> frontend@0.0.0 test:planner
+> node src/components/PlannerSnapshot.test.js
+
+Planner snapshot: initial loading, refresh with cached data, failed refresh, missing response and ready state passed.

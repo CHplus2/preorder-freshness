@@ -1,0 +1,123 @@
+
+> frontend@0.0.0 test
+> node src/utils/apiError.test.js && node src/utils/planner.test.js && node src/utils/shopping.test.js && node src/utils/orderQueue.test.js && node src/utils/packing.test.js && node src/utils/inventoryAttention.test.js && node src/utils/orderProgress.test.js && node src/utils/preparationEstimate.test.js && node src/utils/recommendationExport.test.js && node src/utils/deliveryDays.test.js && node src/utils/apiResponse.test.js && node src/utils/checkoutStorage.test.js
+
+✔ nested validation stays readable (2.9704ms)
+✔ server failures do not expose internals (0.6368ms)
+✔ session, timeout and network recovery (0.7269ms)
+✔ non-JSON errors use fallback (2.1149ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 58.0531
+✔ hands-on time excludes unattended equipment use (32.723ms)
+✔ multiday resting appears on each occupied day (0.625ms)
+✔ overlapping closures are not double counted (1.2241ms)
+✔ legacy overlap is flagged and never fabricated into recipe steps (0.728ms)
+✔ cooked orders do not reserve future hands-on work (0.56ms)
+✔ changed hours flag previously accepted early work (0.6889ms)
+✔ unattended equipment conflicts are detected without worker conflicts (3.5788ms)
+✔ different equipment, no equipment and touching endpoints remain valid (1.0818ms)
+✔ closures include unattended work outside hours and union overlapping intervals (2.543ms)
+✔ legacy whole-kitchen reservations conflict with unattended equipment (1.7783ms)
+✔ conflict details identify both orders and worker-only overlap (1.0884ms)
+✔ closure details preserve the reason and clip overlap to selected day (0.5243ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 76.5508
+✔ combines shortages with exact three-place quantities and preserves orders (2.4163ms)
+✔ cutoff includes overdue needs and excludes future needs (0.3949ms)
+✔ never combines different ingredients or units (52.6565ms)
+✔ orders shopping by earliest requirement (14.8462ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 94.2154
+✔ search accepts formatted IDs, customers and menu names (3.4983ms)
+✔ filters combine and delivery dates use Malaysia timezone (97.6931ms)
+✔ overdue excludes cancelled, delivered, unscheduled and future orders (2.3046ms)
+✔ delivery ordering puts unscheduled orders last without mutating input (0.5007ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 131.1414
+✔ uses Malaysia date and excludes dispatched, completed and cancelled orders (85.3472ms)
+✔ totals all order lines without combining renamed menus (3.5847ms)
+✔ reports missing dates and sorts deliveries without mutating source (4.6623ms)
+✔ keeps deleted product lines distinct and includes cooked orders (3.2577ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 119.4477
+✔ date boundaries use explicit Malaysia day rather than device midnight (70.434ms)
+✔ held expired stock appears once and empty batches are excluded (0.9653ms)
+✔ stock value preserves zero cost and reports incomplete costs (3.6802ms)
+✔ priority ranges do not overlap and rows sort without mutating input (1.6111ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 88.7695
+✔ each recorded status has exactly one current stage (3.0974ms)
+✔ cancelled and unknown statuses do not invent completed stages (1.2496ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17.7106
+✔ combined timing reproduces the ten-bar example (4.057ms)
+✔ independent mode repeats full duration including a partial batch (0.3134ms)
+✔ basic cook/pack formula matches backend example (1.5062ms)
+✔ incomplete inputs do not produce misleading zero estimates (0.4006ms)
+✔ unattended overnight steps are exempt from work-window warning (0.4457ms)
+✔ warns about oversized steps and capacity, without assuming unknown hours (0.2746ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 25.572
+✔ exports displayed counts and rates with provenance and correctly quoted CSV (3.0523ms)
+✔ empty cohort preserves report metadata without inventing percentages (1.0688ms)
+✔ missing measures stay blank while recorded zero remains zero (2.3866ms)
+✔ neutralises spreadsheet formulas in textual values (0.5225ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 27.2995
+Basket delivery weekday compatibility checks passed.
+Malformed list and slot response recovery checks passed.
+Checkout storage failures and stable retry identity passed.

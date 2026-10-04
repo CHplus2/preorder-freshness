@@ -1,0 +1,5 @@
+
+> frontend@0.0.0 test:checkout
+> node src/components/AvailabilityResult.test.js
+
+Availability result: success, procurement, stale selection, pending, failure and initial state passed.

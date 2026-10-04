@@ -1,10 +1,11 @@
 # Testing and FYP evidence
 
-Automated tests already exist. Whether they are compulsory depends on your university's rubric.
-They support repeatable correctness evidence, while manual testing and user evaluation assess
-usability and whether the system solves the intended business problem.
+Start with [FYP rubric evidence](FYP-RUBRIC-EVIDENCE.md) for the current objective mapping and repeatable verification runner. Run `backend/venv/Scripts/python.exe scripts/verify_fyp.py` from the repository root on Windows. Results are recorded under `docs/evidence/`; failures and skips must be reported. The runner forces isolated SQLite and in-memory email.
 
-## Existing tests
+The following notes describe additional manual verification. The current suite inventory is generated with each evidence run; the older file examples below are not exhaustive.
+
+
+## Existing examples
 
 Backend: backend/myapp/tests.py, test_planning.py, test_menu.py, test_freshness.py,
 test_integrations.py and test_costs_freshness.py.

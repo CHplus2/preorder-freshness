@@ -1,0 +1,201 @@
+
+> frontend@0.0.0 lint
+> eslint .
+
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\components\CostPanel.jsx
+  15:47  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  13 |  const [waste,setWaste]=useState({inventory_item:'',quantity:'',reason:''});
+  14 |  const expenseKey=useRef(crypto.randomUUID()),wasteKey=useRef(crypto.randomUUID());
+> 15 |  useEffect(()=>{const c=new AbortController();setError('');setReport(null);
+     |                                               ^^^^^^^^ Avoid calling setState() directly within an effect
+  16 |  Promise.all([axios.get('/api/admin/costs/',{params:range,signal:c.signal}),axios.get('/api/admin/raw-materials/',{signal:c.signal}),axios.get('/api/admin/inventory-items/',{signal:c.signal}),axios.get('/api/admin/expenses/',{signal:c.signal})]).then(([a,b,d,e])=>{setReport(a.data);setMaterials(b.data);setLots(d.data);setExpenses(e.data)}).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});return()=>c.abort()},[range,retry]);
+  17 |  const mutate=async(url,data,method='post')=>{if(busy)return false;setBusy(true);setError('');setMessage('');try{await axios[method](url,data,{headers:{'X-CSRFToken':getCookie('csrftoken')}});setRetry(n=>n+1);setMessage('Saved.');return true}catch(e){setError(apiError(e));return false}finally{setBusy(false)}};
+  18 |  return <section className="cost-workspace"><h2>Costs, wastage and pricing</h2><p>Menu estimates use today's ingredient costs and packaging. They exclude discounts, labour, delivery, overhead and tax; they are not net profit.</p>  react-hooks/set-state-in-effect
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\components\InventoryFreshness.jsx
+  5:47  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  3 | export default function InventoryFreshness(){
+  4 |  const [data,setData]=useState(null),[error,setError]=useState(false),[retry,setRetry]=useState(0);
+> 5 |  useEffect(()=>{const c=new AbortController();setError(false);axios.get('/api/inventory-freshness/',{signal:c.signal}).then(r=>setData(r.data)).catch(e=>{if(!axios.isCancel(e))setError(true)});return()=>c.abort()},[retry]);
+    |                                               ^^^^^^^^ Avoid calling setState() directly within an effect
+  6 |  return <details id="inventory-freshness" className="inventory-transparency">
+  7 |  <summary>Ingredient storage records <span>View current batch dates and stock on hold</span></summary>
+  8 |  {error?<p role="status">Inventory records are temporarily unavailable. <button onClick={()=>setRetry(n=>n+1)}>Try again</button></p>:!data?<p role="status">Loading storage records...</p>:<>  react-hooks/set-state-in-effect
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\components\MenuReviews.jsx
+  9:56  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   7 |  const {isAuthenticated}=useAuth();
+   8 |  const [reviews,setReviews]=useState([]),[access,setAccess]=useState(null),[rating,setRating]=useState(5),[comment,setComment]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[retry,setRetry]=useState(0);
+>  9 |  useEffect(()=>{const controller=new AbortController();setLoading(true);setMessage('');setAccess(null);Promise.all([axios.get(`/api/products/${id}/reviews/`,{signal:controller.signal}),axios.get(`/api/products/${id}/review-access/`,{signal:controller.signal})]).then(([a,b])=>{setReviews(a.data);setAccess(b.data)}).catch(e=>{if(!axios.isCancel(e))setMessage(apiError(e));}).finally(()=>{if(!controller.signal.aborted)setLoading(false)});return()=>controller.abort();},[id,isAuthenticated,retry]);
+     |                                                        ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  10 |  const submit=async e=>{e.preventDefault();if(busy)return;setBusy(true);setMessage('');try{const r=await axios.post(`/api/products/${id}/reviews/`,{rating,comment},{headers:{'X-CSRFToken':getCookie('csrftoken')}});setReviews(r.data);setComment('');setAccess({eligible:false,reason:'Thank you for sharing your experience.'});}catch(e){setMessage(apiError(e));}finally{setBusy(false)}};
+  11 |  return <section className="dk-reviews"><h2>From our customers</h2>{loading?<p role="status">Loading reviews...</p>:<>{reviews.length===0 && access && <p>No reviews yet.</p>}{reviews.map(r=><article className="dk-panel" key={r.id}><strong>{r.rating}/5 · {r.customer}</strong><p>{r.comment}</p></article>)}{access?.eligible?<form onSubmit={submit}><h3>Share your meal experience</h3><label>Rating<select value={rating} onChange={e=>setRating(Number(e.target.value))}>{[5,4,3,2,1].map(n=><option key={n} value={n}>{n} stars</option>)}</select></label><label>Your review<textarea required maxLength={1000} value={comment} onChange={e=>setComment(e.target.value)}/></label><button disabled={busy}>{busy?'Posting...':'Post review'}</button></form>:<p>{access?.reason}</p>}</>}{message && <p role="alert">{message}</p>}{!loading && !access && <button onClick={()=>setRetry(n=>n+1)}>Retry loading reviews</button>}</section>;
+  12 | }  react-hooks/set-state-in-effect
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\contexts\AuthProvider.jsx
+   9:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-refresh/only-export-components
+  32:9   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  30 |
+  31 |     useEffect(() => {
+> 32 |         checkAuth();
+     |         ^^^^^^^^^ Avoid calling setState() directly within an effect
+  33 |     }, [checkAuth])
+  34 |
+  35 |     const signup = async (account) => {  react-hooks/set-state-in-effect
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\contexts\CartProvider.jsx
+   10:14  error    Fast refresh only works when a file only exports components. Move your React context(s) to a separate file                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-refresh/only-export-components
+   12:14  error    Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-refresh/only-export-components
+   78:6   warning  React Hook useCallback has a missing dependency: 'setAlert'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/exhaustive-deps
+   82:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  80 |   useEffect(() => {
+  81 |     if (isAuthenticated) {
+> 82 |       fetchWallet();
+     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  83 |       refreshCart();
+  84 |     }
+  85 |   }, [fetchWallet, refreshCart]);  react-hooks/set-state-in-effect
+   85:6   warning  React Hook useEffect has a missing dependency: 'isAuthenticated'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+  100:6   warning  React Hook useCallback has a missing dependency: 'setAlert'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/exhaustive-deps
+  115:6   warning  React Hook useCallback has a missing dependency: 'setAlert'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/exhaustive-deps
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\contexts\OrderProvider.jsx
+  11:14  error    Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  80:8   warning  React Hook useCallback has a missing dependency: 'setAlert'. Either include it or remove the dependency array                   react-hooks/exhaustive-deps
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\contexts\ProductProvider.jsx
+  11:14  error    Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-refresh/only-export-components
+  35:8   warning  React Hook useCallback has a missing dependency: 'setAlert'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+  48:8   warning  React Hook useCallback has a missing dependency: 'setAlert'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+  67:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  65 |
+  66 |     useEffect(() => {
+> 67 |         fetchCategories();
+     |         ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  68 |     }, [fetchCategories]);
+  69 |
+  70 |  react-hooks/set-state-in-effect
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\contexts\StorefrontProvider.jsx
+  4:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\contexts\UIProvider.jsx
+  4:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\pages\admin\AdminCustomersPage.jsx
+  8:47  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   6 | export default function AdminCustomersPage(){
+   7 |  const [customers,setCustomers]=useState([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(null),[error,setError]=useState(''),[retry,setRetry]=useState(0);
+>  8 |  useEffect(()=>{const c=new AbortController();setLoading(true);setError('');axios.get('/api/admin/customers/',{signal:c.signal}).then(r=>setCustomers(r.data)).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))}).finally(()=>{if(!c.signal.aborted)setLoading(false)});return()=>c.abort();},[retry]);
+     |                                               ^^^^^^^^^^ Avoid calling setState() directly within an effect
+   9 |  const toggle=async customer=>{if(busy)return;setBusy(customer.id);setError('');try{const r=await axios.patch(`/api/admin/customers/${customer.id}/`,{is_active:!customer.is_active},{headers:{'X-CSRFToken':getCookie('csrftoken')}});setCustomers(rows=>rows.map(c=>c.id===r.data.id?r.data:c));}catch(e){setError(apiError(e))}finally{setBusy(null)}};
+  10 |  return <main className="dk-workspace"><div className="admin-page-heading"><div><h1>Customers</h1><p>Manage customer accounts and store access.</p></div><button disabled={loading} onClick={()=>setRetry(n=>n+1)}>{loading?'Refreshing...':'Refresh customers'}</button></div>{error && <p role="alert">{error}</p>}{loading?<p role="status">Loading customers...</p>:<div className="admin-table-scroll"><table><thead><tr><th>Username</th><th>Active</th><th>Role</th><th>Action</th></tr></thead><tbody>{customers.map(c=><tr key={c.id}><td>{c.username}</td><td>{c.is_active?'Yes':'No'}</td><td>{c.is_staff?'Owner':'Customer'}</td><td>{c.is_staff?'Owner account':<button disabled={busy!==null} onClick={()=>toggle(c)}>{busy===c.id?'Saving...':c.is_active?'Deactivate':'Activate'}</button>}</td></tr>)}</tbody></table></div>}</main>;
+  11 | }  react-hooks/set-state-in-effect
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\pages\admin\AdminInventoryPage.jsx
+   69:14  error  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+   82:14  error  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+   89:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  87 |   useEffect(() => {
+  88 |     const controller = new AbortController();
+> 89 |     setInitialLoading(true);
+     |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  90 |     setInitialError("");
+  91 |     Promise.all([
+  92 |       axios.get(API_URL + "/raw-materials/", { ...getAuthConfig(), signal: controller.signal }),  react-hooks/set-state-in-effect
+  237:14  error  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  306:14  error  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\pages\admin\AdminReportsPage.jsx
+  11:17  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   9 | export default function AdminReportsPage() {
+  10 |  const [report,setReport]=useState([]),[summary,setSummary]=useState(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[retry,setRetry]=useState(0);
+> 11 |  useEffect(()=>{setLoading(true);setError('');Promise.all([axios.get('/api/admin/reports/sales/'),axios.get('/api/admin/analytics/')]).then(([a,b])=>{setReport(a.data);setSummary(b.data);}).catch(e=>setError(apiError(e))).finally(()=>setLoading(false));},[retry]);
+     |                 ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  12 |  const max=Math.max(1,...(summary?.analytics.trend || []).map(d=>Number(d.sales)));
+  13 |  return <main className="dk-workspace"><span className="dk-eyebrow">A CLEARER PICTURE OF YOUR KITCHEN</span><h1>Sales analytics</h1><p>Paid, non-cancelled orders. Net food sales include discounts and exclude delivery fees.</p><button disabled={loading} onClick={()=>setRetry(n=>n+1)}>{loading?'Loading sales...':'Refresh sales'}</button>{error && <p role="alert">{error}</p>}
+  14 |  <div className="inventory-summary" aria-busy={loading}>{[['Net food sales · 28 days','RM '+(summary?.analytics.net_food_sales || '0')],['Paid orders · 28 days',summary?.analytics.paid_orders || 0],['Average food order','RM '+(summary?.analytics.average_order_value || '0')],['Next 7 days · estimate',summary?.forecast.next_7_days_portions==null?'Insufficient history':summary.forecast.next_7_days_portions+' portions']].map(([label,value])=><article className="summary-card" key={label}><span>{label}</span><strong>{loading ? 'Loading…' : error ? 'Unavailable' : value}</strong></article>)}</div>  react-hooks/set-state-in-effect
+
+C:\Users\DELL\Documents\IT Personal Projects\preorder-freshness\frontend\src\pages\admin\StoreSettingsPage.jsx
+  20:47  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  18 |  const [setupRevision,setSetupRevision]=useState(0);
+  19 |  const [store,setStore]=useState(null),[message,setMessage]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);
+> 20 |  useEffect(()=>{const c=new AbortController();setError('');axios.get('/api/storefront/',{signal:c.signal}).then(r=>setStore(r.data)).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});return()=>c.abort()},[retry]);
+     |                                               ^^^^^^^^ Avoid calling setState() directly within an effect
+  21 |  const settingsReady=Boolean(store);
+  22 |  useEffect(()=>{
+  23 |   if(!settingsReady)return;  react-hooks/set-state-in-effect
+
+✖ 28 problems (21 errors, 7 warnings)
+

@@ -20,3 +20,6 @@ backend/backups/
 **/staticfiles/
 .vercel/
 escrow/artifacts/
+
+# Sanitised verification logs are deliberate FYP evidence.
+!docs/evidence/**/*.log

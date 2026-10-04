@@ -1,0 +1,867 @@
+[
+  {
+    "file": "backend/myapp/test_checkout_failures.py",
+    "test": "test_failed_item_write_rolls_back_order_and_preserves_basket",
+    "line": 24
+  },
+  {
+    "file": "backend/myapp/test_checkout_failures.py",
+    "test": "test_failure_after_demo_wallet_debit_rolls_back_balance_and_receipts",
+    "line": 40
+  },
+  {
+    "file": "backend/myapp/test_commitment_migration.py",
+    "test": "test_old_orders_are_labelled_without_invented_historical_costs",
+    "line": 9
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_recipe_edit_cannot_change_accepted_consumption_or_packaging",
+    "line": 50
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_deleted_menu_does_not_destroy_accepted_recipe",
+    "line": 61
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_planning_uses_frozen_ingredients",
+    "line": 66
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_shortage_rolls_back_structured_consumption",
+    "line": 73
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_cost_and_trace_survive_later_batch_edits",
+    "line": 80
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_unknown_cost_is_not_zero_profit",
+    "line": 91
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_cooked_cancellation_keeps_cost_as_loss",
+    "line": 96
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_customer_cannot_change_roles_delete_or_read_private_reports",
+    "line": 100
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_payment_requires_evidence_and_cannot_change_flag",
+    "line": 112
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_refund_pending_failed_then_completed",
+    "line": 120
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_wallet_refund_exactly_once_and_mismatched_retry_rejected",
+    "line": 131
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_inventory_adjustment_requires_reason_and_records_delta",
+    "line": 141
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_checkout_retry_returns_original_order",
+    "line": 149
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_guest_guidance_uses_future_capacity_not_current_stock",
+    "line": 160
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_guide_respects_budget_capacity_and_invalid_date",
+    "line": 168
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_metrics_require_rendered_results_and_verified_purchase",
+    "line": 174
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_signup_rejects_weak_password",
+    "line": 202
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_recovery_generic_response_and_single_use_token",
+    "line": 208
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_login_limit_shared_database",
+    "line": 219
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_anonymous_login_requires_csrf",
+    "line": 225
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_explicit_recipe_amendment_preserves_before_and_after",
+    "line": 231
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_replan_keeps_accepted_settings_despite_current_menu_edits",
+    "line": 248
+  },
+  {
+    "file": "backend/myapp/test_commitments.py",
+    "test": "test_basket_slots_and_procurement_quote",
+    "line": 256
+  },
+  {
+    "file": "backend/myapp/test_contribution_export.py",
+    "test": "test_permissions",
+    "line": 21
+  },
+  {
+    "file": "backend/myapp/test_contribution_export.py",
+    "test": "test_empty_export_has_headers_and_download_metadata",
+    "line": 27
+  },
+  {
+    "file": "backend/myapp/test_contribution_export.py",
+    "test": "test_all_matching_orders_export_beyond_dashboard_limit",
+    "line": 35
+  },
+  {
+    "file": "backend/myapp/test_contribution_export.py",
+    "test": "test_oversized_export_rejected_instead_of_truncated",
+    "line": 43
+  },
+  {
+    "file": "backend/myapp/test_contribution_export.py",
+    "test": "test_date_validation_and_cohort",
+    "line": 49
+  },
+  {
+    "file": "backend/myapp/test_contribution_export.py",
+    "test": "test_csv_formula_text_is_escaped_and_missing_stays_unknown",
+    "line": 58
+  },
+  {
+    "file": "backend/myapp/test_contribution_export.py",
+    "test": "test_realised_contribution_matches_dashboard_and_cooked_loss",
+    "line": 67
+  },
+  {
+    "file": "backend/myapp/test_costs_freshness.py",
+    "test": "test_costs_and_unknowns",
+    "line": 21
+  },
+  {
+    "file": "backend/myapp/test_costs_freshness.py",
+    "test": "test_waste_deducts_once_and_preserves_cost",
+    "line": 28
+  },
+  {
+    "file": "backend/myapp/test_costs_freshness.py",
+    "test": "test_waste_overdraw_rejected",
+    "line": 37
+  },
+  {
+    "file": "backend/myapp/test_costs_freshness.py",
+    "test": "test_expense_retry_and_void",
+    "line": 42
+  },
+  {
+    "file": "backend/myapp/test_costs_freshness.py",
+    "test": "test_earliest_deadline_and_original_preserved",
+    "line": 51
+  },
+  {
+    "file": "backend/myapp/test_costs_freshness.py",
+    "test": "test_uncertain_storage_forces_hold",
+    "line": 61
+  },
+  {
+    "file": "backend/myapp/test_costs_freshness.py",
+    "test": "test_event_requires_duration_and_evidence",
+    "line": 65
+  },
+  {
+    "file": "backend/myapp/test_costs_freshness.py",
+    "test": "test_owner_only_and_private_cost",
+    "line": 71
+  },
+  {
+    "file": "backend/myapp/test_delivery_weekdays.py",
+    "test": "test_default_keeps_flexible_preorders",
+    "line": 18
+  },
+  {
+    "file": "backend/myapp/test_delivery_weekdays.py",
+    "test": "test_allowed_and_disallowed_delivery_day",
+    "line": 22
+  },
+  {
+    "file": "backend/myapp/test_delivery_weekdays.py",
+    "test": "test_rule_uses_malaysia_date",
+    "line": 28
+  },
+  {
+    "file": "backend/myapp/test_delivery_weekdays.py",
+    "test": "test_invalid_rules_rejected",
+    "line": 33
+  },
+  {
+    "file": "backend/myapp/test_delivery_weekdays.py",
+    "test": "test_accepted_snapshot_retains_original_weekdays",
+    "line": 41
+  },
+  {
+    "file": "backend/myapp/test_delivery_weekdays.py",
+    "test": "test_legacy_snapshot_keeps_flexible_dates",
+    "line": 50
+  },
+  {
+    "file": "backend/myapp/test_exception_recovery.py",
+    "test": "test_validation_remains_actionable",
+    "line": 8
+  },
+  {
+    "file": "backend/myapp/test_exception_recovery.py",
+    "test": "test_conflict_does_not_expose_database_details",
+    "line": 13
+  },
+  {
+    "file": "backend/myapp/test_exception_recovery.py",
+    "test": "test_database_outage_is_correlated_and_sanitised",
+    "line": 19
+  },
+  {
+    "file": "backend/myapp/test_exception_recovery.py",
+    "test": "test_unexpected_failure_is_not_reported_as_success",
+    "line": 27
+  },
+  {
+    "file": "backend/myapp/test_freshness.py",
+    "test": "test_remaining_is_calculated_from_dates",
+    "line": 14
+  },
+  {
+    "file": "backend/myapp/test_freshness.py",
+    "test": "test_manufactured_uses_manufacturing_start",
+    "line": 18
+  },
+  {
+    "file": "backend/myapp/test_freshness.py",
+    "test": "test_held_and_expired_are_not_hidden",
+    "line": 23
+  },
+  {
+    "file": "backend/myapp/test_freshness.py",
+    "test": "test_unknown_and_empty_do_not_invent_scores",
+    "line": 30
+  },
+  {
+    "file": "backend/myapp/test_freshness.py",
+    "test": "test_empty_inventory",
+    "line": 37
+  },
+  {
+    "file": "backend/myapp/test_help.py",
+    "test": "test_languages_and_no_key_fallback",
+    "line": 19
+  },
+  {
+    "file": "backend/myapp/test_help.py",
+    "test": "test_multilingual_detection",
+    "line": 29
+  },
+  {
+    "file": "backend/myapp/test_help.py",
+    "test": "test_external_ai_requires_consent_and_is_skipped_for_known_topics",
+    "line": 34
+  },
+  {
+    "file": "backend/myapp/test_help.py",
+    "test": "test_budgets_are_calculated_from_database_not_model",
+    "line": 43
+  },
+  {
+    "file": "backend/myapp/test_help.py",
+    "test": "test_orders_return_navigation_not_private_data",
+    "line": 53
+  },
+  {
+    "file": "backend/myapp/test_help.py",
+    "test": "test_invalid_inputs",
+    "line": 59
+  },
+  {
+    "file": "backend/myapp/test_help.py",
+    "test": "test_throttles_repeated_requests",
+    "line": 65
+  },
+  {
+    "file": "backend/myapp/test_help.py",
+    "test": "test_provider_timeout_and_untrusted_output_fall_back",
+    "line": 72
+  },
+  {
+    "file": "backend/myapp/test_help.py",
+    "test": "test_provider_only_receives_redacted_question_and_fixed_prompt",
+    "line": 85
+  },
+  {
+    "file": "backend/myapp/test_integrations.py",
+    "test": "test_disabled_manual_payment_rejected",
+    "line": 25
+  },
+  {
+    "file": "backend/myapp/test_integrations.py",
+    "test": "test_manual_payment_stays_unpaid_and_snapshots_details",
+    "line": 29
+  },
+  {
+    "file": "backend/myapp/test_integrations.py",
+    "test": "test_empty_payment_setup_rejected",
+    "line": 42
+  },
+  {
+    "file": "backend/myapp/test_integrations.py",
+    "test": "test_reminder_trigger_requires_secret",
+    "line": 47
+  },
+  {
+    "file": "backend/myapp/test_integrations.py",
+    "test": "test_reminder_status_is_owner_only",
+    "line": 52
+  },
+  {
+    "file": "backend/myapp/test_integrations.py",
+    "test": "test_due_reminders_deduplicated_and_bounded",
+    "line": 57
+  },
+  {
+    "file": "backend/myapp/test_integrations.py",
+    "test": "test_failed_email_can_retry_without_false_receipt",
+    "line": 67
+  },
+  {
+    "file": "backend/myapp/test_integrations.py",
+    "test": "test_stale_and_cancelled_orders_are_not_notified",
+    "line": 73
+  },
+  {
+    "file": "backend/myapp/test_inventory_audit.py",
+    "test": "test_stale_edit_cannot_restore_consumed_stock",
+    "line": 24
+  },
+  {
+    "file": "backend/myapp/test_inventory_audit.py",
+    "test": "test_missing_or_invalid_version_rejected",
+    "line": 33
+  },
+  {
+    "file": "backend/myapp/test_inventory_audit.py",
+    "test": "test_fresh_edit_accepted_and_version_advanced",
+    "line": 40
+  },
+  {
+    "file": "backend/myapp/test_inventory_audit.py",
+    "test": "test_inventory_list_query_count_does_not_grow_with_batches",
+    "line": 48
+  },
+  {
+    "file": "backend/myapp/test_inventory_audit.py",
+    "test": "test_sales_endpoint_retains_totals_without_operational_payload",
+    "line": 60
+  },
+  {
+    "file": "backend/myapp/test_inventory_audit.py",
+    "test": "test_sales_endpoint_requires_owner",
+    "line": 72
+  },
+  {
+    "file": "backend/myapp/test_menu.py",
+    "test": "test_pages_are_bounded_stable_and_complete",
+    "line": 13
+  },
+  {
+    "file": "backend/myapp/test_menu.py",
+    "test": "test_filters_apply_before_pagination",
+    "line": 24
+  },
+  {
+    "file": "backend/myapp/test_menu.py",
+    "test": "test_invalid_page_and_category",
+    "line": 31
+  },
+  {
+    "file": "backend/myapp/test_menu_lifecycle.py",
+    "test": "test_public_menu_excludes_paused_and_archived",
+    "line": 19
+  },
+  {
+    "file": "backend/myapp/test_menu_lifecycle.py",
+    "test": "test_only_owner_can_change_status_and_invalid_values_rejected",
+    "line": 28
+  },
+  {
+    "file": "backend/myapp/test_menu_lifecycle.py",
+    "test": "test_existing_basket_can_be_reduced_or_removed_but_not_increased",
+    "line": 40
+  },
+  {
+    "file": "backend/myapp/test_menu_lifecycle.py",
+    "test": "test_planning_rejects_inactive_new_order",
+    "line": 52
+  },
+  {
+    "file": "backend/myapp/test_menu_lifecycle.py",
+    "test": "test_existing_order_plan_can_be_retained_after_archive",
+    "line": 61
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_bulk_duration",
+    "line": 35
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_independent_batches_repeat_full_recipe_including_partial_batch",
+    "line": 40
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_independent_batches_can_use_multiple_days_without_splitting_steps",
+    "line": 47
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_independent_batches_do_not_override_early_finish_limit",
+    "line": 63
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_twenty_two_step_batches_keep_dependencies_and_resource_limits",
+    "line": 67
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_batch_mode_is_preserved_in_accepted_preparation_snapshot",
+    "line": 83
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_upstream_conflict_retries_whole_sequence_without_leaking_trial_slots",
+    "line": 92
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_oversized_unsplit_step_explains_why_later_date_will_not_help",
+    "line": 103
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_independent_mode_must_be_consistent_and_is_bounded",
+    "line": 108
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_distinct_unattended_resources_overlap",
+    "line": 113
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_same_equipment_cannot_overlap",
+    "line": 117
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_worker_cannot_overlap_different_equipment",
+    "line": 121
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_multiday_rest_dependencies",
+    "line": 125
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_block_rejects_booking_without_cancelling",
+    "line": 132
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_quote_capacity",
+    "line": 136
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_block_protected_by_permission_and_existing_order",
+    "line": 140
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_task_validation",
+    "line": 147
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_invalid_ids_and_dates_are_client_errors",
+    "line": 151
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_database_failure_does_not_leak_details",
+    "line": 155
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_planner_queries_do_not_grow_per_order",
+    "line": 160
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_review_eligibility",
+    "line": 168
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_forecast_sparse_and_trend",
+    "line": 175
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_quote_is_advisory_and_snapshot_is_immutable",
+    "line": 182
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_shortages_exclude_batch_expiring_during_multiday_preparation",
+    "line": 195
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_owner_preview_and_confirm_existing_order",
+    "line": 207
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_replan_rejects_stale_preview_or_started_order",
+    "line": 221
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_replan_requires_menu_steps",
+    "line": 233
+  },
+  {
+    "file": "backend/myapp/test_planning.py",
+    "test": "test_planner_exposes_setup_and_hours",
+    "line": 239
+  },
+  {
+    "file": "backend/myapp/test_postgres_commitments.py",
+    "test": "test_two_buyers_cannot_take_the_last_portion",
+    "line": 16
+  },
+  {
+    "file": "backend/myapp/test_pricing.py",
+    "test": "test_scenario_calculation_and_no_saved_changes",
+    "line": 23
+  },
+  {
+    "file": "backend/myapp/test_pricing.py",
+    "test": "test_baseline_threshold_and_explicit_scenario_discount",
+    "line": 38
+  },
+  {
+    "file": "backend/myapp/test_pricing.py",
+    "test": "test_unknown_cost_never_becomes_profit_or_breakeven",
+    "line": 44
+  },
+  {
+    "file": "backend/myapp/test_pricing.py",
+    "test": "test_missing_packaging_recipe_and_invalid_recipe",
+    "line": 54
+  },
+  {
+    "file": "backend/myapp/test_pricing.py",
+    "test": "test_explicit_zero_costs_are_valid",
+    "line": 63
+  },
+  {
+    "file": "backend/myapp/test_pricing.py",
+    "test": "test_loss_flag_and_currency_rounding",
+    "line": 71
+  },
+  {
+    "file": "backend/myapp/test_pricing.py",
+    "test": "test_permissions_and_missing_menu",
+    "line": 78
+  },
+  {
+    "file": "backend/myapp/test_pricing.py",
+    "test": "test_input_bounds_and_nonfinite_values",
+    "line": 85
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_preview_has_no_mutation_and_confirm_preserves_terms",
+    "line": 38
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_retry_returns_current_order_without_second_change",
+    "line": 67
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_private_to_customer_or_owner",
+    "line": 77
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_preview_bound_to_actor",
+    "line": 87
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_stale_order_does_not_apply",
+    "line": 92
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_expired_and_tampered_preview",
+    "line": 98
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_exact_cutoff_and_later_are_blocked",
+    "line": 104
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_status_and_refund_guards",
+    "line": 110
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_capacity_is_rechecked_on_confirm",
+    "line": 117
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_changed_task_availability_needs_new_preview",
+    "line": 124
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_same_day_excludes_own_daily_capacity",
+    "line": 133
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_invalid_dates_reasons_and_removed_menu",
+    "line": 136
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_new_preparation_also_requires_cutoff",
+    "line": 146
+  },
+  {
+    "file": "backend/myapp/test_rescheduling.py",
+    "test": "test_original_preview_cannot_overwrite_started_order",
+    "line": 153
+  },
+  {
+    "file": "backend/myapp/test_setup.py",
+    "test": "test_owner_only",
+    "line": 15
+  },
+  {
+    "file": "backend/myapp/test_setup.py",
+    "test": "test_empty_setup_is_not_complete_and_get_does_not_create_store",
+    "line": 21
+  },
+  {
+    "file": "backend/myapp/test_setup.py",
+    "test": "test_complete_setup_allows_zero_cost_and_no_stock_for_future_preorders",
+    "line": 36
+  },
+  {
+    "file": "backend/myapp/test_setup.py",
+    "test": "test_menu_gaps_recompute_after_edits",
+    "line": 44
+  },
+  {
+    "file": "backend/myapp/test_setup.py",
+    "test": "test_all_menus_checked_but_examples_bounded",
+    "line": 55
+  },
+  {
+    "file": "backend/myapp/test_setup.py",
+    "test": "test_invalid_legacy_tasks_do_not_break_checklist",
+    "line": 61
+  },
+  {
+    "file": "backend/myapp/test_setup.py",
+    "test": "test_stock_counts_exclude_empty_future_and_costed_batches",
+    "line": 66
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_expiry_sources",
+    "line": 31
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_missing_guidance_rejected",
+    "line": 39
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_negative_batch_rejected",
+    "line": 43
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_available_excludes_expired_and_held",
+    "line": 47
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_cooking_fefo_and_idempotence",
+    "line": 53
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_shortage_rolls_back_every_deduction",
+    "line": 67
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_invalid_transition",
+    "line": 76
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_preorder_does_not_deduct",
+    "line": 85
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_early_delivery_rejected",
+    "line": 92
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_capacity_enforced",
+    "line": 97
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_bulk_discount",
+    "line": 102
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_private_inventory",
+    "line": 110
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_verified_reviews",
+    "line": 115
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_shopping_does_not_double_allocate",
+    "line": 124
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_recipe_validation",
+    "line": 132
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_settings_permission_and_discount_bounds",
+    "line": 136
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_reminders_preview_and_deduplication",
+    "line": 141
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_recommendation_cold_start",
+    "line": 158
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_used_material_unit_and_delete_protected",
+    "line": 165
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_authenticated_cart_from_vite_loopback_origin",
+    "line": 172
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_untrusted_origin_still_rejected",
+    "line": 183
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_bootstrap_sets_csrf_cookie",
+    "line": 192
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_business_story_roundtrip",
+    "line": 197
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_public_routes_resolve_to_spa",
+    "line": 205
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_repeated_save_updates_single_address",
+    "line": 219
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_other_customer_cannot_read_or_overwrite_address",
+    "line": 228
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_order_snapshot_survives_saved_address_edit",
+    "line": 238
+  },
+  {
+    "file": "backend/myapp/tests.py",
+    "test": "test_anonymous_address_access_denied",
+    "line": 250
+  }
+]
