@@ -1,0 +1,5 @@
+.basket-delivery-days { margin:16px 0 24px; padding:16px 20px; border:1px solid #d6dfcf; border-radius:12px; background:#f5f8f1; line-height:1.6; }
+.basket-delivery-days strong { display:block; }
+.basket-delivery-days p { margin:8px 0 0; }
+.basket-delivery-days [role="alert"] { color:#853919; }
+.basket-delivery-days a { display:inline-flex; align-items:center; min-height:44px; margin-top:12px; text-decoration:underline; text-underline-offset:4px; }

@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {basketDeliveryDays,deliveryDayIssue,basketDaysText} from './deliveryDays.js';
+const item=(name,days)=>({product:{name,delivery_weekdays:days}});
+assert.deepEqual(basketDeliveryDays([item('Any',[])]),[0,1,2,3,4,5,6]);
+assert.deepEqual(basketDeliveryDays([item('Weekend',[5,6]),item('Saturday',[5])]),[5]);
+assert.equal(deliveryDayIssue([item('Saturday',[5])],'2026-10-10T16:00'),'');
+assert.match(deliveryDayIssue([item('Saturday',[5])],'2026-10-11T16:00'),/Choose Saturday/);
+assert.match(deliveryDayIssue([item('Monday',[0]),item('Saturday',[5])],''),/no delivery weekday in common/);
+assert.equal(deliveryDayIssue([item('Any',undefined)],'2026-10-11T16:00'),'');
+assert.equal(basketDaysText([item('Weekend',[5,6])]),'Saturday, Sunday');
+console.log('Basket delivery weekday compatibility checks passed.');

@@ -19,5 +19,14 @@ try{
  assert.match(demo,/Demo credit wallet/);assert.doesNotMatch(demo,/<details[^>]*\sopen/);
  assert.doesNotMatch(payment({manualEnabled:false}),/DuitNow QR/);
  assert.match(payment({value:'wallet'}),/demo wallet selected/);
+ const {default:BasketDeliveryDays}=await server.ssrLoadModule('/src/components/BasketDeliveryDays.jsx');
+ const basket=(cart,value='')=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(BasketDeliveryDays,{cart,value})));
+ const meal=(name,delivery_weekdays)=>({product:{name,delivery_weekdays}});
+ assert.equal(basket([meal('Everyday',[])]),'');
+ assert.match(basket([meal('Weekend',[5,6])]),/Saturday, Sunday/);
+ const conflict=basket([meal('Monday',[0]),meal('Saturday',[5])]);
+ assert.match(conflict,/no delivery weekday in common/);
+ assert.match(conflict,/href="\/cart"/);
+ assert.match(basket([meal('Saturday',[5])],'2026-10-11T16:00'),/cannot be delivered/);
  console.log('Product UX: loading/error counts, enabled payment options and collapsed demo disclosure passed.');
 }finally{await server.close();}
