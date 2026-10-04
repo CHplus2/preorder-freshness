@@ -14,3 +14,13 @@ Order placement validates inputs, serialises bookings with locks, uses an atomic
 
 ## Limits and follow-up batches
 This is not a certification that every file or edge case is covered. Remaining work includes browser-storage availability/corruption before checkout, stale concurrent responses and session changes, structured payload validation beyond list envelopes, authenticated browser failure injection, provider timeouts in the optional AI helper, and deployment/database concurrency tests against isolated PostgreSQL. No live destructive failure injection was performed. Do not automatically retry order/payment writes with new request IDs; a timed-out write may already have succeeded. Do not fall back to fabricated stock, payment success or accepted schedules.
+
+
+## Second hardening batch
+Shared text-link rules now unify the named storefront and workspace links. Checklist menu links carry a review intent, show that intent on the destination and focus the matching editor section. Settings and payment-record user actions use both persistent inline errors and setAlert feedback. Background-load errors remain inline rather than generating duplicate popups.
+
+Checkout browser-storage parsing/quota failures now block submission with an actionable error. Corrupted retry references are not silently replaced, and valid references are reused. Payment records require a server record ID before success, invalid read payloads are rejected, UUID creation is inside the recovery boundary, and post-save refresh failures are reported separately from successful writes. Ingredient loading is cancellable, validates its list envelope and offers a retry without erasing edits.
+
+SMTP does not require a VPS or Hostinger: keep configurable email support. Vercel permits outgoing SMTP other than port 25; external provider credentials and delivery configuration are still required. No live emails were sent or SMTP credentials modified during this review.
+
+Verification: 34 targeted backend tests passed; frontend utility suite and production build passed. This batch does not certify complete coverage across every component or concurrent session transition. Avoid a global mutation interceptor that duplicates alerts already handled by feature boundaries. Remaining deeper fault-injection and session-race work stays on the audit backlog.

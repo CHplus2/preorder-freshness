@@ -1,3 +1,4 @@
+import {readCheckout,checkoutAttempt} from '../utils/checkoutStorage';
 import {responseList,invalidResponse} from '../utils/apiResponse';
 import {useUI} from './UIProvider';
 import {apiError} from '../utils/apiError';
@@ -55,10 +56,9 @@ export default function OrderProvider({ children }) {
 
     const placeOrder = useCallback(async (addressId, payment, options = {}) => {
         try {
-            const body={address_id:addressId,payment,...JSON.parse(sessionStorage.getItem('deliveryPlan') || '{}')};
+            const body={address_id:addressId,payment,...readCheckout(sessionStorage,'deliveryPlan',{})};
             const key=JSON.stringify([body,cart.map(i=>[i.product.id,i.quantity])]);
-            let attempt=JSON.parse(sessionStorage.getItem('checkoutAttempt') || 'null');
-            if(!attempt || attempt.key!==key){attempt={key,id:crypto.randomUUID()};sessionStorage.setItem('checkoutAttempt',JSON.stringify(attempt))}
+            const attempt=checkoutAttempt(sessionStorage,key,()=>crypto.randomUUID());
             const placed = await axios.post("/api/orders/place/", { ...body, request_id:attempt.id, recommendation_session:sessionStorage.getItem('recommendationSession') }, {
                 withCredentials: true,
                 headers: { "X-CSRFToken": getCookie("csrftoken") },

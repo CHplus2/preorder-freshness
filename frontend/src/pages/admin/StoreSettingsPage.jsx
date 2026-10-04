@@ -1,3 +1,4 @@
+import {useUI} from '../../contexts/UIProvider';
 import './StoreSettingsPage.css';
 import SetupChecklist from '../../components/SetupChecklist';
 import ReminderStatus from '../../components/ReminderStatus';
@@ -13,6 +14,7 @@ const groups=[
  {title:'Bulk promotion',help:'Set the discount to 0 to switch off the promotion.',collapse:true,fields:[['bulk_minimum','Minimum portions','number',1,10000],['bulk_discount_percent','Discount (%)','number',0,50]]}
 ];
 export default function StoreSettingsPage(){
+ const {setAlert}=useUI();
  const [setupRevision,setSetupRevision]=useState(0);
  const [store,setStore]=useState(null),[message,setMessage]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);
  useEffect(()=>{const c=new AbortController();setError('');axios.get('/api/storefront/',{signal:c.signal}).then(r=>setStore(r.data)).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});return()=>c.abort()},[retry]);
@@ -24,7 +26,7 @@ export default function StoreSettingsPage(){
   const target=document.getElementById(id);
   if(target){target.scrollIntoView({block:'start'});(target.matches('input,textarea')?target:target.querySelector('input,textarea'))?.focus({preventScroll:true});}
  },[settingsReady]);
- const save=async e=>{e.preventDefault();if(busy)return;setBusy(true);setError('');setMessage('');try{const r=await axios.patch('/api/storefront/',store,{headers:{'X-CSRFToken':getCookie('csrftoken')}});setStore(r.data);setSetupRevision(n=>n+1);window.dispatchEvent(new Event('storefront-updated'));setMessage('Settings saved. Existing order schedules are unchanged.');}catch(e){setError(apiError(e))}finally{setBusy(false)}};
+ const save=async e=>{e.preventDefault();if(busy)return;setBusy(true);setError('');setMessage('');try{const r=await axios.patch('/api/storefront/',store,{headers:{'X-CSRFToken':getCookie('csrftoken')}});setStore(r.data);setSetupRevision(n=>n+1);window.dispatchEvent(new Event('storefront-updated'));setMessage('Settings saved. Existing order schedules are unchanged.');setAlert({type:'success',message:'Settings saved.'});}catch(e){const message=apiError(e);setError(message);setAlert({type:'error',message});}finally{setBusy(false)}};
  const fields=g=><><p>{g.help}</p><div className="admin-fields">{g.fields.map(([key,label,type='text',min,max])=><label key={key} style={type==='textarea'?{gridColumn:'1 / -1'}:undefined}>{label}{type==='textarea'?<textarea value={store[key] || ''} onChange={e=>setStore({...store,[key]:e.target.value})}/>:<input id={key==='service_area'?'store-contact':undefined} type={type} min={min} max={max} value={store[key] ?? ''} onChange={e=>setStore({...store,[key]:e.target.value})}/>}</label>)}</div></>;
  return <main className="dk-workspace settings-page"><div className="admin-page-heading"><div><span className="admin-kicker">YOUR BUSINESS</span><h1>Settings</h1><p>Manage kitchen availability, storefront details and promotions.</p><a href="#setup">View kitchen setup checklist</a></div></div>{error && <div role="alert" className="admin-notice error">{error}<button onClick={()=>setRetry(n=>n+1)}>Reload settings</button></div>}{!store && !error && <p role="status">Loading settings...</p>}{store && <form onSubmit={save} className="dk-settings">{groups.map(g=>g.collapse?<details className="settings-group" key={g.title}><summary>{g.title}</summary>{fields(g)}</details>:<section className="settings-group" id={g.title==='Storefront identity'?'store-identity':undefined} key={g.title}><h2>{g.title}</h2>{fields(g)}</section>)}<label className="settings-payment-toggle"><input type="checkbox" checked={!!store.manual_payment_enabled} onChange={e=>setStore({...store,manual_payment_enabled:e.target.checked})}/> Enable manual DuitNow / bank transfer at checkout</label><div className="admin-toolbar settings-save-actions"><button className="admin-primary" disabled={busy}>{busy?'Saving...':'Save settings'}</button><span role="status">{message}</span></div></form>}<SetupChecklist key={setupRevision}/><ReminderStatus/></main>;
 }

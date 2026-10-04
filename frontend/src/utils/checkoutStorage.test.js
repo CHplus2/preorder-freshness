@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {checkoutAttempt,readCheckout} from './checkoutStorage.js';
+const id='11111111-1111-4111-8111-111111111111';
+const map=new Map();const storage={getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,value)};
+assert.equal(checkoutAttempt(storage,'basket',()=>id).id,id);
+assert.equal(checkoutAttempt(storage,'basket',()=>{throw Error('Must reuse reference');}).id,id);
+map.set('checkoutAttempt','broken');assert.throws(()=>checkoutAttempt(storage,'basket',()=>id),{code:'CHECKOUT_STORAGE'});
+map.set('checkoutAttempt',JSON.stringify({id:'invalid',key:'basket'}));assert.throws(()=>checkoutAttempt(storage,'basket',()=>id),{code:'CHECKOUT_STORAGE'});
+assert.throws(()=>readCheckout({getItem:()=>{throw Error('Denied');}},'deliveryPlan',{}),{code:'CHECKOUT_STORAGE'});
+assert.throws(()=>checkoutAttempt({getItem:()=>null,setItem:()=>{throw Error('Quota');}},'basket',()=>id),{code:'CHECKOUT_STORAGE'});
+console.log('Checkout storage failures and stable retry identity passed.');

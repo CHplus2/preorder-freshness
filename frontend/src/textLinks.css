@@ -1,0 +1,7 @@
+/* Shared text-link treatment; navigation tabs and filled buttons retain their own styles. */
+:root { --link-underline-offset:4px; --link-underline-width:1px; }
+body a.text-link,body .menu-list-meta a,body .setup-checklist a,body .dk-workspace a:not(.admin-primary):not(.dk-primary),body .basket-delivery-days a,body .menu-video-link {
+ text-decoration-line:underline; text-decoration-thickness:var(--link-underline-width); text-underline-offset:var(--link-underline-offset); text-decoration-skip-ink:auto; border-bottom:0;
+}
+body a.text-link { padding-bottom:0; }
+body a.text-link:focus-visible,body .dk-workspace a:focus-visible { outline:2px solid currentColor; outline-offset:4px; }

@@ -35,6 +35,7 @@ import "./App.css";
 import "./dapur.css";
 import "./business.css";
 import "./admin.css";
+import "./textLinks.css";
 import StorefrontProvider, {useStorefront} from './contexts/StorefrontProvider';
 import {HomePage,StoryPage,HowItWorksPage,ContactPage} from './pages/customer/BusinessPages';
 import {BusinessFooter,PageMeta} from './components/BusinessLayout';

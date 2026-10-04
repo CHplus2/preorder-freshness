@@ -1,3 +1,4 @@
+import {useSearchParams} from 'react-router-dom';
 import './MenuSellingStatus.css';
 import DialogFeedback from '../../components/DialogFeedback';
 import ModalDialog from '../../components/ModalDialog';
@@ -9,6 +10,9 @@ import { useProduct } from "../../contexts/ProductProvider";
 
 
 export default function AdminProductsPage() {
+  const [reviewParams]=useSearchParams();
+  const review=reviewParams.get('review');
+  const reviewTitles={recipes:'Menu ingredients',preparation:'Preparation steps',costs:'Menu costs'};
   const [statusFilter,setStatusFilter]=useState('current');
   const [statusBusy,setStatusBusy]=useState(false);
   const [statusMessage,setStatusMessage]=useState('');
@@ -17,6 +21,13 @@ export default function AdminProductsPage() {
   const [newProduct, setNewProduct] = useState(false);
   const [updatedProduct, setUpdatedProduct] = useState(false);
   const [loading, setLoading] = useState(false);
+  const editingProductId=updatedProduct?.id;
+  useEffect(()=>{
+    if(!editingProductId || !['recipes','preparation','costs'].includes(review))return;
+    const target=document.querySelector(review==='preparation'?'.preparation-editor':review==='costs'?'[data-review-cost]':'.recipe-editor');
+    if(target){target.scrollIntoView({block:'start'});target.querySelector('input,select,button')?.focus({preventScroll:true});}
+  },[editingProductId,review]);
+
   const { fallback_img, setAlert } = useUI();
   const { categories, products, fetchProducts, addProduct, updateProduct } = useProduct();
 
@@ -101,6 +112,7 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
+{reviewTitles[review] && <p className="menu-state-feedback" role="status"><strong>Review: {reviewTitles[review]}</strong><br/>Choose a menu below. Its editor will open at the relevant section.</p>}
 <p className="menu-state-intro">Pause a menu to stop new orders. Archive it to remove it from your current menu list. Existing orders keep their recipes and delivery plans.</p>
       {statusMessage && <p className="menu-state-feedback" role="status">{statusMessage}</p>}
       {/* Search & Filter */}
@@ -161,7 +173,7 @@ export default function AdminProductsPage() {
               <td data-label="Preparation"><span className="status-badge">{p.preparation_tasks?.length ? `${p.preparation_tasks.length} steps` : "Needs setup"}</span></td>
               <td data-label="Actions">
                 <div className="menu-state-actions">
-                  <button disabled={statusBusy} onClick={() => setUpdatedProduct({ ...p })}>Edit & steps</button>
+                  <button disabled={statusBusy} onClick={() => setUpdatedProduct({ ...p })}>{reviewTitles[review]?`Edit ${reviewTitles[review].toLowerCase()}`:'Edit & steps'}</button>
                   {p.selling_status==='archived'?<button disabled={statusBusy} onClick={()=>changeStatus(p,'paused')}>Restore as paused</button>:<>
                     <button disabled={statusBusy} onClick={()=>changeStatus(p,p.selling_status==='active'?'paused':'active')}>{p.selling_status==='active'?'Pause orders':'Resume orders'}</button>
                     <button disabled={statusBusy} onClick={()=>changeStatus(p,'archived')}>Archive</button>
