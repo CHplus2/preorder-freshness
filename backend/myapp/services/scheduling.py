@@ -152,6 +152,12 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
             if getattr(item.product, 'selling_status', 'active') != 'active':
                 raise ValidationError(f'{item.product.name} is not accepting new orders. Remove it from your basket before continuing.')
     local = timezone.localtime(delivery_at)
+    for item in items:
+        weekdays = getattr(item.product, "delivery_weekdays", [])
+        if weekdays and local.weekday() not in weekdays:
+            names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            allowed = ", ".join(names[day] for day in weekdays)
+            raise ValidationError(f"{item.product.name} is delivered on {allowed}. Choose one of these delivery days.")
     if not 9 <= local.hour < 21:
         raise ValidationError('Choose delivery between 9am and 9pm Malaysia time (before 9pm).')
     if delivery_at <= now or delivery_at > now+timedelta(days=90):

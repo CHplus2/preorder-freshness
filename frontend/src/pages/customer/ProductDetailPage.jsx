@@ -1,3 +1,4 @@
+import {deliveryDaysText} from '../../utils/deliveryDays';
 import MenuReviews from "../../components/MenuReviews";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -59,6 +60,7 @@ function ProductContent({product, id, formatPrice, addToCart}) {
         </div>
 
         <div className="meta">
+          <span>{deliveryDaysText(product.delivery_weekdays)}</span>
           <span>{product.lead_hours} hours advance notice</span>
           <span>{product.freshness}</span>
           <span>Category: {product.category_name}</span>

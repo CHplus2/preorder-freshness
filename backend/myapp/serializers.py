@@ -49,6 +49,13 @@ class ProductSerializer(serializers.ModelSerializer):
             return 'Ingredients need restocking'
         return 'Within recorded shelf life - estimate, not a safety guarantee'
 
+    def validate_delivery_weekdays(self, value):
+        if not isinstance(value, list) or any(type(day) is not int or day < 0 or day > 6 for day in value):
+            raise serializers.ValidationError("Choose weekdays from Monday to Sunday.")
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError("Each weekday may appear only once.")
+        return sorted(value)
+
     def validate_preparation_tasks(self, value):
         from .services.scheduling import validate_tasks
         return validate_tasks(value)

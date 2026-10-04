@@ -48,6 +48,8 @@ def guided_menu(request):
     # Bound scheduler work. Rank first so the window is not just oldest menus.
     candidates = []
     for p in products:
+        if p.delivery_weekdays and data["date"].weekday() not in p.delivery_weekdays:
+            continue
         if not p.ingredients.all():
             continue
         score, reasons = get_score(p, categories, counts, popularity)

@@ -219,3 +219,5 @@
 .cart-unavailable { margin: 0 0 24px; padding: 16px; border: 1px solid #e3be70; border-radius: 12px; background: #fff8e8; line-height: 1.6; }
 .cart-unavailable-label { margin: 8px 0 12px; color: #805318; line-height: 1.5; }
 .cart-container button:disabled { opacity: .55; cursor: not-allowed; }
+
+.cart-delivery-days { margin: 8px 0 12px; line-height: 1.6; color: #52634f; }

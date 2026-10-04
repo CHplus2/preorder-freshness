@@ -1,3 +1,4 @@
+import {deliveryDaysText} from '../../utils/deliveryDays';
 import { useNavigate } from "react-router-dom";
 import { useUI } from "../../contexts/UIProvider";
 import { useCart } from "../../contexts/CartProvider";
@@ -43,6 +44,7 @@ export default function CartPage() {
                 <div className="cart-item-info">
                   <p className="cart-item-name">{item.product.name}</p>
                   {item.product.selling_status && item.product.selling_status !== "active" && <p className="cart-unavailable-label">Orders unavailable · Please remove this item</p>}
+                  {item.product.delivery_weekdays?.length > 0 && <p className="cart-delivery-days">{deliveryDaysText(item.product.delivery_weekdays)}</p>}
                   <p className="cart-item-price">
                     {formatPrice(item.product.price)}
                   </p>

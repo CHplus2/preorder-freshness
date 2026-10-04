@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 PREPARATION_FIELDS = ('lead_hours', 'preparation_minutes', 'preparation_tasks',
     'max_preparation_days', 'batch_size', 'additional_batch_minutes',
-    'packing_minutes_per_portion', 'max_early_minutes', 'daily_capacity')
+    'packing_minutes_per_portion', 'max_early_minutes', 'daily_capacity', 'delivery_weekdays')
 
 
 def preparation_snapshot(product):

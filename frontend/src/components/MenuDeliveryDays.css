@@ -1,0 +1,8 @@
+.menu-delivery-days { margin:24px 0; padding:20px; border:1px solid #d9dfd5; border-radius:12px; min-width:0; }
+.menu-delivery-days legend { padding:0 8px; font-weight:600; }
+.menu-delivery-days p { margin:0 0 16px; line-height:1.6; }
+.menu-delivery-days .delivery-day-choice { display:flex; align-items:center; gap:12px; margin:0; min-height:44px; cursor:pointer; }
+.menu-delivery-days .delivery-day-choice input { width:18px; height:18px; margin:0; flex:0 0 18px; }
+.delivery-day-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 20px; margin-top:16px; }
+.menu-delivery-days .delivery-day-note { margin:16px 0 0; color:#52634f; }
+@media(max-width:480px) { .menu-delivery-days { padding:16px; } .delivery-day-grid { grid-template-columns:1fr; } }
