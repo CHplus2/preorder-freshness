@@ -15,3 +15,4 @@
 .availability-result summary{cursor:pointer;font-weight:600}
 .availability-result--pending{background:#f3f5ef;border-color:#cdd6c8}
 .availability-result--error{background:#fff1ed;border-color:#d9a795;color:#873a22}
+.checkout-demo-options{margin-top:24px;border-top:1px solid #d9e1d3;padding-top:18px}.checkout-demo-options>summary{cursor:pointer;font-size:14px;font-weight:600;line-height:1.5}.checkout-demo-options .payment-options{margin:16px 0}.checkout-demo-options>a{display:inline-block;padding:8px 0;font-size:14px;text-underline-offset:4px}.checkout-demo-options>summary:focus-visible{outline:3px solid #477b4f;outline-offset:4px}

@@ -4,10 +4,18 @@
 .fyp-form input,.fyp-form select,.fyp-form textarea {width:100%;min-width:0;padding:.7rem;border:1px solid #b8beb5;border-radius:6px;background:#fff;color:#243328;font:inherit;box-sizing:border-box}
 .fyp-form button,.guide-results button,.slot-suggestions button {padding:.7rem 1rem;min-height:44px;border:1px solid #477b4f;border-radius:6px;background:#edf3eb;color:#243328;cursor:pointer}
 .fyp-form button:disabled {opacity:.65;cursor:wait}
-.guide-results {display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.5rem;margin:1rem 0}
+.guide-results {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:1.5rem;margin:1rem 0}
 .guide-results article {padding:1rem;border:1px solid #d9ddd5;border-radius:8px}
 .guide-results button,.slot-suggestions button {margin:.3rem .4rem .3rem 0}
 .guided-menu {margin:1.5rem 0}
+.guided-menu>summary{cursor:pointer;font-size:1rem;font-weight:650;line-height:1.5;padding:4px 0}
+.guided-menu[open]>summary{margin-bottom:16px}
+.guided-menu>p{line-height:1.6;margin:16px 0 0}
+.guided-menu .guide-method{margin-top:16px}
+.guided-menu summary:focus-visible{outline:3px solid #477b4f;outline-offset:4px}
+.guided-menu .fyp-form{gap:16px;margin:20px 0}
+.guided-menu .fyp-form label{margin:0;min-width:0}
+@media(max-width:480px){.guided-menu .fyp-form.inline{grid-template-columns:1fr}.guided-menu .fyp-form button{width:100%}}
 .dk-panel details {padding:.8rem 0;border-bottom:1px solid #d9ddd5}
 .dk-panel summary {cursor:pointer;line-height:1.6}
 .slot-suggestions {margin:1rem 0}

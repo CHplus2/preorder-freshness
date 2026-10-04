@@ -340,3 +340,8 @@ body {
 .menu-skeleton>span{display:block;height:16px;width:70%;background:#edf1ec;border-radius:4px;margin-top:12px}
 .menu-skeleton>span:last-child{width:40%}
 .menu-video-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:12px;font-size:13px;line-height:1.5;text-underline-offset:4px}
+.products-page .menu-intro{padding:28px 0 8px;margin-bottom:16px}
+.products-page .menu-intro h1{font-size:clamp(32px,4vw,48px);line-height:1.1;letter-spacing:-1px;margin:12px 0 16px}
+.products-page .menu-intro p{margin:0;line-height:1.6}
+.products-page .guided-menu{margin:20px 0;padding:16px 20px}
+.products-page .browse-controls{margin-bottom:12px}

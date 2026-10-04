@@ -113,7 +113,7 @@ export default function AdminOrdersPage() {
                   RM {(Number(order.total_amount)+Number(order.shipping_fee)).toFixed(2)}
                 </div>
               </div>
-              {order.items.some(i=>i.recipe_source?.startsWith('legacy')) && <p className="owner-order-note">Earlier order: recipe history is a legacy baseline or unknown. Review pending orders in Planner before preparation.</p>}
+              {order.items.some(i=>i.recipe_source?.startsWith('legacy')) && <p className="owner-order-note">Review this older order’s recipe in Planner before preparation.</p>}
               {paymentOrder?.id===order.id && <PaymentRecords order={order} onSaved={fetchAdminOrders}/>}
               <AcceptedRecipe order={order}/>
               <RescheduleOrder order={order} onSaved={fetchAdminOrders}/>

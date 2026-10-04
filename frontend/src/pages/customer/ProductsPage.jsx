@@ -1,3 +1,4 @@
+import MenuListingStatus from '../../components/MenuListingStatus';
 import axios from 'axios';
 import GuidedMenu from '../../components/GuidedMenu';
 import {apiError} from '../../utils/apiError';
@@ -22,7 +23,6 @@ export default function ProductsPage() {
   const generation=useRef(0);
   useEffect(()=>{
     const c=new AbortController(),version=++generation.current;
-    setLoading(true);setError('');
     const timer=setTimeout(()=>{
       axios.get('/api/menu/',{params:{page,search:searchTerm,category:selectedCategory},signal:c.signal})
         .then(({data})=>{if(version!==generation.current || c.signal.aborted)return;
@@ -63,7 +63,7 @@ export default function ProductsPage() {
         </select>
       </div>
 
-      <div className="menu-list-meta"><p role="status">{loading && !listing.rows.length?'Loading meals...':listing.count+' meals found'}</p><a href="#inventory-freshness" onClick={showInventory}>View ingredient storage records</a></div>
+      <div className="menu-list-meta"><MenuListingStatus loading={loading} error={error} count={listing.count} shown={listing.rows.length}/><a href="#inventory-freshness" onClick={showInventory}>View ingredient storage records</a></div>
       {/* Products Grid */}
       <div className="products-container" aria-busy={loading}>
         {loading && !filteredProducts.length && Array.from({length:6},(_,i)=><div className="menu-skeleton" aria-hidden="true" key={i}><div/><span/><span/></div>)}
@@ -80,7 +80,7 @@ export default function ProductsPage() {
                       onError={(e) => {e.currentTarget.onerror=null;if(e.currentTarget.getAttribute("src")!==fallback_img)e.currentTarget.src=fallback_img}}
                     />
                   ) : (
-                    <div className="image-placeholder">No Image</div>
+                    <div className="image-placeholder">Photo coming soon</div>
                   )}
                 </div>
                 <div className="product-info">
@@ -91,7 +91,7 @@ export default function ProductsPage() {
               </Link>
               {p.social_url && <a className="menu-video-link" href={p.social_url} target="_blank" rel="noreferrer">Watch this food being made <span aria-hidden="true">↗</span></a>}
               <button className="add-btn" onClick={() => addToCart(p.id)}>
-                Add to Cart
+                Add to basket
               </button>
             </div>
           ))
@@ -100,7 +100,7 @@ export default function ProductsPage() {
         ) : null}
       </div>
       <div className="menu-load-more">
-        {error && <p role="alert">{error} <button onClick={()=>setRetry(n=>n+1)}>Try again</button></p>}
+        {error && <p role="alert">{error} <button onClick={()=>{setLoading(true);setError('');setRetry(n=>n+1)}}>Try again</button></p>}
         {listing.rows.length>0 && <p role="status">Showing {listing.rows.length} of {listing.count} meals</p>}
         {listing.next && !error && <button className="dk-primary" disabled={loading} onClick={()=>{if(!loading){setLoading(true);setPage(n=>n+1)}}}>{loading?'Loading meals...':'Load more meals'}</button>}
       </div>
