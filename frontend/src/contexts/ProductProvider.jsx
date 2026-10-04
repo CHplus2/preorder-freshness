@@ -1,14 +1,11 @@
+import {ProductContext} from './ProductContext';
 import {apiError} from '../utils/apiError';
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getCookie } from "../utils/cookieUtils";
-import { useUI } from "./UIProvider";
-import { useAuth } from "./AuthProvider";
-import { useCart } from "./CartProvider";
+import { useUI } from "./UIContext";
+import { useAuth } from "./AuthContext";
+import { useCart } from "./CartContext";
 import axios from "axios";
-
-const ProductContext = createContext();
-
-export const useProduct = () => useContext(ProductContext);
 
 export default function ProductProvider({ children }) {
     const [categories, setCategories] = useState([]);
@@ -32,7 +29,7 @@ export default function ProductProvider({ children }) {
             console.error("fetchCategories:", err.response?.data || err.message);
         }
 
-    }, []);
+    }, [setAlert]);
 
     const fetchProducts = useCallback(async (preview = false) => {
         try {
@@ -45,7 +42,7 @@ export default function ProductProvider({ children }) {
             setAlert({message:apiError(err),type:"error"});
             console.error("fetchProducts:", err.response?.data || err.message);
         }
-    }, []);
+    }, [setAlert]);
 
     const fetchRecommendation = useCallback(async () => {
         if (!isAuthenticated) { setRecommended([]); return; }
@@ -64,8 +61,10 @@ export default function ProductProvider({ children }) {
     }, [isAuthenticated])
 
     useEffect(() => {
-        fetchCategories();
-    }, [fetchCategories]);
+        const controller=new AbortController();
+        axios.get('/api/categories/',{signal:controller.signal}).then(({data})=>setCategories(Array.isArray(data)?data:data.results || [])).catch(err=>{if(!axios.isCancel(err))setAlert({type:'error',message:apiError(err)});});
+        return()=>controller.abort();
+    }, [setAlert]);
 
 
     const addProduct = async (product) => {

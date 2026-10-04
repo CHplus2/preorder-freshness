@@ -66,7 +66,7 @@ export default function AdminInventoryPage() {
       );
 
       setRawMaterials(response.data);
-    } catch (err) {
+    } catch {
       setError("Failed to load raw materials.");
     }
   };
@@ -79,15 +79,13 @@ export default function AdminInventoryPage() {
       );
 
       setInventoryItems(response.data);
-    } catch (err) {
+    } catch {
       setError("Failed to load inventory.");
     }
   };
 
   useEffect(() => {
     const controller = new AbortController();
-    setInitialLoading(true);
-    setInitialError("");
     Promise.all([
       axios.get(API_URL + "/raw-materials/", { ...getAuthConfig(), signal: controller.signal }),
       axios.get(API_URL + "/inventory-items/", { ...getAuthConfig(), signal: controller.signal })
@@ -234,7 +232,7 @@ export default function AdminInventoryPage() {
       );
 
       await fetchRawMaterials();
-    } catch (err) {
+    } catch {
       setError(
         "This raw material cannot be deleted because it is still being used."
       );
@@ -303,7 +301,7 @@ export default function AdminInventoryPage() {
       );
 
       await fetchInventoryItems();
-    } catch (err) {
+    } catch {
       setError("Failed to delete inventory item.");
     }
   };
@@ -319,7 +317,7 @@ export default function AdminInventoryPage() {
   if (initialLoading) return <PageLoading label="Loading inventory..." />;
   if (initialError) return <div className="admin-inventory-container">
     <h1>Inventory</h1><p role="alert">{initialError}</p>
-    <button type="button" onClick={() => setRetry(n => n + 1)}>Try again</button>
+    <button type="button" onClick={() => {setInitialLoading(true);setInitialError("");setRetry(n => n + 1)}}>Try again</button>
   </div>;
 
   return (

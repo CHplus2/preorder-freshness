@@ -2,10 +2,10 @@ import {useEffect,useState} from 'react';
 import axios from 'axios';
 export default function InventoryFreshness(){
  const [data,setData]=useState(null),[error,setError]=useState(false),[retry,setRetry]=useState(0);
- useEffect(()=>{const c=new AbortController();setError(false);axios.get('/api/inventory-freshness/',{signal:c.signal}).then(r=>setData(r.data)).catch(e=>{if(!axios.isCancel(e))setError(true)});return()=>c.abort()},[retry]);
+ useEffect(()=>{const c=new AbortController();axios.get('/api/inventory-freshness/',{signal:c.signal}).then(r=>setData(r.data)).catch(e=>{if(!axios.isCancel(e))setError(true)});return()=>c.abort()},[retry]);
  return <details id="inventory-freshness" className="inventory-transparency">
  <summary>Ingredient storage records <span>View current batch dates and stock on hold</span></summary>
- {error?<p role="status">Inventory records are temporarily unavailable. <button onClick={()=>setRetry(n=>n+1)}>Try again</button></p>:!data?<p role="status">Loading storage records...</p>:<>
+ {error?<p role="status">Inventory records are temporarily unavailable. <button onClick={()=>{setError(false);setData(null);setRetry(n=>n+1)}}>Try again</button></p>:!data?<p role="status">Loading storage records...</p>:<>
  <h2>What is in storage today?</h2>
  <p>A batch is one recorded lot of an ingredient, such as a delivery of chicken. These counts describe the kitchen's current records, not the ingredients already used in your meal.</p>
  <ul className="inventory-status-list">

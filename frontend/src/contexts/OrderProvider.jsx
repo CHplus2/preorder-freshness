@@ -1,14 +1,12 @@
+import {OrderContext} from './OrderContext';
 import {readCheckout,checkoutAttempt} from '../utils/checkoutStorage';
 import {responseList,invalidResponse} from '../utils/apiResponse';
-import {useUI} from './UIProvider';
+import {useUI} from './UIContext';
 import {apiError} from '../utils/apiError';
-import { createContext, useContext, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { getCookie } from "../utils/cookieUtils";
-import { useCart } from "./CartProvider";
+import { useCart } from "./CartContext";
 import axios from "axios";
-
-const OrderContext = createContext();
-export const useOrder = () => useContext(OrderContext);
 
 export default function OrderProvider({ children }) {
     const {setAlert} = useUI();
@@ -77,7 +75,7 @@ export default function OrderProvider({ children }) {
             setAlert({message:apiError(err),type:"error"});
             return false;
         }
-    }, [refreshCart,cart]);
+    }, [refreshCart,cart,setAlert]);
 
     const updateOrder = async (orderId, newStatus) => {
         try {

@@ -1,23 +1,12 @@
+import {CartContext} from './CartContext';
 import {responseList} from '../utils/apiResponse';
 import {apiError} from '../utils/apiError';
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getCookie } from "../utils/cookieUtils";
-import { useAuth } from "./AuthProvider";
-import { useUI } from "./UIProvider";
+import { useAuth } from "./AuthContext";
+import { useUI } from "./UIContext";
 import axios from "axios";
-import { useStorefront } from "./StorefrontProvider";
-
-export const CartContext = createContext();
-
-export const useCart = () => {
-  const context = useContext(CartContext);
-
-  if (!context) {
-    throw new Error("useCart must be used within CartProvider");
-  }
-
-  return context;
-}
+import { useStorefront } from "./StorefrontContext";
 
 export default function CartProvider({ children }) {
   const { store: promotion } = useStorefront();
@@ -34,25 +23,6 @@ export default function CartProvider({ children }) {
   const portions = cart.reduce((n,i)=>n+i.quantity,0);
   const discount = promotion && portions >= promotion.bulk_minimum ? Math.round(total * promotion.bulk_discount_percent) / 100 : 0;
   const finalTotal = total - discount + SHIPPING_FEE;
-
-  const fetchWallet = useCallback(async () => {
-    try {
-      const res = await axios.get("/api/wallet/", { withCredentials: true });
-      setWallet(res.data);
-    } catch (err) {
-
-      if (err.response?.status === 404) {
-        setWallet(null);
-      } else {
-        setWallet(false);
-      }
-
-      console.error("fetchWallet:", err.response?.data || err.message);
-    } finally {
-      setWalletLoading(false);
-    }
-  }, [])
-
 
   const refreshCart = useCallback(async () => {
     if (!isAuthenticated) {
@@ -75,14 +45,15 @@ export default function CartProvider({ children }) {
     } finally {
       setCartLoading(false);
     }
-  }, [isAuthenticated, setCart]);
+  }, [isAuthenticated, setCart, setAlert]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchWallet();
-      refreshCart();
-    }
-  }, [fetchWallet, refreshCart]);
+    if(!isAuthenticated)return;
+    const controller=new AbortController();
+    axios.get('/api/cart/',{withCredentials:true,signal:controller.signal}).then(({data})=>{setCart(responseList(data));setCartError('');}).catch(err=>{if(!axios.isCancel(err))setCartError(apiError(err));}).finally(()=>{if(!controller.signal.aborted)setCartLoading(false);});
+    axios.get('/api/wallet/',{withCredentials:true,signal:controller.signal}).then(({data})=>setWallet(data)).catch(err=>{if(!axios.isCancel(err))setWallet(err.response?.status===404?null:false);}).finally(()=>{if(!controller.signal.aborted)setWalletLoading(false);});
+    return()=>controller.abort();
+  }, [isAuthenticated,setCart]);
 
   const createWallet = useCallback(async () => {
     try {
@@ -97,7 +68,7 @@ export default function CartProvider({ children }) {
       setAlert({ message: apiError(err, "Failed to create wallet"), type: "error"})
       console.error("createWallet:", err.response?.data || err.message);
     }
-  }, [])
+  }, [setAlert])
 
   const topupWallet = useCallback(async (amount) => {
     try {
@@ -112,7 +83,7 @@ export default function CartProvider({ children }) {
       setAlert({ message: apiError(err, "Failed to top up wallet"), type: "error"})
       console.error("topupWallet:", err.response?.data || err.message);
     }
-  }, []);
+  }, [setAlert]);
 
   const addToCart = async (productId, quantity = 1) => {
     if (isAuthenticated) {

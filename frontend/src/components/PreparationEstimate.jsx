@@ -1,5 +1,5 @@
 import {useId,useState} from 'react';
-import {useStorefront} from '../contexts/StorefrontProvider';
+import {useStorefront} from '../contexts/StorefrontContext';
 import {preparationEstimate} from '../utils/preparationEstimate';
 import {duration} from '../utils/planner';
 import './PreparationEstimate.css';

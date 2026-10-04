@@ -2,8 +2,8 @@ import ModalDialog from '../ModalDialog';
 import {Link} from 'react-router-dom';
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { useUI } from "../../contexts/UIProvider";
-import { useAuth } from "../../contexts/AuthProvider";
+import { useUI } from "../../contexts/UIContext";
+import { useAuth } from "../../contexts/AuthContext";
 import "./GroceryLogin.css";
 
 function GroceryLogin() {

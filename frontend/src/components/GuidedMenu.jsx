@@ -1,8 +1,8 @@
 import {useEffect,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
-import {useCart} from '../contexts/CartProvider';
-import {useProduct} from '../contexts/ProductProvider';
+import {useCart} from '../contexts/CartContext';
+import {useProduct} from '../contexts/ProductContext';
 import {getCookie} from '../utils/cookieUtils';
 import {apiError} from '../utils/apiError';
 const headers=()=>({'X-CSRFToken':getCookie('csrftoken')});

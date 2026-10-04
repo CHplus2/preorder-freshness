@@ -6,9 +6,9 @@ import InventoryFreshness from '../../components/InventoryFreshness';
 import {PageMeta} from "../../components/BusinessLayout";
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useUI } from "../../contexts/UIProvider";
-import { useProduct } from "../../contexts/ProductProvider";
-import { useCart } from "../../contexts/CartProvider";
+import { useUI } from "../../contexts/UIContext";
+import { useProduct } from "../../contexts/ProductContext";
+import { useCart } from "../../contexts/CartContext";
 import "./ProductsPage.css";
 
 export default function ProductsPage() {

@@ -1,12 +1,9 @@
+import {AuthContext} from './AuthContext';
 import {apiError} from '../utils/apiError';
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getCookie } from "../utils/cookieUtils";
-import { useUI } from "./UIProvider";
+import { useUI } from "./UIContext";
 import axios from "axios";
-
-const AuthContext = createContext();
-
-export const useAuth = () => useContext(AuthContext);
 
 export default function AuthProvider({ children }) {
     const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -29,8 +26,12 @@ export default function AuthProvider({ children }) {
     }, []);
 
     useEffect(() => {
-        checkAuth();
-    }, [checkAuth])
+        const controller=new AbortController();
+        axios.get('/api/check-auth/',{withCredentials:true,signal:controller.signal}).then(({data})=>{
+            setIsAuthenticated(data.authenticated);setIsAdmin(data.is_admin);
+        }).catch(err=>{if(!axios.isCancel(err)){setIsAuthenticated(false);setIsAdmin(false);}});
+        return()=>controller.abort();
+    }, [])
 
     const signup = async (account) => {
       try {

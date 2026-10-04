@@ -5,8 +5,8 @@ import ModalDialog from '../../components/ModalDialog';
 import MenuPhotoField from "../../components/MenuPhotoField";
 import RecipeEditor from "../../components/RecipeEditor";
 import { useEffect, useState } from "react";
-import { useUI } from "../../contexts/UIProvider";
-import { useProduct } from "../../contexts/ProductProvider";
+import { useUI } from "../../contexts/UIContext";
+import { useProduct } from "../../contexts/ProductContext";
 
 
 export default function AdminProductsPage() {

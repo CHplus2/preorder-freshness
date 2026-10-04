@@ -1,7 +1,5 @@
-import { createContext, useContext, useState } from "react";
-
-const UIContext = createContext();
-export const useUI = () => useContext(UIContext);
+import {UIContext} from './UIContext';
+import { useState } from "react";
 
 export default function UIProvider({ children }) {
     const [showLogin, setShowLogin] = useState(null);

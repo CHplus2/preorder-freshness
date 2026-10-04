@@ -1,0 +1,31 @@
+
+> frontend@0.0.0 build
+> vite build
+
+vite v8.0.10 building client environment for production...
+[2K
+transforming...✓ 2446 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                1.38 kB │ gzip:   0.64 kB
+dist/assets/AdminInventoryPage-DPer_eOs.css    0.81 kB │ gzip:   0.38 kB
+dist/assets/AdminReportsPage-bdyv9sh1.css      1.17 kB │ gzip:   0.47 kB
+dist/assets/AdminOrdersPage-BNJJJRzI.css       1.26 kB │ gzip:   0.51 kB
+dist/assets/StoreSettingsPage-HIHbvgKw.css     1.82 kB │ gzip:   0.61 kB
+dist/assets/PlannerPage-DmU_gIMI.css           2.50 kB │ gzip:   0.78 kB
+dist/assets/AdminProductsPage-BQuXjOkT.css     3.37 kB │ gzip:   1.01 kB
+dist/assets/index-ZSrhnMjc.css                85.57 kB │ gzip:  17.94 kB
+dist/assets/cookieUtils-CJ9DTZnJ.js            0.24 kB │ gzip:   0.19 kB
+dist/assets/AdminCustomersPage-ulK0jJcD.js     1.97 kB │ gzip:   0.85 kB
+dist/assets/planner-BBly4pYt.js                2.89 kB │ gzip:   1.19 kB
+dist/assets/jsx-runtime-2UHhqg_S.js            8.66 kB │ gzip:   3.31 kB
+dist/assets/StoreSettingsPage-CqYcNMl8.js      9.34 kB │ gzip:   3.67 kB
+dist/assets/AdminOrdersPage-niL6GXCi.js       13.56 kB │ gzip:   4.43 kB
+dist/assets/AdminInventoryPage-B8k-MP6d.js    23.92 kB │ gzip:   6.05 kB
+dist/assets/AdminReportsPage-DVbJBKZc.js      24.40 kB │ gzip:   7.47 kB
+dist/assets/AdminProductsPage-DBzlkUOe.js     25.00 kB │ gzip:   7.47 kB
+dist/assets/PlannerPage-DwthPTyG.js           27.11 kB │ gzip:   8.19 kB
+dist/assets/EscrowDemoPage-DpwsTNx4.js       272.49 kB │ gzip: 100.63 kB
+dist/assets/index-Bl55liAe.js                494.82 kB │ gzip: 156.99 kB
+
+✓ built in 3.99s

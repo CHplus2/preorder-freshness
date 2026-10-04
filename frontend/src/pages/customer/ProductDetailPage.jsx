@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import PageLoading from "../../components/PageLoading";
 import { apiError } from "../../utils/apiError";
-import { useUI } from "../../contexts/UIProvider"
-import { useCart } from "../../contexts/CartProvider";
+import { useUI } from "../../contexts/UIContext"
+import { useCart } from "../../contexts/CartContext";
 import axios from "axios";
 import "./ProductDetailPage.css";
 

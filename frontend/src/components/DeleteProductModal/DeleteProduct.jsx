@@ -1,8 +1,8 @@
 import DialogFeedback from '../DialogFeedback';
 import ModalDialog from '../ModalDialog';
 import { motion } from "framer-motion";
-import { useUI } from "../../contexts/UIProvider";
-import { useProduct } from "../../contexts/ProductProvider";
+import { useUI } from "../../contexts/UIContext";
+import { useProduct } from "../../contexts/ProductContext";
 import "./DeleteProduct.css";
 
 function DeleteProduct() {

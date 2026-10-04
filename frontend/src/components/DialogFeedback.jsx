@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useUI } from '../contexts/UIProvider';
+import { useUI } from '../contexts/UIContext';
 
 // Keep newly raised errors inside the native modal's accessible surface.
 export default function DialogFeedback() {

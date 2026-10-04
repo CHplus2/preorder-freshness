@@ -1,7 +1,6 @@
-import {createContext,useContext,useEffect,useState} from 'react';
+import {StoreContext} from './StorefrontContext';
+import {useEffect,useState} from 'react';
 import axios from 'axios';
-const StoreContext=createContext(null);
-export const useStorefront=()=>useContext(StoreContext);
 export default function StorefrontProvider({children}){
  const [store,setStore]=useState({name:'Dapur Kita',tagline:'From our home kitchen to your table.'});
  const [error,setError]=useState('');

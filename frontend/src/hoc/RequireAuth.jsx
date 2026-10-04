@@ -1,7 +1,7 @@
 import PageLoading from "../components/PageLoading";
 import { useEffect } from "react";
-import { useUI } from "../contexts/UIProvider";
-import { useAuth } from "../contexts/AuthProvider";
+import { useUI } from "../contexts/UIContext";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function RequireAuth({ children, message = "Please Log in to view this page" }) {
     const { setShowLogin } = useUI();

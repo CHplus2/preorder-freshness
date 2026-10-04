@@ -1,4 +1,4 @@
-import {useUI} from '../contexts/UIProvider';
+import {useUI} from '../contexts/UIContext';
 import {invalidResponse} from '../utils/apiResponse';
 import {useEffect, useRef, useState} from 'react';
 import axios from 'axios';

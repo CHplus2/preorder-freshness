@@ -4,8 +4,8 @@ import ManualPayment from '../../components/ManualPayment';
 import RescheduleOrder from '../../components/RescheduleOrder';
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useUI } from "../../contexts/UIProvider";
-import { useOrder } from "../../contexts/OrderProvider";
+import { useUI } from "../../contexts/UIContext";
+import { useOrder } from "../../contexts/OrderContext";
 import "./OrdersPage.css";
 
 export default function OrdersPage() {

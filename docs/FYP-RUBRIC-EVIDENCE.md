@@ -62,3 +62,9 @@ Latest run: [manifest](evidence/20261004T103053Z/manifest.json). Backend: 173 te
 The run used a modified working tree based on commit 50efc7e. source-hashes.json identifies tested code files. The final commit also contains documentation and this evidence, so do not equate the base commit alone with the exact tested tree.
 
 New regression evidence: CheckoutFailureTests verifies transaction rollback after a mocked item-write failure (including a prior demo-wallet debit), basket retention, private error sanitisation and successful idempotent retry. These are synthetic integration tests, not real bank/payment-provider tests.
+
+
+## Follow-up verification — lint remediation
+Latest run superseding the earlier failed gate: [20261004T104116Z manifest](evidence/20261004T104116Z/manifest.json). Every command passed, including repository-wide lint (zero errors/warnings), production build, frontend utility/rendering checks, release checks and backend tests. Backend remains 173 tests run, 172 passed and 1 PostgreSQL-only skip. This is a successful local automated gate, not completion of PostgreSQL concurrency, full browser validation or participant research.
+
+Changes: shared contexts/hooks moved to dedicated modules with updated consumers; missing stable callback dependencies corrected; loading/error resets moved to refresh actions; reviews remount when their menu/authentication context changes; initial auth/cart requests use cancellation; unused error bindings removed without changing catch recovery. No lint rule was disabled. The earlier failed runs are retained as development/defect evidence. The new run records the modified tree based on 630fdbc plus file hashes.

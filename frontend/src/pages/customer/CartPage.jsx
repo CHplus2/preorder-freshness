@@ -1,7 +1,7 @@
 import {deliveryDaysText} from '../../utils/deliveryDays';
 import { useNavigate } from "react-router-dom";
-import { useUI } from "../../contexts/UIProvider";
-import { useCart } from "../../contexts/CartProvider";
+import { useUI } from "../../contexts/UIContext";
+import { useCart } from "../../contexts/CartContext";
 import "./CartPage.css";
 
 export default function CartPage() { 

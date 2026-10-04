@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useUI } from "../../contexts/UIProvider";
-import { useCart } from "../../contexts/CartProvider";
-import { useOrder } from "../../contexts/OrderProvider";
+import { useUI } from "../../contexts/UIContext";
+import { useCart } from "../../contexts/CartContext";
+import { useOrder } from "../../contexts/OrderContext";
 import "./PaymentPage.css";
 
 export default function PaymentPage() {

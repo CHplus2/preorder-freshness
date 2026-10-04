@@ -1,8 +1,8 @@
 import {useState,useEffect} from 'react';
 import {Link} from 'react-router-dom';
 import {ArrowUpRight,CalendarDays,Heart,ChefHat,Clock,ShoppingBag,Mail,MapPin,MessageCircle} from 'lucide-react';
-import {useStorefront} from '../../contexts/StorefrontProvider';
-import {useProduct} from '../../contexts/ProductProvider';
+import {useStorefront} from '../../contexts/StorefrontContext';
+import {useProduct} from '../../contexts/ProductContext';
 import {Reveal,PageMeta,PrimaryLink,FAQ} from '../../components/BusinessLayout';
 export function HomePage(){
  const {store}=useStorefront();const {products,fetchProducts}=useProduct();const [occasion,setOccasion]=useState('Everyday favourites');

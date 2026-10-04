@@ -5,8 +5,8 @@ import AcceptedRecipe from '../../components/AcceptedRecipe';
 import RescheduleOrder from '../../components/RescheduleOrder';
 import ModalDialog from '../../components/ModalDialog';
 import { useEffect, useRef, useState } from "react";
-import { useUI } from "../../contexts/UIProvider";
-import { useOrder } from "../../contexts/OrderProvider";
+import { useUI } from "../../contexts/UIContext";
+import { useOrder } from "../../contexts/OrderContext";
 import {filterOrders,overdueOrder} from '../../utils/orderQueue';
 
 

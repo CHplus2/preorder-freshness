@@ -3,7 +3,7 @@ import {useEffect,useState} from 'react';
 import {Link,useLocation} from 'react-router-dom';
 import {motion,useReducedMotion} from 'framer-motion';
 import {ArrowUpRight,Plus,Minus} from 'lucide-react';
-import {useStorefront} from '../contexts/StorefrontProvider';
+import {useStorefront} from '../contexts/StorefrontContext';
 export function Reveal({children,className=''}){
  const reduced=useReducedMotion();
  return <motion.div className={className} initial={reduced?false:{opacity:0,y:22}} whileInView={{opacity:1,y:0}} viewport={{once:true,amount:.1}} transition={{duration:.55,ease:'easeOut'}}>{children}</motion.div>;
