@@ -328,7 +328,9 @@ body {
 
 .menu-list-meta{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 20px;font-size:14px}
 .menu-list-meta p{margin:0;color:#53655a}
-.menu-list-meta a{text-underline-offset:4px}
+.products-page .menu-list-meta a{display:inline-flex;align-items:center;min-height:44px;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;line-height:1.5}
+.products-page .menu-list-meta a:hover{text-decoration-thickness:2px}
+.products-page .menu-list-meta a:focus-visible{outline:2px solid currentColor;outline-offset:4px;border-radius:2px}
 .menu-load-more{text-align:center;margin:28px 0}
 .menu-load-more button{min-height:44px}
 .menu-load-more p{margin-bottom:16px}

@@ -10,4 +10,6 @@ New order quotes, slot suggestions and placement use the shared scheduler to enf
 - Browser layout review of the real component rendered with application styles: 390px viewport has no horizontal overflow, 44px choice rows, 12px checkbox/label gap and 12px Save/Cancel gap. This isolated preview does not represent a full authenticated owner end-to-end test.
 
 ## Release
-Migration 0018_product_delivery_weekdays adds one JSON field, default []. Production migration remains pending. Back up the target schema, apply 0018, verify counts/defaults and migration status, then deploy. Vercel blocks deployment until the schema is ready.
+Migration 0018_product_delivery_weekdays adds one JSON field, default []. Production migration applied on 2026-10-04 after explicit owner approval and verification of the local PostgreSQL backup. All 20 menus remained active with unrestricted delivery weekdays; 21 orders and 44 order items were preserved. No migrations remain pending.
+
+The public storage-records text link now explicitly retains its underline, with a 44px minimum tap height and visible keyboard focus.
