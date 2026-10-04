@@ -68,3 +68,21 @@ New regression evidence: CheckoutFailureTests verifies transaction rollback afte
 Latest run superseding the earlier failed gate: [20261004T104116Z manifest](evidence/20261004T104116Z/manifest.json). Every command passed, including repository-wide lint (zero errors/warnings), production build, frontend utility/rendering checks, release checks and backend tests. Backend remains 173 tests run, 172 passed and 1 PostgreSQL-only skip. This is a successful local automated gate, not completion of PostgreSQL concurrency, full browser validation or participant research.
 
 Changes: shared contexts/hooks moved to dedicated modules with updated consumers; missing stable callback dependencies corrected; loading/error resets moved to refresh actions; reviews remount when their menu/authentication context changes; initial auth/cart requests use cancellation; unused error bindings removed without changing catch recovery. No lint rule was disabled. The earlier failed runs are retained as development/defect evidence. The new run records the modified tree based on 630fdbc plus file hashes.
+
+
+## PostgreSQL concurrency verification — 4 October 2026
+Successful run: [manifest](evidence/postgres-20261004T105044Z/manifest.json) and [test log](evidence/postgres-20261004T105044Z/concurrency.log). Both tests passed against a newly created local PostgreSQL cluster with synthetic data, separate connections and a synchronisation barrier:
+- Two buyers racing for daily capacity of one: one HTTP 201, one HTTP 400, one order persisted.
+- Two requests sharing a checkout reference and demo wallet: HTTP 201/200, same order ID, one debit of RM15 from RM100, one transaction, one receipt and an emptied basket.
+
+This verifies these two row-locking/idempotency scenarios on PostgreSQL; it is not a stress test or proof of all possible interleavings. The first runner attempt encountered a Windows inherited-output-handle startup timeout. Its failed record is retained with manual-cleanup evidence. The runner now directs startup output to a file, and shuts down a cluster identified by its own temporary directory. The successful run records cluster_stopped=true. Production data, real payments and SMTP were not accessed.
+
+Reproduce using installed PostgreSQL binaries and the backend virtual environment:
+
+```powershell
+.\backend\venv\Scripts\python.exe scripts/verify_postgres.py
+```
+
+Override the PostgreSQL executable directory with `--pg-bin` if needed. The runner creates a random-password cluster on a dynamically selected loopback port, forces dotenv off, sets an isolated Django test database and stops the server after testing. Local SSL is disabled only in this test process; production settings are unchanged. Temporary stopped cluster files remain in the OS temporary directory for troubleshooting. No credentials are included in the evidence.
+
+The ordinary SQLite suite still skips PostgreSQL-only tests by design; use this separate run as the evidence for these concurrency cases. Full authenticated browser verification and participant validation remain outstanding.

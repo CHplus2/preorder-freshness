@@ -1,0 +1,12 @@
+{
+  "started_utc": "20261004T104736Z",
+  "base_commit": "fefc0ea880d86a708999ba9911aab2021b08667f",
+  "working_tree_dirty": true,
+  "database": "new temporary PostgreSQL cluster; loopback only; synthetic data",
+  "exit_code": 1,
+  "status": "failed",
+  "cluster_stopped": false,
+  "cluster_directory": "C:\\Users\\DELL\\AppData\\Local\\Temp\\dapur-postgres-verification-ooq3666m\\cluster",
+  "limits": "Tests checkout races only; no real payment, SMTP or production data used.",
+  "manual_cleanup": "Verified temporary cluster was stopped using pg_ctl fast shutdown after the Windows captured-pipe timeout. No tests ran in this attempt."
+}
