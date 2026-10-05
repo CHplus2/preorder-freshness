@@ -1,4 +1,5 @@
-import {deliveryDaysText} from '../../utils/deliveryDays';
+import {deliveryDaysText, deliveryDayIssue} from '../../utils/deliveryDays';
+import BasketDeliveryDays from '../../components/BasketDeliveryDays';
 import { useNavigate } from "react-router-dom";
 import { useUI } from "../../contexts/UIContext";
 import { useCart } from "../../contexts/CartContext";
@@ -10,6 +11,7 @@ export default function CartPage() {
   const navigate = useNavigate();
 
   const unavailable = cart.some(item => item.product.selling_status && item.product.selling_status !== "active");
+  const incompatibleDays = Boolean(deliveryDayIssue(cart, ''));
   const total = cart.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
@@ -91,6 +93,7 @@ export default function CartPage() {
         !cartLoading && !cartError && <p>Your basket is empty. Add a meal from the menu to get started.</p>
       )}
 
+      {cart.length > 0 && !unavailable && <BasketDeliveryDays cart={cart} value="" showBasketLink={false}/>}
       {cart.length > 0 && <div className="cart-total">
         Total: <strong>{formatPrice(total)}</strong>
       </div>}
@@ -98,7 +101,7 @@ export default function CartPage() {
       {cart.length > 0 && (
         <button
           className="checkout-btn"
-          disabled={unavailable || cartLoading || Boolean(cartError)}
+          disabled={unavailable || incompatibleDays || cartLoading || Boolean(cartError)}
           onClick={() => navigate("/checkout")}
         >
           Proceed to Checkout

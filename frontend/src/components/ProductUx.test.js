@@ -27,6 +27,9 @@ try{
  const conflict=basket([meal('Monday',[0]),meal('Saturday',[5])]);
  assert.match(conflict,/no delivery weekday in common/);
  assert.match(conflict,/href="\/cart"/);
+ const inBasket=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(BasketDeliveryDays,{cart:[meal('Monday',[0]),meal('Saturday',[5])],value:'',showBasketLink:false})));
+ assert.match(inBasket,/no delivery weekday in common/);
+ assert.doesNotMatch(inBasket,/href="\/cart"/);
  assert.match(basket([meal('Saturday',[5])],'2026-10-11T16:00'),/cannot be delivered/);
  console.log('Product UX: loading/error counts, enabled payment options and collapsed demo disclosure passed.');
 }finally{await server.close();}

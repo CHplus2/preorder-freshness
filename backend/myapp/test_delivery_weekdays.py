@@ -52,3 +52,39 @@ class DeliveryWeekdayTests(TestCase):
         snapshot.pop('delivery_weekdays')
         accepted=SimpleNamespace(product=SimpleNamespace(id=self.product.pk,name=self.product.name,**snapshot),product_id=self.product.pk,quantity=1)
         self.assertIsNotNone(schedule_order([accepted],self.delivery,self.store,exclude_order_id=123))
+
+    def test_mixed_basket_requires_a_shared_delivery_day(self):
+        other = Product.objects.create(name='Weekend curry', price=15, lead_hours=1)
+        day = self.delivery.weekday()
+        self.product.delivery_weekdays = [day, (day+1)%7]
+        other.delivery_weekdays = [day, (day+2)%7]
+        items = [self.item, SimpleNamespace(product=other, product_id=other.pk, quantity=1)]
+        self.assertIsNotNone(schedule_order(items, self.delivery, self.store))
+        for offset in [1, 2]:
+            with self.assertRaisesMessage(ValidationError, 'is delivered on'):
+                schedule_order(items, self.delivery+timedelta(days=offset), self.store)
+
+    def test_slot_api_uses_current_rules_for_an_existing_basket(self):
+        from django.contrib.auth.models import User
+        from rest_framework.test import APIClient
+        from .models import CartItem
+        client = APIClient()
+        buyer = User.objects.create_user('weekday-buyer')
+        client.force_authenticate(buyer)
+        other = Product.objects.create(name='Curry', price=15, lead_hours=1)
+        for product in [self.product, other]:
+            CartItem.objects.create(user=buyer, product=product, quantity=1)
+        payload = {'date': self.delivery.date().isoformat()}
+        response = client.post('/api/orders/slots/', payload)
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertTrue(response.data['slots'])
+        other.delivery_weekdays = [(self.delivery.weekday()+1)%7]
+        other.save()
+        self.assertEqual(client.post('/api/orders/slots/', payload).data['slots'], [])
+        other.delivery_weekdays = []
+        other.selling_status = 'paused'
+        other.save()
+        self.assertEqual(client.post('/api/orders/slots/', payload).data['slots'], [])
+        other.selling_status = 'active'
+        other.save()
+        self.assertTrue(client.post('/api/orders/slots/', payload).data['slots'])
