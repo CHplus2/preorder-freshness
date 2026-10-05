@@ -54,7 +54,8 @@ export default function AdminProductsPage() {
 
   const validateInput = (product) => {
     if (!product.name || !product.price || !product.category) {
-      setAlert({message:"Please fill all required fields",type:"error"});
+      const missing=[!product.name && 'menu name',!product.price && 'price',!product.category && 'category'].filter(Boolean);
+      setAlert({message:`Complete these fields: ${missing.join(', ')}.`,type:"error"});
       return false;
     }
     return true;

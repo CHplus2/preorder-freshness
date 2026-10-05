@@ -1,0 +1,22 @@
+/* A native dialog owns its feedback; do not show an inaccessible duplicate toast. */
+body:has(dialog[open]) .alert.alert{display:none}
+.account-dialog .account-error,
+.admin-shell .admin-notice.error,
+.admin-shell .inventory-error,
+.checkout-container .checkout-error,
+.checkout-container .availability-result--error{
+  background:#fff;
+  color:#85382e;
+  border:1px solid #e1ddd8;
+  border-left:3px solid #a45143;
+  border-radius:6px;
+  box-shadow:none;
+  padding:14px 16px;
+  line-height:1.6;
+  text-align:left;
+}
+.account-dialog .dialog-feedback{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:16px 0}
+.account-dialog .dialog-feedback p{margin:0;text-align:left;color:inherit;font-size:14px;line-height:1.6}
+.account-dialog .dialog-feedback button{flex-shrink:0;margin:0;min-height:44px;background:#fff;color:#683c34;border:1px solid #d8cec8;box-shadow:none}
+.alert.alert.error{background:#fff;color:#85382e;border:1px solid #e1ddd8;border-left:3px solid #a45143}
+@media(max-width:480px){.account-dialog .dialog-feedback{flex-direction:column;gap:12px}}
