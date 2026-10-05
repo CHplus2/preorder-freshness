@@ -11,9 +11,9 @@ export default function RecipeEditor({value, onChange}) {
  const rows=value.ingredients || [];
  const update=(i, key, v)=>onChange({...value, ingredients:rows.map((r,n)=>n===i?{...r,[key]:v}:r)});
  return <fieldset className="recipe-editor"><legend>Recipe & preorder settings</legend>
- {error && <p role="alert">{error} <button type="button" onClick={()=>setRetry(n=>n+1)}>Retry ingredients</button></p>}<p>Quantities per portion. Include salt, oil and spices. Use each ingredient’s inventory unit.</p>
+ {error && <p className="recipe-load-error" role="alert">{error} <button type="button" onClick={()=>setRetry(n=>n+1)}>Retry ingredients</button></p>}<p>Quantities per portion. Include salt, oil and spices. Use each ingredient’s inventory unit.</p>
  {rows.map((r,i)=><div className="recipe-row" key={i}>
- <select aria-label="Ingredient" value={r.raw_material} onChange={e=>update(i,'raw_material',Number(e.target.value))}><option value="">Choose ingredient</option>{materials.map(m=><option key={m.id} value={m.id}>{m.name} ({m.unit})</option>)}</select>
+ <select aria-label="Ingredient" disabled={!!error} value={r.raw_material} onChange={e=>update(i,'raw_material',Number(e.target.value))}><option value="">Choose ingredient</option>{r.raw_material && !materials.some(m=>Number(m.id)===Number(r.raw_material)) && <option value={r.raw_material}>Ingredient #{r.raw_material} · {error?'details unavailable':'loading details'}</option>}{materials.map(m=><option key={m.id} value={m.id}>{m.name} ({m.unit})</option>)}</select>
  <input aria-label="Quantity per portion" type="number" min="0.001" step="0.001" value={r.quantity_required} onChange={e=>update(i,'quantity_required',e.target.value)}/>
  <button type="button" onClick={()=>onChange({...value,ingredients:rows.filter((_,n)=>n!==i)})}>Remove</button></div>)}
  <button type="button" onClick={()=>onChange({...value,ingredients:[...rows,{raw_material:'',quantity_required:''}]})}>+ Ingredient</button>
