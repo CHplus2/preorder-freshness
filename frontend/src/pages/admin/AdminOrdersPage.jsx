@@ -91,7 +91,7 @@ export default function AdminOrdersPage() {
 
               <p>Prepare: {order.preparation_at ? new Date(order.preparation_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Legacy order — unscheduled'}</p>
               <p>Deliver: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Unscheduled'} · {order.delivery_method}</p>
-              {overdueOrder(order,now) && <p className="admin-notice error">Past requested delivery time — confirm fulfilment and update this order.</p>}
+              {overdueOrder(order,now) && <p className="admin-follow-up"><strong>Delivery follow-up</strong><span>The requested time has passed. Confirm delivery with the customer, then update the order status.</span></p>}
               {/* BODY */}
               <div className="order-body">
                 {order.items.map((item) => (

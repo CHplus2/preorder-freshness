@@ -2,10 +2,13 @@ import {useId, useState} from 'react';
 import axios from 'axios';
 import {apiError} from '../utils/apiError';
 import {getCookie} from '../utils/cookieUtils';
+import {deliveryPolicy, deliveryPreview, deliveryConfirmation} from '../utils/deliveryResponse';
+import {useUI} from '../contexts/UIContext';
 
 const when = value => new Date(value).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'});
 
 export default function RescheduleOrder({order, onSaved}) {
+  const {setAlert} = useUI();
   const [open, setOpen] = useState(null);
   const panelId = useId();
   const [policy, setPolicy] = useState(null);
@@ -18,8 +21,8 @@ export default function RescheduleOrder({order, onSaved}) {
   const url = `/api/orders/${order.id}/reschedule/`;
 
   async function load() {
-    setBusy(true); setError('');
-    try { setPolicy((await axios.get(url,{timeout:30000})).data); }
+    setBusy(true); setError(''); setPolicy(null);
+    try { setPolicy(deliveryPolicy((await axios.get(url,{timeout:30000})).data)); }
     catch (e) { setError(apiError(e)); }
     finally { setBusy(false); }
   }
@@ -36,15 +39,24 @@ export default function RescheduleOrder({order, onSaved}) {
       const body = confirm ? {confirm:preview.confirm} : {delivery_at:`${delivery}:00+08:00`, reason};
       const response = await axios.post(url, body, {timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
       if (confirm) {
+        deliveryConfirmation(response.data, order.id);
         setPreview(null);
+        setPolicy(null);
+        setDelivery(''); setReason('');
         setMessage('Delivery time updated. Your order total and accepted menu remain unchanged.');
-        await onSaved();
-        setPolicy((await axios.get(url,{timeout:30000})).data);
-      } else setPreview(response.data);
+        setAlert({message:'Delivery time updated.',type:'success'});
+        // The mutation is confirmed. A later read failure must not imply it failed.
+        try {
+          await onSaved();
+          setPolicy(deliveryPolicy((await axios.get(url,{timeout:30000})).data));
+        } catch {
+          setError('Your delivery change was saved, but the latest details could not be loaded. Try again to refresh them.');
+        }
+      } else setPreview(deliveryPreview(response.data));
     } catch (e) {
       setError(apiError(e));
       // Keep the confirmation after network failures so retries remain idempotent.
-      if (e.response) setPreview(null);
+      if (e.response && e.response.status < 500) setPreview(null);
     } finally { setBusy(false); }
   }
 

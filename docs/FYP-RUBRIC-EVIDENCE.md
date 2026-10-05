@@ -90,3 +90,5 @@ The ordinary SQLite suite still skips PostgreSQL-only tests by design; use this 
 ## Authenticated browser walkthrough — 5 October 2026
 
 [Browser evidence and limitations](evidence/browser-20261005/README.md) records synthetic customer checkout, an unpaid cash-on-delivery order, owner settings save and field navigation, and the customer-facing admin-access boundary. The walkthrough found and verified a fix for notifications leaking across account changes. Remaining browser scenarios and participant validation are explicitly pending; this is partial developer verification, not a completed user study.
+
+[Delivery and fulfilment follow-up](evidence/browser-20261005-orders/README.md) records a customer delivery amendment, service interruption/retry, owner fulfilment transitions and the customer Delivered/review state with payment still unpaid. It also documents empty-ledger feedback and responsive owner notices. Exact post-save refresh-failure injection and representative participant validation remain outstanding.

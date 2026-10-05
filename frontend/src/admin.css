@@ -65,6 +65,13 @@
 .cost-input-row label{flex:1;min-width:180px}
 .cost-input-row button{margin-bottom:8px}
 .cost-workspace .settings-group{margin:20px 0}
+.cost-workspace .settings-group[open]>summary{margin-bottom:12px}
+.cost-workspace .ledger-scope{margin:0 0 16px;color:#53655a;font-size:13px;line-height:1.6}
+.cost-workspace .ledger-empty{margin:0;padding:16px 18px;background:#f5f7f4;border-radius:6px;line-height:1.65}
+.admin-shell .admin-follow-up{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:20px 0;padding:4px 0 4px 16px;border-left:3px solid #b28a43;color:#485344;font-size:14px;line-height:1.65}
+.admin-shell .admin-follow-up strong{color:#624e2d;font-size:14px}
+.admin-shell .admin-follow-up p{margin:0}
+.admin-shell .admin-follow-up button{margin-top:6px}
 .cost-workspace form>button{margin-top:20px}
 @media (max-width: 400px) {
   .admin-shell .inventory-summary { grid-template-columns: minmax(0, 1fr); }
