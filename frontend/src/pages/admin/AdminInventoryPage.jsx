@@ -1,4 +1,5 @@
 import InventoryAttention from '../../components/InventoryAttention';
+import InventoryFeedback from '../../components/InventoryFeedback';
 import {expiryStatus} from '../../utils/inventoryAttention';
 import {malaysiaDate} from '../../utils/planner';
 import ModalDialog from '../../components/ModalDialog';
@@ -663,7 +664,7 @@ export default function AdminInventoryPage() {
           >
 
             <h2>Create Raw Material</h2>
-            {error && <p className="account-error" role="alert">{error}</p>}
+            <InventoryFeedback message={error}/>
 
             <label htmlFor="admininventorypage-field-1">Name</label>
 
@@ -743,7 +744,7 @@ export default function AdminInventoryPage() {
           >
 
             <h2>Edit Raw Material</h2>
-            {error && <p className="account-error" role="alert">{error}</p>}
+            <InventoryFeedback message={error}/>
 
             <label htmlFor="admininventorypage-field-3">Name</label>
 
@@ -824,7 +825,7 @@ export default function AdminInventoryPage() {
           >
 
             <h2>Add Inventory Item</h2>
-            {error && <p className="account-error" role="alert">{error}</p>}
+            <InventoryFeedback message={error}/>
 
             <label htmlFor="admininventorypage-field-5">Raw Material</label>
 
@@ -986,7 +987,7 @@ export default function AdminInventoryPage() {
           >
 
             <h2>Edit Inventory Item</h2>
-            {error && <div role="alert" className="error-message"><p>{error}</p><button type="button" disabled={loading} onClick={async () => {
+            <InventoryFeedback message={error}><button type="button" disabled={loading} onClick={async () => {
               setLoading(true);
               try {
                 const response = await axios.get(`${API_URL}/inventory-items/${editingInventoryItem.id}/`, getAuthConfig());
@@ -994,7 +995,7 @@ export default function AdminInventoryPage() {
                 setError("");
               } catch (err) { setError(apiError(err, "Could not reload this batch.")); }
               finally { setLoading(false); }
-            }}>Reload latest batch (discards edits)</button></div>}
+            }}>Reload latest batch (discards edits)</button></InventoryFeedback>
 
             <label htmlFor="admininventorypage-field-11">Raw Material</label>
 
