@@ -72,6 +72,23 @@
 .admin-shell .admin-follow-up strong{color:#624e2d;font-size:14px}
 .admin-shell .admin-follow-up p{margin:0}
 .admin-shell .admin-follow-up button{margin-top:6px}
+.planner-setup{margin:24px 0;border-top:1px solid #dce2df;border-bottom:1px solid #dce2df}
+.planner-setup-row{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 0}
+.planner-setup-row+.planner-setup-row{border-top:1px solid #e2e7e3}
+.admin-shell .planner-setup-row h2{margin:0 0 6px;font-size:15px;line-height:1.5;font-weight:650;color:#2b4333}
+.planner-setup-row p{margin:0;max-width:66ch;line-height:1.65;font-size:14px;color:#53655a}
+.contribution-order{margin-top:8px;padding:8px 0}
+.contribution-order[open]>summary{margin-bottom:16px}
+.contribution-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:0 0 20px}
+.contribution-values dt{font-size:13px;color:#53655a;line-height:1.5;margin-bottom:6px}
+.contribution-values dd{margin:0;font-size:15px;font-weight:600;line-height:1.5}
+.admin-shell .contribution-subheading,.admin-shell .accepted-recipe h3{font-size:14px;line-height:1.5;margin:20px 0 8px;font-weight:650}
+.contribution-missing{margin:12px 0 20px}
+.contribution-order ul{padding-left:22px;font-size:14px;line-height:1.65;margin:8px 0 20px}
+.contribution-order li+li{margin-top:8px}
+@media(max-width:600px){.contribution-values{grid-template-columns:1fr;gap:14px}}
+.planner-setup-row>a,.planner-setup-row>button{flex-shrink:0;margin:0;min-height:44px;display:inline-flex;align-items:center}
+@media(max-width:600px){.planner-setup-row{flex-direction:column;align-items:flex-start;gap:14px;padding:20px 0}}
 .cost-workspace form>button{margin-top:20px}
 @media (max-width: 400px) {
   .admin-shell .inventory-summary { grid-template-columns: minmax(0, 1fr); }

@@ -29,15 +29,15 @@ export default function OutcomePanel(){
       <label>Through<input type="date" required min={range.start} value={range.end} onChange={e=>setRange({...range,end:e.target.value})}/></label><button>Apply / refresh</button>
     </form>{error && <p role="alert">{error}</p>}
     {!report && !error && <p role="status">Loading outcomes…</p>}
-    {report && <><p>{report.definition}</p><p><strong>RM {report.known_contribution}</strong> known food contribution across {report.complete_orders} complete orders. Showing {report.shown} of {report.order_count} orders.</p>
+    {report && <><details className="contribution-help"><summary>How contribution is calculated</summary><p>{report.definition}</p></details><p><strong>RM {report.known_contribution}</strong> known food contribution across {report.complete_orders} complete orders. Showing {report.shown} of {report.order_count} orders.</p>
       <button type="button" disabled={exporting} onClick={download}>{exporting?'Preparing export…':'Download contribution CSV'}</button>
       <p>Exports all orders placed from {report.start} through {report.end}, up to 5,000 orders. Larger ranges must be narrowed. Export values reflect records at download time; blank contribution means unavailable. No customer contact details are included.</p>
       {exportError && <p role="alert">{exportError}</p>}
-      {report.rows.map(r=><details key={r.order}><summary>Order #{r.order} · {r.status} · {r.food_contribution===null?'Contribution unavailable':`RM ${r.food_contribution} contribution`}</summary>
-        <p>Net realised food revenue: RM {r.net_food_revenue} · Known ingredient costs: RM {r.known_ingredient_cost} · Accepted packaging estimate: RM {r.accepted_packaging_cost}</p>
+      {report.rows.map(r=><details className="contribution-order" key={r.order}><summary>Order #{r.order} · {r.status} · {r.food_contribution===null?'Contribution unavailable':`RM ${r.food_contribution} contribution`}</summary>
+        <dl className="contribution-values"><div><dt>Net realised food revenue</dt><dd>RM {r.net_food_revenue}</dd></div><div><dt>Known ingredient costs</dt><dd>RM {r.known_ingredient_cost}</dd></div><div><dt>Accepted packaging estimate</dt><dd>RM {r.accepted_packaging_cost}</dd></div></dl>
         {!r.realised && <p>Contribution is calculated after delivery or a cooked cancellation.</p>}
-        {r.missing.length>0 && <ul>{r.missing.map(m=><li key={m}>{m}</li>)}</ul>}
-        <h3>Ingredients actually consumed</h3><ul>{r.trace.map((t,i)=><li key={i}>{t.menu}: {t.quantity} {t.unit} {t.material}, batch #{t.batch} {t.batch_code}, recorded expiry {t.recorded_expiry}. Unit cost: {t.unit_cost===null?'unknown':`RM ${t.unit_cost}/${t.unit}`}</li>)}</ul>
+        {r.missing.length>0 && <details className="contribution-missing"><summary>Missing cost records ({r.missing.length})</summary><ul>{r.missing.map(m=><li key={m}>{m}</li>)}</ul></details>}
+        <h3 className="contribution-subheading">Recorded ingredient use</h3>{r.trace.length===0 ? <p>No ingredient use recorded for this order yet.</p> : <ul>{r.trace.map((t,i)=><li key={i}>{t.menu}: {t.quantity} {t.unit} {t.material}, batch #{t.batch} {t.batch_code}, recorded expiry {t.recorded_expiry}. Unit cost: {t.unit_cost===null?'unknown':`RM ${t.unit_cost}/${t.unit}`}</li>)}</ul>}
       </details>)}
     </>}
   </section>;
