@@ -77,6 +77,52 @@ class KitchenTests(TestCase):
         order=self.order()
         self.assertEqual(self.client.patch(f'/api/admin/orders/{order.id}/',{'status':'delivered'}).status_code,400)
 
+    def test_shortage_ignores_unusable_batches_and_recovers_after_restock(self):
+        from .models import IngredientConsumption
+        usable = self.batch(40, 3)
+        excluded = [self.batch(1000, -1), self.batch(1000, 3, quarantined=True)]
+        future = self.batch(1000, 5)
+        future.received_date = self.today + timedelta(days=1)
+        future.save()
+        excluded.append(future)
+        order = self.order()
+        url = f'/api/admin/orders/{order.pk}/'
+        response = self.client.patch(url, {'status': 'cooked'})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('short by 60 g', str(response.data))
+        usable.refresh_from_db()
+        order.refresh_from_db()
+        self.assertEqual(usable.quantity, 40)
+        self.assertEqual(order.status, 'processing')
+        self.assertFalse(order.inventory_deducted)
+        self.assertFalse(IngredientConsumption.objects.exists())
+        self.assertFalse(InventoryLog.objects.exists())
+        replenishment = self.batch(60, 4)
+        self.assertEqual(self.client.patch(url, {'status': 'cooked'}).status_code, 200)
+        self.assertEqual(self.client.patch(url, {'status': 'cooked'}).status_code, 200)
+        for lot in [usable, replenishment]:
+            lot.refresh_from_db()
+            self.assertEqual(lot.quantity, 0)
+        for lot in excluded:
+            lot.refresh_from_db()
+            self.assertEqual(lot.quantity, 1000)
+        self.assertEqual(IngredientConsumption.objects.count(), 2)
+        self.assertEqual(InventoryLog.objects.count(), 2)
+
+    def test_second_ingredient_shortage_rolls_back_first_ingredient(self):
+        from .models import IngredientConsumption
+        rice = RawMaterial.objects.create(name='Rice', unit='g')
+        ProductIngredient.objects.create(product=self.product, raw_material=rice, quantity_required=50)
+        chicken = self.batch(100, 3)
+        order = self.order()
+        response = self.client.patch(f'/api/admin/orders/{order.pk}/', {'status': 'cooked'})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Rice', str(response.data))
+        chicken.refresh_from_db()
+        self.assertEqual(chicken.quantity, 100)
+        self.assertFalse(IngredientConsumption.objects.exists())
+        self.assertFalse(InventoryLog.objects.exists())
+
     def checkout(self, delivery=None):
         self.client.force_authenticate(self.user)
         CartItem.objects.get_or_create(user=self.user,product=self.product,defaults={'quantity':1})
