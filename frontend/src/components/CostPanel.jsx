@@ -12,12 +12,14 @@ export default function CostPanel(){
  const [expense,setExpense]=useState({date:malaysiaDate(new Date()),category:'utilities',amount:'',note:''});
  const [waste,setWaste]=useState({inventory_item:'',quantity:'',reason:''});
  const expenseKey=useRef(crypto.randomUUID()),wasteKey=useRef(crypto.randomUUID());
+ const feedback=useRef(null);
+ useEffect(()=>{if(error || message){feedback.current?.scrollIntoView({block:'center'});feedback.current?.focus({preventScroll:true})}},[error,message]);
  useEffect(()=>{const c=new AbortController();
  Promise.all([axios.get('/api/admin/costs/',{params:range,signal:c.signal}),axios.get('/api/admin/raw-materials/',{signal:c.signal}),axios.get('/api/admin/inventory-items/',{signal:c.signal}),axios.get('/api/admin/expenses/',{signal:c.signal})]).then(([a,b,d,e])=>{setReport(a.data);setMaterials(b.data);setLots(d.data);setExpenses(e.data)}).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});return()=>c.abort()},[range,retry]);
  const mutate=async(url,data,method='post')=>{if(busy)return false;setBusy(true);setError('');setMessage('');try{await axios[method](url,data,{headers:{'X-CSRFToken':getCookie('csrftoken')}});setReport(null);setRetry(n=>n+1);setMessage('Saved.');return true}catch(e){setError(apiError(e));return false}finally{setBusy(false)}};
  return <section className="cost-workspace"><h2>Costs, wastage and pricing</h2><p>Menu estimates use today's ingredient costs and packaging. They exclude discounts, labour, delivery, overhead and tax; they are not net profit.</p>
  <div className="admin-fields">{['start','end'].map(key=><label key={key}>{key==='start'?'Period starts':'Period ends'}<input type="date" value={range[key]} onChange={e=>{if(e.target.value){setReport(null);setError('');setRange({...range,[key]:e.target.value});}}}/></label>)}</div>
- {error && <p role="alert">{error} <button onClick={()=>{setReport(null);setError('');setRetry(n=>n+1)}}>Retry</button></p>}<p role="status">{message}</p>
+ {(error || message) && <div ref={feedback} tabIndex={-1} role={error?'alert':'status'} className="cost-feedback"><p>{error || message}</p>{error && <button type="button" disabled={busy} onClick={()=>{setReport(null);setError('');setMessage('');setRetry(n=>n+1)}}>Refresh cost records</button>}</div>}
  {!report && !error && <p role="status">Loading costs...</p>}
  {report && <><div className="admin-metrics"><article><span>Operating expenses in period</span><strong>{money(report.operating_expenses)}</strong></article><article><span>Recorded wastage cost in period</span><strong>{money(report.known_waste_cost)}</strong><small>{report.unpriced_waste_records} waste records have unknown costs, excluded from this total.</small></article></div>
  <h3>Current menu contribution estimates · per portion</h3><p>Contribution = menu price minus ingredient estimate minus packaging. Dates above filter expenses and wastage, not these current recipe estimates.</p>

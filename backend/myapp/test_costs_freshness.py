@@ -39,6 +39,16 @@ class CostsAndFreshnessTests(TestCase):
         self.assertEqual(response.status_code,400)
         self.lot.refresh_from_db();self.assertEqual(self.lot.quantity,500)
 
+    def test_waste_ledger_uses_malaysia_date_at_utc_boundary(self):
+        from datetime import datetime, timezone as dt_timezone
+        waste = WasteRecord.objects.create(inventory_item=self.lot, quantity=10,
+            reason='Date boundary test', request_id=uuid4())
+        WasteRecord.objects.filter(pk=waste.pk).update(
+            created_at=datetime(2026, 10, 5, 23, 30, tzinfo=dt_timezone.utc))
+        response = self.client.get('/api/admin/costs/', {'start':'2026-10-06','end':'2026-10-06'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['waste'][0]['date'], '2026-10-06')
+
     def test_expense_retry_and_void(self):
         data={'request_id':str(uuid4()),'date':str(self.today),'amount':'12.50','category':'utilities','note':'Power'}
         first=self.client.post('/api/admin/expenses/',data)

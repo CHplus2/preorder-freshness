@@ -102,4 +102,4 @@ def cost_report(request):
         'operating_expenses':str(costs.aggregate(total=Sum('amount'))['total'] or Decimal('0')),
         'known_waste_cost':str(waste.aggregate(total=Sum('estimated_cost'))['total'] or Decimal('0')),
         'unpriced_waste_records':waste.filter(estimated_cost__isnull=True).count(),
-        'waste':[{'id':w.pk,'material':w.inventory_item.raw_material.name,'quantity':str(w.quantity),'unit':w.inventory_item.raw_material.unit,'reason':w.reason,'cost':str(w.estimated_cost) if w.estimated_cost is not None else None,'date':w.created_at.date().isoformat()} for w in waste.select_related('inventory_item__raw_material').order_by('-created_at')[:100]]})
+        'waste':[{'id':w.pk,'material':w.inventory_item.raw_material.name,'quantity':str(w.quantity),'unit':w.inventory_item.raw_material.unit,'reason':w.reason,'cost':str(w.estimated_cost) if w.estimated_cost is not None else None,'date':timezone.localtime(w.created_at).date().isoformat()} for w in waste.select_related('inventory_item__raw_material').order_by('-created_at')[:100]]})
