@@ -13,6 +13,13 @@ import { getCookie } from "../../utils/cookieUtils";
 
 const API_URL = "/api/admin";
 
+function inventorySaveError(error) {
+  if (!error?.response || error.response.status >= 500) {
+    return "The save could not be confirmed. Your entries are still here. Check inventory records before submitting again to avoid adding the same batch twice.";
+  }
+  return apiError(error, "Could not save this inventory batch.");
+}
+
 const emptyRawMaterial = {
   name: "",
   unit: "g",
@@ -51,6 +58,31 @@ export default function AdminInventoryPage() {
   const [retry, setRetry] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [refreshError, setRefreshError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const closeForm = (setter) => {
+    if (loading) return;
+    setError("");
+    setter(null);
+  };
+
+  const refreshRecords = async () => {
+    setRefreshing(true);
+    setRefreshError("");
+    try {
+      const [materials, inventory] = await Promise.all([
+        axios.get(`${API_URL}/raw-materials/`, getAuthConfig()),
+        axios.get(`${API_URL}/inventory-items/`, getAuthConfig()),
+      ]);
+      setRawMaterials(materials.data);
+      setInventoryItems(inventory.data);
+    } catch {
+      setRefreshError("Records could not be refreshed. Displayed quantities may be out of date. Refresh records before making another stock change.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const getAuthConfig = () => ({
     headers: {
@@ -67,8 +99,9 @@ export default function AdminInventoryPage() {
       );
 
       setRawMaterials(response.data);
+      setRefreshError("");
     } catch {
-      setError("Failed to load raw materials.");
+      setRefreshError("Your change was saved, but raw materials could not be refreshed. Refresh records to see the latest list.");
     }
   };
 
@@ -80,8 +113,9 @@ export default function AdminInventoryPage() {
       );
 
       setInventoryItems(response.data);
+      setRefreshError("");
     } catch {
-      setError("Failed to load inventory.");
+      setRefreshError("Your change was saved, but inventory could not be refreshed. Refresh records to see the latest quantities.");
     }
   };
 
@@ -256,8 +290,7 @@ export default function AdminInventoryPage() {
       setNewInventoryItem(null);
     } catch (err) {
       setError(
-        err.response?.data?.detail ||
-        apiError(err, "Failed to create inventory item.")
+        inventorySaveError(err)
       );
     } finally {
       setLoading(false);
@@ -280,8 +313,7 @@ export default function AdminInventoryPage() {
       setEditingInventoryItem(null);
     } catch (err) {
       setError(
-        err.response?.data?.detail ||
-        apiError(err, "Failed to update inventory item.")
+        inventorySaveError(err)
       );
     } finally {
       setLoading(false);
@@ -358,10 +390,16 @@ export default function AdminInventoryPage() {
         </div>
       </div>
 
-      {error && (
+      <InventoryFeedback message={refreshError}>
+        <button type="button" disabled={refreshing} onClick={refreshRecords}>
+          {refreshing ? "Refreshing..." : "Refresh records"}
+        </button>
+      </InventoryFeedback>
+
+      {error && !newRawMaterial && !newInventoryItem && !editingRawMaterial && !editingInventoryItem && (
         <div className="inventory-error">
           {error}
-          <button onClick={() => setError("")}>×</button>
+          <button aria-label="Dismiss error" onClick={() => setError("")}>×</button>
         </div>
       )}
 
@@ -649,11 +687,11 @@ export default function AdminInventoryPage() {
 
       {/* CREATE RAW MATERIAL MODAL */}
       {newRawMaterial && (
-        <ModalDialog label="Create Raw Material" onDismiss={() => setNewRawMaterial(null)}>
+        <ModalDialog label="Create Raw Material" onDismiss={() => closeForm(setNewRawMaterial)}>
 <div
           className="modal-overlay"
           onClick={() =>
-            setNewRawMaterial(null)
+            closeForm(setNewRawMaterial)
           }
         >
           <div
@@ -713,8 +751,9 @@ export default function AdminInventoryPage() {
               </button>
 
               <button
+                disabled={loading}
                 onClick={() =>
-                  setNewRawMaterial(null)
+                  closeForm(setNewRawMaterial)
                 }
               >
                 Cancel
@@ -729,11 +768,11 @@ export default function AdminInventoryPage() {
 
       {/* EDIT RAW MATERIAL MODAL */}
       {editingRawMaterial && (
-        <ModalDialog label="Edit Raw Material" onDismiss={() => setEditingRawMaterial(null)}>
+        <ModalDialog label="Edit Raw Material" onDismiss={() => closeForm(setEditingRawMaterial)}>
 <div
           className="modal-overlay"
           onClick={() =>
-            setEditingRawMaterial(null)
+            closeForm(setEditingRawMaterial)
           }
         >
           <div
@@ -794,8 +833,9 @@ export default function AdminInventoryPage() {
               </button>
 
               <button
+                disabled={loading}
                 onClick={() =>
-                  setEditingRawMaterial(null)
+                  closeForm(setEditingRawMaterial)
                 }
               >
                 Cancel
@@ -810,11 +850,11 @@ export default function AdminInventoryPage() {
 
       {/* CREATE INVENTORY MODAL */}
       {newInventoryItem && (
-        <ModalDialog label="Add Inventory Item" onDismiss={() => setNewInventoryItem(null)}>
+        <ModalDialog label="Add Inventory Item" onDismiss={() => closeForm(setNewInventoryItem)}>
 <div
           className="modal-overlay"
           onClick={() =>
-            setNewInventoryItem(null)
+            closeForm(setNewInventoryItem)
           }
         >
           <div
@@ -956,8 +996,9 @@ export default function AdminInventoryPage() {
               </button>
 
               <button
+                disabled={loading}
                 onClick={() =>
-                  setNewInventoryItem(null)
+                  closeForm(setNewInventoryItem)
                 }
               >
                 Cancel
@@ -972,11 +1013,11 @@ export default function AdminInventoryPage() {
 
       {/* EDIT INVENTORY MODAL */}
       {editingInventoryItem && (
-        <ModalDialog label="Edit Inventory Item" onDismiss={() => setEditingInventoryItem(null)}>
+        <ModalDialog label="Edit Inventory Item" onDismiss={() => closeForm(setEditingInventoryItem)}>
 <div
           className="modal-overlay"
           onClick={() =>
-            setEditingInventoryItem(null)
+            closeForm(setEditingInventoryItem)
           }
         >
           <div
@@ -1122,8 +1163,9 @@ export default function AdminInventoryPage() {
               </button>
 
               <button
+                disabled={loading}
                 onClick={() =>
-                  setEditingInventoryItem(null)
+                  closeForm(setEditingInventoryItem)
                 }
               >
                 Cancel
