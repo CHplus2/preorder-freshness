@@ -92,3 +92,17 @@ The ordinary SQLite suite still skips PostgreSQL-only tests by design; use this 
 [Browser evidence and limitations](evidence/browser-20261005/README.md) records synthetic customer checkout, an unpaid cash-on-delivery order, owner settings save and field navigation, and the customer-facing admin-access boundary. The walkthrough found and verified a fix for notifications leaking across account changes. Remaining browser scenarios and participant validation are explicitly pending; this is partial developer verification, not a completed user study.
 
 [Delivery and fulfilment follow-up](evidence/browser-20261005-orders/README.md) records a customer delivery amendment, service interruption/retry, owner fulfilment transitions and the customer Delivered/review state with payment still unpaid. It also documents empty-ledger feedback and responsive owner notices. Exact post-save refresh-failure injection and representative participant validation remain outstanding.
+
+## Targeted follow-up batches — 5–6 October 2026
+
+These records extend the earlier full verification run; they do not replace it with a newly claimed full-suite pass.
+
+- Objective 1, flexible preorders: [delivery-day checks](evidence/delivery-days-20261005/README.md) cover mixed-basket conflicts, weekday selection, paused menus and 13 backend tests. The basket now explains incompatible delivery days before checkout.
+- Objective 2, freshness: [backend recovery](evidence/freshness-recovery-20261006/README.md), [inventory forms](evidence/inventory-form-20261006/README.md) and [cooking/wastage walkthrough](evidence/stock-flow-20261006/README.md) document excluded stock, rollback, restock retry, repeated cooking, waste overdraw and Malaysian ledger dates. Recorded eligibility remains distinct from a food-safety assessment.
+- Objective 3, single-vendor storefront: [editor navigation](evidence/editor-20261005/README.md) and [notification feedback](evidence/notifications-20261005/README.md) document owner editing and usability corrections. These are developer checks, not evidence of measured branding improvement.
+- Objective 4, analytics: [report validation](evidence/report-validation-20261006/README.md) and [pricing validation](evidence/pricing-validation-20261006/README.md) preserve zero, unknown and negative values and verify failed-request recovery. Pricing changes are simulations only.
+- Objective 5, recommendations: [recommendation checks](evidence/recommendations-20261006/README.md) cover category/availability rules, empty results, stale preferences, response validation and network recovery. They do not establish reduced decision fatigue or higher conversion.
+
+For Chapter 4, use each linked defect, change and verified screenshot as development/problem-solving evidence. For Chapter 5, report the stated test environment, expected outcome, observed result and limitation. Do not add test counts from separate batches into a unique total because suites overlap. The current follow-up queue is [NEXT-BATCHES.md](NEXT-BATCHES.md).
+
+Still needed for stronger academic conclusions: representative participant evaluation with consent, explicit comparison to the literature cited in the dissertation, and read-only deployed verification. No full-mark guarantee or new literature contribution follows from developer testing alone.

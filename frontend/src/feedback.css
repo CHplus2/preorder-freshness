@@ -29,3 +29,6 @@ body:has(dialog[open]) .alert.alert{display:none}
 .cost-feedback[role="alert"]{border-left-color:#a45143;color:#85382e}
 .cost-feedback p{margin:0;text-align:left;line-height:1.6;color:inherit}
 .cost-feedback button{min-height:44px;margin:0}
+
+/* On narrow screens help stays in the footer flow, clear of checkout actions. */
+@media(max-width:600px){.business-footer .dk-help-toggle{position:static;margin:0 0 24px;transform:none}.business-footer .kitchen-chat{box-sizing:border-box;left:16px;right:16px;width:auto;bottom:16px;max-height:calc(100dvh - 32px)}}

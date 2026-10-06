@@ -2,7 +2,7 @@
 
 Updated 6 October 2026. Keep the storefront single-vendor. Work in manageable batches, record actual results and push completed changes.
 
-1. Menu availability: mixed basket, weekday and pause browser checks completed; accepted-order preservation covered by backend tests. See evidence/delivery-days-20261005. Follow up the floating help launcher overlapping mobile basket actions.
+1. Menu availability: mixed basket, weekday and pause browser checks completed; accepted-order preservation covered by backend tests. See evidence/delivery-days-20261005. Mobile help overlap corrected and checked at 390 px (evidence/mobile-help-20261006).
 2. Ingredient freshness: backend and browser shortage/retry, duplicate cooking, waste overdraw/correction, form reload and hold checks completed. See freshness-recovery-20261006, inventory-form-20261006 and stock-flow-20261006 evidence. Add-inventory form and mobile checks remain separate coverage gaps. Do not make food-safety guarantees.
 3. Recommendations: response/storage recovery and stale-result fixes completed; backend category/availability checks and browser budget/empty/network-retry checks passed (evidence/recommendations-20261006). Add-to-cart browser and mobile checks remain. Real business impact requires participant/outcome data.
 4. Reporting: contribution/cost and pricing response validation completed, including supporting material/batch/expense rows. Browser failed-refresh/retry, below-cost and unknown-cost checks passed (evidence/report-validation-20261006 and pricing-validation-20261006). Mobile coverage and contextual read-only error wording remain follow-ups.
