@@ -106,3 +106,5 @@ These records extend the earlier full verification run; they do not replace it w
 For Chapter 4, use each linked defect, change and verified screenshot as development/problem-solving evidence. For Chapter 5, report the stated test environment, expected outcome, observed result and limitation. Do not add test counts from separate batches into a unique total because suites overlap. The current follow-up queue is [NEXT-BATCHES.md](NEXT-BATCHES.md).
 
 Still needed for stronger academic conclusions: representative participant evaluation with consent, explicit comparison to the literature cited in the dissertation, and read-only deployed verification. No full-mark guarantee or new literature contribution follows from developer testing alone.
+
+Deployment follow-up: the [6 October public smoke check](evidence/live-public-20261006/README.md) confirms live menu loading/search, storage-record navigation and corrected mobile help placement. Authenticated production workflows remain unverified; this limited check does not replace local tests or participant evaluation.
