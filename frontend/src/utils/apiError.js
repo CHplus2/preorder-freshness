@@ -1,3 +1,19 @@
+// Read-only requests can be retried without the order-submission warning.
+export function readApiError(error, fallback = 'The records could not be loaded.') {
+  if (error?.code === 'INVALID_RESPONSE') return 'The kitchen returned an unexpected response. Refresh these records to try again.';
+  if (!error?.response) {
+    return error?.code === 'ECONNABORTED'
+      ? 'Loading took too long. Check your connection and try again.'
+      : 'Could not load these records. Check your connection and try again.';
+  }
+  if (error.response.status >= 500) {
+    const reference = error.response.data?.reference;
+    return 'These records are temporarily unavailable. Please try again shortly.'
+      + (typeof reference === 'string' ? ` Reference: ${reference}` : '');
+  }
+  return apiError(error, fallback);
+}
+
 export function apiError(error, fallback = 'The request could not be completed.') {
   if (error?.code === 'CHECKOUT_STORAGE') return 'Checkout could not safely save or read its request reference. No new order request was sent. Check My orders before clearing browser data or starting again; allow browser storage to continue.';
   if (error?.code === 'INVALID_RESPONSE') return 'The kitchen returned an unexpected response. Please reload and try again. If you submitted an order, check My orders first.';

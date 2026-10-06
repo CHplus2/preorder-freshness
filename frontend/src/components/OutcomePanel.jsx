@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import axios from 'axios';
 import {contributionReport} from '../utils/costResponse';
-import {apiError} from '../utils/apiError';
+import {readApiError} from '../utils/apiError';
 const date=d=>new Date(d).toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'});
 export default function OutcomePanel(){
   const [exporting,setExporting]=useState(false),[exportError,setExportError]=useState('');
@@ -18,12 +18,12 @@ export default function OutcomePanel(){
       setTimeout(()=>URL.revokeObjectURL(url),1000);
     }catch(e){
       if(e.response?.data instanceof Blob){try{e.response.data=JSON.parse(await e.response.data.text());}catch{e.response.data=null;}}
-      setExportError(apiError(e));
+      setExportError(readApiError(e));
     }finally{setExporting(false);}
   };
   useEffect(()=>{const c=new AbortController();
     axios.get('/api/admin/contribution/',{params:applied,signal:c.signal})
-      .then(a=>setReport(contributionReport(a.data))).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});return()=>c.abort();},[applied]);
+      .then(a=>setReport(contributionReport(a.data))).catch(e=>{if(!axios.isCancel(e))setError(readApiError(e))});return()=>c.abort();},[applied]);
   return <section className="dk-panel"><h2>Order contribution</h2>
     <form className="fyp-form inline" onSubmit={e=>{e.preventDefault();setReport(null);setError('');setExportError('');setApplied({...range})}}>
       <label>Orders placed from<input type="date" required value={range.start} onChange={e=>setRange({...range,start:e.target.value})}/></label>

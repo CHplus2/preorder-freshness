@@ -3,7 +3,7 @@ import BatchTrace from '../../components/BatchTrace';
 import CostPanel from '../../components/CostPanel';
 import OutcomePanel from '../../components/OutcomePanel';
 import {salesSummary,menuSales} from '../../utils/salesResponse';
-import {apiError} from '../../utils/apiError';
+import {readApiError} from '../../utils/apiError';
 import { useEffect, useState } from "react";
 import axios from 'axios';
 
@@ -13,7 +13,7 @@ export default function AdminReportsPage() {
   const controller=new AbortController();
   Promise.all([axios.get('/api/admin/reports/sales/',{signal:controller.signal}),axios.get('/api/admin/analytics/',{signal:controller.signal})])
    .then(([a,b])=>{const rows=menuSales(a.data),summary=salesSummary(b.data);if(!controller.signal.aborted){setReport(rows);setSummary(summary);}})
-   .catch(e=>{if(!axios.isCancel(e))setError(apiError(e));})
+   .catch(e=>{if(!axios.isCancel(e))setError(readApiError(e));})
    .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
   return()=>controller.abort();
  },[retry]);

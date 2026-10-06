@@ -1,12 +1,12 @@
 import {useEffect,useState} from 'react';
 import axios from 'axios';
-import {apiError} from '../utils/apiError';
+import {readApiError} from '../utils/apiError';
 import {recommendationCsv} from '../utils/recommendationExport';
 import './RecommendationReport.css';
 const stages=[['clicked_sessions','Clicked a suggestion'],['added_sessions','Added to basket'],['ordered_sessions','Placed an attributed order'],['paid_sessions','Attributed paid order']];
 export default function RecommendationReport(){
   const [data,setData]=useState(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);
-  useEffect(()=>{const controller=new AbortController();axios.get('/api/admin/recommendation-metrics/',{signal:controller.signal}).then(r=>setData(r.data)).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))}).finally(()=>{if(!controller.signal.aborted)setLoading(false)});return()=>controller.abort()},[revision]);
+  useEffect(()=>{const controller=new AbortController();axios.get('/api/admin/recommendation-metrics/',{signal:controller.signal}).then(r=>setData(r.data)).catch(e=>{if(!axios.isCancel(e))setError(readApiError(e))}).finally(()=>{if(!controller.signal.aborted)setLoading(false)});return()=>controller.abort()},[revision]);
   const refresh=()=>{setLoading(true);setError('');setRevision(n=>n+1)};
   const download=()=>{
     try{
