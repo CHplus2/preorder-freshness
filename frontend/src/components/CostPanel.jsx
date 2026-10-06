@@ -3,6 +3,8 @@ import axios from 'axios';
 import {apiError} from '../utils/apiError';
 import {getCookie} from '../utils/cookieUtils';
 import {malaysiaDate} from '../utils/planner';
+import {costReport} from '../utils/costResponse';
+import {responseList} from '../utils/apiResponse';
 import PricingPreview from './PricingPreview';
 const money=v=>v==null?'Not recorded':'RM '+Number(v).toFixed(2);
 export default function CostPanel(){
@@ -15,7 +17,7 @@ export default function CostPanel(){
  const feedback=useRef(null);
  useEffect(()=>{if(error || message){feedback.current?.scrollIntoView({block:'center'});feedback.current?.focus({preventScroll:true})}},[error,message]);
  useEffect(()=>{const c=new AbortController();
- Promise.all([axios.get('/api/admin/costs/',{params:range,signal:c.signal}),axios.get('/api/admin/raw-materials/',{signal:c.signal}),axios.get('/api/admin/inventory-items/',{signal:c.signal}),axios.get('/api/admin/expenses/',{signal:c.signal})]).then(([a,b,d,e])=>{setReport(a.data);setMaterials(b.data);setLots(d.data);setExpenses(e.data)}).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});return()=>c.abort()},[range,retry]);
+ Promise.all([axios.get('/api/admin/costs/',{params:range,signal:c.signal}),axios.get('/api/admin/raw-materials/',{signal:c.signal}),axios.get('/api/admin/inventory-items/',{signal:c.signal}),axios.get('/api/admin/expenses/',{signal:c.signal})]).then(([a,b,d,e])=>{const report=costReport(a.data),materials=responseList(b.data),lots=responseList(d.data),expenses=responseList(e.data);setReport(report);setMaterials(materials);setLots(lots);setExpenses(expenses)}).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});return()=>c.abort()},[range,retry]);
  const mutate=async(url,data,method='post')=>{if(busy)return false;setBusy(true);setError('');setMessage('');try{await axios[method](url,data,{headers:{'X-CSRFToken':getCookie('csrftoken')}});setReport(null);setRetry(n=>n+1);setMessage('Saved.');return true}catch(e){setError(apiError(e));return false}finally{setBusy(false)}};
  return <section className="cost-workspace"><h2>Costs, wastage and pricing</h2><p>Menu estimates use today's ingredient costs and packaging. They exclude discounts, labour, delivery, overhead and tax; they are not net profit.</p>
  <div className="admin-fields">{['start','end'].map(key=><label key={key}>{key==='start'?'Period starts':'Period ends'}<input type="date" value={range[key]} onChange={e=>{if(e.target.value){setReport(null);setError('');setRange({...range,[key]:e.target.value});}}}/></label>)}</div>

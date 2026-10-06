@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {costReport,contributionReport} from './costResponse.js';
+const period={start:'2026-10-01',end:'2026-10-06'};
+const menu={id:1,name:'Rice',price:'10',missing:[],ingredient_cost:'12',packaging_cost:'0',estimated_contribution:'-2',estimated_margin_percent:'-20'};
+const costs={...period,operating_expenses:'0',known_waste_cost:'0',unpriced_waste_records:0,menus:[menu],waste:[]};
+assert.equal(costReport(costs),costs);
+assert.equal(costReport({...costs,menus:[{...menu,missing:['Unknown'],ingredient_cost:null,estimated_contribution:null,estimated_margin_percent:null}]}).menus[0].ingredient_cost,null);
+for(const changes of [{menus:null},{waste:{}},{operating_expenses:null},{known_waste_cost:'bad'},{menus:[{...menu,missing:null}]},{menus:[{...menu,price:''}]}])assert.throws(()=>costReport({...costs,...changes}),e=>e.code==='INVALID_RESPONSE');
+const row={order:1,status:'delivered',realised:true,missing:[],net_food_revenue:'10',known_ingredient_cost:'12',accepted_packaging_cost:'0',food_contribution:'-2',trace:[]};
+const contribution={...period,definition:'Definition',known_contribution:'-2',complete_orders:1,shown:1,order_count:1,rows:[row]};
+assert.equal(contributionReport(contribution),contribution);
+assert.equal(contributionReport({...contribution,rows:[{...row,food_contribution:null}]}).rows[0].food_contribution,null);
+for(const changes of [{rows:null},{shown:2},{known_contribution:null},{rows:[{...row,trace:null}]},{rows:[{...row,food_contribution:'NaN'}]},{rows:[{...row,trace:[{}]}]}])assert.throws(()=>contributionReport({...contribution,...changes}),e=>e.code==='INVALID_RESPONSE');
+console.log('Cost/contribution checks preserve zero, unknown and negative values; reject malformed records.');

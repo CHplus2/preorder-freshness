@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import axios from 'axios';
+import {contributionReport} from '../utils/costResponse';
 import {apiError} from '../utils/apiError';
 const date=d=>new Date(d).toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'});
 export default function OutcomePanel(){
@@ -22,9 +23,9 @@ export default function OutcomePanel(){
   };
   useEffect(()=>{const c=new AbortController();
     axios.get('/api/admin/contribution/',{params:applied,signal:c.signal})
-      .then(a=>setReport(a.data)).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});return()=>c.abort();},[applied]);
+      .then(a=>setReport(contributionReport(a.data))).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});return()=>c.abort();},[applied]);
   return <section className="dk-panel"><h2>Order contribution</h2>
-    <form className="fyp-form inline" onSubmit={e=>{e.preventDefault();setReport(null);setError('');setApplied({...range})}}>
+    <form className="fyp-form inline" onSubmit={e=>{e.preventDefault();setReport(null);setError('');setExportError('');setApplied({...range})}}>
       <label>Orders placed from<input type="date" required value={range.start} onChange={e=>setRange({...range,start:e.target.value})}/></label>
       <label>Through<input type="date" required min={range.start} value={range.end} onChange={e=>setRange({...range,end:e.target.value})}/></label><button>Apply / refresh</button>
     </form>{error && <p role="alert">{error}</p>}
