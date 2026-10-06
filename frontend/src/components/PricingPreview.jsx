@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import axios from 'axios';
+import {pricingResponse} from '../utils/costResponse';
 import {apiError} from '../utils/apiError';
 import {getCookie} from '../utils/cookieUtils';
 const money = value => value == null ? 'Unavailable' : `RM ${value}`;
@@ -13,7 +14,7 @@ export default function PricingPreview({menus}) {
   const submit = async event => {
     event.preventDefault();if(busy)return;
     setBusy(true);setError('');setResult(null);
-    try {setResult((await axios.post('/api/admin/pricing-preview/',form,{headers:{'X-CSRFToken':getCookie('csrftoken')}})).data);}
+    try {setResult(pricingResponse((await axios.post('/api/admin/pricing-preview/',form,{headers:{'X-CSRFToken':getCookie('csrftoken')}})).data));}
     catch(e){setError(apiError(e));}finally{setBusy(false);}
   };
   return <section className="dk-panel"><h3>Test a price or bulk offer</h3>

@@ -5,6 +5,34 @@ const count=v=>Number.isInteger(v) && v>=0;
 const strings=v=>Array.isArray(v) && v.every(s=>typeof s==='string');
 const date=v=>typeof v==='string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(v));
 const requireValid=condition=>{if(!condition)throw invalidResponse()};
+const id=v=>Number.isInteger(v) && v>0;
+const nonnegative=v=>number(v) && Number(v)>=0;
+
+export function pricingResponse(data) {
+ requireValid(data && typeof data.menu==='string' && typeof data.definition==='string' && id(data.portions) && id(data.current_bulk_minimum) && strings(data.missing) && optional(data.contribution_change));
+ requireValid(data.assumptions && ['ingredient_increase_percent','additional_cost_per_portion'].every(key=>nonnegative(data.assumptions[key])));
+ for(const key of ['baseline','proposed']) {
+  const row=data[key];
+  requireValid(row && ['price','discount_percent','food_revenue','additional_cost'].every(field=>nonnegative(row[field])) && ['ingredient_cost','packaging_cost','contribution','margin_percent','per_portion','break_even_price'].every(field=>optional(row[field])) && (row.below_cost===null || typeof row.below_cost==='boolean'));
+ }
+ return data;
+}
+
+export function costMaterials(data) {
+ const rows=responseList(data);
+ for(const row of rows)requireValid(id(row.id) && typeof row.name==='string' && typeof row.unit==='string' && (row.estimated_unit_cost===null || nonnegative(row.estimated_unit_cost)));
+ return rows;
+}
+export function costLots(data) {
+ const rows=responseList(data);
+ for(const row of rows)requireValid(id(row.id) && typeof row.raw_material_name==='string' && typeof row.unit==='string' && typeof row.batch_code==='string' && nonnegative(row.quantity));
+ return rows;
+}
+export function costExpenses(data) {
+ const rows=responseList(data);
+ for(const row of rows)requireValid(id(row.id) && date(row.date) && nonnegative(row.amount) && typeof row.category==='string' && typeof row.note==='string' && typeof row.voided==='boolean');
+ return rows;
+}
 
 export function costReport(data) {
  requireValid(data && date(data.start) && date(data.end) && number(data.operating_expenses) && number(data.known_waste_cost) && count(data.unpriced_waste_records));
