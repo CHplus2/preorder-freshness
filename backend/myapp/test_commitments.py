@@ -171,6 +171,27 @@ class CommitmentTests(TestCase):
             self.assertEqual(self.client.post('/api/menu/guide/',body,format='json').data['results'],[])
         self.assertEqual(self.client.post('/api/menu/guide/',{'date':'bad'},format='json').status_code,400)
 
+    def test_guide_excludes_paused_wrong_weekday_and_other_category(self):
+        from .models import Category
+        self.client.force_authenticate(None)
+        body = {'date': str(self.delivery.date())}
+        for state in ['paused', 'archived']:
+            self.product.selling_status = state
+            self.product.save()
+            self.assertEqual(self.client.post('/api/menu/guide/', body).data['results'], [])
+        self.product.selling_status = 'active'
+        self.product.delivery_weekdays = [(self.delivery.weekday()+1)%7]
+        self.product.save()
+        self.assertEqual(self.client.post('/api/menu/guide/', body).data['results'], [])
+        self.product.delivery_weekdays = []
+        category = Category.objects.create(name='Guide preference')
+        other = Category.objects.create(name='Other preference')
+        self.product.category = category
+        self.product.save()
+        self.assertEqual(self.client.post('/api/menu/guide/', {**body, 'category': other.pk}).data['results'], [])
+        matches = self.client.post('/api/menu/guide/', {**body, 'category': category.pk}).data['results']
+        self.assertEqual([row['id'] for row in matches], [self.product.pk])
+
     def test_metrics_require_rendered_results_and_verified_purchase(self):
         self.client.force_authenticate(self.buyer)
         guided=self.client.post('/api/menu/guide/',{'date':str(self.delivery.date())},format='json').data
