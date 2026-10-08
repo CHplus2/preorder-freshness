@@ -7,6 +7,90 @@ from rest_framework.response import Response
 from ..models import KitchenBlock, Storefront, Order
 from ..services.scheduling import booked_tasks
 
+class ManualPlanInput(serializers.Serializer):
+    start = serializers.DateTimeField()
+    end = serializers.DateTimeField()
+    reason = serializers.CharField(max_length=500, trim_whitespace=True)
+
+
+@api_view(['GET','POST'])
+@permission_classes([IsAdminUser])
+@transaction.atomic
+def manual_order_plan(request, pk):
+    """Preview an owner-defined whole-kitchen reservation, then confirm its version."""
+    from datetime import timedelta
+    from django.core import signing
+    from django.utils import timezone
+    from ..models import OrderAmendment
+    from ..serializers import OrderSerializer
+    import uuid
+
+    Storefront.objects.get_or_create(pk=1)
+    store = Storefront.objects.select_for_update().get(pk=1)
+    order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
+    if request.method == 'GET':
+        return Response({'history': [{'id': a.pk, 'at': a.created_at, 'actor': a.actor_id, 'before': a.before, 'after': a.after}
+            for a in order.amendments.order_by('-created_at','-pk')[:20]]})
+    token = request.data.get('confirm')
+    previous = None
+    if token is not None:
+        if not isinstance(token, str) or len(token) > 30000:
+            raise serializers.ValidationError('Invalid preview. Preview the preparation times again.')
+        try:
+            previous = signing.loads(token, salt='manual-kitchen-plan', max_age=600)
+        except signing.BadSignature:
+            raise serializers.ValidationError('Preview expired. Preview the preparation times again.')
+        if previous['order'] != order.pk or previous['actor'] != request.user.pk:
+            raise serializers.ValidationError('This preview belongs to another order or owner.')
+        if order.amendments.filter(after__manual_request_id=previous['request_id']).exists():
+            return Response({'order': OrderSerializer(order).data, 'already_applied': True})
+    if order.status != 'pending' or order.inventory_deducted:
+        raise serializers.ValidationError('Only orders awaiting preparation can have their plan edited.')
+    if not order.delivery_at:
+        raise serializers.ValidationError('Set a requested delivery time first.')
+    incoming = ManualPlanInput(data=previous or request.data)
+    incoming.is_valid(raise_exception=True)
+    start, end = incoming.validated_data['start'], incoming.validated_data['end']
+    if start <= timezone.now() or end <= start:
+        raise serializers.ValidationError('Choose a future start and an end after the start.')
+    if end > order.delivery_at - timedelta(minutes=store.delivery_buffer_minutes):
+        raise serializers.ValidationError('Finish preparation before the delivery buffer begins. Change the delivery request first if needed.')
+    if end-start > timedelta(days=30):
+        raise serializers.ValidationError('Use a preparation window of at most 30 days.')
+    warnings = []
+    a, b = timezone.localtime(start), timezone.localtime(end)
+    if a.date() != b.date() or a.hour < store.kitchen_open_hour or (b.hour, b.minute, b.second) > (store.kitchen_close_hour, 0, 0):
+        warnings.append('This window spans days or includes time outside kitchen hours. The entire window will be reserved, including overnight gaps.')
+    others = Order.objects.filter(status__in=['pending','processing'], inventory_deducted=False,
+        preparation_at__lt=end, delivery_at__gt=start).exclude(pk=order.pk)
+    overlaps = [o.pk for o in others if any(t['start'] < end and t['end'] > start for t in booked_tasks([o], store))]
+    if overlaps:
+        warnings.append('Overlaps preparation for orders: '+', '.join(str(pk) for pk in overlaps)+'. Existing plans will not be moved.')
+    if KitchenBlock.objects.filter(start_at__lt=end, end_at__gt=start).exists():
+        warnings.append('Overlaps a blocked kitchen period.')
+    warnings.append('This is an overall time reservation. Check recipe durations, ingredient freshness, storage and gaps between steps yourself; individual steps will not be retained in the active plan.')
+    snapshot = dict(order=order.pk, actor=request.user.pk, version=order.updated_at.isoformat(),
+        start=start.isoformat(), end=end.isoformat(), reason=incoming.validated_data['reason'], warnings=warnings,
+        delivery=order.delivery_at.isoformat(), buffer=store.delivery_buffer_minutes,
+        request_id=previous['request_id'] if previous else str(uuid.uuid4()))
+    if previous:
+        if previous != snapshot:
+            return Response({'detail': 'The order or kitchen availability changed. Preview again.'}, status=409)
+        minutes = (end-start).total_seconds()/60
+        before = {'plan': order.preparation_plan, 'start': order.preparation_at.isoformat() if order.preparation_at else None,
+            'end': order.preparation_end_at.isoformat() if order.preparation_end_at else None}
+        order.preparation_at, order.preparation_end_at = start, end
+        order.preparation_plan = dict(mode='manual_window', needs_review=False,
+            manually_confirmed_by=request.user.pk, manually_confirmed_at=timezone.now().isoformat(),
+            reason=snapshot['reason'], warnings=warnings, minutes=minutes, hands_on_minutes=minutes,
+            tasks=[dict(name='Manual preparation window', menu='Owner-arranged preparation', start=start.isoformat(),
+                end=end.isoformat(), minutes=minutes, resource='all', worker=True)])
+        order.save(update_fields=['preparation_at','preparation_end_at','preparation_plan','updated_at'])
+        OrderAmendment.objects.create(order=order, actor=request.user, before=before,
+            after={'manual_request_id': snapshot['request_id'], 'plan': order.preparation_plan})
+        return Response({'order': OrderSerializer(order).data, 'already_applied': False})
+    return Response({'preview': snapshot, 'confirm': signing.dumps(snapshot, salt='manual-kitchen-plan', compress=True)})
+
 class BlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = KitchenBlock

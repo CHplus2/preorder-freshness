@@ -43,14 +43,8 @@ def admin_order_detail(request, pk):
             for item in order.items.select_related('product'):
                 deduct_inventory(item, request.user, order)
             order.inventory_deducted = True
-        if new_status == 'processing' and order.preparation_plan.get('needs_review'):
-            from django.utils import timezone
-            from ..models import OrderAmendment
-            before = dict(order.preparation_plan)
-            order.preparation_plan = dict(before, needs_review=False,
-                manually_confirmed_by=request.user.pk, manually_confirmed_at=timezone.now().isoformat())
-            OrderAmendment.objects.create(order=order, actor=request.user,
-                before={'plan': before}, after={'plan': order.preparation_plan})
+        if new_status == 'processing' and (order.preparation_plan.get('needs_review') or not order.preparation_at or not order.preparation_end_at):
+            raise ValidationError('Set and confirm preparation times in Planner before starting this order.')
         order.status = new_status
     if new_payment_status and new_payment_status != order.payment_status:
         raise ValidationError('Record a verified payment or refund in Payment records; status cannot be changed directly.')

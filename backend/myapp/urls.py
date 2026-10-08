@@ -9,7 +9,7 @@ from .views.discovery import guided_menu, basket_slots, recommendation_event, re
 from .views.auth import recovery_request, recovery_confirm
 from .views.costs import expenses, void_expense, record_waste, cost_report
 from .views.reminders import reminder_status, run_reminders
-from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_plan, accepted_recipe
+from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_plan, accepted_recipe, manual_order_plan
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -55,6 +55,7 @@ urlpatterns = [
     path("menu/", MenuList.as_view()),
     path("inventory-freshness/", inventory_freshness),
     path("admin/orders/<int:pk>/preparation-plan/", review_order_plan),
+    path("admin/orders/<int:pk>/manual-plan/", manual_order_plan),
     path("admin/kitchen-blocks/", kitchen_blocks),
     path("admin/kitchen-blocks/<int:pk>/", kitchen_block_detail),
     path("address/", saved_address),

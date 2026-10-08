@@ -69,11 +69,9 @@ class AccountWalletTests(TestCase):
         owner = User.objects.create_user('owner', is_staff=True)
         self.client.force_authenticate(owner)
         changed = self.client.patch(f'/api/admin/orders/{order.pk}/', {'status':'processing'}, format='json')
-        self.assertEqual(changed.status_code, 200, changed.data)
+        self.assertEqual(changed.status_code, 400, changed.data)
         order.refresh_from_db()
-        self.assertFalse(order.preparation_plan['needs_review'])
-        self.assertEqual(order.preparation_plan['manually_confirmed_by'], owner.pk)
-        self.assertEqual(order.amendments.count(), 1)
+        self.assertTrue(order.preparation_plan['needs_review'])
         self.assertIsNone(order.preparation_at)
         self.assertEqual(order.payment_status, 'unpaid')
 
