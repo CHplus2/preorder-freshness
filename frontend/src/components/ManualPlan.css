@@ -13,4 +13,9 @@
 .manual-plan-history{margin-top:24px;border-top:1px solid #dce2df;padding-top:20px}
 .manual-plan-history>button{margin:16px 0}
 .manual-plan-history article{padding:12px 0;border-bottom:1px solid #dce2df}
+.manual-step-list{display:grid;gap:20px}
+.manual-step-list fieldset{min-width:0;margin:0;padding:16px;border:1px solid #dce2df;border-radius:6px}
+.manual-step-list legend{padding:0 6px;font-size:15px;font-weight:600;line-height:1.5}
+.manual-plan-preview ol{line-height:1.6;padding-left:22px}
+.manual-plan-preview ol li+li{margin-top:12px}
 @media(max-width:600px){.manual-plan-fields{grid-template-columns:1fr}.manual-plan{padding:16px}}

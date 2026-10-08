@@ -7,17 +7,31 @@ from rest_framework.response import Response
 from ..models import KitchenBlock, Storefront, Order
 from ..services.scheduling import booked_tasks
 
-class ManualPlanInput(serializers.Serializer):
+class StepTimeInput(serializers.Serializer):
+    index = serializers.IntegerField(min_value=0)
     start = serializers.DateTimeField()
-    end = serializers.DateTimeField()
+
+
+class ManualPlanInput(serializers.Serializer):
+    mode = serializers.ChoiceField(choices=['window','steps'], default='window')
+    start = serializers.DateTimeField(required=False)
+    end = serializers.DateTimeField(required=False)
+    steps = StepTimeInput(many=True, required=False)
     reason = serializers.CharField(max_length=500, trim_whitespace=True)
+
+    def validate(self, data):
+        if data['mode']=='window' and ('start' not in data or 'end' not in data):
+            raise serializers.ValidationError('Enter the preparation start and end.')
+        if data['mode']=='steps' and not data.get('steps'):
+            raise serializers.ValidationError('Provide the revised task start times.')
+        return data
 
 
 @api_view(['GET','POST'])
 @permission_classes([IsAdminUser])
 @transaction.atomic
 def manual_order_plan(request, pk):
-    """Preview an owner-defined whole-kitchen reservation, then confirm its version."""
+    """Preview owner-defined window or step times, then confirm its version."""
     from datetime import timedelta
     from django.core import signing
     from django.utils import timezone
@@ -50,29 +64,38 @@ def manual_order_plan(request, pk):
         raise serializers.ValidationError('Set a requested delivery time first.')
     incoming = ManualPlanInput(data=previous or request.data)
     incoming.is_valid(raise_exception=True)
-    start, end = incoming.validated_data['start'], incoming.validated_data['end']
+    from django.utils.dateparse import parse_datetime
+    from ..services.manual_steps import edit_steps, conflict
+    step_mode = incoming.validated_data['mode']=='steps'
+    tasks, warnings = edit_steps(order, incoming.validated_data['steps'], store) if step_mode else ([], [])
+    start = min(parse_datetime(t['start']) for t in tasks) if step_mode else incoming.validated_data['start']
+    end = max(parse_datetime(t['end']) for t in tasks) if step_mode else incoming.validated_data['end']
     if start <= timezone.now() or end <= start:
         raise serializers.ValidationError('Choose a future start and an end after the start.')
     if end > order.delivery_at - timedelta(minutes=store.delivery_buffer_minutes):
         raise serializers.ValidationError('Finish preparation before the delivery buffer begins. Change the delivery request first if needed.')
     if end-start > timedelta(days=30):
         raise serializers.ValidationError('Use a preparation window of at most 30 days.')
-    warnings = []
     a, b = timezone.localtime(start), timezone.localtime(end)
-    if a.date() != b.date() or a.hour < store.kitchen_open_hour or (b.hour, b.minute, b.second) > (store.kitchen_close_hour, 0, 0):
+    if not step_mode and (a.date() != b.date() or a.hour < store.kitchen_open_hour or (b.hour, b.minute, b.second) > (store.kitchen_close_hour, 0, 0)):
         warnings.append('This window spans days or includes time outside kitchen hours. The entire window will be reserved, including overnight gaps.')
     others = Order.objects.filter(status__in=['pending','processing'], inventory_deducted=False,
         preparation_at__lt=end, delivery_at__gt=start).exclude(pk=order.pk)
-    overlaps = [o.pk for o in others if any(t['start'] < end and t['end'] > start for t in booked_tasks([o], store))]
+    reserved = tasks if step_mode else [dict(start=start,end=end,worker=True,resource='all')]
+    overlaps = sorted(o.pk for o in others if any(conflict(t,r) for t in booked_tasks([o], store) for r in reserved))
     if overlaps:
         warnings.append('Overlaps preparation for orders: '+', '.join(str(pk) for pk in overlaps)+'. Existing plans will not be moved.')
-    if KitchenBlock.objects.filter(start_at__lt=end, end_at__gt=start).exists():
+    if any(KitchenBlock.objects.filter(start_at__lt=r['end'],end_at__gt=r['start']).exists() for r in reserved):
         warnings.append('Overlaps a blocked kitchen period.')
-    warnings.append('This is an overall time reservation. Check recipe durations, ingredient freshness, storage and gaps between steps yourself; individual steps will not be retained in the active plan.')
+    if step_mode:
+        warnings.append('Task durations and equipment are unchanged. Review any holding or conflict warnings before accepting these times.')
+    else:
+        warnings.append('This is an overall time reservation. Check recipe durations, ingredient freshness, storage and gaps between steps yourself; individual steps will not be retained in the active plan.')
     snapshot = dict(order=order.pk, actor=request.user.pk, version=order.updated_at.isoformat(),
         start=start.isoformat(), end=end.isoformat(), reason=incoming.validated_data['reason'], warnings=warnings,
         delivery=order.delivery_at.isoformat(), buffer=store.delivery_buffer_minutes,
-        request_id=previous['request_id'] if previous else str(uuid.uuid4()))
+        request_id=previous['request_id'] if previous else str(uuid.uuid4()),
+        mode=incoming.validated_data['mode'], steps=[dict(index=c['index'],start=c['start'].isoformat()) for c in incoming.validated_data.get('steps',[])])
     if previous:
         if previous != snapshot:
             return Response({'detail': 'The order or kitchen availability changed. Preview again.'}, status=409)
@@ -80,16 +103,21 @@ def manual_order_plan(request, pk):
         before = {'plan': order.preparation_plan, 'start': order.preparation_at.isoformat() if order.preparation_at else None,
             'end': order.preparation_end_at.isoformat() if order.preparation_end_at else None}
         order.preparation_at, order.preparation_end_at = start, end
+        original_plan = order.preparation_plan
         order.preparation_plan = dict(mode='manual_window', needs_review=False,
             manually_confirmed_by=request.user.pk, manually_confirmed_at=timezone.now().isoformat(),
             reason=snapshot['reason'], warnings=warnings, minutes=minutes, hands_on_minutes=minutes,
             tasks=[dict(name='Manual preparation window', menu='Owner-arranged preparation', start=start.isoformat(),
                 end=end.isoformat(), minutes=minutes, resource='all', worker=True)])
+        if step_mode:
+            order.preparation_plan = dict(original_plan, mode='manual_tasks', needs_review=False, tasks=tasks,
+                manually_confirmed_by=request.user.pk, manually_confirmed_at=timezone.now().isoformat(),
+                reason=snapshot['reason'], warnings=warnings)
         order.save(update_fields=['preparation_at','preparation_end_at','preparation_plan','updated_at'])
         OrderAmendment.objects.create(order=order, actor=request.user, before=before,
             after={'manual_request_id': snapshot['request_id'], 'plan': order.preparation_plan})
         return Response({'order': OrderSerializer(order).data, 'already_applied': False})
-    return Response({'preview': snapshot, 'confirm': signing.dumps(snapshot, salt='manual-kitchen-plan', compress=True)})
+    return Response({'preview': dict(snapshot, task_times=tasks), 'confirm': signing.dumps(snapshot, salt='manual-kitchen-plan', compress=True)})
 
 class BlockSerializer(serializers.ModelSerializer):
     class Meta:

@@ -75,3 +75,70 @@ class ManualPlanTests(TestCase):
     def test_cross_day_window_discloses_continuous_reservation(self):
         self.body['start']=(self.start-timedelta(days=1)).replace(hour=19).isoformat()
         self.assertTrue(any('entire window' in w for w in self.preview()['preview']['warnings']))
+
+
+class StepPlanTests(TestCase):
+    def setUp(self):
+        ManualPlanTests.setUp(self)
+        self.tasks=[dict(name='Bake',menu='Test dish',product_id=1,batch_number=None,sequence=1,
+            start=self.start.isoformat(),end=(self.start+timedelta(hours=1)).isoformat(),
+            resource='oven',worker=False,overnight=False,minutes=60,max_wait_minutes=30),
+            dict(name='Pack',menu='Test dish',product_id=1,batch_number=None,sequence=2,
+            start=(self.start+timedelta(hours=1)).isoformat(),end=(self.start+timedelta(minutes=75)).isoformat(),
+            resource='packing_area',worker=True,overnight=False,minutes=15,max_wait_minutes=0)]
+        self.order.preparation_plan={'tasks':self.tasks,'minutes':75,'hands_on_minutes':15,
+            'lines':[dict(product_id=1,max_early_minutes=120,max_preparation_days=2)]}
+        self.order.preparation_at=self.start;self.order.preparation_end_at=self.start+timedelta(minutes=75);self.order.save()
+        self.body=dict(mode='steps',reason='Reviewed individual timings',steps=[dict(index=i,start=t['start']) for i,t in enumerate(self.tasks)])
+
+    def preview(self):
+        return ManualPlanTests.preview(self)
+
+    def test_step_edits_preserve_recipe_durations_resources_and_audit(self):
+        self.body['steps'][0].update(start=(self.start+timedelta(hours=1)).isoformat(),resource='none',minutes=1)
+        self.body['steps'][1]['start']=(self.start+timedelta(hours=2)).isoformat()
+        preview=self.preview()
+        self.assertEqual(len(preview['preview']['task_times']),2)
+        result=self.client.post(self.url,{'confirm':preview['confirm']},format='json')
+        self.assertEqual(result.status_code,200,result.data)
+        self.order.refresh_from_db()
+        plan=self.order.preparation_plan
+        self.assertEqual(plan['mode'],'manual_tasks')
+        self.assertEqual(plan['tasks'][0]['resource'],'oven')
+        self.assertEqual(plan['tasks'][0]['minutes'],60)
+        self.assertEqual(plan['hands_on_minutes'],15)
+        self.assertEqual(self.order.amendments.get().before['plan']['tasks'],self.tasks)
+        self.assertTrue(self.client.post(self.url,{'confirm':preview['confirm']},format='json').data['already_applied'])
+
+    def test_dropped_duplicate_or_reordered_recipe_steps_are_rejected(self):
+        for changes in [self.body['steps'][:1],[self.body['steps'][0]]*2,
+                [dict(index=0,start=self.tasks[1]['start']),dict(index=1,start=self.tasks[0]['start'])]]:
+            response=self.client.post(self.url,dict(self.body,steps=changes),format='json')
+            self.assertEqual(response.status_code,400,response.data)
+        self.assertFalse(self.order.amendments.exists())
+
+    def test_cross_day_step_gap_warns_without_reserving_the_gap(self):
+        self.body['steps'][0]['start']=(self.start-timedelta(days=1)).isoformat()
+        preview=self.preview()
+        self.assertTrue(any('waiting limit' in w for w in preview['preview']['warnings']))
+        self.assertEqual(self.client.post(self.url,{'confirm':preview['confirm']},format='json').status_code,200)
+        self.order.refresh_from_db()
+        self.assertEqual(len(self.order.preparation_plan['tasks']),2)
+        self.assertEqual(self.order.preparation_plan['hands_on_minutes'],15)
+
+    def test_equipment_aware_overlap_and_no_false_gap_closure_warning(self):
+        other=Order.objects.create(user=self.buyer,delivery_at=self.order.delivery_at,preparation_at=self.start,
+            preparation_end_at=self.start+timedelta(hours=1),preparation_plan={'tasks':[dict(self.tasks[0],resource='stove')]})
+        self.assertFalse(any('Overlaps preparation' in w for w in self.preview()['preview']['warnings']))
+        other.preparation_plan={'tasks':[self.tasks[0]]};other.save()
+        self.assertTrue(any('Overlaps preparation' in w for w in self.preview()['preview']['warnings']))
+
+    def test_window_plan_has_no_individual_recipe_steps_to_edit(self):
+        self.order.preparation_plan['mode']='manual_window';self.order.save()
+        self.assertEqual(self.client.post(self.url,self.body,format='json').status_code,400)
+
+    def test_conflicting_step_within_order_is_disclosed(self):
+        self.order.preparation_plan['tasks'][1].update(product_id=2,sequence=1,resource='oven')
+        self.order.save()
+        self.body['steps'][1]['start']=self.start.isoformat()
+        self.assertTrue(any('Within this order' in w for w in self.preview()['preview']['warnings']))
