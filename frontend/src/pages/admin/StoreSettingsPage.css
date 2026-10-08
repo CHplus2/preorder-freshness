@@ -10,6 +10,7 @@
 .settings-page .admin-fields>label>input,.settings-page .admin-fields>label>textarea{margin:0}
 .settings-page .settings-payment-toggle{display:flex;align-items:flex-start;gap:12px;margin:0;padding:4px 0;line-height:1.6}
 .settings-page .settings-payment-toggle>input{width:18px;min-height:18px;height:18px;flex-shrink:0;margin:3px 0 0}
+.settings-page .settings-payment-error{margin:0;padding:12px 16px;border-left:3px solid #8b6651;color:#654b3d;font-size:14px;line-height:1.6}
 .settings-page .settings-save-actions{display:flex;align-items:center;flex-wrap:wrap;gap:16px;padding-top:8px;margin:0}
 .settings-page .settings-save-actions>button{margin:0;min-height:46px}
 .settings-page .settings-save-actions>[role=status]:empty{display:none}

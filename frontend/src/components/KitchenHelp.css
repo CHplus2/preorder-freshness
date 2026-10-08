@@ -1,6 +1,6 @@
 .kitchen-chat { position:fixed; z-index:1100; right:24px; bottom:88px; width:min(420px,calc(100vw - 32px)); max-height:min(740px,calc(100dvh - 112px)); display:flex; flex-direction:column; background:#fff; color:#253d2e; border:1px solid #cddbd0; border-radius:16px; box-shadow:0 12px 48px #18332226; overflow:hidden; text-align:left; font:14px/1.6 system-ui,sans-serif; }
 .kitchen-chat header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid #e0e7df; gap:16px; }
-.kitchen-chat h2 { margin:0; font-size:18px; color:#253d2e; }
+.kitchen-chat header #kitchen-chat-title { margin:0; font:600 16px/1.4 system-ui,sans-serif; letter-spacing:normal; text-transform:none; color:#253d2e; }
 .kitchen-chat button { min-height:44px; padding:10px 14px; border:1px solid #c5d4c9; border-radius:8px; background:#fff; color:#294d36; font:inherit; cursor:pointer; }
 .kitchen-chat button:hover { background:#eff5ef; }
 .kitchen-chat button:disabled { opacity:.55; cursor:wait; }
