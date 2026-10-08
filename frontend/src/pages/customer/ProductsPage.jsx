@@ -40,6 +40,7 @@ export default function ProductsPage() {
     <div className="products-page">
       <PageMeta title="The menu" description="Explore this kitchen’s current food menu, prices and preorder notice. Choose a favourite and schedule your delivery."/>
       <section className="menu-intro"><span className="dk-eyebrow">FIND YOUR NEXT FAVOURITE</span><h1>What sounds <em>good?</em></h1><p>Explore the current menu. Every item shows its price, advance notice and daily portion limit.</p></section>
+      <p className="menu-availability-note">Need a particular delivery date? Use the menu finder below, then check delivery times for your combined basket before checkout. <Link to="/cart">Check basket times</Link></p>
       <GuidedMenu/>
 
       {/* Search & Filter */}

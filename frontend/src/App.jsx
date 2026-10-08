@@ -20,6 +20,7 @@ import ProductsPage from "./pages/customer/ProductsPage";
 import ProductsDetailPage from "./pages/customer/ProductDetailPage";
 import CartPage from "./pages/customer/CartPage";
 import OrdersPage from "./pages/customer/OrdersPage";
+const AccountPage=lazy(()=>import("./pages/customer/AccountPage"));
 import CheckoutPage from "./pages/customer/CheckoutPage";
 import RecoveryPage from './pages/customer/RecoveryPage';
 import './fyp.css';
@@ -56,6 +57,7 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        <Route path="/account" element={<RequireAuth><AccountPage/></RequireAuth>}/>
         <Route path="/recover" element={<RecoveryPage/>}/>
         <Route path="/escrow-demo" element={<Suspense fallback={<p className="dk-workspace">Loading escrow lab…</p>}><EscrowDemoPage/></Suspense>}/>
         <Route path="/story" element={<StoryPage/>}/>
@@ -224,7 +226,7 @@ function AppContent() {
         <div className="business-header-actions">
           {isAuthenticated && !ownerPage && <Link to="/cart" className="basket-link" aria-label={`Basket, ${cart.reduce((n,i)=>n+i.quantity,0)} items`}><ShoppingBag size={19}/><span>{cart.reduce((n,i)=>n+i.quantity,0)}</span></Link>}
           {isAuthenticated===false && <button className="login-btn" onClick={()=>setShowLogin(true)}>Sign in</button>}
-          {isAuthenticated && <div className="user-dropdown"><button className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} onClick={()=>setDropdownOpen(!dropdownOpen)}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content"><Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to="/admin/planner" onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}<button className="logout-btn" onClick={logout}>Sign out</button></div>}</div>}
+          {isAuthenticated && <div className="user-dropdown"><button className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} onClick={()=>setDropdownOpen(!dropdownOpen)}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content"><Link to="/account" onClick={()=>setDropdownOpen(false)}>Account settings</Link><Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to="/admin/planner" onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}<button className="logout-btn" onClick={logout}>Sign out</button></div>}</div>}
           {!ownerPage && <button className="mobile-menu-toggle" aria-label={mobileOpen?'Close navigation':'Open navigation'} aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={()=>setMobileOpen(!mobileOpen)}>{mobileOpen?<X size={23}/>:<Menu size={23}/>}</button>}
         </div>
       </header>

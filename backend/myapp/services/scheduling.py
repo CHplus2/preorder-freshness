@@ -173,13 +173,25 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
     busy = [dict(start=a, end=b, resource='all', worker=True) for a,b in KitchenBlock.objects.filter(start_at__lt=ready,end_at__gt=horizon).values_list('start_at','end_at')]
     orders = Order.objects.filter(status__in=['pending','processing'],inventory_deducted=False,preparation_at__lt=ready,delivery_at__gt=horizon).exclude(pk=exclude_order_id).only('preparation_at','preparation_end_at','delivery_at','preparation_plan')
     busy.extend(booked_tasks(orders, store))
-    planned = []
-    # Retry the whole new sequence when an upstream step cannot meet its gap.
-    # Existing bookings never move; failed trial steps never reserve resources.
-    for line in sorted(lines, key=lambda x: (-x['minutes'], x['product_id'])):
-        placed = place_line(line, ready, advance, busy, store)
-        busy.extend(placed)
-        planned.extend(placed)
+    # A long recipe placed first can unnecessarily block a recipe that must
+    # finish close to dispatch. Try bounded alternative orderings, always from
+    # the same immutable existing bookings; never relax storage/gap limits.
+    longest = sorted(lines, key=lambda x: (-x['minutes'], x['product_id']))
+    tightest = sorted(lines, key=lambda x: (x['max_early_minutes'], -x['minutes'], x['product_id']))
+    failure = None
+    for sequence in (longest, tightest, list(reversed(longest))):
+        trial_busy = list(busy)
+        planned = []
+        try:
+            for line in sequence:
+                placed = place_line(line, ready, advance, trial_busy, store)
+                trial_busy.extend(placed)
+                planned.extend(placed)
+            break
+        except ValidationError as exc:
+            failure = failure or exc
+    else:
+        raise failure
     planned.sort(key=lambda t:t['start'])
     return dict(start=min(t['start'] for t in planned), end=max(t['end'] for t in planned),
                 minutes=minutes, hands_on_minutes=sum(t['minutes'] for t in planned if t['worker']),

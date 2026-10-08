@@ -1,4 +1,5 @@
 from .views.help import KitchenHelp
+from .views.account import account_profile
 from .views.setup import setup_checklist
 from .views.pricing import pricing_preview
 from .views.rescheduling import reschedule_order
@@ -57,6 +58,7 @@ urlpatterns = [
     path("admin/kitchen-blocks/", kitchen_blocks),
     path("admin/kitchen-blocks/<int:pk>/", kitchen_block_detail),
     path("address/", saved_address),
+    path("account/", account_profile),
     path("orders/quote/", preparation_quote),
     path("products/<int:pk>/review-access/", review_access),
     path("storefront/", storefront),

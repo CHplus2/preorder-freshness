@@ -226,3 +226,11 @@
 .cart-container .remove-btn { min-height:44px; background:transparent; color:#765148; }
 .cart-container .remove-btn:hover { background:#f6efec; box-shadow:none; }
 .cart-container .cart-item:hover { border-color:#d5dfd6; }
+
+.cart-availability {margin:24px 0;padding:20px;border:1px solid #d5dfd6;border-radius:12px;}
+.cart-availability h2 {font:600 18px/1.4 system-ui,sans-serif;margin:0 0 12px;}
+.cart-availability p {line-height:1.6;}
+.cart-availability label {display:block;margin:16px 0 8px;}
+.cart-availability input {min-height:44px;padding:10px;max-width:100%;box-sizing:border-box;}
+.cart-availability .slot-suggestions {display:flex;flex-wrap:wrap;gap:12px;margin-top:16px;}
+.cart-availability button {min-height:44px;}

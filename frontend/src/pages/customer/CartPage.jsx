@@ -1,3 +1,5 @@
+import {useState} from 'react';
+import BasketSlots from '../../components/BasketSlots';
 import {deliveryDaysText, deliveryDayIssue} from '../../utils/deliveryDays';
 import BasketDeliveryDays from '../../components/BasketDeliveryDays';
 import { useNavigate } from "react-router-dom";
@@ -9,6 +11,11 @@ export default function CartPage() {
   const { formatPrice } = useUI();
   const { cart, cartLoading, cartError, refreshCart, removeFromCart, updateQuantity } = useCart();
   const navigate = useNavigate();
+  const [deliveryDay,setDeliveryDay]=useState('');
+  const [selectedTime,setSelectedTime]=useState('');
+  const [selectionKey,setSelectionKey]=useState('');
+  const [slotNotice,setSlotNotice]=useState('');
+  const basketKey=JSON.stringify(cart.map(i=>[i.id,i.quantity]));
 
   const unavailable = cart.some(item => item.product.selling_status && item.product.selling_status !== "active");
   const incompatibleDays = Boolean(deliveryDayIssue(cart, ''));
@@ -98,6 +105,12 @@ export default function CartPage() {
       )}
 
       {cart.length > 0 && !unavailable && <BasketDeliveryDays cart={cart} value="" showBasketLink={false}/>}
+      {cart.length > 0 && !unavailable && !incompatibleDays && <section className="cart-availability" aria-label="Basket delivery times">
+        <h2>Find a delivery time</h2><p>Check your whole basket before checkout. Available times depend on quantities and kitchen preparation capacity.</p>
+        <label htmlFor="basket-delivery-day">Preferred delivery date</label><input id="basket-delivery-day" type="date" value={deliveryDay} onChange={e=>{setDeliveryDay(e.target.value);setSelectedTime('');setSlotNotice('');}}/>
+        <BasketSlots key={basketKey} value={deliveryDay} disabled={cartLoading} onSelect={time=>{setSelectionKey(basketKey);setSelectedTime(time);try{sessionStorage.setItem('preferredDelivery',time+':00+08:00');setSlotNotice('Selected for checkout. Availability will be checked again when you order.');}catch{setSlotNotice('Your browser could not save this selection. Choose the time again at checkout.');}}}/>
+        {selectedTime && selectionKey===basketKey && <p role="status">{selectedTime.replace('T',' ')} (Malaysia time). {slotNotice}</p>}
+      </section>}
       {cart.length > 0 && <div className="cart-total">
         Total: <strong>{formatPrice(total)}</strong>
       </div>}

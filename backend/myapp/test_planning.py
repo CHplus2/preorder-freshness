@@ -37,6 +37,18 @@ class PlanningTests(TestCase):
         lines,total=preparation_work([self.item(p,25)])
         self.assertEqual(total,130);self.assertEqual(lines[0]['batches'],3)
 
+    def test_tight_finish_recipe_can_be_placed_before_long_recipe(self):
+        long=self.product(name='Long recipe', max_early_minutes=120,
+            preparation_tasks=[self.task(worker=True,minutes=90)])
+        tight=self.product(name='Finish at dispatch',max_early_minutes=0,
+            preparation_tasks=[self.task(worker=True,minutes=10)])
+        plan=schedule_order([self.item(long),self.item(tight)],self.delivery,self.store,now=self.now)
+        steps=plan['tasks']
+        self.assertEqual(len(steps),2)
+        self.assertLessEqual(steps[0]['end'],steps[1]['start'])
+        self.assertEqual(steps[-1]['product_id'],tight.pk)
+        self.assertEqual(plan['end'],self.delivery-timedelta(minutes=self.store.delivery_buffer_minutes))
+
     def test_independent_batches_repeat_full_recipe_including_partial_batch(self):
         p=self.product(batch_size=10,preparation_tasks=[self.task(minutes=40,independent_batches=True)])
         lines,total=preparation_work([self.item(p,25)])

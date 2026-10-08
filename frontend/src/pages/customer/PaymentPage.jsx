@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useUI } from "../../contexts/UIContext";
 import { useCart } from "../../contexts/CartContext";
 import { useOrder } from "../../contexts/OrderContext";
 import "./PaymentPage.css";
+import {apiError} from "../../utils/apiError";
 
 export default function PaymentPage() {
     const { setAlert } = useUI();
@@ -12,7 +13,8 @@ export default function PaymentPage() {
 
     const { method } = useParams();
     const [amount, setAmount] = useState(0);
-    const [paying, setPaying] = useState(null);
+    const [paying, setPaying] = useState(false);
+    const [paymentError,setPaymentError]=useState("");
     const location = useLocation();
     const addressId = location.state?.addressId || Number(localStorage.getItem("addressId"));
 
@@ -26,14 +28,18 @@ export default function PaymentPage() {
     }, [addressId, setAlert, navigate])
 
     const handlePay = async () => {
+        if(paying)return;
+        setPaymentError("");
         setPaying(true);
         try {
-            const success = await placeOrder(addressId, method);
-            // The order provider displays the actual validation/network failure.
+            const success = await placeOrder(addressId, method, {throwOnError:true});
+            // Only a confirmed order response is treated as a completed demo debit.
             if (!success) return;
             try { localStorage.removeItem("addressId"); } catch { /* Order already accepted. */ }
             setAlert({ message: "Order placed using demo credits. No real money was charged.", type: "success" });
             navigate("/orders", { state: { formPayment: true } });
+        } catch(error) {
+            setPaymentError(apiError(error));
         } finally {
             setPaying(false);
         }
@@ -53,9 +59,8 @@ export default function PaymentPage() {
 
     return (    
         <div className="payment-container">
-            <button className="back-btn" type="button" onClick={() => navigate("/checkout")}>
-                ← Back to Checkout
-            </button>
+            <Link className="payment-back" to="/checkout">Back to checkout</Link>
+            {paymentError && <div role="alert" className="payment-error"><p>{paymentError}</p><Link to="/orders">Check my orders</Link><p>Review the delivery date and basket at checkout before retrying.</p></div>}
         
             {method === "paypal" && <p>Online payment needs server verification setup. Return to checkout and choose cash on delivery.</p>}
             {method === "wallet" && (

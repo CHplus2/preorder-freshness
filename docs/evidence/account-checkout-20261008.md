@@ -1,0 +1,13 @@
+# Account and checkout recovery — 8 October 2026
+
+Changes: account settings for first/last name and the existing default delivery address, independent form saves, account-menu and checkout links; inline demo checkout failure recovery; quieter back links in demo credit and escrow screens; availability query before entering demo payment; basket date/slot finder and earlier menu guidance.
+
+The planner now tries longest-first, tightest-finish-first, and reversed longest-first sequences from unchanged existing bookings. This fixes an explicitly tested feasible case where longest-first alone rejected a recipe with a zero-minute early-finish allowance. It remains a bounded greedy planner, not an optimal solver. Recipe gaps, early-finish limits and working hours remain enforced.
+
+Validation: 36 tests passed in myapp.test_account_wallet and myapp.test_planning using an isolated in-memory database with dotenv disabled. Covered a synthetic 75-credit four-menu checkout, one debit on an idempotent retry, insufficient balance, infeasible schedules without debits, account isolation, immutable order-address snapshots, and existing multi-day/independent-batch planning cases. Lint and production build passed (build reports bundle-size warning).
+
+The four-menu fixture initially rejected generic default preparation settings. Using explicitly feasible synthetic recipe settings allowed the wallet debit and order to complete. These are not the production menu recipes and do not establish the exact live plan's feasibility. The user subsequently supplied actual preparation-constraint errors affecting both COD and wallet; these confirm rejection occurs during scheduling rather than credit transfer.
+
+Browser check on isolated localhost:8025: existing synthetic owner session opened Account settings, saved first/last name and default delivery address independently, and both displayed Saved. The local environment later lost its browser/server session; final mobile account, basket-slot handoff and inline payment-error layout were not visually verified. No live account, stock, payment or recipe values were changed; no migration is needed. The synthetic review-owner account now has the test profile/address.
+
+Operational limit: menu batch size, durations, permitted holding/gaps, and delivery time must describe a feasible real kitchen workflow. This patch does not automatically split continuous cooking over nights or silently extend storage limits. Live menu settings require owner review if all checked slots remain unavailable. Testnet escrow remains separate from demo-credit order checkout.

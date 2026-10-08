@@ -8,6 +8,10 @@
 }
 
 /* BACK BUTTON */
+.payment-container .payment-back { display:inline-flex;align-items:center;min-height:44px;margin:0 0 24px;color:#52634f;font-size:14px;text-decoration:underline;text-underline-offset:4px; }
+.payment-container .payment-error { margin:0 0 24px;padding:16px;border-left:3px solid #986a58;color:#654b3d;line-height:1.6; }
+.payment-container .payment-error p { margin:0 0 12px; }
+.payment-container .payment-error p:last-child { margin:12px 0 0; }
 .back-btn {
   min-height:44px;
   padding:10px 0;
@@ -174,3 +178,5 @@
   outline: none;
   border-color: #285a3e;
 }
+
+.payment-container .topup-section input {color:#263e2e;border:1px solid #c5d4c9;min-height:44px;box-sizing:border-box;}
