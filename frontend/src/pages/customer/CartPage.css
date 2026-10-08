@@ -221,3 +221,8 @@
 .cart-container button:disabled { opacity: .55; cursor: not-allowed; }
 
 .cart-delivery-days { margin: 8px 0 12px; line-height: 1.6; color: #52634f; }
+.cart-container .qty-btn { min-width:44px; width:44px; min-height:44px; height:44px; padding:0; display:grid; place-items:center; border-color:#c5d4c9; }
+.cart-container .qty-btn:hover:not(:disabled) { background:#edf4ed; box-shadow:none; }
+.cart-container .remove-btn { min-height:44px; background:transparent; color:#765148; }
+.cart-container .remove-btn:hover { background:#f6efec; box-shadow:none; }
+.cart-container .cart-item:hover { border-color:#d5dfd6; }

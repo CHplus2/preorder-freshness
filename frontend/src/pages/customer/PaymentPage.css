@@ -9,6 +9,12 @@
 
 /* BACK BUTTON */
 .back-btn {
+  min-height:44px;
+  padding:10px 0;
+  margin-bottom:20px;
+  background:transparent;
+  border:0;
+  cursor:pointer;
   font-size: 14px;
   color: #586854;
   transition: 0.2s;

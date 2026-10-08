@@ -58,6 +58,8 @@ export default function CartPage() {
                 <div className="qty-controls">
                   <button
                     className="qty-btn"
+                    aria-label={`Decrease quantity of ${item.product.name}`}
+                    disabled={item.quantity <= 1 || cartLoading}
                     onClick={() =>
                       updateQuantity(item.id, Math.max(1, item.quantity - 1))
                     }
@@ -69,7 +71,8 @@ export default function CartPage() {
 
                   <button
                     className="qty-btn"
-                    disabled={Boolean(item.product.selling_status && item.product.selling_status !== "active")}
+                    aria-label={`Increase quantity of ${item.product.name}`}
+                    disabled={cartLoading || Boolean(item.product.selling_status && item.product.selling_status !== "active")}
                     onClick={() =>
                       updateQuantity(item.id, item.quantity + 1)
                     }
@@ -80,6 +83,7 @@ export default function CartPage() {
 
                 <button
                   className="remove-btn"
+                  aria-label={`Remove ${item.product.name} from basket`}
                   onClick={() => removeFromCart(item.id)}
                 >
                   Remove

@@ -53,7 +53,7 @@ export default function PaymentPage() {
 
     return (    
         <div className="payment-container">
-            <button className="back-btn" onClick={() => navigate(-1)}>
+            <button className="back-btn" type="button" onClick={() => navigate("/checkout")}>
                 ← Back to Checkout
             </button>
         
