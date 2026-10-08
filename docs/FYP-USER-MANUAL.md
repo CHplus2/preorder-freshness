@@ -1,12 +1,16 @@
 # Dapur Kita user manual
 
+**Current behaviour:** see [the feature guide updated 9 October 2026](DAPUR-KITA-FEATURE-GUIDE.md)
+for owner-review fallback, manual windows, step editing and email rules. Latest
+automated results: [verification summary](LATEST-VERIFICATION-20261009.md).
+
 Scope: single-vendor home-food preorder system. Screens can vary by role. Prices, dates and stock shown in screenshots must be labelled as test data when synthetic. Never share passwords or live customer details in the report.
 
 ## Customer: order food
 1. Open Menu and browse or search. Read advance notice, delivery weekdays and the food description. Ask the owner about allergies; ingredient records do not certify suitability.
 2. Add portions to the basket. Paused/archived menus cannot be newly ordered. Remove any unavailable items that were added earlier.
 3. Open Checkout. Save a complete delivery address and choose a Malaysia-time delivery date/time. Any shared-weekday restriction is shown for the basket. Conflicting menus may need separate orders.
-4. Check availability, or request suggested times. A successful quote is advisory: checkout checks capacity again. If unavailable, use the explanation to change the date or contact the owner. Ingredient procurement may still be needed.
+4. Check availability, or request suggested times. A successful quote is advisory: checkout checks capacity again. If automatic preparation cannot fit, submit an unpaid request for owner confirmation; valid delivery dates, notice, selling rules and daily capacity still apply. Ingredient procurement may still be needed.
 5. Choose COD or the configured manual transfer option. Manual payment does not automatically mark the order paid. Demo wallet/testnet options are demonstrations, not real payment settlement.
 6. Submit once. Open My orders to confirm the saved order and track its recorded stages. On a timeout, inspect My orders before retrying; an order may have been saved despite a lost response.
 7. Use delivery-change controls when offered. Preview a proposed change and confirm it before its preview expires. Started orders and cutoff rules can prevent a change. A review is available only when the server considers the order eligible.

@@ -1,5 +1,11 @@
 # Preparation planning: owner and developer guide
 
+**Historical algorithm notes:** this document describes the September implementation.
+For current October behaviour, including unpaid owner-review fallback, exactly 21:00
+delivery, independent batches and manual editing, use
+[DAPUR-KITA-FEATURE-GUIDE.md](DAPUR-KITA-FEATURE-GUIDE.md), sections 3–6.
+Statements below about rejecting all unplannable bookings are superseded.
+
 Verified against services/scheduling.py on 25 September 2026. This describes implemented behaviour, not proposed features. Read this document alongside the code if the application changes later.
 
 ## Short answer

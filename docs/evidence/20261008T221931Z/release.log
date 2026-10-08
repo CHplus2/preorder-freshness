@@ -1,0 +1,9 @@
+test_local_build_does_not_connect_to_database (test_build_release.ReleaseGateTests.test_local_build_does_not_connect_to_database) ... ok
+test_migrated_database_allows_build (test_build_release.ReleaseGateTests.test_migrated_database_allows_build) ... ok
+test_pending_migrations_stop_before_frontend_build (test_build_release.ReleaseGateTests.test_pending_migrations_stop_before_frontend_build) ... ok
+test_vercel_file_import_and_frontend_routes (test_vercel_entrypoint.EntrypointTests.test_vercel_file_import_and_frontend_routes) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 3.643s
+
+OK
