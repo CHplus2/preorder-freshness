@@ -27,17 +27,16 @@ export default function PaymentPage() {
 
     const handlePay = async () => {
         setPaying(true);
-        const success = await placeOrder(addressId, method);
-        setPaying(false);
-
-        if (!success) {
-            setAlert({ message: "Payment failed. Please try again.", type: "error" });
-            return;
+        try {
+            const success = await placeOrder(addressId, method);
+            // The order provider displays the actual validation/network failure.
+            if (!success) return;
+            try { localStorage.removeItem("addressId"); } catch { /* Order already accepted. */ }
+            setAlert({ message: "Order placed using demo credits. No real money was charged.", type: "success" });
+            navigate("/orders", { state: { formPayment: true } });
+        } finally {
+            setPaying(false);
         }
-
-        localStorage.removeItem("addressId");
-        setAlert({ "message": "Payment successful!", "type": "success" })
-        navigate("/orders", { state: { formPayment: true } });
     }
 
     const handleSubmit = (e) => {
@@ -61,7 +60,7 @@ export default function PaymentPage() {
             {method === "paypal" && <p>Online payment needs server verification setup. Return to checkout and choose cash on delivery.</p>}
             {method === "wallet" && (
             <div className="wallet-box">
-                <h3>Demo credit payment</h3>
+                <h3>Demo credit payment</h3><p>For demonstration only. These credits are not real money.</p>
 
                 <div className="payment-summary">
                 <p><strong>Total:</strong> {finalTotal.toFixed(2)} demo credits</p>

@@ -28,7 +28,7 @@ export function apiError(error, fallback = 'The request could not be completed.'
   const flatten = (value, label = '') => {
     if (typeof value === 'string') return /<[^>]+>/.test(value) ? [] : [label + value];
     if (Array.isArray(value)) return value.flatMap(v => flatten(v, label));
-    if (value && typeof value === 'object') return Object.entries(value).flatMap(([key,v]) => flatten(v, ['detail','non_field_errors'].includes(key) ? label : `${key.replaceAll('_',' ')}: `));
+    if (value && typeof value === 'object') return Object.entries(value).flatMap(([key,v]) => flatten(v, ['detail','non_field_errors'].includes(key) ? label : `${key === 'whatsapp_number' ? 'WhatsApp number' : key.replaceAll('_',' ').replace(/^./, letter => letter.toUpperCase())}: `));
     return [];
   };
   const message = flatten(data).slice(0,6).join(' ');
