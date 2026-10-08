@@ -142,7 +142,7 @@ def place_line(line, ready, advance, busy, store):
     raise ValidationError(f'{line["menu"]}: automatic planning reached its search limit. Contact the owner to review the plan; availability has not been confirmed.')
 
 
-def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, notice_from=None):
+def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, notice_from=None, allow_manual_review=False):
     now = now or timezone.now()
     items = list(items)
     if not items:
@@ -158,16 +158,31 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
             names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             allowed = ", ".join(names[day] for day in weekdays)
             raise ValidationError(f"{item.product.name} is delivered on {allowed}. Choose one of these delivery days.")
-    if not 9 <= local.hour < 21:
-        raise ValidationError('Choose delivery between 9am and 9pm Malaysia time (before 9pm).')
+    if not time(9) <= local.time() <= time(21):
+        raise ValidationError('Choose delivery between 9am and 9pm Malaysia time.')
     if delivery_at <= now or delivery_at > now+timedelta(days=90):
         raise ValidationError('Choose a future delivery within the next 90 days.')
     booked = dict(OrderItem.objects.filter(product_id__in=[i.product_id for i in items], order__delivery_at__date=local.date()).exclude(order__status='cancelled').exclude(order_id=exclude_order_id).values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
     for item in items:
         if booked.get(item.product_id, 0)+item.quantity > item.product.daily_capacity:
             raise ValidationError(f'{item.product.name} has insufficient capacity on this day. Choose another date.')
-    lines, minutes = preparation_work(items)
     advance = max(now, (notice_from or now)+timedelta(hours=max(i.product.lead_hours for i in items)))
+    if allow_manual_review and delivery_at < advance+timedelta(minutes=store.delivery_buffer_minutes):
+        raise ValidationError('Choose a delivery time after the menu advance notice and delivery buffer.')
+    try:
+        return automatic_plan(items, delivery_at, store, exclude_order_id, advance)
+    except ValidationError as exc:
+        if not allow_manual_review:
+            raise
+        # Only recipe/planning validation is advisory. Database and unexpected
+        # failures propagate; never turn an outage into an accepted request.
+        return dict(start=None, end=None, tasks=[], needs_review=True,
+                    review_reason=' '.join(str(part) for part in exc.detail),
+                    delivery_buffer_minutes=store.delivery_buffer_minutes)
+
+
+def automatic_plan(items, delivery_at, store, exclude_order_id, advance):
+    lines, minutes = preparation_work(items)
     ready = delivery_at-timedelta(minutes=store.delivery_buffer_minutes)
     horizon = ready-timedelta(days=max(i.product.max_preparation_days for i in items))
     busy = [dict(start=a, end=b, resource='all', worker=True) for a,b in KitchenBlock.objects.filter(start_at__lt=ready,end_at__gt=horizon).values_list('start_at','end_at')]

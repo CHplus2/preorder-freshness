@@ -12,6 +12,10 @@ try {
   assert.match(render({}), /continue to place your preorder/);
   assert.match(render({}), /stock is not reserved/);
   assert.match(render({quote:{...quote, plan:{...quote.plan, procurement_required:true}}}), /needs to purchase ingredients/);
+  const manual=render({quote:{...quote,plan:{needs_review:true,preparation_at:null}}});
+  assert.match(manual,/Kitchen confirmation needed/);
+  assert.match(manual,/No payment will be taken/);
+  assert.doesNotMatch(manual,/Your requested time is available|Preparation starts/);
   const stale = render({selectionKey:'changed-basket'});
   assert.match(stale, /Please check availability again/);
   assert.doesNotMatch(stale, /Your requested time is available/);

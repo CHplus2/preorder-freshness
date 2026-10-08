@@ -36,7 +36,7 @@ export default function PaymentPage() {
             // Only a confirmed order response is treated as a completed demo debit.
             if (!success) return;
             try { localStorage.removeItem("addressId"); } catch { /* Order already accepted. */ }
-            setAlert({ message: "Order placed using demo credits. No real money was charged.", type: "success" });
+            setAlert({ message: success.needs_review ? "Request sent to the kitchen. No credits were deducted; payment is cash on delivery after confirmation." : success.payment_method==='wallet' && success.payment_status==='paid' ? "Order placed using demo credits. No real money was charged." : "Order saved. Check My orders for its payment and confirmation status.", type: "success" });
             navigate("/orders", { state: { formPayment: true } });
         } catch(error) {
             setPaymentError(apiError(error));
@@ -65,7 +65,7 @@ export default function PaymentPage() {
             {method === "paypal" && <p>Online payment needs server verification setup. Return to checkout and choose cash on delivery.</p>}
             {method === "wallet" && (
             <div className="wallet-box">
-                <h3>Demo credit payment</h3><p>For demonstration only. These credits are not real money.</p>
+                <p>If the kitchen needs to review preparation, your request will be saved without charging credits, with payment on delivery.</p><h3>Demo credit payment</h3><p>For demonstration only. These credits are not real money.</p>
 
                 <div className="payment-summary">
                 <p><strong>Total:</strong> {finalTotal.toFixed(2)} demo credits</p>

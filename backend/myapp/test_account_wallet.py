@@ -41,14 +41,98 @@ class AccountWalletTests(TestCase):
         self.assertFalse(Order.objects.exists())
         self.assertFalse(WalletTransaction.objects.exists())
 
-    def test_multi_menu_preparation_rejection_is_not_a_payment_failure(self):
+    def test_infeasible_recipe_becomes_unpaid_review_request_and_retry_is_safe(self):
         Product.objects.update(batch_size=1, preparation_minutes=60)
+        quote = self.client.post('/api/orders/quote/', self.body, format='json')
+        self.assertEqual(quote.status_code, 200, quote.data)
+        self.assertTrue(quote.data['needs_review'])
+        self.assertIsNone(quote.data['preparation_at'])
+        response = self.client.post('/api/orders/place/', self.body, format='json')
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertTrue(response.data['needs_review'])
+        retry = self.client.post('/api/orders/place/', self.body, format='json')
+        self.assertEqual(retry.status_code, 200)
+        self.assertTrue(retry.data['needs_review'])
+        order = Order.objects.get()
+        self.assertEqual(order.status, 'pending')
+        self.assertEqual(order.payment_status, 'unpaid')
+        self.assertEqual(order.payment_method, 'cod')
+        self.assertIsNone(order.preparation_at)
+        self.assertIsNone(order.preparation_end_at)
+        self.assertEqual(order.preparation_plan['tasks'], [])
+        self.assertIn('cannot fit', order.preparation_plan['review_reason'])
+        self.wallet.refresh_from_db()
+        self.assertEqual(self.wallet.balance, Decimal('8836.48'))
+        self.assertFalse(PaymentEvent.objects.exists())
+        self.assertFalse(WalletTransaction.objects.exists())
+        self.assertFalse(CartItem.objects.filter(user=self.user).exists())
+        owner = User.objects.create_user('owner', is_staff=True)
+        self.client.force_authenticate(owner)
+        changed = self.client.patch(f'/api/admin/orders/{order.pk}/', {'status':'processing'}, format='json')
+        self.assertEqual(changed.status_code, 200, changed.data)
+        order.refresh_from_db()
+        self.assertFalse(order.preparation_plan['needs_review'])
+        self.assertEqual(order.preparation_plan['manually_confirmed_by'], owner.pk)
+        self.assertEqual(order.amendments.count(), 1)
+        self.assertIsNone(order.preparation_at)
+        self.assertEqual(order.payment_status, 'unpaid')
+
+    def test_review_request_does_not_bypass_capacity_or_selling_status(self):
+        Product.objects.update(daily_capacity=1)
         response=self.client.post('/api/orders/place/',self.body,format='json')
         self.assertEqual(response.status_code,400)
-        self.assertIn('cannot fit',str(response.data))
+        self.assertFalse(Order.objects.exists())
+        Product.objects.update(daily_capacity=100, selling_status='paused')
+        response=self.client.post('/api/orders/place/',self.body,format='json')
+        self.assertEqual(response.status_code,400)
+        self.assertFalse(Order.objects.exists())
+
+    def test_cod_review_request_for_unsplittable_step(self):
+        Product.objects.update(preparation_minutes=1440)
+        self.body['payment']='cod'
+        response=self.client.post('/api/orders/place/',self.body,format='json')
+        self.assertEqual(response.status_code,201,response.data)
+        self.assertTrue(response.data['needs_review'])
+        self.assertIsNone(Order.objects.get().preparation_at)
+
+    def test_review_request_delivery_change_preserves_pending_review(self):
+        Product.objects.update(preparation_minutes=1440)
+        self.body['payment']='cod'
+        placed=self.client.post('/api/orders/place/',self.body,format='json')
+        order=Order.objects.get(pk=placed.data['order_id'])
+        url=f'/api/orders/{order.pk}/reschedule/'
+        self.assertTrue(self.client.get(url).data['eligible'])
+        target=(timezone.localtime()+timedelta(days=6)).replace(hour=17,minute=0,second=0,microsecond=0)
+        preview=self.client.post(url,{'delivery_at':target.isoformat(),'reason':'Customer requested another day'},format='json')
+        self.assertEqual(preview.status_code,200,preview.data)
+        self.assertTrue(preview.data['preview']['needs_review'])
+        confirmed=self.client.post(url,{'confirm':preview.data['confirm']},format='json')
+        self.assertEqual(confirmed.status_code,200,confirmed.data)
+        order.refresh_from_db()
+        self.assertEqual(order.delivery_at,target)
+        self.assertTrue(order.preparation_plan['needs_review'])
+        self.assertIsNone(order.preparation_at)
+        self.assertEqual(self.client.post(url,{'confirm':preview.data['confirm']},format='json').status_code,200)
+
+    def test_unexpected_planner_failure_does_not_create_review_request(self):
+        from unittest.mock import patch
+        from django.db import OperationalError
+        with patch('myapp.services.scheduling.automatic_plan', side_effect=OperationalError('test outage')):
+            with self.assertLogs('myapp.exceptions', level='ERROR'):
+                response=self.client.post('/api/orders/place/',self.body,format='json')
+            self.assertEqual(response.status_code,503)
+            self.assertNotIn('needs_review',response.data)
+        self.assertFalse(Order.objects.exists())
+        self.assertFalse(PaymentEvent.objects.exists())
         self.wallet.refresh_from_db()
         self.assertEqual(self.wallet.balance,Decimal('8836.48'))
-        self.assertFalse(Order.objects.exists())
+
+    def test_nine_pm_is_accepted_but_later_is_not(self):
+        delivery=(timezone.localtime()+timedelta(days=4)).replace(hour=21,minute=0,second=0,microsecond=0)
+        self.body['delivery_at']=delivery.isoformat()
+        self.assertEqual(self.client.post('/api/orders/quote/',self.body,format='json').status_code,200)
+        self.body['delivery_at']=(delivery+timedelta(minutes=1)).isoformat()
+        self.assertEqual(self.client.post('/api/orders/quote/',self.body,format='json').status_code,400)
 
     def test_insufficient_credit_preserves_cart_and_creates_no_payment(self):
         self.wallet.balance=1

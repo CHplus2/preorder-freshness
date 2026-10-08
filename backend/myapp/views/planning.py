@@ -26,7 +26,7 @@ def planning(request):
     allocations = []
     missing_recipes = []
     for order in orders:
-        if order.inventory_deducted:
+        if order.inventory_deducted or (order.preparation_plan.get('needs_review') or order.preparation_plan.get('manually_confirmed_at')) and not order.preparation_at:
             continue
         day = timezone.localtime(order.preparation_at).date() if order.preparation_at else timezone.localdate()
         use_by = timezone.localtime(order.preparation_end_at).date() if order.preparation_end_at else day

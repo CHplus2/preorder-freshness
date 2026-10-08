@@ -95,7 +95,7 @@ def place_order(request):
         if previous:
             if previous.user_id != user.pk:
                 raise ValidationError('This checkout reference is unavailable. Start a new checkout.')
-            return Response({'detail': 'Order already placed', 'order_id': previous.pk})
+            return Response({'detail': 'Order already placed', 'order_id': previous.pk, 'needs_review': previous.preparation_plan.get('needs_review', False), 'payment_method': previous.payment_method, 'payment_status': previous.payment_status})
     address_id = serializers.IntegerField(min_value=1).run_validation(request.data.get("address_id"))
     payment = request.data.get("payment")
 
@@ -124,7 +124,11 @@ def place_order(request):
     list(Product.objects.select_for_update().filter(id__in=cart_items.values('product_id')).order_by('id'))
     delivery_at = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
     from ..services.scheduling import schedule_order, plan_snapshot
-    plan = schedule_order(cart_items, delivery_at, store)
+    plan = schedule_order(cart_items, delivery_at, store, allow_manual_review=True)
+    needs_review = plan.get('needs_review', False)
+    if needs_review:
+        # Review requests never debit credits or invite an advance transfer.
+        payment = 'cod'
     local_delivery = timezone.localtime(delivery_at)
     method = request.data.get('delivery_method', 'standard')
     if method not in ('standard', 'express'):
@@ -206,7 +210,7 @@ def place_order(request):
 
     from ..services.discovery import attribute_order
     attribute_order(request, order)
-    return Response({"detail": "Order placed", "order_id": order.id}, status=status.HTTP_201_CREATED)
+    return Response({"detail": "Order placed", "order_id": order.id, "needs_review": needs_review, "payment_method": order.payment_method, "payment_status": order.payment_status}, status=status.HTTP_201_CREATED)
 
 
 # ------------------------------------------
@@ -243,7 +247,9 @@ def preparation_quote(request):
     delivery = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     items = list(CartItem.objects.filter(user=request.user).select_related('product'))
-    plan = schedule_order(items, delivery, store)
+    plan = schedule_order(items, delivery, store, allow_manual_review=True)
+    if plan.get('needs_review'):
+        return Response(dict(preparation_at=None, preparation_end_at=None, **plan_snapshot(plan)))
     from ..services.discovery import shopping_preview
     return Response(dict(preparation_at=plan['start'], preparation_end_at=plan['end'],
         procurement_required=bool(shopping_preview(items, plan['start'], plan['end'])), **plan_snapshot(plan)))

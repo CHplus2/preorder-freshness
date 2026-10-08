@@ -85,12 +85,12 @@ export default function RescheduleOrder({order, onSaved}) {
           <label>Reason for the change
             <textarea rows={2} required maxLength={300} value={reason} disabled={busy} onChange={e=>{setReason(e.target.value);setMessage('');}}/>
           </label>
-          <details className="delivery-change-rules"><summary>How delivery changes work</summary><p>Changes close 24 hours before preparation starts. The new time must meet this cutoff and kitchen availability. Your items, address and price stay the same.</p></details>
+          <details className="delivery-change-rules"><summary>How delivery changes work</summary><p>Changes close 24 hours before preparation starts, or before requested delivery while awaiting kitchen confirmation. The new time must meet this cutoff and kitchen availability. Your items, address and price stay the same.</p></details>
           <div className="delivery-change-actions"><button disabled={busy}>Check new time</button><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Cancel</button></div>
         </> : <div className="delivery-change-review">
           <h4>Confirm your new time</h4>
           <dl><div><dt>Current delivery</dt><dd>{when(preview.preview.previous_delivery)}</dd></div><div><dt>New delivery</dt><dd><strong>{when(preview.preview.delivery_at)}</strong></dd></div></dl>
-          <p>Reason: {preview.preview.reason}</p>
+          <p>Reason: {preview.preview.reason}</p>{preview.preview.needs_review && <p>The requested time will still need kitchen confirmation. No automatic preparation plan has been reserved.</p>}
           <p className="delivery-change-hint">Confirm within 10 minutes. Availability is checked again when you confirm.</p>
           <details className="delivery-change-rules"><summary>Deadline for any further changes</summary><p>{when(preview.preview.change_closes_at)}. This preview does not reserve kitchen capacity.</p></details>
           <div className="delivery-change-actions"><button type="button" disabled={busy} onClick={e=>submit(e,true)}>Confirm new time</button><button type="button" disabled={busy} onClick={()=>setPreview(null)}>Back</button></div>

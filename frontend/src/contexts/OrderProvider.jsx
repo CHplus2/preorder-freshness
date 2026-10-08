@@ -68,7 +68,7 @@ export default function OrderProvider({ children }) {
                 sessionStorage.removeItem('recommendationSession');
             } catch { /* The retained request ID is safe to replay server-side. */ }
             refreshCart();
-            return true;
+            return placed.data;
         } catch (err) {
             console.error("placeOrder:", err.response?.data || err.message);
             if (options.throwOnError) throw err;

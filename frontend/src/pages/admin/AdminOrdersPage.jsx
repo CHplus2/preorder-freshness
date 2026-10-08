@@ -89,9 +89,10 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              <p>Prepare: {order.preparation_at ? new Date(order.preparation_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Legacy order — unscheduled'}</p>
+              <p>Prepare: {order.preparation_at ? new Date(order.preparation_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Owner planning required — unscheduled'}</p>
               <p>Deliver: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Unscheduled'} · {order.delivery_method}</p>
               {overdueOrder(order,now) && <p className="admin-follow-up"><strong>Delivery follow-up</strong><span>The requested time has passed. Confirm delivery with the customer, then update the order status.</span></p>}
+              {order.status==='pending' && order.preparation_plan?.needs_review && <div className="owner-order-note"><strong>Delivery time awaiting your confirmation</strong><p>Review the recipe, kitchen workload and handling limits. Contact the customer if another time is needed. Set the order to Processing to confirm that you can fulfil it; an automatic task plan is optional.</p><details><summary>Automatic planning notes</summary><p>{order.preparation_plan.review_reason}</p></details></div>}
               {/* BODY */}
               <div className="order-body">
                 {order.items.map((item) => (
@@ -147,6 +148,7 @@ export default function AdminOrdersPage() {
                   </p> : <p>No delivery address recorded for this order. Confirm the address with the customer before dispatch.</p>}
                 </div>
 
+                {editingOrder.preparation_plan?.needs_review && <p className="owner-order-note">Selecting Processing confirms you have reviewed preparation, storage and workload and can fulfil the requested time. This records your manual confirmation; it does not create automatic task times.</p>}
                 {/* Status Select */}
                 <label htmlFor="status-select">Order Status:</label>
                 <select

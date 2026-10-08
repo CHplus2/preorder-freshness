@@ -24,7 +24,8 @@ class ChangeInput(serializers.Serializer):
 
 
 def eligibility(order, now):
-    cutoff = order.preparation_at - timedelta(hours=CUTOFF_HOURS) if order.preparation_at else None
+    anchor = order.delivery_at if order.preparation_plan.get('needs_review') else order.preparation_at
+    cutoff = anchor - timedelta(hours=CUTOFF_HOURS) if anchor else None
     if order.status != 'pending' or order.inventory_deducted:
         return cutoff, 'Only orders awaiting preparation can be rescheduled.'
     if order.payment_status == 'refunded':
@@ -86,20 +87,21 @@ def reschedule_order(request, pk):
     items = list(order.items.select_related('product'))
     # A changed date needs fresh notice; no reuse of the original order's lead-time window.
     plan = schedule_order([scheduled_item(i) for i in items], target, store,
-                          now=now, exclude_order_id=order.pk)
-    if plan['start'] <= now + timedelta(hours=CUTOFF_HOURS):
+                          now=now, exclude_order_id=order.pk, allow_manual_review=bool(order.preparation_plan.get('needs_review')))
+    change_anchor = plan['start'] or target
+    if change_anchor <= now + timedelta(hours=CUTOFF_HOURS):
         raise serializers.ValidationError('The new preparation time must also be more than 24 hours away.')
     snapshot = {'kind': 'delivery_change', 'order': order.pk, 'actor': request.user.pk,
         'actor_role': 'owner' if request.user.is_staff else 'customer',
         'request_id': previous['request_id'] if previous else str(uuid.uuid4()),
         'version': order.updated_at.isoformat(), 'delivery_at': target.isoformat(),
-        'reason': incoming.validated_data['reason'], 'preparation_at': plan['start'].isoformat(),
-        'preparation_end_at': plan['end'].isoformat(), 'plan': plan_snapshot(plan)}
+        'reason': incoming.validated_data['reason'], 'preparation_at': plan['start'].isoformat() if plan['start'] else None,
+        'preparation_end_at': plan['end'].isoformat() if plan['end'] else None, 'plan': plan_snapshot(plan)}
     if previous:
         if snapshot != previous:
             return Response({'detail': 'Kitchen availability changed. Preview the new time again.'}, status=409)
         before = {'delivery_at': order.delivery_at.isoformat(),
-            'preparation_at': order.preparation_at.isoformat(), 'plan': order.preparation_plan}
+            'preparation_at': order.preparation_at.isoformat() if order.preparation_at else None, 'plan': order.preparation_plan}
         order.delivery_at = target
         order.preparation_at = plan['start']
         order.preparation_end_at = plan['end']
@@ -108,5 +110,5 @@ def reschedule_order(request, pk):
         OrderAmendment.objects.create(order=order, actor=request.user, before=before, after=snapshot)
         return Response({'order': OrderSerializer(order).data, 'already_applied': False})
     return Response({'preview': {'previous_delivery': order.delivery_at, 'delivery_at': target,
-        'reason': snapshot['reason'], 'change_closes_at': plan['start']-timedelta(hours=CUTOFF_HOURS)},
+        'reason': snapshot['reason'], 'change_closes_at': change_anchor-timedelta(hours=CUTOFF_HOURS), 'needs_review': plan.get('needs_review',False)},
         'confirm': signing.dumps(snapshot, salt=SALT, compress=True)})
