@@ -28,6 +28,6 @@
 .kitchen-chat-consent input { width:18px; height:18px; flex-shrink:0; margin-top:3px; }
 .kitchen-chat-input { display:flex; gap:8px; }
 .kitchen-chat-input button { background:#285a3e; color:white; display:grid; place-items:center; }
-.kitchen-chat-actions { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:8px; font-size:12px; }
+.kitchen-chat-actions { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-top:20px; padding-top:12px; border-top:1px solid #e0e7df; font-size:12px; flex-wrap:wrap; }
 .kitchen-chat-actions button { border:0; padding:8px; font-size:12px; }
 @media(max-width:600px) { .kitchen-chat { right:12px; bottom:calc(78px + env(safe-area-inset-bottom)); width:calc(100vw - 24px); max-height:calc(100dvh - 104px - env(safe-area-inset-bottom)); } .kitchen-chat-body,.kitchen-chat-compose { padding:12px 16px; } .kitchen-chat input:not([type=checkbox]),.kitchen-chat select { font-size:16px; } }
