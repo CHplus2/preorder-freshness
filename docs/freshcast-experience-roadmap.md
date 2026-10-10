@@ -61,3 +61,9 @@ Validation: 26 predictive tests, existing frontend/UX/planner/checkout suites, p
 Kitchen inspection now compares returned eligible-stock and forecast-need kilograms using two decorative containers on a common scale. Native buttons select a short explanation, while source/interpretation details stay collapsed. Selecting another ingredient resets inspection. The component never subtracts these values to invent waste or shortage; those remain separate backend results. Wider desktop inspection improves readability; no new standalone section or model was added.
 
 Validation: 26 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. Fixture browser checks covered exact quantities, selected explanations, ingredient reset, mobile overflow and zero API writes; component screenshot reviewed. Live backend and production deployment remain unverified.
+
+## Batch 10 — navigation inside the kitchen
+
+The illustrated drawing now has its own fixed aspect-ratio stage, independent of inspection-panel height, so hotspot positions stay aligned with the room. Fridge and Order counter links are placed on the artwork and use native accessible navigation to existing routes. Fridge preserves the locally inspected ingredient and source/center/scenario context; Order counter clears a meal filter to show all returned external meal forecasts without implying a local recipe mapping. Ingredient positions remain decorative. Title/caption sit outside the drawing to reduce marker overlap.
+
+Validation: 26 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. Fixture browser checks covered stable stage aspect ratio, preview-to-inventory context, keyboard demand navigation, mobile click targets and overflow. Desktop/mobile screenshots reviewed. Live backend and Vercel production remain unverified.

@@ -1,14 +1,15 @@
 import { useState } from "react";
+import { NavLink, useSearchParams } from "react-router-dom";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { problemSummary } from "./problemSummary";
 import StockNeedInspection from "./StockNeedInspection";
 const spots = [
   [22, 34],
   [43, 24],
-  [70, 31],
+  [24, 61],
   [83, 47],
-  [54, 65],
-  [26, 61],
+  [54, 49],
+  [76, 73],
 ];
 function KitchenRoom() {
   return (
@@ -122,6 +123,7 @@ export default function KitchenWalkthrough({
   onSelect,
   renderIngredient,
 }) {
+  const [params] = useSearchParams();
   const [inspected, setInspected] = useState(selected);
   const [page, setPage] = useState(() =>
     Math.max(
@@ -141,37 +143,73 @@ export default function KitchenWalkthrough({
   return (
     <section className="fc-walkthrough" aria-label="Kitchen hotspot explorer">
       <div className="fc-room">
-        <KitchenRoom />
         <div className="fc-room-title">
           <strong>A little kitchen. Real planning questions.</strong>
           <span>Click an ingredient to take a closer look.</span>
         </div>
-        {visible.map((r, i) => (
-          <button
-            key={r.ingredient_id}
-            type="button"
-            className={`fc-hotspot ${r.shortfall_kg > 0 ? "gap" : "waste"}`}
-            style={{ left: `${spots[i][0]}%`, top: `${spots[i][1]}%` }}
-            aria-label={`Inspect marker ${currentPage * spots.length + i + 1}: ${r.ingredient_id}`}
-            aria-pressed={risk?.ingredient_id === r.ingredient_id}
-            onClick={() => setInspected(r.ingredient_id)}
-          >
-            <span>{currentPage * spots.length + i + 1}</span>
-            <span className="fc-hotspot-ingredient" aria-hidden="true">
-              {renderIngredient?.(r.ingredient_id)}
-            </span>
-            <span className="fc-hotspot-label">
-              {r.ingredient_id}
-              <small>
-                {r.expiring_unused_kg > 0 && r.shortfall_kg > 0
-                  ? "Waste + shortage"
-                  : r.shortfall_kg > 0
-                    ? "Shortage risk"
-                    : "Waste risk"}
-              </small>
-            </span>
-          </button>
-        ))}
+        <div className="fc-room-stage">
+          <KitchenRoom />
+          {visible.map((r, i) => (
+            <button
+              key={r.ingredient_id}
+              type="button"
+              className={`fc-hotspot ${r.shortfall_kg > 0 ? "gap" : "waste"}`}
+              style={{ left: `${spots[i][0]}%`, top: `${spots[i][1]}%` }}
+              aria-label={`Inspect marker ${currentPage * spots.length + i + 1}: ${r.ingredient_id}`}
+              aria-pressed={risk?.ingredient_id === r.ingredient_id}
+              onClick={() => setInspected(r.ingredient_id)}
+            >
+              <span>{currentPage * spots.length + i + 1}</span>
+              <span className="fc-hotspot-ingredient" aria-hidden="true">
+                {renderIngredient?.(r.ingredient_id)}
+              </span>
+              <span className="fc-hotspot-label">
+                {r.ingredient_id}
+                <small>
+                  {r.expiring_unused_kg > 0 && r.shortfall_kg > 0
+                    ? "Waste + shortage"
+                    : r.shortfall_kg > 0
+                      ? "Shortage risk"
+                      : "Waste risk"}
+                </small>
+              </span>
+            </button>
+          ))}
+          {[
+            {
+              id: "inventory",
+              name: "Open fridge evidence",
+              label: "Fridge",
+              left: 66,
+              top: 20,
+            },
+            {
+              id: "forecast",
+              name: "Open order counter evidence",
+              label: "Order counter",
+              left: 53,
+              top: 79,
+            },
+          ].map((station) => {
+            const next = new URLSearchParams(params);
+            if (risk) next.set("ingredient", risk.ingredient_id);
+            next.delete("step");
+            next.delete("action");
+            if (station.id === "forecast") next.delete("meal");
+            return (
+              <NavLink
+                key={station.id}
+                className="fc-room-door"
+                aria-label={station.name}
+                style={{ left: `${station.left}%`, top: `${station.top}%` }}
+                to={{ pathname: `/admin/ai/${station.id}`, search: `?${next}` }}
+              >
+                <ArrowUpRight size={16} aria-hidden="true" />
+                {station.label}
+              </NavLink>
+            );
+          })}
+        </div>
         <span className="fc-room-caption">
           Illustrated planning scene · positions are decorative
         </span>

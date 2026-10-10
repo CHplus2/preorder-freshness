@@ -1333,3 +1333,61 @@
     grid-template-columns: minmax(0, 1fr) 300px;
   }
 }
+.pd .fc-room {
+  align-self: start;
+}
+.pd .fc-room-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1000 / 650;
+}
+.pd .fc-room-title {
+  position: static;
+  padding: 16px 18px 6px;
+}
+.pd .fc-room-caption {
+  position: static;
+  display: block;
+  text-align: center;
+  padding: 12px;
+}
+.pd .fc-room-stage .fc-room-art {
+  width: 100%;
+  height: 100%;
+}
+.pd .fc-room a.fc-room-door {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transform: translate(-50%, -50%);
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 2px solid #668564;
+  border-radius: 12px;
+  background: #fffdf7;
+  color: #344d3c;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  box-shadow: 0 4px 0 #b9c6ab;
+  z-index: 3;
+}
+.pd .fc-room a.fc-room-door::after {
+  display: none;
+}
+.pd .fc-room a.fc-room-door:hover {
+  background: #e5ecdc;
+}
+.pd .fc-room a.fc-room-door:focus-visible {
+  outline: 3px solid #a55b32;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .pd .fc-room a.fc-room-door {
+    padding: 4px 7px;
+    font-size: 11px;
+  }
+}
