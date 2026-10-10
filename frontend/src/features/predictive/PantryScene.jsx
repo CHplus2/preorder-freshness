@@ -217,8 +217,8 @@ export default function PantryScene({
           </span>
         </div>
         <p className="pantry-how-to">
-          Select a marker or crate, inspect the problem, then explore its
-          decision.
+          Click an ingredient to inspect its risk. Choose Explore this decision
+          to work through your options.
         </p>
         <div className="fc-scene-switch" role="group" aria-label="Kitchen view">
           <button
@@ -239,6 +239,7 @@ export default function PantryScene({
             risks={risks}
             selected={selected}
             onSelect={onSelect}
+            renderIngredient={(name) => <IngredientDrawing name={name} />}
           />
         ) : (
           <div className="pantry-floor">

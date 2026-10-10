@@ -88,9 +88,19 @@ export default function DecisionAssistant({
     );
   return (
     <section className="fc-assistant">
-      <RiskLens risks={priorityRisks} lens={lens} onChange={changeLens} />
+      <details className="fc-kitchen-tools">
+        <summary>
+          Kitchen focus ·{" "}
+          {lens === "priority"
+            ? "backend priority"
+            : lens === "waste"
+              ? "waste first"
+              : "shortages first"}
+        </summary>
+        <RiskLens risks={priorityRisks} lens={lens} onChange={changeLens} />
+      </details>
       <PantryScene
-        key={lens}
+        key={`${lens}:${risk.ingredient_id}`}
         risks={risks}
         selected={risk.ingredient_id}
         onSelect={(id) => {
@@ -107,13 +117,16 @@ export default function DecisionAssistant({
         center={baseline.center_id}
         week={baseline.week}
       />
-      <ReviewQueue
-        key={`${isFixture}:${JSON.stringify(baseline)}`}
-        risks={risks}
-        selected={risk.ingredient_id}
-        onSelect={setIngredient}
-        isFixture={isFixture}
-      />
+      <details className="fc-kitchen-tools">
+        <summary>Open manager review queue</summary>
+        <ReviewQueue
+          key={`${isFixture}:${JSON.stringify(baseline)}`}
+          risks={risks}
+          selected={risk.ingredient_id}
+          onSelect={setIngredient}
+          isFixture={isFixture}
+        />
+      </details>
       <details className="pantry-list-view">
         <summary>List view & priority rules</summary>
         <div className="fc-issue-picker">

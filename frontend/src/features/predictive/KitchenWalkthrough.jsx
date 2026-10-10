@@ -104,14 +104,32 @@ function KitchenRoom() {
         d="m188 428 63 38v53l-63-37Zm63 38 87-39v53l-87 39Z"
         fill="#be9256"
       />
+      <g stroke="#6b805f" strokeWidth="3">
+        <path d="m770 114 98 18v61l-98-24Z" fill="#cbdfe5" />
+        <path d="m819 123v63m-48-46 97 18" fill="none" />
+        <path d="m445 64 25-4v41l-25 5Z" fill="#ebaf83" />
+        <path d="M456 63V47" fill="none" />
+      </g>
       <path d="m798 411 38-16 40 21-38 17Z" fill="#719168" />
       <path d="m811 423 27 10 25-12-8 46-28 12Z" fill="#c38c64" />
     </svg>
   );
 }
-export default function KitchenWalkthrough({ risks, selected, onSelect }) {
+export default function KitchenWalkthrough({
+  risks,
+  selected,
+  onSelect,
+  renderIngredient,
+}) {
   const [inspected, setInspected] = useState(selected);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(() =>
+    Math.max(
+      0,
+      Math.floor(
+        risks.findIndex((r) => r.ingredient_id === selected) / spots.length,
+      ),
+    ),
+  );
   const pages = Math.max(1, Math.ceil(risks.length / spots.length));
   const currentPage = Math.min(page, pages - 1);
   const visible = risks.slice(
@@ -124,8 +142,8 @@ export default function KitchenWalkthrough({ risks, selected, onSelect }) {
       <div className="fc-room">
         <KitchenRoom />
         <div className="fc-room-title">
-          <strong>Your kitchen decision tour</strong>
-          <span>Select a marker to inspect an issue.</span>
+          <strong>A little kitchen. Real planning questions.</strong>
+          <span>Click an ingredient to take a closer look.</span>
         </div>
         {visible.map((r, i) => (
           <button
@@ -138,7 +156,19 @@ export default function KitchenWalkthrough({ risks, selected, onSelect }) {
             onClick={() => setInspected(r.ingredient_id)}
           >
             <span>{currentPage * spots.length + i + 1}</span>
-            <span className="fc-hotspot-label">{r.ingredient_id}</span>
+            <span className="fc-hotspot-ingredient" aria-hidden="true">
+              {renderIngredient?.(r.ingredient_id)}
+            </span>
+            <span className="fc-hotspot-label">
+              {r.ingredient_id}
+              <small>
+                {r.expiring_unused_kg > 0 && r.shortfall_kg > 0
+                  ? "Waste + shortage"
+                  : r.shortfall_kg > 0
+                    ? "Shortage risk"
+                    : "Waste risk"}
+              </small>
+            </span>
           </button>
         ))}
         <span className="fc-room-caption">
@@ -146,7 +176,12 @@ export default function KitchenWalkthrough({ risks, selected, onSelect }) {
         </span>
       </div>
       <aside className="fc-room-inspector" aria-label="Selected hotspot">
-        <span className="pantry-kicker">ISSUE PREVIEW</span>
+        <span className="pantry-kicker">INGREDIENT INSPECTION</span>
+        {risk && (
+          <div className="fc-inspector-package" aria-hidden="true">
+            {renderIngredient?.(risk.ingredient_id)}
+          </div>
+        )}
         <div aria-live="polite">
           <h3>{risk?.ingredient_id || "No issues reported"}</h3>
           <p>
@@ -154,6 +189,28 @@ export default function KitchenWalkthrough({ risks, selected, onSelect }) {
               ? problemSummary(risk)
               : "The calculation returned no ingredient risks."}
           </p>
+          {risk && (
+            <dl className="fc-inspector-quantities">
+              <div>
+                <dt>May expire unused</dt>
+                <dd>
+                  {new Intl.NumberFormat("en-MY", {
+                    maximumFractionDigits: 2,
+                  }).format(risk.expiring_unused_kg)}{" "}
+                  kg
+                </dd>
+              </div>
+              <div>
+                <dt>Expected shortfall</dt>
+                <dd>
+                  {new Intl.NumberFormat("en-MY", {
+                    maximumFractionDigits: 2,
+                  }).format(risk.shortfall_kg)}{" "}
+                  kg
+                </dd>
+              </div>
+            </dl>
+          )}
           {risk && (
             <p className="pd-note">
               {risk.potential_waste_cost_myr === null
