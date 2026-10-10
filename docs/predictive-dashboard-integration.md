@@ -43,3 +43,9 @@ Crates are keyboard-operable buttons with pressed-state selection. Their risk la
 ## Visual clarity review
 
 The pantry now starts with a plain-language waste/shortage summary and a short instruction for the decision journey. The explanation step shows API ingredient demand, eligible stock, and possible waste/shortage on a shared kilogram scale. These are independent quantities, not a stacked total or a new forecast calculation. Step navigation focuses the new heading and respects reduced motion. The recommendation ends with a practical verification checklist. Desktop/mobile browser checks use intercepted contract fixtures; live integration and first-time user testing remain separate validation.
+
+## Typography and interaction refinement
+
+Functional headings and ingredient labels use the system sans-serif; the main headline and shop sign retain serif styling. Crate labels and manager notes are larger, the decorative storefront is shorter, and repeated promotional copy is removed. Full source warnings remain available in a native expandable section, with model/simulated-operation and fixture provenance still visible above the experience.
+
+Crates use CSS perspective and hover depth without a WebGL dependency. Motion is limited to hover-capable devices and respects reduced motion; keyboard selection remains available. The three forecast explanation cards are buttons with pressed states and a politely announced explanation for each stage. They use existing API quantities without additional model calculations or claims about action outcomes. This is visual depth, not a 3D inventory simulation.
