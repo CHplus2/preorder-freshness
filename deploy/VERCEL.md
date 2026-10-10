@@ -1,6 +1,20 @@
 # Direct FreshCast deployment on Vercel
 
-## Stable bundle source repair — 10 October 2026
+## Connected kitchen release
+
+The integration release adds default database-based My kitchen mode, preserves
+the dashboard branch through `4700f89`, and keeps Genpact as a separately labelled
+model demonstration. Backend/UI integration source is `27ce4fa`; `e355f6d` adds
+appropriate local purchase validation messages. The original verified model
+bundle remains unchanged. See [the demo runbook](../docs/FRESHCAST-DEMO-RUNBOOK.md)
+for the served workflow, source boundaries and actual verification evidence.
+
+Production preparation added one labelled fictional four-portion order and nine
+assumed stock batches through normal staff APIs. Every original order and stock
+record was compared and preserved. Planning and hypothetical purchase APIs are
+read-only; builds still do not migrate or seed the production database.
+
+## Earlier stable bundle source repair — 10 October 2026
 
 The Production build of integration commit `2db0d0c` failed because its
 `FRESHCAST_BUNDLE_URL` used the main website alias. That alias had moved to a
