@@ -1,44 +1,143 @@
-# Predictive dashboard API — proposed frontend contract
+# Predictive API contract — Dormathon 2026
 
-**Proposal awaiting backend agreement.** No predictive contract/endpoints existed in this checkout. Coordinate with the backend developer before using Live API. This document does not describe a confirmed deployed API. No Django logic, FEFO algorithm or ML model is included.
+Version: `1` (implemented). Backend branch: `feature/ai-backend`.
+Dashboard branch: `feature/ai-dashboard`.
 
-Staff routes: `/admin/ai/forecast`, `/admin/ai/inventory`, `/admin/ai/decisions`. Demo data is synthetic and explicitly labeled; live errors never fall back to mocks. The backend must enforce staff permissions. Requests include Django session cookies.
+## Availability and scope
 
-## Proposed read-only endpoints
+**All five endpoints below are implemented**. The evaluated CatBoost artifact
+achieved 28.23% WAPE versus 34.81% baseline on weeks 136–145. A complete separately
+provisioned bundle and optional ML dependencies are required; Git alone does not
+supply them. See `backend/predictive_ai/README.md` for reset and deployment steps.
+Generated operations currently cover center 13 only; other centers return HTTP
+503 `operational_data_unavailable`. No empty/fabricated forecast is substituted.
 
-`GET /api/predictive/options/`:
+The forecasting domain is external Genpact **weekly** center/meal demand.
+`meal_id` is never a Dapur Kita `Product.id`. Recipe, stock, costs and supplier
+inputs initially use explicit simulated operational data. No local FYP stock is
+read or modified by this demo. A real-data adapter requires an explicit,
+verified mapping and unit conversion; it is outside this initial contract.
+
+## HTTP rules
+
+Base: `/api/admin/predictive/`; trailing slashes required. JSON UTF-8. All
+operations require Django staff permission (`IsAdminUser`) and existing session
+authentication. Session-authenticated POST requires CSRF using existing frontend
+conventions. Anonymous/nonstaff requests return HTTP 403 under existing DRF
+session defaults. GET is read-only; POST scenarios are nonpersistent and cannot
+send messages, deduct stock, or create orders.
+
+Integers: IDs and week indices; floating-point numbers: forecasts, kg quantities,
+MYR amounts and percentage metrics. Unknown costs are `null`, never zero.
+All output numbers must be finite. Arrays may be empty only after a successful
+calculation. Weekly expiry is an inclusive bucket, not a calendar date or proof
+of food safety. Prices and operational quantities must not be labeled real.
+
+## Endpoints
+
+| Method | Relative path | Inputs | Success body |
+| --- | --- | --- | --- |
+| GET | `metrics/` | none | `api_version`, `model_status`, `metrics`, `warnings` |
+| GET | `centers/` | none | `api_version`, `forecast_week`, `centers`, `warnings` |
+| GET | `forecast/` | required integer `center_id`; optional integer `week` | Forecast response below |
+| GET | `inventory-risk/` | same as forecast | Same forecast response, including risks and allocations |
+| POST | `what-if/` | JSON below | Same forecast response with scenario flag set |
+
+`week` defaults to the maximum historical week plus one. Any other horizon is
+HTTP 400. Unknown centers are HTTP 400; known centers with no eligible history
+produce an explicit 422 error. No implicit all-center forecast. The initial
+scenario controls only promotion flags; no claimed causal uplift.
+
+Metrics object retains training script names: `train_max_week`,
+`validation_start_week`, `validation_end_week`, `train_rows`, `validation_rows`,
+`model_wape_percent`, `lag1_baseline_wape_percent`, `model_beats_baseline`,
+`warning`. WAPE is a percentage, not a fraction. `model_status` is `ready` only
+with a genuinely trained and compatible artifact and metrics. Missing prerequisites
+return 503, not fabricated metrics. Centers entries use `center_id` (integer),
+`center_type` (string), `op_area` (number). City/region fields are not promised.
+
+### Forecast response shape
+
+This is a shape example with empty arrays, **not a generated forecast**:
 
 ```json
-{"menu_items":[{"id":"nasi-lemak","name":"Nasi lemak"}],"fulfillment_centers":[{"id":"north","name":"North campus kitchen"}]}
+{
+  "api_version": "1",
+  "center_id": 1,
+  "week": 146,
+  "horizon_weeks": 1,
+  "promotion_scenario": false,
+  "sources": {
+    "demand": "GENPACT_HISTORICAL",
+    "operational": "SIMULATED",
+    "product_mapping": "UNMAPPED"
+  },
+  "meal_forecasts": [],
+  "ingredient_risks": [],
+  "batch_allocations": [],
+  "warnings": []
+}
 ```
 
-IDs are strings. Empty arrays are valid. Demo centers do not establish real operational centers.
+`146` is illustrative; use the returned `forecast_week`, never hardcode it.
+`meal_forecasts` entries: `center_id`, `meal_id`, `week`, `predicted_orders`.
+Predictions are nonnegative model estimates, not confirmed bookings or rounded
+integer orders. Only meals with explicitly simulated recipes contribute to
+ingredient calculations; list uncovered meal IDs in warnings.
 
-`GET /api/predictive/dashboard/?menu_item_id=nasi-lemak&fulfillment_center_id=north&scenario=baseline`
+`ingredient_risks` entries:
 
-`scenario` is `baseline` or `promotion`. Promotion is always a what-if simulation. GET must not execute purchases, change inventory, activate promotions or train models.
+- `ingredient_id`: stable string key; quantities below are kilograms.
+- `risk_type`: `expiry_surplus`, `shortage`, `expiry_surplus_and_shortage`, or `none`.
+- `forecast_demand_kg`, `available_kg`, `expiring_unused_kg`, `shortfall_kg`:
+  nonnegative numbers; demand equals sum of forecast orders times recipe kg/order.
+- `potential_waste_cost_myr`: nonnegative number or null when any surplus cost is
+  unknown; calculate each unused expiring batch at its own cost before summing.
+- `illustrative_reorder_kg`: max(0, demand + simulated safety stock - eligible stock).
+- `action`, `explanation`, `risk_inputs_note`: plain-language strings explaining
+  forecast need, eligible stock, expiry bucket, uncertainty and proposed action.
 
-| Field | Meaning |
-| --- | --- |
-| `source` | `model` for backend results; `mock` for synthetic data |
-| `generated_at`, `as_of_date` | ISO timestamp with timezone and YYYY-MM-DD inventory reference date |
-| `menu_item_id`, `fulfillment_center_id`, `scenario` | Exact selection echoed back |
-| `currency` | `MYR` |
-| `uncertainty_label` | Explanation of range, coverage and limitations |
-| `assumptions` | Explanatory strings, including promotion uplift and omitted costs |
-| `forecast` | Array of `{week_start, actual_demand, predicted_demand, lower_bound, upper_bound}` in portions/week |
-| `inventory_risks` | Array of `{ingredient_id, ingredient_name, unit, expiry_date, days_to_expiry, stock_quantity, predicted_consumption, surplus_quantity, projected_loss, urgency, issue_category, reason}` |
-| `recommendations` | Array of `{id, ingredient_id, ingredient_name, priority, unit, purchase_quantity, action, reason, projected_waste, projected_loss}` |
-| `comparison` | `{baseline: {purchase_cost, projected_loss}, recommended: {purchase_cost, projected_loss}}` |
+`batch_allocations` entries: `batch_id` (string), `ingredient_id` (string),
+`expiry_week` (integer), `eligible` (boolean), `exclusion_reason` (null or
+`expired`), `consumed_kg`, `remaining_kg`, `potential_waste_cost_myr`.
+All allocation is hypothetical. Expired batches consume zero. Eligible batches
+allocate in `(expiry_week, batch_id)` order; current-week surplus is potential
+waste, not measured spoilage. Include inventory-only ingredients with zero demand
+so excess stock is visible. Initial simulated batches do not model received-week
+or quarantine state; do not infer their absence in real stock.
 
-Complete synthetic example: `frontend/src/features/predictive/mockData.js`.
+Risk ordering: known potential waste MYR descending, then current-week expiry
+surplus descending, shortfall descending, ingredient ID ascending. Unknown costs
+must be disclosed in warnings rather than imply no risk. Shortage purchasing
+costs require a separate verified supplier-price source; no guaranteed delivery
+or savings. Promotion recommendations remain speculative.
 
-Demand values may be null when unavailable; each row needs actual or predicted demand. Bounds must both be null or satisfy lower ≤ predicted ≤ upper. Unknown is never zero. Quantities/costs are finite nonnegative numbers; priority is a positive integer (1 first); days to expiry is an integer and may be negative. Dates represent Malaysia business days. Week starts, ingredient IDs and recommendation IDs must be unique. Inventory, recommendations and comparison must use the same selected menu, center, scenario and forecast horizon. Units are consistent per ingredient and never summed across ingredients.
+### Nonpersistent scenario request
 
-Urgency: `critical`, `high`, `medium`, `low`. Business issue: `expiry_surplus`, `overstock`, `stockout`, `quality_hold`. Backend provides categorization, FEFO/consumption, recommendations and explanations; frontend only displays them. Financial impact is projected waste cost, not realized savings or net profit. Disclose omitted promotion, labor and delivery costs.
+```json
+{"center_id": 1, "week": 146, "promotion_scenario": true}
+```
 
-Return arrays, including empty arrays, without pagination envelopes. Use 401/403 for denied access, 404 for missing endpoints, and non-2xx for errors. The frontend rejects malformed data, checks echoed selection, and cancels obsolete requests.
+Reject unknown fields, booleans/fractions as integer IDs, nonboolean scenario
+flags, unavailable centers and unsupported weeks. Set both observational promotion
+flags for this hypothetical scenario; disclose that prices and other covariates
+are assumed and response is not a causal comparison. Default forecast is
+`promotion_scenario: false`.
 
-## Validation
+## Errors and synchronization
 
-From `frontend`: `npm ci`, `npm run test:predictive`, `npm run build`. Run the existing suites with `npm test`, and the predictive adapter checks with `npm run test:predictive`. Node's built-in test runner adds no dependency. Browser checks should cover all views at desktop/mobile sizes, selections, simulation labels, accessible exact chart values, live error/retry, empty options/results and staff access. Actual model/API integration remains unverified until the backend implements an agreed contract.
+Predictive error body:
+
+```json
+{"code": "model_unavailable", "detail": "Train and evaluate the demand model before requesting forecasts."}
+```
+
+Codes: HTTP 400 `invalid_parameters`; 422 `no_eligible_history`; 503
+`source_data_unavailable`, `model_unavailable`, `operational_data_unavailable`.
+Authentication errors retain existing DRF `detail` behavior. Unexpected failures
+use the existing sanitized exception handler; never expose filesystem paths,
+CSV contents or tracebacks. Dashboard should render these states explicitly.
+
+Backend endpoint tests must enforce field names, finite JSON numbers, staff
+permissions, CSRF, invalid input, missing model/data, FEFO and no database writes.
+Update this document in the same commit as endpoint/schema changes. Frontend mocks must be explicitly labeled fixtures.

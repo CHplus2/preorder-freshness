@@ -458,3 +458,30 @@
     gap: 12px;
   }
 }
+
+.pd-demand-bars {
+  display: grid;
+  gap: 18px;
+  margin: 24px 0;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 12px;
+}
+.pd-demand-bars .pd-bar {
+  margin: 6px 0;
+  height: 12px;
+}
+.pd-demand-bars .pd-bar span {
+  background: #285a3e;
+}
+.pd-demand-bars .pd-scenario-bar span {
+  background: #7868c0;
+}
+.pd-loss-total {
+  font-size: 22px !important;
+  line-height: 1.5;
+}
+.pd-controls input {
+  width: 100%;
+  margin-top: 6px;
+}

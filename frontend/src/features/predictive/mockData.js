@@ -1,159 +1,87 @@
-// Synthetic demonstration fixtures. No trained model or live inventory is used.
-export const mockOptions = {
-  menu_items: [
-    { id: "nasi-lemak", name: "Nasi lemak" },
-    { id: "chicken-rice", name: "Chicken rice" },
-  ],
-  fulfillment_centers: [
-    { id: "north", name: "North campus kitchen" },
-    { id: "south", name: "South campus kitchen" },
-  ],
+// Explicit frontend fixtures matching contract v1. No model was run for these numbers.
+export const demoCenters = {
+  api_version: "1",
+  forecast_week: 146,
+  centers: [{ center_id: 13, center_type: "TYPE_A", op_area: 5 }],
+  warnings: ["Frontend fixture center, not live data."],
 };
-export function mockDashboard({
-  menu_item_id,
-  fulfillment_center_id,
-  scenario,
-}) {
-  const factor =
-    (menu_item_id === "chicken-rice" ? 0.8 : 1) *
-    (fulfillment_center_id === "south" ? 0.7 : 1);
-  const promo = scenario === "promotion" ? 1.15 : 1;
-  const scale = (n) => Math.round(n * factor);
-  const forecast = [210, 238, 225, 260, 278, 294, 286, 310].map((n, i) => ({
-    week_start: [
-      "2026-09-07",
-      "2026-09-14",
-      "2026-09-21",
-      "2026-09-28",
-      "2026-10-05",
-      "2026-10-12",
-      "2026-10-19",
-      "2026-10-26",
-    ][i],
-    actual_demand: i < 4 ? scale(n) : null,
-    predicted_demand: i >= 3 ? scale(n * promo) : null,
-    lower_bound: i >= 4 ? scale(n * promo * 0.82) : null,
-    upper_bound: i >= 4 ? scale(n * promo * 1.22) : null,
-  }));
-  const inventory_risks = [
-    {
-      ingredient_id: "chicken",
-      ingredient_name: "Fresh chicken",
-      unit: "kg",
-      expiry_date: "2026-10-12",
-      days_to_expiry: 2,
-      stock_quantity: scale(46),
-      predicted_consumption: scale(28 * promo),
-      surplus_quantity: scale(18 / promo),
-      projected_loss: scale(216 / promo),
-      urgency: "critical",
-      issue_category: "expiry_surplus",
-      reason:
-        "Stock expires before the next replenishment cycle. Expected consumption is below available stock.",
-    },
-    {
-      ingredient_id: "coconut",
-      ingredient_name: "Coconut milk",
-      unit: "L",
-      expiry_date: "2026-10-13",
-      days_to_expiry: 3,
-      stock_quantity: scale(24),
-      predicted_consumption: scale(17 * promo),
-      surplus_quantity: scale(7 / promo),
-      projected_loss: scale(56 / promo),
-      urgency: "high",
-      issue_category: "overstock",
-      reason:
-        "Current stock exceeds the forecast requirement within its usable period.",
-    },
-    {
-      ingredient_id: "rice",
-      ingredient_name: "Rice",
-      unit: "kg",
-      expiry_date: "2027-02-01",
-      days_to_expiry: 114,
-      stock_quantity: scale(18),
-      predicted_consumption: scale(35 * promo),
-      surplus_quantity: 0,
-      projected_loss: 0,
-      urgency: "medium",
-      issue_category: "stockout",
-      reason:
-        "Expected consumption exceeds stock. Purchase planning is needed to maintain menu availability.",
-    },
-  ];
-  const recommendations = [
-    {
-      id: "rec-chicken",
-      ingredient_id: "chicken",
-      ingredient_name: "Fresh chicken",
-      priority: 1,
-      unit: "kg",
-      purchase_quantity: 0,
-      action: "Defer the next purchase",
-      reason: "Use existing batches in expiry order before replenishing.",
-      projected_waste: scale(18 / promo),
-      projected_loss: scale(216 / promo),
-    },
-    {
-      id: "rec-coconut",
-      ingredient_id: "coconut",
-      ingredient_name: "Coconut milk",
-      priority: 2,
-      unit: "L",
-      purchase_quantity: scale(2),
-      action: "Reduce replenishment",
-      reason:
-        "A smaller order limits surplus while preserving forecast coverage.",
-      projected_waste: scale(7 / promo),
-      projected_loss: scale(56 / promo),
-    },
-    {
-      id: "rec-rice",
-      ingredient_id: "rice",
-      ingredient_name: "Rice",
-      priority: 3,
-      unit: "kg",
-      purchase_quantity: scale(17 * promo),
-      action: "Replenish before next week",
-      reason:
-        "Close the expected stock gap; confirm supplier lead time before ordering.",
-      projected_waste: 0,
-      projected_loss: 0,
-    },
-  ];
+export const demoMetrics = {
+  api_version: "1",
+  model_status: "ready",
+  metrics: {
+    train_max_week: 135,
+    validation_start_week: 136,
+    validation_end_week: 145,
+    train_rows: 100,
+    validation_rows: 10,
+    model_wape_percent: 30,
+    lag1_baseline_wape_percent: 36,
+    model_beats_baseline: true,
+    warning: "Illustrative metrics only; not evaluated model scores.",
+  },
+  warnings: ["Synthetic frontend fixture metrics."],
+};
+export function demoForecast({ center_id, week, promotion_scenario }) {
+  const demand = promotion_scenario ? 230.5 : 210.25;
   return {
-    source: "mock",
-    generated_at: "2026-10-10T00:00:00Z",
-    as_of_date: "2026-10-10",
-    currency: "MYR",
-    menu_item_id,
-    fulfillment_center_id,
-    scenario,
-    uncertainty_label:
-      "Illustrative range; not a calibrated confidence interval",
-    assumptions:
-      scenario === "promotion"
-        ? [
-            "Illustrative 15% demand uplift; no causal promotion model.",
-            "Discount cost and customer response are not estimated.",
-          ]
-        : [
-            "Synthetic weekly demand and inventory; not operational advice.",
-            "Quantities represent one selected menu and center.",
-          ],
-    forecast,
-    inventory_risks,
-    recommendations,
-    comparison: {
-      baseline: {
-        purchase_cost: scale(820),
-        projected_loss: scale(340 / promo),
-      },
-      recommended: {
-        purchase_cost: scale(640),
-        projected_loss: scale(272 / promo),
-      },
+    api_version: "1",
+    center_id,
+    week,
+    horizon_weeks: 1,
+    promotion_scenario,
+    sources: {
+      demand: "GENPACT_HISTORICAL",
+      operational: "SIMULATED",
+      product_mapping: "UNMAPPED",
     },
+    meal_forecasts: [
+      { center_id, meal_id: 101, week, predicted_orders: demand },
+      { center_id, meal_id: 102, week, predicted_orders: 170.75 },
+    ],
+    ingredient_risks: [
+      {
+        ingredient_id: "chicken",
+        risk_type: "expiry_surplus",
+        forecast_demand_kg: 28,
+        available_kg: 46,
+        expiring_unused_kg: 18,
+        shortfall_kg: 0,
+        potential_waste_cost_myr: 216,
+        illustrative_reorder_kg: 0,
+        action: "Defer replenishment",
+        explanation:
+          "Simulated expiring stock exceeds the forecast requirement.",
+        risk_inputs_note: "Synthetic recipes and stock; weekly expiry buckets.",
+      },
+      {
+        ingredient_id: "rice",
+        risk_type: "shortage",
+        forecast_demand_kg: 35,
+        available_kg: 18,
+        expiring_unused_kg: 0,
+        shortfall_kg: 17,
+        potential_waste_cost_myr: null,
+        illustrative_reorder_kg: 19,
+        action: "Review replenishment",
+        explanation: "Expected ingredient need exceeds eligible stock.",
+        risk_inputs_note: "Supplier lead time and prices are unverified.",
+      },
+    ],
+    batch_allocations: [
+      {
+        batch_id: "fixture-chicken-1",
+        ingredient_id: "chicken",
+        expiry_week: week,
+        eligible: true,
+        exclusion_reason: null,
+        consumed_kg: 28,
+        remaining_kg: 18,
+        potential_waste_cost_myr: 216,
+      },
+    ],
+    warnings: [
+      "All values are frontend fixtures, not actual model predictions.",
+      "Promotion changes are hypothetical and do not establish causal uplift.",
+    ],
   };
 }
