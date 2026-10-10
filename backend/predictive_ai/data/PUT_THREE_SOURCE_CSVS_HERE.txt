@@ -1,0 +1,1 @@
+Download: train.csv, meal_info.csv, fulfilment_center_info.csv from the Genpact Food Demand Forecasting challenge. These are WEEKLY order records. Do not mix with the FYP SQLite database.
