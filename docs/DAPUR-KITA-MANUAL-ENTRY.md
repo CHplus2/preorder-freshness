@@ -453,7 +453,7 @@ Menu direction was checked against Malaysian operators offering rice meals and h
 - https://mejamakan.my/ — home-style lauk/menu context.
 - https://hq.moh.gov.my/fsq/garis-panduan-keselamatan-makanan-homebased — KKM home-based food guidance; use applicable guidance and actual supplier evidence for operations.
 
-Companion JSON: DAPUR-KITA-STARTER-DATA.json. It uses material/category names for manual lookup, not database IDs, and is not directly importable. `allergen_review` is an advisory field to append to Description; `unit` on inventory is a reference to the raw-material unit. No live data has been inserted.
+Companion JSON: DAPUR-KITA-STARTER-DATA.json. It uses material/category names for manual lookup, not database IDs, and cannot be posted directly to the API. `allergen_review` is an advisory field to append to Description; `unit` on inventory is a reference to the raw-material unit. The [catalogue importer](DAPUR-KITA-CATALOGUE-IMPORT.md) translates menus/materials through authenticated staff APIs and excludes inventory templates. Preparing or testing it does not insert live data.
 
 ## Additional menus: expanded catalogue
 
