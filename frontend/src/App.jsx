@@ -31,6 +31,7 @@ const AdminOrdersPage=lazy(()=>import("./pages/admin/AdminOrdersPage"));
 const AdminReportsPage=lazy(()=>import("./pages/admin/AdminReportsPage"));
 const AdminCustomersPage=lazy(()=>import("./pages/admin/AdminCustomersPage"));
 const StoreSettingsPage=lazy(()=>import("./pages/admin/StoreSettingsPage"));
+const PredictiveDashboard=lazy(()=>import("./features/predictive/PredictiveDashboard"));
 const PlannerPage=lazy(()=>import("./pages/admin/PlannerPage"));
 import "./App.css";
 import "./dapur.css";
@@ -57,6 +58,11 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        {['forecast', 'inventory', 'decisions'].map(view => (
+          <Route key={view} path={`/admin/ai/${view}`} element={
+            <RequireAuth message="Admin access required"><PredictiveDashboard view={view}/></RequireAuth>
+          }/>
+        ))}
         <Route path="/account" element={<RequireAuth><AccountPage/></RequireAuth>}/>
         <Route path="/recover" element={<RecoveryPage/>}/>
         <Route path="/escrow-demo" element={<Suspense fallback={<p className="dk-workspace">Loading escrow lab…</p>}><EscrowDemoPage/></Suspense>}/>
@@ -197,7 +203,7 @@ function AppContent() {
   const [mobileOpen,setMobileOpen]=useState(false);
   const ownerPage=location.pathname.startsWith('/admin/');
   const publicLinks=[['/','Home'],['/story','Our story'],['/menu','Menu'],['/how-it-works','How it works'],['/contact','Contact']];
-  const ownerLinks=[['/admin/planner','Planner'],['/admin/products','Menus'],['/admin/inventory','Inventory'],['/admin/orders','Orders'],['/admin/reports','Sales'],['/admin/settings','Settings'],['/admin/customers','Customers'],['/','View storefront']];
+  const ownerLinks=[['/admin/planner','Planner'],['/admin/products','Menus'],['/admin/inventory','Inventory'],['/admin/orders','Orders'],['/admin/reports','Sales'],['/admin/ai/forecast','AI Planning'],['/admin/settings','Settings'],['/admin/customers','Customers'],['/','View storefront']];
   const navigation=ownerPage?ownerLinks:publicLinks;
   const closeMenu=()=>setMobileOpen(false);
   useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[location.pathname]);
