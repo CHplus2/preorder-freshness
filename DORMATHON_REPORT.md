@@ -399,3 +399,55 @@ workflow. Preserved it by rebasing only the local documentation commit onto the
 updated integration head. The workflow's execution/success is unverified; it
 regenerates a bundle rather than exporting exact cloud model bytes. No workflow
 was triggered by this session, and no force-push was used.
+
+## Task 8: deployment investigation and tested container candidate
+
+The user's live `source_data_unavailable` message agrees with deployment source:
+CSV/model artifacts are Git-ignored, and existing Vercel build/dependency
+configuration does not provision them or install the optional ML runtime. The
+previous build log's missing PostgreSQL DATABASE_URL is a separate Preview
+configuration failure. No production settings were altered.
+
+Latest remote integration head was fetched and matched `7f9ecfa`. Access to
+GitHub Actions/logs, Vercel docs/API and the live website remained blocked:
+GitHub returned Forbidden; live HTTPS CONNECT returned proxy HTTP 403 (envoy).
+Thus no claim is made about the Actions artifact's success or live authenticated
+API/browser tests. Exact Vercel function fit remains unverified. A cloud-network
+draft was saved adding api.github.com, api.vercel.com, vercel.com and the live
+site hostname, preserving package presets. It requires user review/save/publish
+before affected access can be retried. This does not change production settings.
+
+Prepared the existing full Django+React app as a container deployment candidate,
+with inference-only runtime requirements, Gunicorn startup, and safe checksum-
+verified provisioning of an existing bundle from a mount or HTTPS artifact URL.
+No scikit-learn/training/notebook runtime requirements are added; supported
+CatBoost dependencies remain intact. No new API/auth flow or UI features.
+Docker context excludes CSVs/models, credentials, databases and generated output.
+Startup does not train or run migrations. Signed artifact URLs are not logged;
+TLS, fixed archive hashes, size limits and safe member checks are enforced.
+Versioned destination prevents overwriting active model inputs.
+
+Docker build passed after diagnosing container DNS and TLS trust. Used supplied
+proxy address mapping and approved CA via temporary BuildKit secret; never
+disabled TLS verification or copied credentials/trust secrets into the image.
+The built image's Python packages occupy about 797 MB; representative runtime
+memory was about 585 MiB. These measurements support the container-host proposal,
+not an unverified Vercel serverless compatibility claim.
+
+Mounted a freshly checksum-verified copy of the existing eight runtime files
+read-only into the candidate container, with a separate copied local SQLite
+demo database. Model SHA remained b7608c307e17bb6d2b5b4ca15c4e495394cc405035de8c947522574da28b91a9;
+no retraining or production database access occurred. Chromium on the container
+passed all five real endpoints, the five-step ingredient journey, worksheet,
+promotion comparison, selection retention, recommendation, forecast/inventory,
+mobile layout, loading recovery, operational error and authentication gating.
+Seven repository/provisioning tests passed, including archive integrity,
+traversal rejection, required files and no-overwrite behavior. Original WAPE
+remains 28.23% versus 34.81% baseline.
+
+Deploy instructions and measured evidence are in `deploy/README.md`. No external
+artifact upload, hosted preview, production routing change or promotion occurred.
+A preview-host choice/access and secure artifact upload path remain missing;
+network changes must be activated before remote investigation/testing resumes.
+Production promotion requires the user's approval after a real hosted preview
+passes. The live prototype is not yet verified ready for judging.
