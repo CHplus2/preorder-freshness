@@ -46,3 +46,18 @@ def inventory_risk(request): return dispatch(request,'inventory-risk')
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def what_if(request): return dispatch(request,'what-if')
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def backtest(request):
+    from predictive_ai.backtest import backtest as replay
+    try:
+        values = request.query_params
+        if any(len(values.getlist(k)) != 1 for k in values):
+            raise service.PredictiveError('invalid_parameters', 'Repeated query parameters are not supported.', 400)
+        response = Response(replay(values))
+    except service.PredictiveError as exc:
+        response = Response(dict(code=exc.code, detail=exc.detail), status=exc.status)
+    response['Cache-Control'] = 'no-store'
+    return response

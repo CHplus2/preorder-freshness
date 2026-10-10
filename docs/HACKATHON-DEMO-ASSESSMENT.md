@@ -1,5 +1,52 @@
 # Assessment against the supplied Dormathon judging criteria
 
+## Final decision after reading the uploaded judging rubric (10 October 2026)
+
+The uploaded `Dormathon_2026_Judging_Rubric.pdf` gives the Predictive Model Track
+five equally weighted criteria: problem clarity/value, predictive rigor/data
+robustness, decision support/actionability, explainability/trust, and live
+execution/prototype/pitch. Its guiding question is: "Does your model help someone
+make a better decision, and can you prove it?" It rewards sound forecasting,
+noise/missing-value handling and concrete prioritized interventions. It does not
+specify CatBoost, a maximum WAPE, mandatory proprietary customer data, or an
+interactive arbitrary-input prediction form. Its scores are not an eligibility
+rulebook; this PDF does not resolve whether pre-existing FYP code is permitted.
+The earlier five-pillar summary below is historical context, not this track rubric.
+
+**Keep the working evaluated Genpact CatBoost demonstration. Do not promote the
+failed local/bakery CatBoost candidates.** This is a late-stage release decision,
+not a claim that Genpact transfers to the owner's shop or that WAPE on different
+datasets can be compared to rank models. On Genpact's own chronological holdout,
+the saved model's freshly reproduced WAPE is 28.23494%, versus 34.80762% for the
+previous observation: an 18.88288% relative error reduction on 32,821 rows. The
+artifact was trained through week 135 and evaluated on weeks 136–145. No new
+model fitting or hyperparameter selection was performed for this release.
+
+The staff-only `backtest/?center_id=13&week=136` endpoint now lets a judge choose
+a labelled held-out week and inspect actual quantities, model predictions,
+baseline predictions and selected-slice WAPE/MAE. It runs the saved model with
+past-only quantity features; changes to target/future quantities do not change
+the selected prediction. Historical price/promotion inputs are assumed known.
+This is a replay of an already evaluated holdout, not fresh independent evidence
+or a stock-risk calculation. Week 146 remains the unlabelled future scenario.
+
+Keep database-backed `local-plan/` as a distinct confirmed-order/recipe/stock
+calculation, not a learned demand forecast. The existing React screen still uses
+Genpact and simulated operations; its local-mode UI integration remains pending.
+Do not claim current local accuracy, actual savings, zero false alarms, a coherent
+fully connected local forecasting demo, or a guaranteed judging score. Stock and
+recipes cannot repair the scarcity/relabelled provenance of original sales.
+
+Quick presentation sequence: show the held-out evidence, demonstrate the current
+Detect → Categorize → Prioritize → Explain → Decide journey, then show the separate
+database planner and explain the boundary. Lead with the specific kitchen decision
+and finish with a pilot plan to collect stable menu/date history. A single coherent
+public-bakery shop would require the unimplemented migration described in
+`PUBLIC-BAKERY-DEMO-FEASIBILITY.md`; do not attempt a rushed catalogue/history rewrite
+or claim that migration happened.
+
+## Earlier general judging summary
+
 The owner supplied five judging pillars and a summary saying functional products
 are built from scratch during a continuous 24-hour sprint. The official reuse
 rules have not been provided. This project uses an existing FYP repository;

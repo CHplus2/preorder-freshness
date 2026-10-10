@@ -4,6 +4,7 @@ from myapp.views.local_planning import local_planning
 
 urlpatterns=[
     path('local-plan/', local_planning),
+    path('backtest/', predictive.backtest),
     path('metrics/',predictive.metrics),
     path('centers/',predictive.centers),
     path('forecast/',predictive.forecast),

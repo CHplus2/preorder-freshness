@@ -5,7 +5,7 @@ Dashboard branch: `feature/ai-dashboard`.
 
 ## Availability and scope
 
-**The five Genpact endpoints and separate `local-plan/` endpoint are implemented**.
+**The five Genpact endpoints, `backtest/` and separate `local-plan/` endpoint are implemented**.
 The local plan reads database orders and stock without using a model; its distinct
 schema is documented below. The evaluated Genpact CatBoost artifact
 achieved 28.23% WAPE versus 34.81% baseline on weeks 136–145. A complete separately
@@ -61,6 +61,36 @@ not a calendar date or proof of food safety. Its simulated prices and operationa
 quantities must not be labelled real shop observations.
 
 ## Genpact endpoints
+
+### Labelled held-out replay (implemented)
+
+`GET backtest/?center_id=13&week=136` requires both positive integer parameters;
+only weeks 136–145 from the saved artifact's validation metadata are supported.
+Unknown, repeated, missing or additional parameters return 400. No observations
+for a valid selection return 422 `no_eligible_history`. Missing data/model return
+the existing 503 errors. Staff permission is required; POST returns 405;
+responses use `Cache-Control: no-store`. No business database records are written.
+
+Success fields: `api_version: "1"`, `mode: "historical_backtest"`, `center_id`,
+`week`, `model_status: "ready"`, `training_max_week: 135`,
+`evaluation_protocol: "rolling_one_week_ahead"`, `observations` (row count),
+`actual_orders_total`, `sources: {demand: "GENPACT_HISTORICAL", operational:
+"NOT_USED"}`, `warnings`, `scores`, and `meal_comparisons`.
+`scores` contains `catboost` and `previous_observation`; each has
+`wape_percent` (number or null when actual total is zero) and
+`mae_orders_per_meal` (number). Each comparison has integer `meal_id`, numeric
+`actual_orders`, `predicted_orders` and `baseline_orders`.
+
+This replays the already reported holdout, not newly collected independent data.
+Only earlier quantities enter shifted features. Recorded target-week prices and
+promotion flags are assumed known. The previous-observation baseline may span
+missing weeks. Selected scores are not the pooled whole-holdout scores. No stock
+risks are returned; replay is separate from the week-146 future scenario.
+The existing React dashboard does not call this endpoint. After staff login,
+open the endpoint URL directly for a JSON/DRF demonstration or request it using
+the existing session. Do not pass this schema to `validateForecast`.
+
+### Forecast and metrics endpoints
 
 | Method | Relative path | Inputs | Success body |
 | --- | --- | --- | --- |
