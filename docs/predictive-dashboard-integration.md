@@ -49,3 +49,9 @@ The pantry now starts with a plain-language waste/shortage summary and a short i
 Functional headings and ingredient labels use the system sans-serif; the main headline and shop sign retain serif styling. Crate labels and manager notes are larger, the decorative storefront is shorter, and repeated promotional copy is removed. Full source warnings remain available in a native expandable section, with model/simulated-operation and fixture provenance still visible above the experience.
 
 Crates use CSS perspective and hover depth without a WebGL dependency. Motion is limited to hover-capable devices and respects reduced motion; keyboard selection remains available. The three forecast explanation cards are buttons with pressed states and a politely announced explanation for each stage. They use existing API quantities without additional model calculations or claims about action outcomes. This is visual depth, not a 3D inventory simulation.
+
+## Kitchen hotspot explorer
+
+The assistant now opens on an original isometric SVG kitchen with numbered HTML button hotspots. A marker selects an issue preview locally; “Explore this decision” opens that ingredient’s existing decision journey. Ingredient quantities and nullable costs come from the baseline API response. Marker locations are decorative, with no inference of real storage zones, food handling, or product mappings. This is a perspective illustration with hotspots, not a rotatable 3D scan.
+
+The previous crate experience remains available through the view switch, and the ingredient list remains available below. Six issues appear per kitchen scene, with paging for additional issues. Buttons have accessible names, selected states, and 44px markers; issue previews announce changes politely. Mobile stacks the inspector beneath the scene. No extra model, backend changes, purchase execution, external imagery or WebGL dependencies are introduced.

@@ -805,7 +805,185 @@
   }
 }
 @media (max-width: 560px) {
-  .pantry-sign > span { display: none; }
-  .pantry-sign { top: 45px; }
-  .pantry-window-label { bottom: 10px; }
+  .pantry-sign > span {
+    display: none;
+  }
+  .pantry-sign {
+    top: 45px;
+  }
+  .pantry-window-label {
+    bottom: 10px;
+  }
+}
+.fc-scene-switch {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.pd .fc-scene-switch button[aria-pressed="true"] {
+  background: #446c55;
+  color: #fff;
+  border-color: #446c55;
+}
+.fc-walkthrough {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 20px;
+  align-items: stretch;
+}
+.fc-room {
+  position: relative;
+  min-width: 0;
+  border-radius: 14px;
+  background: radial-gradient(ellipse at center, #fffdf5, #ece4d1);
+  border: 1px solid #d9ccb5;
+  overflow: hidden;
+}
+.fc-room-art {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.fc-room-title {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  display: grid;
+  gap: 3px;
+  color: #304b3c;
+  font-size: 15px;
+}
+.fc-room-title span {
+  font-size: 12px;
+}
+.pd .fc-hotspot {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  color: #304b3c;
+}
+.fc-hotspot > span:first-child {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 3px solid #fff9eb;
+  border-radius: 50%;
+  background: #865125;
+  color: #fff;
+  box-shadow:
+    0 0 0 2px #865125,
+    0 5px 10px #304b3c30;
+  font-size: 16px;
+  font-weight: 750;
+}
+.fc-hotspot.gap > span:first-child {
+  background: #685082;
+  box-shadow:
+    0 0 0 2px #685082,
+    0 5px 10px #304b3c30;
+}
+.fc-hotspot[aria-pressed="true"] > span:first-child {
+  background: #304b3c;
+  box-shadow:
+    0 0 0 4px #91b19c,
+    0 5px 10px #304b3c30;
+}
+.fc-hotspot-label {
+  background: #fffcf4f5;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 650;
+  max-width: 120px;
+  overflow-wrap: anywhere;
+  box-shadow: 0 2px 6px #304b3c15;
+}
+.pd .fc-hotspot:hover {
+  background: transparent;
+}
+.fc-hotspot:hover > span:first-child {
+  outline: 3px solid #bdcea8;
+  outline-offset: 4px;
+}
+.fc-room-caption {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  font-size: 11px;
+  text-align: center;
+  color: #5e503b;
+}
+.fc-room-inspector {
+  background: #fffcf4;
+  padding: 20px;
+  border: 1px solid #d9ccb5;
+  border-radius: 10px;
+}
+.admin-shell .fc-room-inspector h3 {
+  font:
+    700 23px/1.3 system-ui,
+    sans-serif;
+  margin: 16px 0;
+  overflow-wrap: anywhere;
+}
+.fc-room-inspector p {
+  font-size: 14px;
+}
+.fc-room-pages {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 15px;
+  font-size: 12px;
+}
+.pd .fc-room-pages button {
+  padding: 9px;
+}
+.fc-room-pages button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (max-width: 1050px) {
+  .fc-walkthrough {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .fc-room {
+    aspect-ratio: 1 / 1.05;
+  }
+  .fc-room-art {
+    height: 100%;
+    object-fit: fill;
+  }
+  .fc-room-title {
+    top: 10px;
+    left: 12px;
+    font-size: 13px;
+  }
+  .fc-room-title span {
+    font-size: 11px;
+  }
+  .fc-hotspot-label {
+    max-width: 76px;
+    font-size: 11px;
+  }
+  .fc-room-caption {
+    font-size: 10px;
+  }
+}
+/* Keep marker geometry stable when the admin button hover reset applies. */
+.admin-shell .pd .fc-hotspot,
+.admin-shell .pd .fc-hotspot:hover {
+  transform: translate(-50%, -50%);
+  background: transparent;
 }
