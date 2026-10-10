@@ -40,12 +40,15 @@ export default function RescueDemo() {
   const [playing, setPlaying] = useState(false);
   const [showShift, setShowShift] = useState(false);
   const [demandOffset, setDemandOffset] = useState(0);
+  const [compareShift, setCompareShift] = useState(true);
   const stageHeading = useRef(null);
   const selected = choices.find((item) => item.id === action);
   const outcome = rescueOutcome(selected, demandOffset);
   const baselineOutcome = rescueOutcome(choices[0], demandOffset);
   const sold = Math.floor((outcome.sales * progress) / 4);
+  const baselineSold = Math.floor((baselineOutcome.sales * progress) / 4);
   const finished = progress === 4;
+  const comparing = compareShift && action !== "original" && !finished;
   const stage = !inspected ? 0 : finished ? 3 : showShift ? 2 : 1;
   useEffect(() => {
     if (open && stage > 0) {
@@ -102,6 +105,7 @@ export default function RescueDemo() {
             setShowShift(false);
             setAction("original");
             setDemandOffset(0);
+            setCompareShift(true);
             reset();
           }}
         >
@@ -233,7 +237,51 @@ export default function RescueDemo() {
                             ? "Illustrative shift complete"
                             : "Your simulated serving counter"}
                         </h3>
-                        <ServingScene sold={sold} playing={playing} />
+                        {action !== "original" && !finished && (
+                          <label className="fc-shift-compare-toggle">
+                            <input
+                              type="checkbox"
+                              checked={compareShift}
+                              onChange={(event) =>
+                                setCompareShift(event.target.checked)
+                              }
+                            />
+                            Compare with original menu
+                          </label>
+                        )}
+                        <div className={comparing ? "fc-shift-comparison" : ""}>
+                          {comparing && (
+                            <div>
+                              <h4>Original menu · same demand assumption</h4>
+                              <ServingScene
+                                sold={baselineSold}
+                                playing={playing}
+                              />
+                              <p>
+                                {baselineSold} served · {20 - baselineSold}{" "}
+                                remaining in playback
+                              </p>
+                            </div>
+                          )}
+                          <div>
+                            <h4>{selected.name}</h4>
+                            <ServingScene sold={sold} playing={playing} />
+                            {comparing && (
+                              <p>
+                                {sold} served · {20 - sold} remaining in
+                                playback
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {comparing && (
+                          <p className="pd-note">
+                            Both scenes reveal preset totals at the same
+                            playback progress. Customer movement is decorative;
+                            it does not model actual arrival times or prove a
+                            promotion effect.
+                          </p>
+                        )}
                         <p role="status">
                           {sold} served in playback · {20 - sold} remaining
                           {finished

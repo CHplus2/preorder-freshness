@@ -388,3 +388,40 @@
     justify-self: center;
   }
 }
+.pd .fc-shift-compare-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin: 12px 0;
+  font-weight: 600;
+}
+.pd .fc-shift-compare-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: #426b58;
+}
+.pd .fc-shift-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.pd .fc-shift-comparison > div {
+  min-width: 0;
+  padding: 12px;
+  background: #fffdf7;
+  border: 1px solid #c8b99e;
+  border-radius: 18px;
+}
+.pd .fc-shift-comparison h4 {
+  min-height: 40px;
+  margin: 8px 0;
+}
+.pd .fc-shift-comparison p {
+  font-size: 13px;
+}
+@media (max-width: 700px) {
+  .pd .fc-shift-comparison {
+    grid-template-columns: 1fr;
+  }
+}
