@@ -36,14 +36,14 @@ function Empty({ text }) {
 }
 function Warnings({ items }) {
   return (
-    <aside className="pd-assumptions">
-      <h2>Sources, warnings & limitations</h2>
+    <details className="pd-assumptions">
+      <summary>Data sources & limitations</summary>
       <ul>
         {[...new Set(items.filter(Boolean))].map((w, i) => (
           <li key={i}>{w}</li>
         ))}
       </ul>
-    </aside>
+    </details>
   );
 }
 function Forecast({ baseline, scenario, meal, setMeal, isFixture }) {
@@ -490,13 +490,10 @@ function DashboardContent({ view }) {
       <header className="pd-header">
         <div>
           <span className="pd-eyebrow">
-            DORMATHON 2026 · DEMAND & INVENTORY INTELLIGENCE
+            FRESHCAST · KITCHEN DECISION ASSISTANT
           </span>
-          <h1>A fresher kitchen starts with one good decision.</h1>
-          <p>
-            Start with an ingredient problem, explore your options, and review
-            the reasoning before deciding.
-          </p>
+          <h1>Less waste. A better kitchen plan.</h1>
+          <p>Spot a problem. Explore your options. Choose your next move.</p>
         </div>
         <button onClick={() => setRetry((n) => n + 1)}>
           <RefreshCw size={16} /> Refresh
@@ -510,13 +507,13 @@ function DashboardContent({ view }) {
         </strong>
         <p>
           {mode === "live"
-            ? "Genpact meal IDs are unmapped to Dapur Kita products. Recipes, stock, costs and supplier settings are simulated. No demo fallback is used."
+            ? "Demand uses the model. Stock, recipes and costs are simulated; external meal IDs are not mapped to your menu."
             : "All displayed demand, metrics and operations are synthetic frontend fixtures, not actual model predictions."}
         </p>
       </div>
       <details className="fc-context" open={view !== "decisions"}>
         <summary>
-          Kitchen context & data source ·{" "}
+          Kitchen & data ·{" "}
           {data
             ? `Center ${data.center_id}, week ${data.week}`
             : "configure this session"}
@@ -569,9 +566,9 @@ function DashboardContent({ view }) {
             />
           </label>
           <label>
-            Nonpersistent scenario
+            Scenario (not saved)
             <select
-              aria-label="Nonpersistent scenario"
+              aria-label="Scenario (not saved)"
               value={promo ? "promotion" : "baseline"}
               onChange={(e) => choose("scenario", e.target.value)}
             >
@@ -651,9 +648,7 @@ function DashboardContent({ view }) {
                 }}
               />
               <details className="pd-card">
-                <summary>
-                  Secondary analytics · center-wide scenario comparison
-                </summary>
+                <summary>Explore the promotion comparison</summary>
                 <Decisions
                   baseline={current.baseline}
                   scenario={current.scenario}
@@ -666,7 +661,7 @@ function DashboardContent({ view }) {
       )}
       {metrics && (
         <details className="pd-card">
-          <summary>Secondary analytics · model evaluation</summary>
+          <summary>How reliable is the model?</summary>
           <section className="pd-card">
             <h2>
               {mode === "demo"

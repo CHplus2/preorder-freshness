@@ -184,9 +184,8 @@ export default function PantryScene({
       <div className="pantry-storefront">
         <StoreIllustration />
         <div className="pantry-sign">
-          <span>THE LITTLE KITCHEN PLANNING SHOP</span>
+          <span>YOUR KITCHEN, ONE STEP AHEAD</span>
           <h2>FreshCast Pantry</h2>
-          <p>A little foresight. A fresher kitchen.</p>
         </div>
         <div className="pantry-window-label">
           <ShoppingBasket size={16} /> Center {center} · Week {week}
@@ -203,7 +202,7 @@ export default function PantryScene({
             <span className="pantry-kicker">YOUR NEXT KITCHEN DECISION</span>
             <h3>
               {risks.length
-                ? "Pick a crate. Explore a better plan."
+                ? "Which ingredient needs your attention?"
                 : "Nothing needs a decision right now."}
             </h3>
           </div>
@@ -213,8 +212,7 @@ export default function PantryScene({
           </span>
         </div>
         <p className="pantry-how-to">
-          Start here: select a crate → understand the problem → compare actions
-          → leave with a plan.
+          Select an ingredient to open its decision story.
         </p>
         <div className="pantry-floor">
           <div
@@ -250,9 +248,7 @@ export default function PantryScene({
                 <span className="pantry-crate-footer">
                   <span>CASE {String(i + 1).padStart(2, "0")}</span>
                   <span>
-                    {selected === r.ingredient_id
-                      ? "At the planning counter"
-                      : "Inspect crate"}{" "}
+                    {selected === r.ingredient_id ? "Selected" : "Open story"}{" "}
                     <ArrowUpRight size={14} />
                   </span>
                 </span>
@@ -286,15 +282,12 @@ export default function PantryScene({
               FORECAST → EXPLAIN → DECIDE
             </span>
             <p className="pantry-slip-disclaimer">
-              Model evidence powers the decisions. This illustrated shop is a
-              visual planning metaphor; it is not a live inventory map.
+              Planning illustration · not a live stock map.
             </p>
           </aside>
         </div>
         <p className="pantry-scene-note">
-          Crates follow backend risk priority. Artwork is decorative; quantities
-          and explanations come from the selected response. Operational stock
-          and costs remain simulated.
+          Highest-priority issues appear first. Stock and costs are simulated.
         </p>
       </div>
     </section>
