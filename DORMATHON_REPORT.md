@@ -372,3 +372,24 @@ Django-only server serving the integrated production React build after
 collectstatic: loading recovery, all five real endpoints, decision journey,
 promotion/worksheet, mobile, error and authentication checks passed. This validates
 the recommended single-origin local demo configuration.
+
+## Task 7: visible preview request and Vercel evidence
+
+Confirmed the current `integration/dormathon-demo` checkout is clean and contains
+FreshCast navigation and `/admin/ai/decisions`. Reverified the running Django-only
+application internally on port 8003 using staff-session Chromium and a live
+HTTP 200 forecast, and captured a current rendered screenshot. No retraining,
+feature changes or remote data changes.
+
+No external browser-preview/port-forward capability exists in this session,
+so no user-accessible URL was fabricated. Workspace file paths are not usable
+attachment downloads. `docs/freshcast-windows-preview.md` provides full Windows
+PowerShell commands for safe local startup, explicitly gated on transferring
+the already-trained model bundle; Windows itself was not executable here.
+
+GitHub's checks API returned Forbidden, preventing retrieval of the failed
+Vercel preview logs. Its exact failure cause remains unconfirmed. Configuration
+inspection identifies a read-only PostgreSQL migration-check build gate and a
+confirmed omission of optional ML dependencies and ignored artifacts from a
+plain Git deployment. These are kept separate from the unobserved build error.
+Deployment log text was requested; no production deploy or migration performed.
