@@ -1,12 +1,24 @@
-# FreshCast — Kitchen Decision Assistant
+# Dapur Kita — Home-Kitchen Preorders with FreshCast
 
-FreshCast helps a food business spot ingredient shortages and potential waste, understand their causes, and compare purchasing decisions. It is integrated into **Dapur Kita**, an existing React and Django preorder application for a Malaysian home kitchen.
+**Dapur Kita** is a React and Django FYP application for a Malaysian home kitchen, connecting dated preorders, menus, ingredient recipes, stock batches and preparation planning.
 
-**Demo:** [Open the FreshCast Decision Assistant](https://preorder-freshness.vercel.app/admin/ai/decisions?source=local) · **Integrated branch:** `integration/dormathon-demo`
+**FreshCast** is its integrated kitchen decision assistant. It helps the owner spot ingredient shortages and potential waste, understand their causes, and compare purchasing decisions. The separate evaluated-model mode demonstrates food-demand forecasting using public historical data.
+
+## Open the application
+
+- **Dapur Kita storefront / FYP:** [Browse the menu](https://preorder-freshness.vercel.app/menu) — public entry point for menus and the customer preorder flow.
+- **FreshCast / judge demonstration:** [Open the Decision Assistant](https://preorder-freshness.vercel.app/admin/ai/decisions?source=local) — staff entry point for connected kitchen planning.
+- **Integrated source and this README:** [integration/dormathon-demo](https://github.com/CHplus2/preorder-freshness/tree/integration/dormathon-demo).
 
 Owner screens require an existing staff account. Request demonstration access from the project team; credentials are not published in this repository. No merge into `main` is required to use the linked deployed demo.
 
-## What the product does
+## Dapur Kita FYP workflow
+
+Customers browse menus, choose a delivery date and submit a preorder through the existing checkout. The kitchen owner manages menus and recipes, records ingredient batches and expiry evidence, reviews order/preparation schedules, and follows ingredient requirements through fulfilment. Pricing, contribution estimates and reports support operational review.
+
+The [FYP user manual](docs/FYP-USER-MANUAL.md) explains the customer and owner screens; the [technical handoff](docs/FYP-TECHNICAL-HANDOFF.md) covers the wider implementation. The FreshCast workflow below is an additional integrated feature.
+
+## FreshCast decision assistant
 
 The decision assistant guides the owner through five steps: **Detect → Categorize → Prioritize → Explain → Decide**.
 
