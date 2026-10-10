@@ -660,6 +660,7 @@ function DashboardContent({ view }) {
               <DecisionAssistant
                 baseline={current.baseline}
                 scenario={current.scenario}
+                isFixture={mode === "demo"}
                 onPromotion={() => {
                   if (promo) {
                     choose("step", "3");

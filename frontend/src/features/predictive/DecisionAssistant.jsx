@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import PantryScene from "./PantryScene";
+import DecisionRehearsal from "./DecisionRehearsal";
+import { decisionBrief } from "./decisionBrief";
 import ProblemEvidence from "./ProblemEvidence";
 import { problemSummary } from "./problemSummary";
 import { rankRisks } from "./api";
@@ -26,7 +28,12 @@ const steps = [
   "Compare tradeoffs",
   "Review recommendation",
 ];
-export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
+export default function DecisionAssistant({
+  baseline,
+  scenario,
+  onPromotion,
+  isFixture,
+}) {
   const risks = rankRisks(baseline.ingredient_risks).filter(
     (r) => r.risk_type !== "none",
   );
@@ -116,12 +123,13 @@ export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
           baseline={baseline}
           scenario={scenario}
           onPromotion={onPromotion}
+          isFixture={isFixture}
         />
       </div>
     </section>
   );
 }
-function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
+function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
   const [params, setParams] = useSearchParams();
   const value = Number(params.get("step") || 0);
   const step = Number.isInteger(value) && value >= 0 && value < 5 ? value : 0;
@@ -170,6 +178,26 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
     cost,
     percent,
   );
+  function downloadBrief() {
+    const body = decisionBrief({
+      baseline,
+      risk,
+      alternative: actions.find((a) => a.id === action).title,
+      isFixture,
+      estimate,
+      percent,
+    });
+    const url = URL.createObjectURL(
+      new Blob([body], { type: "text/plain;charset=utf-8" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `freshcast-decision-center-${baseline.center_id}-week-${baseline.week}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
   const actions = [
     {
       id: "purchasing",
@@ -409,20 +437,12 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
                 </label>
               </div>
               {estimate ? (
-                <div className="fc-facts" role="status">
-                  <div>
-                    <span>Hypothetical avoided waste cost</span>
-                    <strong>{money(estimate.avoidedLoss)}</strong>
-                  </div>
-                  <div>
-                    <span>Hypothetical remaining waste cost</span>
-                    <strong>{money(estimate.remainingLoss)}</strong>
-                  </div>
-                  <div>
-                    <span>Hypothetical net benefit</span>
-                    <strong>{money(estimate.netBenefit)}</strong>
-                  </div>
-                </div>
+                <DecisionRehearsal
+                  baselineCost={risk.potential_waste_cost_myr}
+                  estimate={estimate}
+                  percent={percent}
+                  onPercent={setPercent}
+                />
               ) : (
                 <p role="status">
                   {risk.potential_waste_cost_myr === null
@@ -467,7 +487,17 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
                 assessment. No action has been executed.
               </p>
             </div>
-            <button onClick={() => setStep(3)}>Revisit tradeoffs</button>
+            <div className="fc-brief-actions">
+              <button className="admin-primary" onClick={downloadBrief}>
+                Download decision slip
+              </button>
+              <button onClick={() => setStep(3)}>Revisit tradeoffs</button>
+            </div>
+            <p className="pd-note">
+              Take a draft briefing to your team. It includes source labels,
+              baseline guidance, verification checks, and any valid worksheet
+              assumptions. Downloading does not execute a decision.
+            </p>
           </>
         )}
         <div className="fc-journey-controls">
