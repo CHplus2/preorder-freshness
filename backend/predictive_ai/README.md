@@ -17,6 +17,11 @@ For known-order requirements and actual database stock, the separate staff-only
 `local-plan/` endpoint requires no trained model. See the
 [local kitchen integration handoff](../../docs/LOCAL-KITCHEN-INTEGRATION.md).
 
+An independent [public bakery feasibility benchmark](../../docs/PUBLIC-BAKERY-DEMO-FEASIBILITY.md)
+tests a named-food alternative for a coherent demo shop. Its CatBoost candidate
+does not beat the seasonal baseline and is offline; existing models and store
+records are preserved.
+
 ## Reproduce after a reset
 
 Prerequisites: Linux Python 3.12, `uv`, `curl`, and HTTPS access to

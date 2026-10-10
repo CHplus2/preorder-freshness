@@ -39,6 +39,10 @@ fulfilment or ingredient use, and did not beat the trailing-average baseline.
 It is not deployed or compatible with this Genpact response schema. Do not
 replace these metrics/source labels with its experimental results.
 
+The separate [public bakery benchmark](PUBLIC-BAKERY-DEMO-FEASIBILITY.md) is also
+offline. No bakery forecast/import endpoint is implemented, and its model is not
+used by either the Genpact routes or `local-plan/`.
+
 ## HTTP rules
 
 Base: `/api/admin/predictive/`; trailing slashes required. JSON UTF-8. All
