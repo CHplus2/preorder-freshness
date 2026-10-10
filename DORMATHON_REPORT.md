@@ -344,3 +344,31 @@ or browser-tested here; full end-to-end GUI readiness remains pending.
 No application/frontend code, model artifacts or data changed. No branches merged
 and no production deployment occurred. Verification servers were stopped after
 testing; the disposable credentials stayed outside Git.
+
+## Task 6: final integration branch and real browser walkthrough
+
+User explicitly authorized `integration/dormathon-demo` from latest remote
+backend `ac967c2`, merging remote dashboard `bc8e5d1`. Merge was conflict-free;
+backend API contract remained byte-for-byte unchanged. Existing React decision
+assistant, navigation, dashboard and styling were preserved. Collaboration
+instructions now reflect the authorized integration branch.
+
+The merged checkout passed Chromium live-API staff-session checks across all five
+endpoints, center 13/week 146, ingredient selection and five-step decision
+journey, client-side financial assumptions, real promotion response, retained
+selection, recommendation, forecast/inventory views, mobile width 390px,
+loading/recovery, unsupported-center error and anonymous gate. No frontend
+fixtures substituted for failed API requests. No JavaScript runtime errors.
+
+Django check, 211 backend tests (209 passed/two PostgreSQL skips), eight ML/risk
+tests, 12 predictive frontend tests, existing frontend utility/UX/planner/checkout
+tests and production build passed. Model bundle was retained and loaded without
+retraining. Full launch instructions and remaining limitations are documented in
+`docs/dormathon-demo-handoff.md`. External exact-bundle backup remains deferred;
+no production deployment or merge into main occurred.
+
+Repeated the real browser walkthrough successfully against a freshly started
+Django-only server serving the integrated production React build after
+collectstatic: loading recovery, all five real endpoints, decision journey,
+promotion/worksheet, mobile, error and authentication checks passed. This validates
+the recommended single-origin local demo configuration.
