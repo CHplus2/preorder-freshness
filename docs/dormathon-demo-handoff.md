@@ -9,11 +9,19 @@ through the guarded one-off command, not by exposing database credentials or a
 new HTTP write endpoint. Code source: `13f2dca` on `integration/dormathon-demo`.
 Main and the developer feature branches were not merged or modified.
 
-Live site: **https://preorder-freshness.vercel.app**. Deployment:
-`dpl_CY9vBZKXUdMhYeGo3Y3KgSMf1UzY` (READY), with the usual live alias verified.
-The deployment-specific build command was `python deploy/apply_dapur_kita_demo.py`;
-the tracked normal build configuration and project build setting were unchanged.
-Future normal releases do not run the rewrite.
+Live site: **https://preorder-freshness.vercel.app**. Final deployment:
+`dpl_EF2zgYRGMZ4mSe7CDxNn8WT4FLMN` (READY), source `ae78d9e`, with the usual
+live alias verified. While this task was running, the teammate's typography and
+interactive-story update `69133dc` was merged into integration as `41db212`.
+That update was preserved, its frontend standard tests and all 12 predictive
+tests passed, and it is included in the final live deployment.
+
+The first data-operation deployment was `dpl_CY9vBZKXUdMhYeGo3Y3KgSMf1UzY`.
+Only that explicitly selected deployment used
+`python deploy/apply_dapur_kita_demo.py`. The final deployment used the normal
+`python build.py` command, with neither data-rewrite flag supplied, and did not
+rerun the rewrite. The tracked build configuration and project setting remain
+unchanged. Future normal releases do not run the rewrite.
 
 Verified through authenticated live APIs after the transaction:
 
@@ -52,12 +60,22 @@ WAPE remains **28.23% versus 34.81% baseline**; no retraining occurred. The exac
 original 5,899,808-byte model bundle was privately read back and checksum verified.
 
 HTTP checks for `/admin/products`, `/admin/orders` and `/admin/ai/decisions`
-returned 200. A new remote Chromium UI walkthrough could not complete because
-the cloud browser rejected the environment proxy certificate
-(`ERR_CERT_AUTHORITY_INVALID`); HTTPS verification was not disabled. The APIs
-were verified, but the newly populated remote tables need a manual browser
-check. Earlier successful local UI checks are recorded below. React source
-and styling were not changed in this data task.
+returned 200. The final authenticated Chromium walkthrough against the actual
+public Vercel site **passed**: replacement menus and order rows rendered,
+FreshCast Pantry rendered in Live API mode, selecting rice and opening the
+explanation showed the new interactive evidence cards, and there were no
+JavaScript page errors. All five APIs, including the CSRF-authenticated what-if,
+were checked using real responses without fixture interception.
+
+Initial browser attempts were blocked by cloud proxy certificate trust and
+then outdated test labels. Chromium's existing trust database was accessible
+through reviewed execution outside the workspace filesystem restriction;
+HTTPS verification stayed enabled. The verification helper was updated for
+the actual page/evidence headings; no application UI fix was needed. Screenshots
+and the browser report are kept privately outside Git under
+`/workspace/onboarding/preorder/catalogue-replacement/`. React source and
+styling were not edited by this data task; the teammate's merged changes were
+preserved and built.
 
 FreshCast still forecasts **Genpact meal demand with simulated operational CSVs**.
 Recasting the FYP catalogue/orders does not make the current model a forecast

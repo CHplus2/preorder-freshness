@@ -4,9 +4,10 @@ Current live status: the Vercel deployment loads the trained Genpact model and
 all five authenticated prediction APIs passed. The owner-authorized Supabase
 demo catalogue/order replacement is complete: 24 menus, 35 guide materials,
 23 recast orders and 15 reconciled payment records, with durable audit backups.
-The teammate's React source is unchanged. The latest remote browser walkthrough
-was blocked by the cloud proxy certificate; manual UI verification and inventory
-entry for checkout remain. See the current section of
+The teammate's latest UI update is preserved and live. The final authenticated
+remote browser walkthrough passed for menus, orders and FreshCast Live API mode,
+without JavaScript page errors or disabled HTTPS verification. All 24 menus
+currently need usable inventory before checkout. See the current section of
 [the integration handoff](dormathon-demo-handoff.md) for exact results and limits.
 
 The sections below record earlier isolated checks and their then-current
