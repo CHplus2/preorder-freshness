@@ -31,3 +31,9 @@ Batch 3 frontend increment: added an interactive decision workbench in Compare t
 Added an ephemeral manager planning board on the decision route. Pin the selected ingredient issue, inspect the next unqueued issue in backend priority order, reopen evidence, remove tickets or clear the board. Tickets preserve baseline guidance and waste/shortage evidence, labeled draft and simulated/fixture. No invented completion score, realized savings, persisted approvals or backend writes. Changing forecast contents/source or leaving/reloading the decision view clears the queue; selecting ingredients keeps it. Existing downloadable per-ingredient brief remains available in the final decision step.
 
 Batch 4 validation: all 18 predictive tests and existing frontend/UX/planner/checkout suites passed, along with the production build and changed-file lint. Fixture browser checks passed for duplicate prevention, next-issue navigation, reopen/remove/clear, page-reload reset, mobile overflow and zero API writes. Live backend and production deployment were not verified.
+
+## Batch 5 — visual risk tradeoffs
+
+Added a waste/shortage map to the action comparison workbench. A circle marks baseline and a diamond marks the returned promotion scenario; axes use ingredient-specific independent kg scales, with exact quantities in accessible SVG text. A plain-language summary calls out opposing waste/shortage movements rather than declaring a winner. Missing scenarios remain unavailable; overlapping points and zero values are explained. No cost estimates, confidence intervals, causal effects or action execution are inferred.
+
+Batch 5 validation: 21 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. Fixture browser checks passed for unavailable scenarios, baseline/promotion switching, accessible map quantities, unknown costs and mobile overflow; desktop screenshot reviewed. Live backend and Vercel deployment remain unverified.

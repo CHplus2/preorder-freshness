@@ -1,4 +1,5 @@
 import { useState } from "react";
+import RiskMap from "./RiskMap";
 import "./actionComparison.css";
 
 const measures = [
@@ -83,6 +84,7 @@ export default function ActionComparison({ risk, scenarioRisk, isFixture }) {
         Each bar uses its own baseline/scenario scale; compare the numbers
         across measures.
       </p>
+      <RiskMap risk={risk} scenarioRisk={scenarioRisk} />
       <details>
         <summary>Which decisions can we evaluate?</summary>
         <ul>
