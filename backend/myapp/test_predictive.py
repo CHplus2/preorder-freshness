@@ -33,14 +33,24 @@ class PredictiveTests(TestCase):
     def test_missing_sources_and_model(self):
         client=APIClient(); client.force_authenticate(self.staff)
         with TemporaryDirectory() as empty:
-            with override_settings(PREDICTIVE_DATA_DIR=empty):
+            with override_settings(PREDICTIVE_DATA_DIR=empty, PREDICTIVE_ARTIFACT_DIR=empty):
                 response=client.get(BASE+'forecast/?center_id=13')
                 self.assertEqual(response.status_code,503)
                 self.assertEqual(response.data['code'],'source_data_unavailable')
-            with override_settings(PREDICTIVE_ARTIFACT_DIR=empty):
-                response=client.get(BASE+'metrics/')
-                self.assertEqual(response.status_code,503)
-                self.assertEqual(response.data['code'],'model_unavailable')
+            # A clean checkout has neither ignored CSVs nor the model. Isolate
+            # the missing-model case from the earlier missing-source check.
+            with TemporaryDirectory() as sources:
+                fixtures={
+                    'train.csv':'id,week,center_id,meal_id,checkout_price,base_price,emailer_for_promotion,homepage_featured,num_orders\n1,1,13,1,10,10,0,0,2\n',
+                    'meal_info.csv':'meal_id,category,cuisine\n1,Bread,Demo\n',
+                    'fulfilment_center_info.csv':'center_id,city_code,region_code,center_type,op_area\n13,1,1,TYPE_A,1\n',
+                }
+                for name,csv in fixtures.items():
+                    (Path(sources)/name).write_text(csv)
+                with override_settings(PREDICTIVE_DATA_DIR=sources, PREDICTIVE_ARTIFACT_DIR=empty):
+                    response=client.get(BASE+'metrics/')
+                    self.assertEqual(response.status_code,503)
+                    self.assertEqual(response.data['code'],'model_unavailable')
 
     @skipUnless((Path(__file__).resolve().parents[1]/'predictive_ai/artifacts/demand_model.cbm').is_file(), 'Requires provisioned real model bundle')
     def test_real_model_endpoints_and_no_database_writes(self):
