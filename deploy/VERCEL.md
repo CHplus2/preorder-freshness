@@ -31,8 +31,26 @@ bindings were preserved. Preview remains independent and requires its own safe
 database/configuration. Build errors now report safe HTTP status or connection
 failure without exposing signed URLs or credentials. Sixteen integrity,
 packaging, entrypoint and build-gate tests plus three Django transfer tests passed.
-The website's Git-only rebuild must still reach READY and pass staff API checks;
-source availability alone does not establish that release's readiness.
+The subsequent GitHub-source Production rebuild is READY:
+`dpl_B31d5dQRxNikXqSrvzQN5bT25zRR`, source `427c385`, now serving
+`https://preorder-freshness.vercel.app`. Its clean build downloaded and verified
+the archive, completed the React build and packaged the Python function. Staff
+requests to all five predictive APIs passed: model ready, 28.23% WAPE vs 34.81%
+baseline, 77 centers, 51 genuine center-13/week-146 predictions and four simulated
+risks; the CSRF-authenticated promotion request passed. Anonymous metrics/local
+planning requests returned 403, and the FreshCast entry route returned HTML 200.
+
+The local planning API also passed a live staff request with database sources,
+three positive batches and one eligible batch. Its 18 active orders were all
+excluded (`not_paid` or `preparation_needs_review`); zero included orders is not
+evidence of zero demand. The existing Decision Assistant still uses Genpact;
+the teammate's local-mode UI integration remains outstanding. Neither offline
+experimental candidate was deployed. No full new browser walkthrough was run
+for this release; these checks verify the build, served route and actual APIs.
+
+Rollback retained: `dpl_77yzit29aZ4oXmsMNWtVqQXLnq43`, the dashboard branch release
+previously assigned to the main alias. Neither developer feature branch nor main
+was modified or merged by this repair.
 
 ## Earlier verified live release — 10 October 2026
 
@@ -105,6 +123,10 @@ can remove the transfer route. Keep the dedicated source deployment/alias,
 rotate download/export credentials together, and preserve the pinned digest.
 Deleting the source or changing its digest independently breaks builds. This is a free
 demo provision path, not independent artifact storage or permanent backup.
+The pinned source deployment freezes its export credential. To rotate it,
+redeploy the source with the verified archive and replacement export credential,
+verify the source, and update the matching downloader credential together.
+Changing project environment variables alone does not alter an old deployment.
 An external private object store can replace the URL later without changing
 prediction endpoints. Production settings do not automatically configure Preview;
 Preview still needs its own safe database and corresponding bundle settings.
