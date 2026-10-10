@@ -101,3 +101,39 @@ Task 1 executed checks (2026-10-10): `manage.py check` passed;
 PostgreSQL-only tests skipped, using dotenv disabled and in-memory SQLite.
 `git diff --check` passed. `git check-ignore` confirmed all three source filenames,
 model artifact, metrics and CatBoost logs are excluded. No model evaluation ran.
+
+## Task 2: ML dependency preparation; source files still unavailable
+
+On 2026-10-10, after the user reported downloading the source CSVs, this cloud
+checkout was checked again on `feature/ai-backend` with a clean working tree and
+index. `backend/predictive_ai/data/` still contained only its placeholder; all
+three original CSVs were absent. A filesystem search found no matching CSVs or
+archives in accessible `/workspace` or `/tmp` paths, including shared downloads.
+The private daemon directory under `/tmp` was inaccessible and was not searched.
+Local downloads do not establish availability in this cloud checkout.
+
+Installed `requirements-ml.txt` into the separate `/workspace/venv-ml` environment
+using Python 3.12.14, leaving Django dependencies and frontend untouched. Core
+versions: CatBoost 1.2.10, pandas 2.3.3, NumPy 2.5.3, scikit-learn 1.9.1.
+The root Django project requires Python 3.13; this Python 3.12 environment is for
+standalone ML scripts only, as requested by Step 1.
+
+Reproduction from the repository root:
+
+```bash
+UV_CACHE_DIR=/workspace/.cache/uv uv venv --python python3 /workspace/venv-ml
+UV_CACHE_DIR=/workspace/.cache/uv uv pip install --python /workspace/venv-ml/bin/python -r backend/predictive_ai/requirements-ml.txt
+UV_CACHE_DIR=/workspace/.cache/uv uv pip check --python /workspace/venv-ml/bin/python
+```
+
+Verification: dependency compatibility check passed; NumPy, pandas, CatBoost,
+and scikit-learn imported successfully; WAPE arithmetic was checked against a
+hand-calculated example; `num_orders` is excluded from model feature names.
+These checks are not model training or a dataset leakage audit. The starter uses
+shifted historical targets, but duplicates, chronology, metadata, missing weeks
+and covariate assumptions cannot be validated against absent source records.
+
+No training, model artifact, evaluation metrics or simulated operational inputs
+were generated. Training and baseline comparison remain blocked until the three
+original files are available in this cloud machine at
+`backend/predictive_ai/data/`. No API implementation or frontend change occurred.
