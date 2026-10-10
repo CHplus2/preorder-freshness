@@ -610,6 +610,16 @@ and excluded from ingredient need. These estimates do not use website orders or
 local inventory. Existing model hash and holdout WAPE remain unchanged: 28.23%
 versus historical baseline 34.81%. No retraining occurred.
 
-The updated source/model-backed Vercel candidate will be uploaded separately from
-Git so the ignored bundle is included. Hosted manual validation and live-domain
-promotion remain separate steps; do not merge main or promote automatically.
+The updated source/model-backed Vercel candidate was uploaded separately from Git
+so the ignored bundle is included. Deployment dpl_24jfu8mggfzXmMZVCSs4ZiZTQcp5,
+source merge fde26ef, reached READY on Hobby with eight verified runtime inputs
+and Large Functions enabled. Open the new illustrated pantry at:
+https://preorder-freshness-59nms3a0y-heroch94-3036s-projects.vercel.app/admin/ai/decisions
+
+Hosted authenticated browser/API validation remains separate from the successful
+build and local end-to-end walkthrough. Existing Vercel/FYP protections remain;
+Codex's active proxy blocks the generated hostname. A wildcard Vercel-host
+allowlist addition is saved for environment review, not assumed active. The public
+live domain remains on its prior deployment. Do not merge main or promote
+automatically. Future Git builds still need secure bundle provisioning or another
+direct source upload; merging main alone does not transfer ignored model files.

@@ -13,6 +13,13 @@ The build verified all eight inputs and successfully enabled Large Functions bet
 for the Python app. The public `preorder-freshness.vercel.app` alias still points
 to its previous deployment; no custom-domain promotion occurred.
 
+The newer candidate also includes teammate dashboard head `7efaee4`, integrated
+by merge `fde26ef`, and reached **READY** with the same model bundle:
+`https://preorder-freshness-59nms3a0y-heroch94-3036s-projects.vercel.app/admin/ai/decisions`
+(deployment `dpl_24jfu8mggfzXmMZVCSs4ZiZTQcp5`). Use this newer URL for the
+illustrated pantry. The real-model browser walkthrough passed locally; hosted
+staff verification still requires existing authentication and hostname access.
+
 Scoped Vercel project access now works through the Codex network-secret binding.
 The CLI rejects that proxy placeholder before making a request, so the actual
 upload used the supported HTTPS API: hashed source uploads to `/v2/files`, then
