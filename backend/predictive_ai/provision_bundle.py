@@ -6,6 +6,7 @@ from pathlib import Path, PurePosixPath
 import shutil
 import tarfile
 import tempfile
+import urllib.error
 import urllib.request
 from urllib.parse import urlsplit
 
@@ -101,6 +102,11 @@ def main():
         try:
             download_bundle(url,digest,args.destination,token=os.getenv('FRESHCAST_BUNDLE_TOKEN',''),
                             retain_archive=args.retain_archive)
+        except urllib.error.HTTPError as exc:
+            # Status codes are safe; exception text can contain a signed URL.
+            raise SystemExit(f'Bundle download failed (HTTP {exc.code}); verify the stable source and server-side credentials.') from None
+        except urllib.error.URLError:
+            raise SystemExit('Bundle download connection failed; verify source reachability and HTTPS configuration.') from None
         except Exception:
             # Signed URLs, authorization headers and tokens never appear in logs.
             raise SystemExit('Bundle provisioning failed; verify secure URL access, checksum and archive contents.') from None

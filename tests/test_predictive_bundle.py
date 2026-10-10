@@ -7,7 +7,8 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 import urllib.request
-from backend.predictive_ai.provision_bundle import FILES,provision,download_bundle,HTTPSRedirect,RETAINED_ARCHIVE
+from backend.predictive_ai.provision_bundle import FILES,provision,download_bundle,HTTPSRedirect,RETAINED_ARCHIVE,main
+import urllib.error
 
 
 class BundleTests(unittest.TestCase):
@@ -72,3 +73,26 @@ class BundleTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,'checksum'):
                     download_bundle('https://artifacts.example.test/private/','0'*64,root/'release',retain_archive=True)
             self.assertFalse((root/'release').exists())
+
+    def test_http_failure_reports_status_without_signed_url_or_token(self):
+        error=urllib.error.HTTPError('https://private.example/bundle?secret=do-not-log',404,'private-token',{},None)
+        with patch('sys.argv',['provision_bundle.py','--destination','unused']):
+            with patch.dict('os.environ',{'FRESHCAST_BUNDLE_URL':'https://private.example/bundle?secret=do-not-log',
+                                         'FRESHCAST_BUNDLE_TOKEN':'private-token'}):
+                with patch('backend.predictive_ai.provision_bundle.download_bundle',side_effect=error):
+                    with self.assertRaises(SystemExit) as raised:
+                        main()
+        message=str(raised.exception)
+        self.assertIn('HTTP 404',message)
+        for secret in ('do-not-log','private-token','private.example'):
+            self.assertNotIn(secret,message)
+
+    def test_connection_failure_does_not_expose_exception_details(self):
+        with patch('sys.argv',['provision_bundle.py','--destination','unused']):
+            with patch.dict('os.environ',{'FRESHCAST_BUNDLE_URL':'https://private.example/bundle'}):
+                with patch('backend.predictive_ai.provision_bundle.download_bundle',
+                           side_effect=urllib.error.URLError('private proxy credential')):
+                    with self.assertRaises(SystemExit) as raised:
+                        main()
+        self.assertIn('connection failed',str(raised.exception))
+        self.assertNotIn('private proxy',str(raised.exception))
