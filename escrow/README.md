@@ -6,6 +6,10 @@ This is an **unaudited academic prototype using valueless test ETH**, separate f
 
 From `escrow`, run `npm ci`, `npm test`, then `npm run compile`. Tests execute on an in-memory Ganache chain with chain ID 31337; they never transfer real money. Compiler output is written to ignored `artifacts/`.
 
+The tests explicitly use Ganache's supported JavaScript µWS fallback on current Node releases. Its informational performance message is expected; no native transport binary is required for these in-memory checks. Contract execution, role checks and revert assertions remain enabled. Negative transaction tests wait for the mined receipt as well as checking submission, because submission alone can return a transaction that later reverts. The test provider disables RPC caching so synchronously mined state changes and advanced deadlines are observed immediately.
+
+The application CI installs both the Django requirements and the existing pinned ML lock, since the held-out backtest tests import NumPy and pandas. Escrow runs in a separate CI job so an unrelated application failure does not prevent contract checks from running.
+
 ## Demonstrate with wallets
 
 1. Use three different test wallets as buyer, seller and arbiter. Select **Sepolia** and obtain valueless Sepolia test ETH for gas. Never use a mainnet account holding funds for the demonstration.
@@ -17,6 +21,8 @@ From `escrow`, run `npm ci`, `npm test`, then `npm run compile`. Tests execute o
 7. For the dispute scenario, create another deal, dispatch it, and open a dispute as buyer or seller. The arbiter can refund the buyer or release to the seller. The recipient then withdraws.
 
 Each action requires the user's wallet confirmation. The page checks network, active signer and deployed bytecode on every operation. Only use the address of the contract you deployed from this source; bytecode existence alone does not authenticate a contract's source.
+
+The page displays the connected wallet's role and offers actions using the last refreshed chain timestamp. Refresh after deadlines or other participants' transactions. Funding deadlines use chain time rather than your laptop clock. Wallet/network changes clear stale participant state, pending operations disable duplicate submissions, and the transaction link remains available if the post-confirmation refresh fails. A successful replacement transaction (wallet speed-up) uses its final receipt and hash; cancellation does not appear as successful settlement.
 
 ## Exact rules and limitations
 

@@ -1,6 +1,6 @@
 import {CartContext} from './CartContext';
 import {responseList} from '../utils/apiResponse';
-import {apiError} from '../utils/apiError';
+import {apiError,readApiError} from '../utils/apiError';
 import { useEffect, useState, useCallback } from "react";
 import { getCookie } from "../utils/cookieUtils";
 import { useAuth } from "./AuthContext";
@@ -12,6 +12,7 @@ export default function CartProvider({ children }) {
   const { store: promotion } = useStorefront();
   const [wallet, setWallet] = useState(null);
   const [walletLoading, setWalletLoading] = useState(true);
+  const [walletError, setWalletError] = useState('');
   const [cartLoading, setCartLoading] = useState(true);
   const [cartError, setCartError] = useState('');
 
@@ -51,9 +52,20 @@ export default function CartProvider({ children }) {
     if(!isAuthenticated)return;
     const controller=new AbortController();
     axios.get('/api/cart/',{withCredentials:true,signal:controller.signal}).then(({data})=>{setCart(responseList(data));setCartError('');}).catch(err=>{if(!axios.isCancel(err))setCartError(apiError(err));}).finally(()=>{if(!controller.signal.aborted)setCartLoading(false);});
-    axios.get('/api/wallet/',{withCredentials:true,signal:controller.signal}).then(({data})=>setWallet(data)).catch(err=>{if(!axios.isCancel(err))setWallet(err.response?.status===404?null:false);}).finally(()=>{if(!controller.signal.aborted)setWalletLoading(false);});
+    axios.get('/api/wallet/',{withCredentials:true,signal:controller.signal,timeout:30000}).then(({data})=>{setWallet(data);setWalletError('');}).catch(err=>{if(!axios.isCancel(err)){if(err.response?.status===404){setWallet(null);setWalletError('');}else setWalletError(readApiError(err,'Could not load your wallet.'));}}).finally(()=>{if(!controller.signal.aborted)setWalletLoading(false);});
     return()=>controller.abort();
   }, [isAuthenticated,setCart]);
+
+  const refreshWallet = useCallback(async () => {
+    setWalletLoading(true); setWalletError('');
+    try {
+      const {data}=await axios.get('/api/wallet/',{withCredentials:true,timeout:30000});
+      setWallet(data);
+    } catch(err) {
+      if(err.response?.status===404) setWallet(null);
+      else setWalletError(readApiError(err,'Could not load your wallet.'));
+    } finally {setWalletLoading(false);}
+  },[]);
 
   const createWallet = useCallback(async () => {
     try {
@@ -62,11 +74,13 @@ export default function CartProvider({ children }) {
         headers: { "X-CSRFToken": getCookie("csrftoken") },
       })
       setWallet(res.data);
+      setWalletError('');
+      return true;
 
     } catch (err) {
-      setWallet(false);
       setAlert({ message: apiError(err, "Failed to create wallet"), type: "error"})
       console.error("createWallet:", err.response?.data || err.message);
+      return false;
     }
   }, [setAlert])
 
@@ -77,11 +91,12 @@ export default function CartProvider({ children }) {
         headers: { "X-CSRFToken": getCookie("csrftoken") },
       })
       setWallet(prev => ({...prev, "balance": res.data.balance}));
+      return true;
 
     } catch (err) {
-      setWallet(false);
       setAlert({ message: apiError(err, "Failed to top up wallet"), type: "error"})
       console.error("topupWallet:", err.response?.data || err.message);
+      return false;
     }
   }, [setAlert]);
 
@@ -156,7 +171,7 @@ export default function CartProvider({ children }) {
         addToCart,
         removeFromCart,
         updateQuantity,
-        wallet, walletLoading,
+        wallet, walletLoading, walletError, refreshWallet,
         createWallet, topupWallet
       }}
     >
