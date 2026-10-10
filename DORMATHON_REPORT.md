@@ -301,3 +301,46 @@ rather than necessarily prior-week lags, known-covariate assumptions, no causal
 promotion claim or demonstrated real-world savings. Deployment to another host
 and real local-product adaptation remain unverified. The evaluated weights remain
 trained through week 135 and are not silently refitted on holdout weeks.
+
+## Task 5: live HTTP demo verification without retraining
+
+Verified all eight required runtime files exist and are nonempty; Python 3.13
+imports Django 6.0.3 and CatBoost 1.2.10 successfully. Started Django against a
+new isolated `/tmp` SQLite database, dotenv disabled, DEBUG=False and in-memory
+email. A throwaway local staff account logged in through the real HTTP login/
+CSRF flow. All five predictive endpoints returned 200. Center 13/week 146
+returned 51 genuine predictions and four calculated ingredient risks; both
+baseline and promotion predictions match direct model inference at 1e-12
+relative tolerance, and recipe requirement arithmetic was checked independently.
+
+Live negative checks passed: anonymous and CSRF-less session POST requests
+returned 403; invalid centers/weeks/IDs, repeated or unknown fields and invalid
+scenario flags returned 400. Missing operations for center 10 returned 503.
+A second verification server using an empty artifact directory returned 503
+`model_unavailable` without removing or changing the real model.
+
+The what-if endpoint only toggles both observational promotion flags, retaining
+latest prices/history and recalculating forecasts, recipes and FEFO. Center-13
+predicted orders changed from 21916.11 to 49246.95 across 51 meals; this is not a
+causal uplift estimate. Risks cover only five simulated recipe meals. The held-out
+metrics remain 28.23% versus 34.81% WAPE; no retraining took place.
+
+Prepared and verified a complete transfer archive with per-file SHA-256 manifest
+at `/workspace/onboarding/preorder/freshcast-demo-bundle.tar.gz`, plus an archive
+checksum sidecar. This remains on the cloud filesystem: **external durable
+preservation is not confirmed**. No storage destination was supplied; a GitHub
+API read probe returned `Forbidden`, so no release upload occurred. The user must
+download/copy it to a demo laptop and durable backup, or provide an accessible
+artifact-store upload method. Git excludes the actual bundle.
+
+`docs/freshcast-demo-readiness.md` provides detailed HTTP results, simulated risk
+values, artifact transfer and a local single-server demo plan. Recommend Python
+3.13 Django with optional locked ML dependencies and the external bundle, Node
+24 frontend build, collectstatic, then Django/WhiteNoise serving React and API on
+one origin. The live local server served the existing React root and built JS/CSS
+assets successfully. The teammate's prediction dashboard has not been integrated
+or browser-tested here; full end-to-end GUI readiness remains pending.
+
+No application/frontend code, model artifacts or data changed. No branches merged
+and no production deployment occurred. Verification servers were stopped after
+testing; the disposable credentials stayed outside Git.
