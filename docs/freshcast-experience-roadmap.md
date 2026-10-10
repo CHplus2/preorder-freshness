@@ -23,3 +23,5 @@ Purchasing/preparation outcomes are not supplied by API v1. Discuss any new API 
 ## Delivery rules
 
 Stay on `feature/ai-dashboard`. Test each implemented batch, commit relevant frontend/docs files, and push that branch. Do not push main, automatically merge, force-push, alter backend/ML logic, train another model, or commit secrets/generated files. Production integration and deployment remain separate actions. Reuse the current checkout and do not create a worktree unless requested.
+
+Batch 3 frontend increment: added an interactive decision workbench in Compare tradeoffs, with baseline/promotion inspection, signed outcome differences, independent quantity/cost bars, explicit missing evidence, and expandable action capabilities. Exact API tables and the separate hypothetical worksheet remain available. Backend `ac967c2` still lacks action-specific purchasing/menu financial outcomes; see `predictive-action-outcomes-request.md` for the proposed extension. This increment does not complete the backend-dependent action simulator.

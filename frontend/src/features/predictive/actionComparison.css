@@ -1,0 +1,81 @@
+.pd .fc-comparison {
+  padding: 24px;
+  margin: 20px 0;
+  background: #f5efdf;
+  border: 2px solid #d9c9a9;
+  border-radius: 24px;
+  box-shadow: 0 7px 0 #e3d6ba;
+}
+.pd .fc-comparison-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+.pd .fc-comparison-switch button {
+  min-height: 44px;
+  border: 1px solid #647764;
+  border-radius: 14px;
+  background: white;
+  color: #344d3c;
+}
+.pd .fc-comparison-switch button[aria-pressed="true"] {
+  background: #344d3c;
+  color: white;
+}
+.pd .fc-comparison-meters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.pd .fc-comparison-meters article {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: #fffdf7;
+  border: 1px solid #dfd3bd;
+  border-radius: 16px;
+}
+.pd .fc-comparison-meters strong {
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+.pd .fc-comparison-meters small {
+  font-size: 13px;
+  color: #536052;
+}
+.pd .fc-comparison-track {
+  height: 10px;
+  border-radius: 8px;
+  background: #e7dfcd;
+  overflow: hidden;
+}
+.pd .fc-comparison-track i {
+  display: block;
+  height: 100%;
+  background: #779778;
+}
+.pd .fc-comparison summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+  font-weight: 600;
+}
+.pd .fc-comparison li {
+  margin: 12px 0;
+  line-height: 1.6;
+}
+@media (max-width: 900px) {
+  .pd .fc-comparison-meters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .pd .fc-comparison {
+    padding: 16px;
+  }
+  .pd .fc-comparison-meters {
+    grid-template-columns: 1fr;
+  }
+}

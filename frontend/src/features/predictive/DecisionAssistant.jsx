@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import PantryScene from "./PantryScene";
 import DecisionRehearsal from "./DecisionRehearsal";
+import ActionComparison from "./ActionComparison";
 import { decisionBrief } from "./decisionBrief";
 import ProblemEvidence from "./ProblemEvidence";
 import { problemSummary } from "./problemSummary";
@@ -337,7 +338,13 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
             <h2 ref={headingRef} tabIndex={-1}>
               Compare costs, benefits and risks
             </h2>
-            <h3>API evidence · {risk.ingredient_id}</h3>
+            <ActionComparison
+              key={risk.ingredient_id}
+              risk={risk}
+              scenarioRisk={scenarioRisk}
+              isFixture={isFixture}
+            />
+            <h3>Exact API evidence · {risk.ingredient_id}</h3>
             <div className="pd-table-wrap">
               <table>
                 <caption>
