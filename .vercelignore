@@ -2,7 +2,13 @@
 **/.env.*
 **/*.sqlite3
 **/venv/**
+**/.venv/**
+**/__pycache__/**
+**/*.pyc
 **/node_modules/**
 backend/backups/**
 screenshots/**
 .git/**
+# Direct CLI uploads carry this verified archive privately without a Git commit.
+!.freshcast-deploy/
+!.freshcast-deploy/runtime-bundle.tar.gz

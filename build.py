@@ -13,6 +13,9 @@ def main():
                                  'migrate', '--check'], cwd=root)
         if result.returncode:
             raise RuntimeError('Database release check failed. Back up the target database, apply and verify pending migrations, then redeploy. This build does not apply migrations.')
+        # Git-ignored inputs are fetched securely and verified at build time, never retrained.
+        subprocess.run([sys.executable, str(root / 'deploy' / 'provision_vercel.py')],
+                       cwd=root, check=True)
     npm = shutil.which('npm')
     if not npm:
         raise RuntimeError('Node.js/npm is required to build the frontend.')

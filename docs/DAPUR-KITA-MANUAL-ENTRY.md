@@ -2,6 +2,8 @@
 
 Prepared 3 October 2026. 24 proposed products for one Malaysian home kitchen: everyday rice meals, noodles and preorder bakes. Prices, purchase costs, quantities and timings below are planning assumptions, not supplier quotes or tested recipes. Trial yields and timed production before live acceptance. No existing records have been changed.
 
+Menu photographs for the fictional live demo are now tracked separately in [DAPUR-KITA-MENU-PHOTOS.md](DAPUR-KITA-MENU-PHOTOS.md), with image URLs in the starter JSON. They are licensed illustrations; the proposed recipes remain the menu specifications.
+
 ## Full catalogue index
 
 1. Nasi Lemak Telur — RM 7.50
@@ -453,7 +455,7 @@ Menu direction was checked against Malaysian operators offering rice meals and h
 - https://mejamakan.my/ — home-style lauk/menu context.
 - https://hq.moh.gov.my/fsq/garis-panduan-keselamatan-makanan-homebased — KKM home-based food guidance; use applicable guidance and actual supplier evidence for operations.
 
-Companion JSON: DAPUR-KITA-STARTER-DATA.json. It uses material/category names for manual lookup, not database IDs, and is not directly importable. `allergen_review` is an advisory field to append to Description; `unit` on inventory is a reference to the raw-material unit. No live data has been inserted.
+Companion JSON: DAPUR-KITA-STARTER-DATA.json. It uses material/category names for manual lookup, not database IDs, and cannot be posted directly to the API. `allergen_review` is an advisory field to append to Description; `unit` on inventory is a reference to the raw-material unit. The [catalogue importer](DAPUR-KITA-CATALOGUE-IMPORT.md) translates menus/materials through authenticated staff APIs and excludes inventory templates. Preparing or testing it does not insert live data.
 
 ## Additional menus: expanded catalogue
 

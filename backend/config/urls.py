@@ -17,8 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.generic import TemplateView
+from predictive_ai.bundle_export import bundle_export
 
 urlpatterns = [
+    path('api/internal/freshcast-bundle/', bundle_export),
     path('django-admin/', admin.site.urls),
     path('api/', include('myapp.urls')),
     re_path(r'^(?!api/|static/|django-admin/).*$', TemplateView.as_view(template_name='index.html')),

@@ -1,0 +1,93 @@
+name: FreshCast downloadable demo bundle
+
+on:
+  push:
+    branches:
+      - integration/dormathon-demo
+    paths:
+      - .github/workflows/freshcast-bundle.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-bundle:
+    name: Reproduce model and package demo inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out integrated demo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12 for model training
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Verify sources, train model and evaluate
+        env:
+          ML_ENV_DIR: ${{ runner.temp }}/freshcast-ml
+          UV_CACHE_DIR: ${{ runner.temp }}/uv-cache
+        run: bash backend/predictive_ai/reproduce.sh
+
+      - name: Package verified demo runtime bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=backend/predictive_ai
+          files=(
+            data/train.csv
+            data/meal_info.csv
+            data/fulfilment_center_info.csv
+            data/recipes_demo.csv
+            data/inventory_batches_demo.csv
+            data/supplier_settings_demo.csv
+            artifacts/demand_model.cbm
+            artifacts/metrics.json
+          )
+          for f in "${files[@]}"; do
+            test -s "$root/$f" || { echo "Missing or empty: $f"; exit 1; }
+          done
+          mkdir -p "$RUNNER_TEMP/freshcast-download"
+          (
+            cd "$root"
+            sha256sum "${files[@]}" > "$RUNNER_TEMP/freshcast-download/MANIFEST.sha256"
+          )
+          tar -czf "$RUNNER_TEMP/freshcast-download/freshcast-demo-bundle.tar.gz" -C "$root" "${files[@]}"
+          (
+            cd "$RUNNER_TEMP/freshcast-download"
+            sha256sum freshcast-demo-bundle.tar.gz > freshcast-demo-bundle.tar.gz.sha256
+          )
+          cat > "$RUNNER_TEMP/freshcast-download/HOW_TO_USE.txt" <<'TXT'
+          FreshCast AI — retrained demo bundle
+          ------------------------------------
+          This archive is regenerated from verified public Genpact inputs with
+          pinned dependencies and the project's reproducible training script.
+          It is not necessarily byte-identical to the original Codex cloud model.
+
+          1. Download and extract the GitHub Actions artifact ZIP.
+          2. Verify freshcast-demo-bundle.tar.gz with its .sha256 file.
+          3. Extract the .tar.gz archive. It contains data/ and artifacts/.
+          4. Set PREDICTIVE_DATA_DIR to the extracted data/ directory.
+          5. Set PREDICTIVE_ARTIFACT_DIR to the extracted artifacts/ directory.
+          6. Install backend/predictive_ai/requirements-ml.lock into the same
+             Python environment as Django (see README.md).
+          7. Start Django using an isolated demo database and staff account.
+          8. Open /admin/ai/decisions in the integrated React application.
+
+          All stock, recipes and supplier information in this bundle are
+          SIMULATED and are not real Dapur Kita kitchen records.
+          TXT
+          ls -lh "$RUNNER_TEMP/freshcast-download/"
+      
+      - name: Upload downloadable demo files
+        uses: actions/upload-artifact@v4
+        with:
+          name: freshcast-demo-bundle
+          path: ${{ runner.temp }}/freshcast-download/
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,16 @@
+.escrow-demo fieldset{border:0;padding:0;margin:0;min-width:0}
+.escrow-demo .escrow-badge{display:inline-block;background:#e8f1eb;color:#285a3e;border-radius:20px;padding:7px 12px;font-size:13px;font-weight:600;margin:0}
+.escrow-demo .escrow-steps{list-style-position:inside;background:#f0f5ef;border-radius:12px;margin:0 0 24px;line-height:1.7}
+.escrow-demo .escrow-status{padding:16px;border:1px solid #b6caaa;border-radius:10px;background:#eef5e8;line-height:1.6}
+.escrow-demo .checkout-section>h2{margin-top:0}
+.escrow-demo button{min-height:44px;border:1px solid #aebbab;border-radius:8px;padding:10px 14px;background:#f3f6ef;color:#29472f;font:600 14px/1.5 system-ui,sans-serif;cursor:pointer;margin:0}
+.escrow-demo button:disabled,.escrow-demo fieldset:disabled button{opacity:.6;cursor:not-allowed}
+.escrow-demo :is(button,input,summary,a):focus-visible{outline:3px solid #477b4f;outline-offset:3px}
+.escrow-demo .escrow-deal{margin-top:24px;padding:18px;background:#f6f8f4;border:1px solid #d9e1d3;border-radius:10px;line-height:1.6}
+.escrow-demo .escrow-deal h3{margin-top:0}
+.escrow-demo .escrow-deal .checkout-actions{margin-top:18px}
+.escrow-demo .escrow-withdrawal{margin-top:24px;border-top:1px solid #d9e1d3;padding-top:4px}
+.escrow-demo .escrow-limits{margin-top:28px;padding:20px;border:1px solid #d9e1d3;border-radius:12px;line-height:1.7;background:#fff}
+.escrow-demo summary{min-height:32px}
+.escrow-demo .checkout-grid>*{min-width:0}
+@media(max-width:480px){.escrow-demo .escrow-steps{display:grid;gap:6px;padding:16px}.escrow-demo .checkout-actions>button{flex:1 1 auto}.escrow-demo .escrow-deal{padding:14px}}

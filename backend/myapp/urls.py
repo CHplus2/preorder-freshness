@@ -31,6 +31,7 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path('admin/predictive/', include('predictive_ai.urls')),
     path('admin/pricing-preview/', pricing_preview),
     path('admin/setup-checklist/', setup_checklist),
     path('orders/<int:pk>/reschedule/', reschedule_order),

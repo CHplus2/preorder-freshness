@@ -1,0 +1,25 @@
+{
+  "purpose": "Proposed fictional demo relabelling only; these mappings are not real food equivalences or observed demand.",
+  "products": {
+    "Mango": "Nasi Lemak Telur",
+    "Watermelon": "Nasi Ayam Kunyit",
+    "Orange": "Nasi Ayam Kicap",
+    "Durian": "Bihun Goreng Telur",
+    "Dragon Fruit": "Fudgy Brownies - Box of 6",
+    "Spinach": "Nasi Goreng Kampung",
+    "Broccoli": "Nasi Goreng Ayam",
+    "Tomato": "Nasi Goreng Telur",
+    "Carrot": "Bihun Goreng Ayam",
+    "Cabbage": "Bihun Goreng Sayur",
+    "Jasmine Rice": "Mee Goreng Telur",
+    "Quinoa": "Mee Goreng Ayam",
+    "Eggs": "Kuey Teow Goreng Telur",
+    "Tofu": "Nasi Ayam Halia",
+    "Chicken Breast": "Nasi Ayam Sambal",
+    "Coconut Water": "Nasi Ayam Black Pepper",
+    "Fresh Milk": "Nasi Ayam Masak Lemak",
+    "Dark Chocolate": "Nasi Telur Kicap",
+    "Granola Bar": "Nasi Lemak Ayam Kunyit",
+    "Mixed Nuts": "Nasi Lemak Ayam Sambal"
+  }
+}

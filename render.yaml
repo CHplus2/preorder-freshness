@@ -1,0 +1,37 @@
+# UNUSED paid fallback: current target is direct Vercel; see deploy/VERCEL.md.
+# Do not apply this Blueprint for the user's free demo.
+# This file alone creates no resources and changes no Vercel settings.
+services:
+  - type: web
+    name: freshcast-dormathon-preview
+    runtime: docker
+    repo: https://github.com/CHplus2/preorder-freshness
+    branch: integration/dormathon-demo
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    plan: standard
+    autoDeploy: false
+    healthCheckPath: /
+    disk:
+      name: freshcast-preview-state
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.render_preview_settings
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_DOTENV_DISABLED
+        value: '1'
+      - key: DEBUG
+        value: 'False'
+      - key: DATABASE_URL
+        value: sqlite:////var/data/freshcast-demo.sqlite3
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.locmem.EmailBackend
+      - key: FRESHCAST_BUNDLE_URL
+        sync: false
+      - key: FRESHCAST_BUNDLE_SHA256
+        value: 697f8e10ee6b2c1b794ee38ec81067477870315fb7c51a1280684e7f0601361a
+      - key: FRESHCAST_BUNDLE_ROOT
+        value: /var/data/bundle-697f8e10ee6b2c1b794ee38ec81067477870315fb7c51a1280684e7f0601361a

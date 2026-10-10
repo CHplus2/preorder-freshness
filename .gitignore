@@ -23,3 +23,11 @@ escrow/artifacts/
 
 # Sanitised verification logs are deliberate FYP evidence.
 !docs/evidence/**/*.log
+
+# External forecasting source/demo data and generated ML outputs stay local.
+backend/predictive_ai/data/*.csv
+backend/predictive_ai/data/*.zip
+backend/predictive_ai/data/local/
+backend/predictive_ai/artifacts/
+catboost_info/
+.freshcast-deploy/

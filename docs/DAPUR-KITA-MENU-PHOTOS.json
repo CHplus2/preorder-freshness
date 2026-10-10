@@ -1,0 +1,267 @@
+{
+  "purpose": "Licensed illustrative photos for a fictional demo catalogue; not photographs of this kitchen. Garnishes, recipes, portions, packaging and variants may differ. Recipe/allergen records remain authoritative.",
+  "photos": [
+    {
+      "filename": "nasi-lemak.jpg",
+      "title": "Nasi Lemak bersama sambal bawang.jpg",
+      "author": "OreosDippedwithMilk",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Nasi_Lemak_bersama_sambal_bawang.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/63/Nasi_Lemak_bersama_sambal_bawang.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "1a9f2ce4369b205a347bbc5d43d7b48c34f6939f22a574a8f509a32a3f1b70bd",
+      "bytes": 325701,
+      "menus": [
+        "Nasi Lemak Telur"
+      ]
+    },
+    {
+      "filename": "turmeric-chicken.jpg",
+      "title": "Ayam Goreng Kunyit.jpg",
+      "author": "Dr.Francostein1975",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Ayam_Goreng_Kunyit.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Ayam_Goreng_Kunyit.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "7212d8a8d27048d388ab001ca7c0c07ce8c0ebe37de9566c2ad315f5f5f8243f",
+      "bytes": 169395,
+      "menus": [
+        "Nasi Ayam Kunyit",
+        "Nasi Lemak Ayam Kunyit"
+      ]
+    },
+    {
+      "filename": "soy-chicken.jpg",
+      "title": "Ayam masak kicap.jpg",
+      "author": "Phalinn Ooi's",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Ayam_masak_kicap.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/89/Ayam_masak_kicap.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "522cb832353cedd532231fecb58a7c45b01149abd63d73f9d34df7898e5b0811",
+      "bytes": 199526,
+      "menus": [
+        "Nasi Ayam Kicap",
+        "Nasi Lemak Ayam Kicap"
+      ]
+    },
+    {
+      "filename": "vegetarian-bihun.jpg",
+      "title": "Bihun goreng vegetarian Siti Fang Fang.jpg",
+      "author": "Cun Cun",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Bihun_goreng_vegetarian_Siti_Fang_Fang.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Bihun_goreng_vegetarian_Siti_Fang_Fang.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "c2ce8b10ff3eeb14b8d79a9c4470a411be189d885b1a2d5b25d30e753cb8ed0d",
+      "bytes": 1327094,
+      "menus": [
+        "Bihun Goreng Telur",
+        "Bihun Goreng Sayur"
+      ]
+    },
+    {
+      "filename": "chicken-bihun.jpg",
+      "title": "Bihun Goreng Ayam.jpg",
+      "author": "Indonesiagood",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Bihun_Goreng_Ayam.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Bihun_Goreng_Ayam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "d485655578282dadcc5e527ed774f2f924187adbbf978a070a50e504bb2e3a8e",
+      "bytes": 4211431,
+      "menus": [
+        "Bihun Goreng Ayam"
+      ]
+    },
+    {
+      "filename": "brownie-squares.jpg",
+      "title": "Chocolate brownies without table.jpg",
+      "author": "Gdr (photograph); Lyzzy (source modification)",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Chocolate_brownies_without_table.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Chocolate_brownies_without_table.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY-SA 3.0",
+      "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "3da3d3fca1af637b3b7fd4fd37924475e396357e5474d465dacc8d5bd862599e",
+      "bytes": 1218404,
+      "menus": [
+        "Fudgy Brownies - Box of 6"
+      ]
+    },
+    {
+      "filename": "fried-rice.jpg",
+      "title": "Nasi goreng kampung ala resto populer.jpg",
+      "author": "Arudina",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Nasi_goreng_kampung_ala_resto_populer.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Nasi_goreng_kampung_ala_resto_populer.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "31a0a59ea337db07838c4bcec5d43787ba81161571c125d80b3e7cb830035704",
+      "bytes": 810545,
+      "menus": [
+        "Nasi Goreng Kampung",
+        "Nasi Goreng Ayam"
+      ]
+    },
+    {
+      "filename": "fried-rice-egg.jpg",
+      "title": "Nasi Goreng Kampung Telur Mata dan Teh O Ais (29 Mei 2024).jpg",
+      "author": "AcMY01",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Nasi_Goreng_Kampung_Telur_Mata_dan_Teh_O_Ais_(29_Mei_2024).jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Nasi_Goreng_Kampung_Telur_Mata_dan_Teh_O_Ais_%2829_Mei_2024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "cf83d8abdee369a8d13707d53162cb3ce9007e0383b92492f0dc5dfbc7c28ab6",
+      "bytes": 2130888,
+      "menus": [
+        "Nasi Goreng Telur",
+        "Nasi Telur Kicap"
+      ]
+    },
+    {
+      "filename": "mee-goreng.jpg",
+      "title": "Mee goreng Pulau Pinang.jpg",
+      "author": "Dr.Francostein1975",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Mee_goreng_Pulau_Pinang.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Mee_goreng_Pulau_Pinang.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "db1aef5df7bec501e12a8dc0b8cdc5cfdfbed0873bd0dd484971334c5c6b15d6",
+      "bytes": 109740,
+      "menus": [
+        "Mee Goreng Telur",
+        "Mee Goreng Ayam"
+      ]
+    },
+    {
+      "filename": "kuey-teow.jpg",
+      "title": "Charkwayteow.JPG",
+      "author": "Chen Siyuan",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Charkwayteow.JPG",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Charkwayteow.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "license_url": "https://commons.wikimedia.org/wiki/Commons:Licensing",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "588aaaec32ffd88db1d55b77ea6b213a5e8dfb098eeb60eaa7842df5f425861c",
+      "bytes": 1001728,
+      "menus": [
+        "Kuey Teow Goreng Telur"
+      ]
+    },
+    {
+      "filename": "ginger-chicken.jpg",
+      "title": "Steamed chicken with ginger sauce.jpg",
+      "author": "CNEcija12345",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Steamed_chicken_with_ginger_sauce.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Steamed_chicken_with_ginger_sauce.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "047a1f717e593b446ff5cf01f269af1aa6a5f9d6a41994b2cc1d5893233a627e",
+      "bytes": 1435804,
+      "menus": [
+        "Nasi Ayam Halia"
+      ]
+    },
+    {
+      "filename": "sambal-chicken.jpg",
+      "title": "Nasi ayam masak merah (Menu Rahmah) at Lotus's Mutiara Damansara 20231112 122914.jpg",
+      "author": "Wiki Farazi",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Nasi_ayam_masak_merah_(Menu_Rahmah)_at_Lotus%27s_Mutiara_Damansara_20231112_122914.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Nasi_ayam_masak_merah_%28Menu_Rahmah%29_at_Lotus%27s_Mutiara_Damansara_20231112_122914.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "af9fb55692ce7d5b138b5c7b71126f6bd59bda4b7bbc7f3201bd2fa2b7c72392",
+      "bytes": 1799357,
+      "menus": [
+        "Nasi Ayam Sambal",
+        "Nasi Lemak Ayam Sambal"
+      ]
+    },
+    {
+      "filename": "coconut-chicken.jpg",
+      "title": "Ayam Salai Masak Lemak Cili Api.jpg",
+      "author": "Mdsheth1986",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Ayam_Salai_Masak_Lemak_Cili_Api.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Ayam_Salai_Masak_Lemak_Cili_Api.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "0fb9a823c9b98229a3c1f3b24dd991106746a613159b71ab9993517a1597fca0",
+      "bytes": 1840259,
+      "menus": [
+        "Nasi Ayam Masak Lemak"
+      ]
+    },
+    {
+      "filename": "walnut-brownies.jpg",
+      "title": "Walnut brownies, October 2010.jpg",
+      "author": "Fabiana Loturco",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Walnut_brownies,_October_2010.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/53/Walnut_brownies%2C_October_2010.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "a7bc03347ff0e8d3fae60b754ea6a84b7a40845e3f477c256b3e1fa7d3afb126",
+      "bytes": 1043249,
+      "menus": [
+        "Walnut Brownies - Box of 6"
+      ]
+    },
+    {
+      "filename": "pepper-chicken.jpg",
+      "title": "Freshippo lemon black pepper chicken drumsticks.jpg",
+      "author": "Fumikas Sagisavas",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Freshippo_lemon_black_pepper_chicken_drumsticks.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Freshippo_lemon_black_pepper_chicken_drumsticks.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "60c9e75c2b4b42d785d2895e9576abe632601d5b954fc7ac4de66b2043b4b255",
+      "bytes": 3071399,
+      "menus": [
+        "Nasi Ayam Black Pepper"
+      ]
+    },
+    {
+      "filename": "cookies.jpg",
+      "title": "More cookies.jpg",
+      "author": "Spiralz from England",
+      "source_page": "https://commons.wikimedia.org/wiki/File:More_cookies.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/20/More_cookies.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "5a069f9612149c259aae83f49ca7ceae0e02769ea720410be9de64fa93d79770",
+      "bytes": 72114,
+      "menus": [
+        "Chocolate Chip Cookies - Pack of 6"
+      ]
+    },
+    {
+      "filename": "banana-cake.jpg",
+      "title": "Banankaka.jpg",
+      "author": "Jsdo1980",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Banankaka.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Banankaka.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "license_url": "https://commons.wikimedia.org/wiki/Commons:Licensing",
+      "changes": "None; original file copied unchanged. Display size and framing use existing CSS.",
+      "sha256": "404a9dc325bfbc3c89f764fcda5ea72603fd92e41d3c41710093eae71e9cfeef",
+      "bytes": 191461,
+      "menus": [
+        "Banana Cake - Box of 4 Slices"
+      ]
+    }
+  ]
+}
