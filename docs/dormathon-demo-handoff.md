@@ -1,5 +1,73 @@
 # Dormathon 2026 integrated demo handoff
 
+## Current live data replacement — 10 October 2026
+
+The owner explicitly confirmed that all existing orders are fictional demo/test
+records and authorized replacing the live catalogue and past dishes/prices.
+The Supabase rewrite **completed**, using the existing Vercel database settings
+through the guarded one-off command, not by exposing database credentials or a
+new HTTP write endpoint. Code source: `13f2dca` on `integration/dormathon-demo`.
+Main and the developer feature branches were not merged or modified.
+
+Live site: **https://preorder-freshness.vercel.app**. Deployment:
+`dpl_CY9vBZKXUdMhYeGo3Y3KgSMf1UzY` (READY), with the usual live alias verified.
+The deployment-specific build command was `python deploy/apply_dapur_kita_demo.py`;
+the tracked normal build configuration and project build setting were unchanged.
+Future normal releases do not run the rewrite.
+
+Verified through authenticated live APIs after the transaction:
+
+- **24 active menus**, **280 recipe links**, and exactly **three categories**:
+  Rice meals, Noodles and Bakes. **19 retail products archived** and six old
+  category labels removed from the replacement catalogue.
+- All **35 guide raw materials** have the specified units and estimated costs.
+  There are 36 material records in total: the old Almond material remains
+  because it has a stock batch. No unrelated stock/history identity was reused.
+- **23 orders / 50 items** mapped to the guide dishes, with correct new prices,
+  subtotals, discount-adjusted totals and **643 accepted recipe links**. IDs,
+  customer associations, dates, delivery dates, quantities, shipping fees,
+  fixed discounts, order status and receipt/refund outcomes were preserved.
+- **15 fictional payment events** reconciled. The summed food-order total
+  changed from **RM773.50 to RM1,021.00** at the guide prices. These are fictional
+  demo calculations, not observed sales of the replacement dishes.
+- **23 durable before/after audit backups** in Supabase's `myapp_orderamendment`
+  table; the first includes the original catalogue. All are readable through
+  the existing staff accepted-recipe API. A private source-only catalogue/order
+  backup in the Vercel deployment was read back and checksum verified (86,227
+  bytes), providing a second copy while that deployment is retained. Neither
+  backup is committed to Git or served as a public asset.
+- All **three stock records unchanged**. Seventeen unsupported legacy
+  consumption flags were cleared; preparation plans need review for the new
+  recipes. No deductions, restocking, supplier facts or expiry dates were
+  fabricated. **All 24 menus currently have zero usable stock**, so checkout
+  requires suitable inventory entries first.
+
+Validation: **52 Django tests**, **six release/packaging tests**, an exact-shape
+isolated rehearsal of all 23 orders/50 items/15 payments, and the actual Vercel
+frontend build passed. All five live predictive APIs passed authenticated
+session/CSRF checks after the new deployment became live. The model is ready;
+center 13/week 146 returned 51 forecasts and four risks. Total forecast orders
+were 21,916.11 baseline and 49,246.95 in the promotion scenario. Saved held-out
+WAPE remains **28.23% versus 34.81% baseline**; no retraining occurred. The exact
+original 5,899,808-byte model bundle was privately read back and checksum verified.
+
+HTTP checks for `/admin/products`, `/admin/orders` and `/admin/ai/decisions`
+returned 200. A new remote Chromium UI walkthrough could not complete because
+the cloud browser rejected the environment proxy certificate
+(`ERR_CERT_AUTHORITY_INVALID`); HTTPS verification was not disabled. The APIs
+were verified, but the newly populated remote tables need a manual browser
+check. Earlier successful local UI checks are recorded below. React source
+and styling were not changed in this data task.
+
+FreshCast still forecasts **Genpact meal demand with simulated operational CSVs**.
+Recasting the FYP catalogue/orders does not make the current model a forecast
+of those menus or convert synthetic historical records into real training data.
+See [catalogue import and rewrite instructions](DAPUR-KITA-CATALOGUE-IMPORT.md).
+Rolling back deployment code does not roll back the Supabase data transaction;
+restoration uses the durable before-snapshots as a separate reviewed operation.
+
+## Earlier integration and local checks
+
 Branch: `integration/dormathon-demo`. Merged remote backend `ac967c2` and
 remote dashboard `bc8e5d1`. The merge was conflict-free. The backend's committed
 predictive API contract is unchanged and authoritative. Both developer branches

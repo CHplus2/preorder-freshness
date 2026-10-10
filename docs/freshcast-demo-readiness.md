@@ -1,8 +1,16 @@
 # FreshCast demo readiness — 2026-10-10
 
-The backend is operational for an external Genpact, weekly, simulated-inventory
-demonstration. The prediction UI is owned by the teammate and has not been
-validated here. End-to-end dashboard readiness is therefore still pending.
+Current live status: the Vercel deployment loads the trained Genpact model and
+all five authenticated prediction APIs passed. The owner-authorized Supabase
+demo catalogue/order replacement is complete: 24 menus, 35 guide materials,
+23 recast orders and 15 reconciled payment records, with durable audit backups.
+The teammate's React source is unchanged. The latest remote browser walkthrough
+was blocked by the cloud proxy certificate; manual UI verification and inventory
+entry for checkout remain. See the current section of
+[the integration handoff](dormathon-demo-handoff.md) for exact results and limits.
+
+The sections below record earlier isolated checks and their then-current
+limitations; the handoff's current live status supersedes those older blockers.
 
 ## Verified by live HTTP
 
