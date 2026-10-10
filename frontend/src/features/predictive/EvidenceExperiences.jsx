@@ -4,6 +4,7 @@ import { Utensils, Package, ArrowRight } from "lucide-react";
 import { rankRisks } from "./api";
 import { problemSummary } from "./problemSummary";
 import { IngredientDrawing } from "./PantryScene";
+import PlanningFridge, { KitchenKeeper } from "./PlanningFridge";
 import "./evidenceExperiences.css";
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
@@ -191,42 +192,47 @@ export function InventoryExplorer({ data }) {
         </p>
       ) : (
         <>
-          <div
-            className="fc-stock-shelf"
-            role="group"
-            aria-label="Ingredient evidence cards"
-          >
-            {rows.map((r) => (
-              <button
-                key={r.ingredient_id}
-                className="fc-stock-box"
-                aria-label={`Inspect stock ${r.ingredient_id}`}
-                aria-pressed={selected.ingredient_id === r.ingredient_id}
-                onClick={() => setInspected(r.ingredient_id)}
-              >
-                <IngredientDrawing name={r.ingredient_id} />
-                <strong>{r.ingredient_id}</strong>
-                <span>
-                  {r.expiring_unused_kg > 0
-                    ? `${qty(r.expiring_unused_kg)} kg may expire`
-                    : r.shortfall_kg > 0
-                      ? `${qty(r.shortfall_kg)} kg shortfall`
-                      : "No reported risk"}
-                </span>
-                {r.expiring_unused_kg > 0 && r.shortfall_kg > 0 && (
-                  <span>{qty(r.shortfall_kg)} kg shortfall too</span>
-                )}
-                <small>
-                  {money(r.potential_waste_cost_myr)} · potential waste
-                </small>
-              </button>
-            ))}
-          </div>
+          <PlanningFridge count={rows.length}>
+            <div
+              className="fc-stock-shelf"
+              role="group"
+              aria-label="Ingredient evidence cards"
+            >
+              {rows.map((r) => (
+                <button
+                  key={r.ingredient_id}
+                  className="fc-stock-box"
+                  aria-label={`Inspect stock ${r.ingredient_id}`}
+                  aria-pressed={selected.ingredient_id === r.ingredient_id}
+                  onClick={() => setInspected(r.ingredient_id)}
+                >
+                  <IngredientDrawing name={r.ingredient_id} />
+                  <strong>{r.ingredient_id}</strong>
+                  <span>
+                    {r.expiring_unused_kg > 0
+                      ? `${qty(r.expiring_unused_kg)} kg may expire`
+                      : r.shortfall_kg > 0
+                        ? `${qty(r.shortfall_kg)} kg shortfall`
+                        : "No reported risk"}
+                  </span>
+                  {r.expiring_unused_kg > 0 && r.shortfall_kg > 0 && (
+                    <span>{qty(r.shortfall_kg)} kg shortfall too</span>
+                  )}
+                  <small>
+                    {money(r.potential_waste_cost_myr)} · potential waste
+                  </small>
+                </button>
+              ))}
+            </div>
+          </PlanningFridge>
           <div className="fc-stock-inspector">
-            <div aria-live="polite">
-              <h3>{selected.ingredient_id} · stock story</h3>
-              <p>{problemSummary(selected)}</p>
-              <p>{selected.explanation}</p>
+            <div className="fc-keeper-brief">
+              <KitchenKeeper />
+              <div aria-live="polite">
+                <h3>{selected.ingredient_id} · stock story</h3>
+                <p>{problemSummary(selected)}</p>
+                <p>{selected.explanation}</p>
+              </div>
             </div>
             <div className="fc-stock-facts">
               <span>
