@@ -5,7 +5,7 @@ Dashboard branch: `feature/ai-dashboard`.
 
 ## Availability and scope
 
-**The five Genpact endpoints, `backtest/` and separate `local-plan/` endpoint are implemented**.
+**The five Genpact endpoints, `backtest/`, `local-plan/` and `local-scenario/` are implemented**.
 The local plan reads database orders and stock without using a model; its distinct
 schema is documented below. The evaluated Genpact CatBoost artifact
 achieved 28.23% WAPE versus 34.81% baseline on weeks 136–145. A complete separately
@@ -205,12 +205,12 @@ Top-level fields:
 | `as_of` / `timezone` | Current local ISO date / Django current timezone name |
 | `window` | `start_date`, `end_date` ISO dates, `horizon_days` integer; inclusive |
 | `sources` | `demand: "CONFIRMED_PAID_PREORDERS"`, `operational: "DATABASE"`, `product_mapping: "ACCEPTED_ORDER_RECIPES"` |
-| `coverage` | Integer `active_orders`, `included_orders`, `excluded_orders`, `positive_batches`, `eligible_batches` |
-| `included_orders` | Entries: integer `order_id`, `portions`; ISO `preparation_date`, `use_by_date` |
+| `coverage` | Integer `active_orders`, `included_orders`, `excluded_orders`, `positive_batches`, `eligible_batches`, `hypothetical_batches` (0 in the baseline) |
+| `included_orders` | Entries: integer `order_id`, `portions`; ISO `preparation_date`, `use_by_date`; `items`: nullable integer `product_id`, string accepted `product_name`, integer `quantity`; `requirements`: integer `raw_material_id`, numeric `quantity`, native `unit` |
 | `excluded_orders` | Entries: integer `order_id`, string `reason` |
 | `ingredient_risks` | Local material rows below, including inventory-only materials |
 | `batch_allocations` | Integer `order_id`, `batch_id`, `raw_material_id`; numeric `quantity`; `unit`; ISO `needed_by`, `use_by_date` |
-| `batches` | Integer `batch_id`, `raw_material_id`; `unit`; numeric `quantity`, `allocated_quantity`, `remaining_quantity`; ISO `received_date`, `expiry_date`; boolean `eligible`; string array `exclusion_reasons` |
+| `batches` | Integer `batch_id`, `raw_material_id`; `unit`; numeric `quantity`, `allocated_quantity`, `remaining_quantity`; ISO `received_date`, `expiry_date`; boolean `eligible`, `hypothetical` (false in baseline); string array `exclusion_reasons` |
 | `shortages` | Integer `order_id`, `raw_material_id`; numeric `quantity`; `unit`; ISO `needed_by` |
 | `recommendations` | Integer `priority` starting at 1, `raw_material_id`; `ingredient_id`, `risk_type`, nullable ISO `urgent_by`, `action`, `explanation` |
 | `warnings` | Array of strings, always display source/coverage caveats |
@@ -268,13 +268,66 @@ waste cost before unknown, descending known waste exposure, material ID. Do not
 compare gram and litre quantities as a financial/severity ranking. Shortage
 purchasing spend is not treated as the value of lost sales. No supplier lead times,
 causal promotion effects, financial savings, purchases or stock deductions exist
-in this endpoint. No local what-if endpoint is implemented.
+in this endpoint. The separate hypothetical purchase endpoint below does not
+execute any purchase or predict additional demand.
 
 The frontend must show excluded-order warnings even when requirements/risks are
 empty. A successful empty calculation is **not proof of zero shop demand**. The
 database may contain fictional demo records; `DATABASE` means storage provenance,
 not verified customer activity. Dates and costs remain owner-maintained inputs;
 their use is not a guarantee of food safety or real-business forecast accuracy.
+
+### Local hypothetical purchase comparison (implemented)
+
+`POST /api/admin/predictive/local-scenario/` uses the existing staff session and
+requires CSRF. GET returns 405. Request JSON:
+
+```json
+{
+  "horizon_days": 7,
+  "raw_material_id": 16,
+  "quantity": "300.000",
+  "unit_cost": "0.020000",
+  "arrival_date": "2026-10-12",
+  "expiry_date": "2026-10-16"
+}
+```
+
+This is a shape example, not a current supplier quote. `horizon_days` defaults
+to 7 (1–28). The other five fields are required. Material must exist; quantity
+is positive with at most three decimal places; unit cost is nonnegative with
+at most six decimal places or null (unknown). Dates are ISO calendar dates;
+arrival must be inside the current inclusive window; expiry must be on/after
+arrival. Unknown fields, invalid values and non-object bodies return 400
+`invalid_parameters`; serializer errors may also include an `errors` object.
+The quantity/cost are always in the selected material's native unit. There is
+no arbitrary unit conversion, promotion uplift, demand multiplier or automatic
+supplier selection. Past receipt dates are not accepted.
+
+Success fields: `api_version: "1"`, `mode: "local_purchase_scenario"`, `purchase`,
+`baseline`, `scenario`, `warnings`. `purchase` echoes the validated inputs plus
+`unit` (decimal fields are strings or null). Both plans use the local-plan schema
+above and are calculated from one shared database snapshot. `scenario.sources`
+changes only `operational` to `DATABASE_WITH_HYPOTHETICAL_PURCHASE`.
+
+The hypothetical batch has `batch_id: -1`, `hypothetical: true`; it may appear
+in allocations. All database batch IDs remain positive. Scenario allocations
+require its arrival on/before order preparation start and expiry on/after
+preparation end. Overbuying can create additional expiry exposure. Baseline
+costs remain recorded estimates; assumed new-batch cost stays unknown if null.
+`positive_batches` counts database batches; `hypothetical_batches` is 1 in the
+scenario; `eligible_batches` includes the hypothetical candidate. Scenario
+`eligible_stock` includes the assumed future purchase and is not current
+on-hand inventory. No order, stock, payment or purchasing row is changed.
+Responses use `Cache-Control: private, no-store`.
+
+The existing React assistant now defaults to `source=local` (also when omitted),
+with `horizon=7` by default. It uses a distinct local validator and native units,
+shows coverage/exclusions, menu snapshots and stock evidence, and calls this
+comparison with CSRF. `source=live` retains the Genpact model demonstration;
+`source=demo` retains explicitly labelled frontend fixtures. Local mode never
+loads Genpact metrics or silently substitutes frontend fixtures. Switching
+sources clears selections; editing purchase inputs clears prior comparisons.
 
 ## Errors and synchronization
 

@@ -111,6 +111,7 @@ export default function RestaurantStations({
   baseline,
   status,
   isFixture,
+  isLocal = false,
 }) {
   const available = status === "ready" && baseline;
   const unavailable =
@@ -133,15 +134,15 @@ export default function RestaurantStations({
       name: "Fridge & stock room",
       label: "Inventory evidence",
       detail: available
-        ? `${baseline.ingredient_risks.length} ingredient records · simulated`
+        ? `${baseline.ingredient_risks.length} ingredient records · ${isLocal ? "database stock" : "simulated"}`
         : unavailable,
     },
     {
       id: "forecast",
       name: "Order counter",
-      label: "Demand analytics",
+      label: isLocal ? "Confirmed preorders" : "Demand analytics",
       detail: available
-        ? `${baseline.meal_forecasts.length} external meal forecasts`
+        ? isLocal ? `${baseline.coverage.included_orders} included orders · accepted recipes` : `${baseline.meal_forecasts.length} external meal forecasts`
         : unavailable,
     },
   ];
@@ -176,7 +177,7 @@ export default function RestaurantStations({
       </div>
       <p className="fc-stations-caption">
         Illustrated navigation ·{" "}
-        {isFixture
+        {isLocal ? "database preorder and stock evidence; no demand model used" : isFixture
           ? "frontend fixtures, no model run"
           : "API demand with simulated stock and costs"}
         . No live restaurant activity is shown.

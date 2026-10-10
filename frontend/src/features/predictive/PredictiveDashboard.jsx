@@ -8,6 +8,7 @@ import "./predictive.css";
 import DecisionAssistant from "./DecisionAssistant";
 import RestaurantStations from "./RestaurantStations";
 import RescueDemo from "./RescueDemo";
+import LocalKitchen from "./LocalKitchen";
 import { DemandExplorer, InventoryExplorer } from "./EvidenceExperiences";
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
@@ -438,6 +439,12 @@ export default function PredictiveDashboard({ view = "decisions" }) {
   return <DashboardContent view={view} />;
 }
 function DashboardContent({ view }) {
+  const [params] = useSearchParams();
+  return ["live", "demo"].includes(params.get("source"))
+    ? <GenpactDashboardContent view={view} />
+    : <LocalKitchen view={view} />;
+}
+function GenpactDashboardContent({ view }) {
   const [params, setParams] = useSearchParams();
   const mode = params.get("source") === "demo" ? "demo" : "live";
   const center = params.get("center") || "";
@@ -544,7 +551,8 @@ function DashboardContent({ view }) {
               value={mode}
               onChange={(e) => choose("source", e.target.value)}
             >
-              <option value="live">Live API</option>
+              <option value="local">My kitchen · database orders & stock</option>
+              <option value="live">Genpact · evaluated model demo</option>
               <option value="demo">Frontend fixtures</option>
             </select>
           </label>

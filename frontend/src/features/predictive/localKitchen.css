@@ -1,0 +1,8 @@
+.local-risk-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 24px 0; }
+.local-risk-board button { display: grid; gap: 8px; text-align: left; padding: 18px; border: 1px solid #b9cbbd; border-radius: 14px; background: #fffdf5; color: #244b37; }
+.local-risk-board button[aria-pressed="true"] { background: #e7f0e8; border: 2px solid #285a3e; }
+.local-order { padding: 14px 0; border-bottom: 1px solid #dce5df; }
+.local-purchase-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin: 20px 0; }
+.local-purchase-form label { display: grid; gap: 8px; }
+.local-purchase-form input { width: 100%; min-width: 0; box-sizing: border-box; }
+.local-purchase-form button { align-self: end; min-height: 44px; }

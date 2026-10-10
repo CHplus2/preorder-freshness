@@ -31,15 +31,17 @@ This is a replay of an already evaluated holdout, not fresh independent evidence
 or a stock-risk calculation. Week 146 remains the unlabelled future scenario.
 
 Keep database-backed `local-plan/` as a distinct confirmed-order/recipe/stock
-calculation, not a learned demand forecast. The existing React screen still uses
-Genpact and simulated operations; its local-mode UI integration remains pending.
+calculation, not a learned demand forecast. The React entry screen now defaults
+to this connected mode; Genpact and simulated operations remain a selectable
+external forecasting demonstration.
 Do not claim current local accuracy, actual savings, zero false alarms, a coherent
 fully connected local forecasting demo, or a guaranteed judging score. Stock and
 recipes cannot repair the scarcity/relabelled provenance of original sales.
 
-Quick presentation sequence: show the held-out evidence, demonstrate the current
-Detect → Categorize → Prioritize → Explain → Decide journey, then show the separate
-database planner and explain the boundary. Lead with the specific kitchen decision
+Quick presentation sequence: demonstrate the database kitchen's
+Detect → Categorize → Prioritize → Explain → Decide journey and hypothetical
+purchase, then show the Genpact held-out evidence and explain the boundary.
+Lead with the specific kitchen decision
 and finish with a pilot plan to collect stable menu/date history. A single coherent
 public-bakery shop would require the unimplemented migration described in
 `PUBLIC-BAKERY-DEMO-FEASIBILITY.md`; do not attempt a rushed catalogue/history rewrite
@@ -85,8 +87,7 @@ actual business impact and forecast accuracy require separate evidence.
    [booking experiment](LOCAL-BOOKING-EXPERIMENT.md) failed to beat the stronger
    baseline and should remain offline.
 
-The current hosted interface is functional as a model-backed Genpact prototype.
-The local planning backend is tested, but the hosted Decision Assistant's local
-mode still needs UI integration and successful deployment. Reliable local
-forecasting remains unestablished. Retraining a small demo history alone does
-not close those gaps or establish business value.
+The integrated interface now supports database-based confirmed-order planning,
+and preserves the model-backed Genpact prototype. Reliable additional-customer
+forecasting for the owner's shop remains unestablished. Retraining a small demo
+history alone does not establish real business value or predictive accuracy.

@@ -1,4 +1,39 @@
-# Local kitchen planning: backend implemented, UI handoff
+# Local kitchen planning: integrated database mode
+
+## Current integration
+
+The existing assistant now opens in **My kitchen** mode at `/admin/ai/decisions`
+or `/admin/ai/decisions?source=local`. It reads `local-plan/`, shows accepted menu
+names and native material units, preserves backend risk ordering, and takes the
+manager through the existing five-step decision structure. The illustrated
+station navigation leads to confirmed-order and database-stock evidence.
+Coverage, excluded orders, loading/errors and refresh are visible. No Genpact
+forecast or metric is used to calculate this mode's requirements.
+
+`POST local-scenario/` adds one hypothetical purchase to a shared read-only
+snapshot and recalculates FEFO. The manager supplies quantity, arrival, expiry
+and optional unit cost. Late arrivals and early-expiring stock cannot cover
+an order; overbuying can increase expiry exposure. No stock or purchase is saved.
+The optional waste-cost worksheet remains a hypothetical user assumption.
+
+`source=live` preserves the evaluated Genpact mode and the teammate's latest
+illustrated assistant. `source=demo` preserves frontend fixtures. The dashboard
+feature branch was merged through `4700f89`; neither feature branch is overwritten.
+No new login screen or model training was introduced.
+
+For a reviewed fictional test site, `scripts/prepare_freshcast_demo.py` prepares
+one four-portion Nasi Ayam Kunyit preorder two days ahead, records an explicitly
+fictional payment reconciliation and creates nine labelled assumed stock batches.
+It uses normal checkout to capture accepted recipes and valid preparation times.
+Chicken stock covers half its need; rice stock exceeds its need and expires
+inside the window. Existing history, stock and baskets are preserved; a nonempty
+basket stops the script. Private before-state and receipts are saved outside Git.
+Run its read-only plan first, then add `--apply --fictional-demo` only for a
+fictional test database. Staff bindings must be supplied through secure settings.
+
+This closes the application-data connection for **confirmed-order planning**.
+It does not establish a trained model for the owner's future customers. The
+Genpact 28.23%/34.81% metrics remain external evaluation evidence.
 
 ## What works
 
@@ -15,11 +50,11 @@ The authoritative JSON contract is
 [predictive-api-contract.md](predictive-api-contract.md#local-kitchen-planning-endpoint).
 The original five Genpact endpoints remain a separate evaluated ML demonstration.
 
-## Teammate frontend handoff
+## Original frontend handoff (completed by this integration)
 
-No React files were changed in this task. The current FreshCast Decision Assistant
-still calls the Genpact endpoints; **it does not yet render this local mode**.
-The current response validator only accepts Genpact/simulated source fields.
+The initial backend-only task left the following work for integration. Local
+mode now has its own response validator and view; the original Genpact response
+validator remains intact.
 
 1. Add an explicit **My kitchen — confirmed orders** choice beside the separately
    labelled **Genpact forecast demo**. Reuse existing staff authentication.
@@ -33,8 +68,8 @@ The current response validator only accepts Genpact/simulated source fields.
 5. Make `coverage`, exclusions and source warnings visible. Missing schedules
    or recipes require review in the existing order/planner workflows. Do not
    present no included orders as no demand or no business risk.
-6. Disable Genpact promotion what-if in local mode. No local action simulator is
-   implemented; a hypothetical worksheet must remain explicitly hypothetical.
+6. Keep Genpact promotion what-if separate. Local mode uses the explicitly
+   hypothetical purchase comparator documented in the authoritative contract.
 7. Refresh or refetch after a user changes an order, recipe commitment or stock.
    There is no push subscription or automatic polling requirement in this API.
 

@@ -23,13 +23,26 @@ def convert(quantity, source, destination):
     return quantity * UNITS[source][1] / UNITS[destination][1]
 
 
-def local_plan(horizon_days=7):
+def planning_snapshot():
     today = timezone.localdate()
-    end = today + timedelta(days=horizon_days - 1)
     materials = {m.pk: m for m in RawMaterial.objects.all()}
     orders = list(Order.objects.filter(status__in=['pending', 'processing'])
                   .prefetch_related('items__accepted_ingredients').order_by('preparation_at', 'id'))
     batches = list(InventoryItem.objects.filter(quantity__gt=0).order_by('expiry_date', 'id'))
+    return today, materials, orders, batches
+
+
+def local_plan(horizon_days=7, hypothetical_purchase=None, snapshot=None):
+    today, materials, orders, recorded_batches = snapshot or planning_snapshot()
+    end = today + timedelta(days=horizon_days - 1)
+    batches = list(recorded_batches)
+    if hypothetical_purchase:
+        from types import SimpleNamespace
+        batches.append(SimpleNamespace(pk=-1, raw_material_id=hypothetical_purchase['raw_material_id'],
+            quantity=hypothetical_purchase['quantity'], received_date=hypothetical_purchase['arrival_date'],
+            expiry_date=hypothetical_purchase['expiry_date'], unit_cost=hypothetical_purchase['unit_cost'],
+            quarantined=False, hypothetical=True))
+        batches.sort(key=lambda b: (b.expiry_date, b.pk))
     exclusions, included = [], []
     demands = defaultdict(Decimal)
     needs_by_order = []
@@ -80,7 +93,11 @@ def local_plan(horizon_days=7):
             exclusions.append({'order_id': order.pk, 'reason': reason})
             continue
         included.append({'order_id': order.pk, 'preparation_date': str(day), 'use_by_date': str(use_by),
-                         'portions': sum(i.quantity for i in items)})
+                         'portions': sum(i.quantity for i in items),
+                         'items': [{'product_id': i.product_id, 'product_name': i.product_name,
+                                    'quantity': i.quantity} for i in items],
+                         'requirements': [{'raw_material_id': key, 'quantity': float(quantity),
+                                           'unit': materials[key].unit} for key, quantity in sorted(needs.items())]})
         needs_by_order.append((order.pk, day, use_by, needs))
         for key, need in needs.items():
             demands[key] += need
@@ -95,12 +112,14 @@ def local_plan(horizon_days=7):
             reasons.append('quarantined')
         if batch.expiry_date < today:
             reasons.append('expired')
-        if batch.received_date > today:
+        hypothetical = getattr(batch, 'hypothetical', False)
+        if batch.received_date > today and not hypothetical:
             reasons.append('not_received')
         if batch.expiry_date < batch.received_date:
             reasons.append('invalid_dates')
         eligible = not reasons
         row = {'batch_id': batch.pk, 'raw_material_id': batch.raw_material_id,
+               'hypothetical': hypothetical,
                'unit': materials[batch.raw_material_id].unit, 'quantity': float(batch.quantity),
                'received_date': str(batch.received_date), 'expiry_date': str(batch.expiry_date),
                'eligible': eligible, 'exclusion_reasons': reasons,
@@ -120,7 +139,7 @@ def local_plan(horizon_days=7):
             for batch, row in by_material[key]:
                 if left <= 0:
                     break
-                if batch.expiry_date < use_by:
+                if batch.expiry_date < use_by or batch.received_date > day:
                     continue
                 quantity = min(left, remaining[batch.pk])
                 if quantity <= 0:
@@ -192,14 +211,18 @@ def local_plan(horizon_days=7):
         warnings.append('Some active orders are excluded; review excluded_orders before making purchasing decisions.')
     if any(r['potential_waste_cost_myr'] is None for r in risks):
         warnings.append('Some expiring batch costs are missing; unknown waste exposure is null, not zero.')
+    if hypothetical_purchase:
+        warnings.append('Scenario adds one hypothetical purchase in the material\'s native unit. It must arrive by preparation start and remain dated usable through preparation end. No supplier availability, lead time or food safety is verified.')
+        warnings.append('Scenario eligible_stock includes the assumed future purchase; it is not current on-hand stock. Database batch quantities are unchanged.')
     return {'api_version': '1', 'mode': 'local_plan', 'model_status': 'not_used',
             'as_of': str(today), 'timezone': timezone.get_current_timezone_name(),
             'window': {'start_date': str(today), 'end_date': str(end), 'horizon_days': horizon_days},
-            'sources': {'demand': 'CONFIRMED_PAID_PREORDERS', 'operational': 'DATABASE',
+            'sources': {'demand': 'CONFIRMED_PAID_PREORDERS', 'operational': 'DATABASE_WITH_HYPOTHETICAL_PURCHASE' if hypothetical_purchase else 'DATABASE',
                         'product_mapping': 'ACCEPTED_ORDER_RECIPES'},
             'coverage': {'active_orders': len(orders), 'included_orders': len(included),
-                         'excluded_orders': len(exclusions), 'positive_batches': len(batches),
-                         'eligible_batches': sum(b['eligible'] for b in batch_rows)},
+                         'excluded_orders': len(exclusions), 'positive_batches': len(recorded_batches),
+                         'eligible_batches': sum(b['eligible'] for b in batch_rows),
+                         'hypothetical_batches': int(bool(hypothetical_purchase))},
             'included_orders': included, 'excluded_orders': exclusions, 'ingredient_risks': risks,
             'batch_allocations': allocations, 'batches': batch_rows, 'shortages': shortages,
             'recommendations': recommendations, 'warnings': warnings}
