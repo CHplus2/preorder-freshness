@@ -1,22 +1,22 @@
-# Dapur Kita — Home-Kitchen Preorders with FreshCast
+# FreshCast — Kitchen Decision Assistant
 
-**Dapur Kita** is a React and Django FYP application for a Malaysian home kitchen, connecting dated preorders, menus, ingredient recipes, stock batches and preparation planning.
+**FreshCast** helps a food business spot ingredient shortages and potential waste, understand their causes, and compare purchasing decisions. A separate evaluated-model mode demonstrates food-demand forecasting using public historical data.
 
-**FreshCast** is its integrated kitchen decision assistant. It helps the owner spot ingredient shortages and potential waste, understand their causes, and compare purchasing decisions. The separate evaluated-model mode demonstrates food-demand forecasting using public historical data.
+It is integrated into **Dapur Kita**, an existing React and Django preorder application for a Malaysian home kitchen, connecting dated preorders, menus, ingredient recipes, stock batches and preparation planning.
 
 ## Open the application
 
-- **Dapur Kita storefront / FYP:** [Browse the menu](https://preorder-freshness.vercel.app/menu) — public entry point for menus and the customer preorder flow.
+- **Dapur Kita storefront:** [Browse the menu](https://preorder-freshness.vercel.app/menu) — public entry point for menus and the customer preorder flow.
 - **FreshCast / judge demonstration:** [Open the Decision Assistant](https://preorder-freshness.vercel.app/admin/ai/decisions?source=local) — staff entry point for connected kitchen planning.
 - **Integrated source and this README:** [integration/dormathon-demo](https://github.com/CHplus2/preorder-freshness/tree/integration/dormathon-demo).
 
 Owner screens require an existing staff account. Request demonstration access from the project team; credentials are not published in this repository. No merge into `main` is required to use the linked deployed demo.
 
-## Dapur Kita FYP workflow
+## Underlying preorder application
 
 Customers browse menus, choose a delivery date and submit a preorder through the existing checkout. The kitchen owner manages menus and recipes, records ingredient batches and expiry evidence, reviews order/preparation schedules, and follows ingredient requirements through fulfilment. Pricing, contribution estimates and reports support operational review.
 
-The [FYP user manual](docs/FYP-USER-MANUAL.md) explains the customer and owner screens; the [technical handoff](docs/FYP-TECHNICAL-HANDOFF.md) covers the wider implementation. The FreshCast workflow below is an additional integrated feature.
+The [application user manual](docs/FYP-USER-MANUAL.md) explains the customer and owner screens; the [technical handoff](docs/FYP-TECHNICAL-HANDOFF.md) covers the wider implementation. The FreshCast workflow below is an additional integrated feature.
 
 ## FreshCast decision assistant
 
@@ -28,7 +28,7 @@ The decision assistant guides the owner through five steps: **Detect → Categor
 - Explain the contributing orders, quantities, preparation dates and batch eligibility.
 - Compare a hypothetical purchase, including arrival date, expiry and unit cost, without changing stock or placing an order.
 
-The surrounding FYP application provides menu, recipe, inventory, checkout, order and preparation-planning workflows. See the [FYP user manual](docs/FYP-USER-MANUAL.md) for those screens.
+The surrounding application provides menu, recipe, inventory, checkout, order and preparation-planning workflows. See the [application user manual](docs/FYP-USER-MANUAL.md) for those screens.
 
 ## Two distinct data modes
 
@@ -85,7 +85,7 @@ In a second terminal at the repository root:
 npm --prefix frontend run dev
 ```
 
-Open `http://127.0.0.1:5173/admin/ai/decisions?source=local`. Vite forwards `/api` requests to local Django on port 8000, preserving the existing session login and CSRF protection. A new local database starts without the hosted demo records: configure menus, recipes, dated stock and reviewed preorders using the [FYP manual](docs/FYP-USER-MANUAL.md). Do not run these migration/setup commands against production.
+Open `http://127.0.0.1:5173/admin/ai/decisions?source=local`. Vite forwards `/api` requests to local Django on port 8000, preserving the existing session login and CSRF protection. A new local database starts without the hosted demo records: configure menus, recipes, dated stock and reviewed preorders using the [application manual](docs/FYP-USER-MANUAL.md). Do not run these migration/setup commands against production.
 
 ### Trained-model bundle
 
@@ -118,13 +118,13 @@ Both GitHub application/escrow jobs passed for the payment-maintenance release. 
 
 ## Scope and documentation
 
-This project extends a pre-existing FYP; it was not built entirely from scratch during the hackathon. Forecasting data comes from an external public dataset. Store records, rescue exercises and inventory assumptions are labelled according to their source. Financial comparisons are estimates, not achieved savings or proof of food safety. Testnet escrow is a separate unaudited lab, not a checkout payment integration; see [escrow setup and rules](escrow/README.md).
+This project extends a pre-existing preorder application; it was not built entirely from scratch during the hackathon. Forecasting data comes from an external public dataset. Store records, rescue exercises and inventory assumptions are labelled according to their source. Financial comparisons are estimates, not achieved savings or proof of food safety. Testnet escrow is a separate unaudited lab, not a checkout payment integration; see [escrow setup and rules](escrow/README.md).
 
 - [Demo walkthrough](docs/FRESHCAST-DEMO-RUNBOOK.md)
 - [API contract](docs/predictive-api-contract.md)
 - [Current deployment and model bundle](deploy/VERCEL.md) — Production and Preview have separate settings; Preview still needs its own database configuration.
 - [Connected kitchen planning](docs/LOCAL-KITCHEN-INTEGRATION.md)
-- [FYP user manual](docs/FYP-USER-MANUAL.md) and [technical handoff](docs/FYP-TECHNICAL-HANDOFF.md)
-- [Preserved FYP documentation index and background](docs/DAPUR-KITA-FYP-README.md)
+- [Application user manual](docs/FYP-USER-MANUAL.md) and [technical handoff](docs/FYP-TECHNICAL-HANDOFF.md)
+- [Preserved application documentation index and background](docs/DAPUR-KITA-FYP-README.md)
 
-Detailed FYP reports remain in `docs/`; this README is the entry point for reviewers and developers.
+Detailed implementation reports remain in `docs/`; this README is the entry point for reviewers and developers.
