@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PlanningFridge, { KitchenKeeper } from "./PlanningFridge";
 import { IngredientDrawing } from "./PantryScene";
+import ServingScene from "./ServingScene";
 import "./rescueDemo.css";
 const choices = [
   {
@@ -151,44 +152,12 @@ export default function RescueDemo() {
                 <div
                   className={`fc-rescue-shift ${playing ? "is-playing" : ""}`}
                 >
-                  <span className="fc-rescue-customer" aria-hidden="true">
-                    <svg viewBox="0 0 80 90" width="48" height="54">
-                      <circle
-                        cx="40"
-                        cy="22"
-                        r="14"
-                        fill="#e5b88b"
-                        stroke="#6c5943"
-                        strokeWidth="2"
-                      />
-                      <path d="M26 20q0-20 28-8v8" fill="#6c5943" />
-                      <path
-                        d="M22 69V48q18-20 36 0v21Z"
-                        fill="#93ae83"
-                        stroke="#466651"
-                        strokeWidth="2"
-                      />
-                      <path
-                        d="M30 69v16m20-16v16"
-                        stroke="#6c5943"
-                        strokeWidth="6"
-                      />
-                      <circle cx="35" cy="23" r="2" fill="#466651" />
-                      <circle cx="45" cy="23" r="2" fill="#466651" />
-                    </svg>
-                  </span>
                   <h3>
                     {finished
                       ? "Illustrative shift complete"
                       : "Your simulated serving counter"}
                   </h3>
-                  <div className="fc-rescue-portions" aria-hidden="true">
-                    {Array.from({ length: 20 }, (_, i) => (
-                      <span className={i < sold ? "served" : ""} key={i}>
-                        ●
-                      </span>
-                    ))}
-                  </div>
+                  <ServingScene sold={sold} playing={playing} />
                   <p role="status">
                     {sold} served in playback · {20 - sold} remaining
                     {finished
@@ -223,6 +192,39 @@ export default function RescueDemo() {
                 </div>
                 {finished && (
                   <div className="fc-rescue-impact">
+                    <div
+                      className="fc-rescue-outcome-board"
+                      aria-label="Illustrative baseline versus selected plan"
+                    >
+                      <div>
+                        <span>Original menu</span>
+                        <strong>11 sold / 9 unsold</strong>
+                        <span className="fc-rescue-sales-meter">
+                          <i style={{ width: "55%" }} />
+                        </span>
+                        <small>RM 110 revenue · RM 30 contribution</small>
+                      </div>
+                      <div>
+                        <span>{selected.name}</span>
+                        <strong>
+                          {selected.sold} sold / {20 - selected.sold} unsold
+                        </strong>
+                        <span className="fc-rescue-sales-meter">
+                          <i
+                            style={{ width: `${(selected.sold / 20) * 100}%` }}
+                          />
+                        </span>
+                        <small>
+                          RM {selected.sold * selected.price} revenue · RM{" "}
+                          {selected.sold * selected.price -
+                            80 -
+                            selected.sold * selected.side -
+                            selected.setup}{" "}
+                          contribution
+                        </small>
+                      </div>
+                    </div>
+
                     <h3>What changed in this fictional scenario?</h3>
                     <p>
                       {selected.sold} sold · {20 - selected.sold} unsold.

@@ -122,3 +122,62 @@
     animation: none;
   }
 }
+.pd .fc-serving-scene {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.pd .fc-serving-scene.is-serving .fc-serving-person {
+  animation: fc-serving-bob 0.6s ease-in-out infinite alternate;
+}
+.pd .fc-serving-scene.is-serving .person-1 {
+  animation-delay: 0.2s;
+}
+.pd .fc-serving-scene.is-serving .person-2 {
+  animation-delay: 0.4s;
+}
+.pd .fc-rescue-outcome-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.pd .fc-rescue-outcome-board > div {
+  display: grid;
+  gap: 12px;
+  background: #fffdf7;
+  padding: 14px;
+  border: 1px solid #c8b99e;
+  border-radius: 14px;
+}
+.pd .fc-rescue-sales-meter {
+  display: block;
+  height: 12px;
+  background: #d0b087;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.pd .fc-rescue-sales-meter i {
+  display: block;
+  height: 100%;
+  background: #547959;
+}
+.pd .fc-rescue-outcome-board small {
+  font-size: 13px;
+  line-height: 1.6;
+}
+@keyframes fc-serving-bob {
+  to {
+    translate: 0 -4px;
+  }
+}
+@media (max-width: 480px) {
+  .pd .fc-rescue-outcome-board {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pd .fc-serving-scene.is-serving .fc-serving-person {
+    animation: none;
+  }
+}
