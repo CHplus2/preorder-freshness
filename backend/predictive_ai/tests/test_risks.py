@@ -32,3 +32,21 @@ class RiskTests(unittest.TestCase):
         risks,_,warnings=self.run_risk(float('nan'))
         self.assertIsNone(next(r for r in risks if r['ingredient_id']=='rice')['potential_waste_cost_myr'])
         self.assertTrue(warnings)
+
+    def test_shortage_replenishment_covers_demand_and_safety_excluding_expired_stock(self):
+        forecasts=pd.DataFrame([dict(center_id=13,meal_id=1,predicted_orders=10)])
+        recipes=pd.DataFrame([dict(meal_id=1,ingredient_id='rice',qty_per_order_kg=.5)])
+        batches=pd.DataFrame([
+            dict(batch_id='expired',center_id=13,ingredient_id='rice',quantity_kg=100,expiry_week=145,cost_per_kg_myr=5),
+            dict(batch_id='usable',center_id=13,ingredient_id='rice',quantity_kg=2,expiry_week=147,cost_per_kg_myr=5)])
+        original=batches.copy(deep=True)
+        suppliers=pd.DataFrame([dict(ingredient_id='rice',safety_stock_kg=1)])
+        risks,_,_=assess_risks(forecasts,recipes,batches,suppliers,13,146,details=True)
+        rice=risks[0]
+        self.assertEqual(rice['risk_type'],'shortage')
+        self.assertEqual(rice['shortfall_kg'],3)
+        self.assertEqual(rice['illustrative_reorder_kg'],4)
+        self.assertEqual(rice['expiring_unused_kg'],0)
+        self.assertIn('Replenish',rice['action'])
+        self.assertIn('shortfall 3.0kg',rice['explanation'])
+        pd.testing.assert_frame_equal(batches,original)  # Recommendations never deduct actual stock.

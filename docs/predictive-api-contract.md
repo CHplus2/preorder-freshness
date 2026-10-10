@@ -18,6 +18,12 @@ inputs initially use explicit simulated operational data. No local FYP stock is
 read or modified by this demo. A real-data adapter requires an explicit,
 verified mapping and unit conversion; it is outside this initial contract.
 
+The separate local preorder readiness audit does not change these endpoints or
+their demand source. No locally trained model is currently available; see
+[local training preparation](LOCAL-PREORDER-TRAINING.md). Both expiry surplus
+and shortage risks are calculated. Explanations include shortfall, illustrative
+replenishment and safety stock; no purchase is executed.
+
 ## HTTP rules
 
 Base: `/api/admin/predictive/`; trailing slashes required. JSON UTF-8. All

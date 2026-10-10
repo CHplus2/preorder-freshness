@@ -27,6 +27,7 @@ escrow/artifacts/
 # External forecasting source/demo data and generated ML outputs stay local.
 backend/predictive_ai/data/*.csv
 backend/predictive_ai/data/*.zip
+backend/predictive_ai/data/local/
 backend/predictive_ai/artifacts/
 catboost_info/
 .freshcast-deploy/

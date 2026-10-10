@@ -4,6 +4,10 @@ The optional CatBoost service runs inside the existing Django application. It
 never imports Genpact IDs into FYP products or changes stock, orders or payments.
 The React prediction dashboard is developed separately.
 
+For the separate local preorder retraining audit and its current data blockers,
+see [LOCAL-PREORDER-TRAINING.md](../../docs/LOCAL-PREORDER-TRAINING.md). The local
+audit is preparation only; it never replaces the trained Genpact demo model.
+
 ## Reproduce after a reset
 
 Prerequisites: Linux Python 3.12, `uv`, `curl`, and HTTPS access to

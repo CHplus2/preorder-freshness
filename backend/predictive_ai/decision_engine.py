@@ -47,13 +47,14 @@ def assess_risks(forecasts, recipes, batches, suppliers, center_id, week, *, det
                 remaining_kg=remaining,potential_waste_cost_myr=value))
         cfg=suppliers[suppliers.ingredient_id==ing]
         safety=float(cfg.iloc[0].safety_stock_kg) if not cfg.empty else 0.
+        reorder=max(0.,demand+safety-available)
         issue='expiry_surplus_and_shortage' if surplus>0 and need>0 else ('expiry_surplus' if surplus>0 else ('shortage' if need>0 else 'none'))
         action='Review expiring surplus and reduce future purchasing conservatively' if surplus>0 else ('Replenish before shortage; verify supplier lead time' if need>0 else 'Maintain purchasing policy')
         if unknown: warnings.append(f'Unknown surplus cost for {ing}; monetary risk cannot be fully ranked.')
         records.append(dict(ingredient_id=ing,risk_type=issue,forecast_demand_kg=demand,available_kg=available,
             expiring_unused_kg=surplus,potential_waste_cost_myr=None if unknown else loss,shortfall_kg=need,
-            illustrative_reorder_kg=max(0.,demand+safety-available),action=action,
-            explanation=f'Forecast use {demand:.1f}kg; eligible stock {available:.1f}kg; unused expiry surplus {surplus:.1f}kg in week {week}. Supplier delivery and promotion uplift are unverified.',
+            illustrative_reorder_kg=reorder,action=action,
+            explanation=f'Forecast use {demand:.1f}kg; eligible stock {available:.1f}kg; shortfall {need:.1f}kg; illustrative replenishment {reorder:.1f}kg including safety stock {safety:.1f}kg; unused expiry surplus {surplus:.1f}kg in week {week}. Supplier delivery and promotion uplift are unverified.',
             risk_inputs_note='SIMULATED recipes, batches, costs and supplier assumptions; weekly buckets are not food-safety measurements.'))
     records.sort(key=lambda x:(-(x['potential_waste_cost_myr'] or 0),-x['expiring_unused_kg'],-x['shortfall_kg'],x['ingredient_id']))
     return (records,allocations,warnings) if details else records
