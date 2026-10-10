@@ -5,7 +5,8 @@
   "functions": {
     "app.py": {
       "maxDuration": 60,
-      "excludeFiles": "{frontend/node_modules/**,backend/venv/**,backend/backups/**,**/*.sqlite3,screenshots/**,.git/**}"
+      "includeFiles": "backend/predictive_ai/{data/*.csv,artifacts/demand_model.cbm,artifacts/metrics.json}",
+      "excludeFiles": "{frontend/node_modules/**,backend/venv/**,.venv/**,venv/**,backend/backups/**,**/*.sqlite3,screenshots/**,.git/**,tests/**}"
     }
   }
 }

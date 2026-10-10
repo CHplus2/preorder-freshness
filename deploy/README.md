@@ -4,9 +4,10 @@ This deploys the **existing Django app and built React UI**, preserving sessions
 CSRF, staff authorization and the v1 predictive contract. No model training or
 migration runs on startup. Existing production Vercel settings remain unchanged.
 
-The user selected Render for the isolated hosted preview. See [RENDER.md](RENDER.md)
-and the root `render.yaml` for the candidate, prerequisites and guarded demo
-settings. No Render service has been created yet.
+The user now wants a free demo directly on Vercel. See [VERCEL.md](VERCEL.md)
+for the current deployment candidate and newly verified Large Functions limits.
+[RENDER.md](RENDER.md) and the root `render.yaml` remain an unused paid fallback;
+do not apply that Blueprint. No hosted service or production promotion was created.
 
 ## Diagnosis and hosting choice
 

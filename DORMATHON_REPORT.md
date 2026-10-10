@@ -485,3 +485,44 @@ service/disk charges remain prerequisites. No hosted URL or judging-readiness
 claim is made. Saved cloud configuration adds Render network domains and scoped
 RENDER_API_KEY plus RENDER_OWNER_ID requirements; review/save/publication remains
 outstanding. These are Codex environment requirements, not production settings.
+
+## Task 10: free-demo constraint and direct Vercel candidate
+
+The user declined paid Render hosting and requested direct Vercel hosting.
+No Render resource was created. The existing paid Blueprint is marked unused.
+Vercel docs and the live FreshCast HTML route are now reachable (HTTP 200), unlike
+the earlier proxy denial; hosted staff/API inference remains unverified.
+
+Current official Python/functions docs establish a 500 MB standard Python
+bundle limit, Hobby memory 2 GB, and a 5 GB Large Functions public beta with
+Fluid Compute/Active CPU. Existing projects opt in with the project environment
+variable VERCEL_SUPPORT_LARGE_FUNCTIONS=1. The tested runtime's about 797 MiB
+packages motivate this route; project eligibility and actual Vercel build size
+are still not verified. No paid plan or production setting was enabled.
+
+Added tested inference dependencies to Vercel's authoritative pyproject manifest,
+secure checksum-verified build-time bundle provisioning after the existing
+read-only database gate, explicit private function input inclusion and additional
+virtual-environment/test exclusions. The build helper preflights all collisions,
+keeps identical files unchanged and refuses to overwrite differing local inputs.
+Model and CSV files remain ignored; frontend, model weights and API contract
+are unchanged. No training or automatic migrations occur.
+
+Eleven deployment tests passed. The actual eight-file original archive was
+checksum-verified and staged into a new offline Vercel rehearsal directory;
+its trained-model SHA-256 is unchanged. WAPE remains 28.23% vs 34.81% baseline.
+No Vercel build or staff browser/API verification on the live domain is claimed.
+
+GitHub Actions metadata is now readable: run 38034208941 on the prior 8e6df60
+commit failed at `python manage.py test myapp --noinput`. The log download redirects
+to a separately blocked Actions results host, so its exact failure is not yet
+diagnosed. This existing remote CI failure is separate from the eleven local
+deployment tests and must not be described as passing.
+
+Saved scoped VERCEL_TOKEN and project/org ID requirements in the cloud draft.
+Existing credentials were checked by name/presence and were absent. Secure
+account/project access, an authorized archive upload destination and Preview
+PostgreSQL bindings are still prerequisites. deploy/VERCEL.md explains the exact
+settings and same-platform Preview acceptance/promotion procedure. Production
+settings, data and deployment remain untouched. The judging demo is not yet
+verified ready online.

@@ -1,4 +1,5 @@
-# Isolated paid preview candidate. Review Render's current plan/disk price before applying.
+# UNUSED paid fallback: current target is direct Vercel; see deploy/VERCEL.md.
+# Do not apply this Blueprint for the user's free demo.
 # This file alone creates no resources and changes no Vercel settings.
 services:
   - type: web

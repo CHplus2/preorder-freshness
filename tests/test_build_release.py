@@ -25,7 +25,8 @@ class ReleaseGateTests(unittest.TestCase):
     def test_migrated_database_allows_build(self, run, which):
         run.return_value = subprocess.CompletedProcess([], 0)
         build.main()
-        self.assertEqual(run.call_count, 3)
+        self.assertEqual(run.call_count, 4)
+        self.assertTrue(run.call_args_list[1].args[0][-1].endswith('provision_vercel.py'))
 
     @patch.dict('os.environ', {'VERCEL':'0'})
     @patch.object(build.shutil, 'which', return_value='npm')
