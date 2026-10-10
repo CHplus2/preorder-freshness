@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { problemSummary } from "./problemSummary";
+import StockNeedInspection from "./StockNeedInspection";
 const spots = [
   [22, 34],
   [43, 24],
@@ -189,6 +190,7 @@ export default function KitchenWalkthrough({
               ? problemSummary(risk)
               : "The calculation returned no ingredient risks."}
           </p>
+          {risk && <StockNeedInspection key={risk.ingredient_id} risk={risk} />}
           {risk && (
             <dl className="fc-inspector-quantities">
               <div>

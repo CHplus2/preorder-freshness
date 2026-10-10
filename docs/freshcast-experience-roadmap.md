@@ -55,3 +55,9 @@ Validation: 26 predictive tests, existing frontend/UX/planner/checkout suites, b
 Refocused the decision route on the original isometric kitchen. Risk-lens controls and the manager review queue are collapsed secondary panels. Clickable hotspots now include illustrated ingredient packages and explicit waste/shortage labels; the selected inspection panel shows matching package artwork and separate returned waste/shortfall quantities. Added decorative window/lantern details without representing live activity. Selecting a problem from another control resets the kitchen preview to that ingredient and starts on its correct hotspot page. Artwork remains illustrative, not verified storage, recipe mapping or actual stock.
 
 Validation: 26 predictive tests, existing frontend/UX/planner/checkout suites, production build and changed-file lint passed. Fixture browser checks covered collapsed controls, marker preview, decision handoff, reopening queue/focus controls and mobile overflow. Desktop/mobile screenshots reviewed; live backend and Vercel production were not verified.
+
+## Batch 9 — visual stock versus need inspection
+
+Kitchen inspection now compares returned eligible-stock and forecast-need kilograms using two decorative containers on a common scale. Native buttons select a short explanation, while source/interpretation details stay collapsed. Selecting another ingredient resets inspection. The component never subtracts these values to invent waste or shortage; those remain separate backend results. Wider desktop inspection improves readability; no new standalone section or model was added.
+
+Validation: 26 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. Fixture browser checks covered exact quantities, selected explanations, ingredient reset, mobile overflow and zero API writes; component screenshot reviewed. Live backend and production deployment remain unverified.
