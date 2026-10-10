@@ -24,7 +24,7 @@ const labels = {
   expiry_surplus_and_shortage: "Waste + stock gap",
 };
 // Decorative packaging only. This does not infer a recipe, unit or product mapping.
-function IngredientDrawing({ name }) {
+export function IngredientDrawing({ name }) {
   const grain = /rice|flour|grain/i.test(name),
     bottle = /milk|oil|sauce/i.test(name),
     vegetable = /tomato|onion|carrot|vegetable/i.test(name);

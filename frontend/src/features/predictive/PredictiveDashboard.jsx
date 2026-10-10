@@ -6,6 +6,7 @@ import { getCookie } from "../../utils/cookieUtils";
 import { loadOptions, loadDashboard, rankRisks } from "./api";
 import "./predictive.css";
 import DecisionAssistant from "./DecisionAssistant";
+import { DemandExplorer, InventoryExplorer } from "./EvidenceExperiences";
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
 const money = (n) =>
@@ -97,69 +98,78 @@ function Forecast({ baseline, scenario, meal, setMeal, isFixture }) {
         <Empty text="No meal forecasts were returned for this selection." />
       ) : (
         <>
-          <div className="pd-demand-bars" aria-label="Demand chart">
-            {rows.map((r) => (
-              <div key={r.meal_id}>
-                <strong>Meal {r.meal_id}</strong>
-                <div className="pd-bar">
-                  <span
-                    style={{
-                      width: `${(r.predicted_orders / maximum) * 100}%`,
-                    }}
-                  />
-                </div>
-                <small>Baseline: {qty(r.predicted_orders)} orders</small>
-                {scenario && (
-                  <>
-                    <div className="pd-bar pd-scenario-bar">
-                      <span
-                        style={{
-                          width: `${((byMeal.get(r.meal_id)?.predicted_orders || 0) / maximum) * 100}%`,
-                        }}
-                      />
-                    </div>
-                    <small>
-                      Promotion scenario:{" "}
-                      {byMeal.has(r.meal_id)
-                        ? qty(byMeal.get(r.meal_id).predicted_orders)
-                        : "Unavailable"}{" "}
-                      orders
-                    </small>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="pd-table-wrap">
-            <table>
-              <caption>
-                Exact {isFixture ? "fixture" : "model"} estimates for week{" "}
-                {baseline.week}
-              </caption>
-              <thead>
-                <tr>
-                  <th>Meal ID</th>
-                  <th>Baseline orders</th>
-                  {scenario && <th>Promotion scenario orders</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.meal_id}>
-                    <td>{r.meal_id}</td>
-                    <td>{qty(r.predicted_orders)}</td>
-                    {scenario && (
-                      <td>
+          <DemandExplorer
+            rows={rows}
+            scenario={scenario}
+            week={baseline.week}
+            isFixture={isFixture}
+          />
+          <details>
+            <summary>Exact demand chart & estimates</summary>
+            <div className="pd-demand-bars" aria-label="Demand chart">
+              {rows.map((r) => (
+                <div key={r.meal_id}>
+                  <strong>Meal {r.meal_id}</strong>
+                  <div className="pd-bar">
+                    <span
+                      style={{
+                        width: `${(r.predicted_orders / maximum) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <small>Baseline: {qty(r.predicted_orders)} orders</small>
+                  {scenario && (
+                    <>
+                      <div className="pd-bar pd-scenario-bar">
+                        <span
+                          style={{
+                            width: `${((byMeal.get(r.meal_id)?.predicted_orders || 0) / maximum) * 100}%`,
+                          }}
+                        />
+                      </div>
+                      <small>
+                        Promotion scenario:{" "}
                         {byMeal.has(r.meal_id)
                           ? qty(byMeal.get(r.meal_id).predicted_orders)
-                          : "Unavailable"}
-                      </td>
-                    )}
+                          : "Unavailable"}{" "}
+                        orders
+                      </small>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="pd-table-wrap">
+              <table>
+                <caption>
+                  Exact {isFixture ? "fixture" : "model"} estimates for week{" "}
+                  {baseline.week}
+                </caption>
+                <thead>
+                  <tr>
+                    <th>Meal ID</th>
+                    <th>Baseline orders</th>
+                    {scenario && <th>Promotion scenario orders</th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {rows.map((r) => (
+                    <tr key={r.meal_id}>
+                      <td>{r.meal_id}</td>
+                      <td>{qty(r.predicted_orders)}</td>
+                      {scenario && (
+                        <td>
+                          {byMeal.has(r.meal_id)
+                            ? qty(byMeal.get(r.meal_id).predicted_orders)
+                            : "Unavailable"}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
         </>
       )}
     </section>
@@ -168,102 +178,112 @@ function Forecast({ baseline, scenario, meal, setMeal, isFixture }) {
 function Inventory({ data }) {
   return (
     <>
-      <section className="pd-card">
-        <h2>Ingredient risk · center {data.center_id}</h2>
-        <p>
-          Center-wide simulated stock and recipes; meal filtering does not
-          change ingredient totals. Quantities are kilograms.
-        </p>
-        {!data.ingredient_risks.length ? (
-          <Empty text="No ingredient risks were returned after calculation." />
-        ) : (
-          <div className="pd-table-wrap">
-            <table>
-              <caption>
-                Priority follows known waste cost, expiring surplus, then
-                shortfall
-              </caption>
-              <thead>
-                <tr>
-                  <th>Ingredient / issue</th>
-                  <th>Forecast need</th>
-                  <th>Eligible stock</th>
-                  <th>Expiring unused</th>
-                  <th>Shortfall</th>
-                  <th>Potential waste cost</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankRisks(data.ingredient_risks).map((r) => (
-                  <tr key={r.ingredient_id}>
-                    <td>
-                      <strong>{r.ingredient_id}</strong>
-                      <small>{issues[r.risk_type]}</small>
-                      <details>
-                        <summary>Why at risk?</summary>
-                        <p>{r.explanation}</p>
-                        <p>{r.risk_inputs_note}</p>
-                      </details>
-                    </td>
-                    <td>{qty(r.forecast_demand_kg)} kg</td>
-                    <td>{qty(r.available_kg)} kg</td>
-                    <td>{qty(r.expiring_unused_kg)} kg</td>
-                    <td>{qty(r.shortfall_kg)} kg</td>
-                    <td>{money(r.potential_waste_cost_myr)}</td>
+      <InventoryExplorer
+        key={`${data.center_id}:${data.week}:${data.promotion_scenario}`}
+        data={data}
+      />
+      <details className="pd-card">
+        <summary>Exact ingredient risk table</summary>
+        <section className="pd-card">
+          <h2>Ingredient risk · center {data.center_id}</h2>
+          <p>
+            Center-wide simulated stock and recipes; meal filtering does not
+            change ingredient totals. Quantities are kilograms.
+          </p>
+          {!data.ingredient_risks.length ? (
+            <Empty text="No ingredient risks were returned after calculation." />
+          ) : (
+            <div className="pd-table-wrap">
+              <table>
+                <caption>
+                  Priority follows known waste cost, expiring surplus, then
+                  shortfall
+                </caption>
+                <thead>
+                  <tr>
+                    <th>Ingredient / issue</th>
+                    <th>Forecast need</th>
+                    <th>Eligible stock</th>
+                    <th>Expiring unused</th>
+                    <th>Shortfall</th>
+                    <th>Potential waste cost</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-      <section className="pd-card">
-        <h2>Hypothetical FEFO allocation</h2>
-        <p>
-          Expiry is an inclusive week bucket, not a calendar deadline or food
-          safety assessment.
-        </p>
-        {!data.batch_allocations.length ? (
-          <Empty text="No batch allocations were returned." />
-        ) : (
-          <div className="pd-table-wrap">
-            <table>
-              <caption>
-                Simulated batch allocation · forecast week {data.week}
-              </caption>
-              <thead>
-                <tr>
-                  <th>Batch / ingredient</th>
-                  <th>Expiry week</th>
-                  <th>Eligibility</th>
-                  <th>Consumed</th>
-                  <th>Remaining</th>
-                  <th>Potential waste cost</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.batch_allocations.map((r) => (
-                  <tr key={r.batch_id}>
-                    <td>
-                      {r.batch_id}
-                      <small>{r.ingredient_id}</small>
-                    </td>
-                    <td>{r.expiry_week}</td>
-                    <td>
-                      {r.eligible
-                        ? "Eligible"
-                        : `Excluded: ${r.exclusion_reason}`}
-                    </td>
-                    <td>{qty(r.consumed_kg)} kg</td>
-                    <td>{qty(r.remaining_kg)} kg</td>
-                    <td>{money(r.potential_waste_cost_myr)}</td>
+                </thead>
+                <tbody>
+                  {rankRisks(data.ingredient_risks).map((r) => (
+                    <tr key={r.ingredient_id}>
+                      <td>
+                        <strong>{r.ingredient_id}</strong>
+                        <small>{issues[r.risk_type]}</small>
+                        <details>
+                          <summary>Why at risk?</summary>
+                          <p>{r.explanation}</p>
+                          <p>{r.risk_inputs_note}</p>
+                        </details>
+                      </td>
+                      <td>{qty(r.forecast_demand_kg)} kg</td>
+                      <td>{qty(r.available_kg)} kg</td>
+                      <td>{qty(r.expiring_unused_kg)} kg</td>
+                      <td>{qty(r.shortfall_kg)} kg</td>
+                      <td>{money(r.potential_waste_cost_myr)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </details>
+      <details className="pd-card">
+        <summary>All batch allocations</summary>
+        <section className="pd-card">
+          <h2>Hypothetical FEFO allocation</h2>
+          <p>
+            Expiry is an inclusive week bucket, not a calendar deadline or food
+            safety assessment.
+          </p>
+          {!data.batch_allocations.length ? (
+            <Empty text="No batch allocations were returned." />
+          ) : (
+            <div className="pd-table-wrap">
+              <table>
+                <caption>
+                  Simulated batch allocation · forecast week {data.week}
+                </caption>
+                <thead>
+                  <tr>
+                    <th>Batch / ingredient</th>
+                    <th>Expiry week</th>
+                    <th>Eligibility</th>
+                    <th>Consumed</th>
+                    <th>Remaining</th>
+                    <th>Potential waste cost</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+                </thead>
+                <tbody>
+                  {data.batch_allocations.map((r) => (
+                    <tr key={r.batch_id}>
+                      <td>
+                        {r.batch_id}
+                        <small>{r.ingredient_id}</small>
+                      </td>
+                      <td>{r.expiry_week}</td>
+                      <td>
+                        {r.eligible
+                          ? "Eligible"
+                          : `Excluded: ${r.exclusion_reason}`}
+                      </td>
+                      <td>{qty(r.consumed_kg)} kg</td>
+                      <td>{qty(r.remaining_kg)} kg</td>
+                      <td>{money(r.potential_waste_cost_myr)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </details>
     </>
   );
 }
@@ -486,7 +506,7 @@ function DashboardContent({ view }) {
   const data = current.scenario || current.baseline;
   const metrics = options?.metrics.metrics;
   return (
-    <main className={`pd ${view === "decisions" ? "pd-visual" : ""}`}>
+    <main className="pd pd-visual">
       <header className="pd-header">
         <div>
           <span className="pd-eyebrow">
