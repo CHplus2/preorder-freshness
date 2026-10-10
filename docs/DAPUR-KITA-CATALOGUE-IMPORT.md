@@ -106,3 +106,37 @@ snapshots, read-only planning, repeat imports, unit/name conflicts, incomplete
 recipes, failed-write recovery, concurrent changes and non-staff denial.
 A local HTTP server test exercises real staff login, cookie/CSRF authentication
 and a complete paused import. Tests use an isolated database, not Vercel data.
+
+## Replacing fictional past orders
+
+The owner confirmed that all existing orders are fictional demo/test records
+and requested replacement dishes and prices for those records too. This is
+additional work: the catalogue importer above still preserves history.
+
+[`DAPUR-KITA-DEMO-ORDER-MAPPING.json`](DAPUR-KITA-DEMO-ORDER-MAPPING.json) proposes
+a deterministic mapping from the 20 currently visible retail products to the
+first 20 guide menus. This is synthetic relabelling, not food equivalence or
+observed demand. Four remaining new menus have no mapped legacy product; no
+past orders are invented for them. Unmapped historical names are flagged for
+an explicit mapping rather than silently dropped.
+
+After staff access is available, inspect the actual history with:
+
+```powershell
+python scripts/plan_dapur_kita_orders.py --output "$env:TEMP\dapur-kita-order-plan.json"
+```
+
+The planner performs only GET requests. It preserves dates, quantities,
+shipping fees and fixed discount amounts in the proposed calculations and
+reports new unit prices, subtotals, order totals and full payment amounts.
+It flags excessive discounts, existing payment events, demo-wallet orders and
+previous inventory deductions. The private report excludes customer and
+address fields. Keep it outside Git and treat the recast records as synthetic
+demo history; they cannot establish model accuracy on real business orders.
+
+Historical rewriting is **not implemented or applied**. Existing staff APIs
+allow status transitions, not replacement order items/accepted recipes or
+ledger edits. A tested, transactional database migration with backup and
+reconciliation is required after inspecting this plan. A Vercel token alone
+does not provide database credentials. The planner does not solve that access
+requirement or alter CatBoost inputs.

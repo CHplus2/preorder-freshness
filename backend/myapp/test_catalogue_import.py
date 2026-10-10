@@ -5,6 +5,7 @@ from decimal import Decimal
 import importlib.util
 import json
 import secrets
+import sys
 from pathlib import Path
 
 from django.contrib.auth.models import User
@@ -19,6 +20,11 @@ spec = importlib.util.spec_from_file_location('catalogue_import', ROOT / 'script
 importer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(importer)
 SOURCE = json.loads(importer.SOURCE.read_text())
+sys.modules['import_dapur_kita'] = importer
+history_spec = importlib.util.spec_from_file_location('catalogue_history', ROOT / 'scripts/plan_dapur_kita_orders.py')
+history = importlib.util.module_from_spec(history_spec)
+history_spec.loader.exec_module(history)
+MAPPING = json.loads(history.MAPPING.read_text())
 
 
 class DjangoAPI:
@@ -165,6 +171,36 @@ class CatalogueImportTests(TestCase):
             importer.apply_catalogue(self.api, SOURCE, snapshot, plan)
         self.old.refresh_from_db()
         self.assertEqual(self.old.selling_status, 'active')
+
+    def test_fictional_history_plan_recalculates_prices_but_changes_no_records(self):
+        self.order.discount_amount = Decimal('1')
+        self.order.shipping_fee = Decimal('4')
+        self.order.payment_method = 'wallet'
+        self.order.inventory_deducted = True
+        self.order.save()
+        result = history.plan_history(self.api, SOURCE, MAPPING)
+        row = result['orders'][0]
+        self.assertEqual(row['lines'][0]['new_name'], 'Nasi Lemak Telur')
+        self.assertEqual(row['lines'][0]['quantity'], 2)
+        self.assertEqual(row['new_total_amount'], '14.00')
+        self.assertEqual(row['new_payment_amount'], '18.00')
+        self.assertEqual(len(row['reconciliation_required']), 2)
+        self.assertFalse(self.api.writes)
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.product_name, 'Mango')
+        self.assertEqual(self.item.unit_price, Decimal('5'))
+
+    def test_history_plan_flags_unmapped_items_and_excessive_discounts(self):
+        mapping = deepcopy(MAPPING)
+        del mapping['products']['Mango']
+        result = history.plan_history(self.api, SOURCE, mapping)
+        self.assertIsNone(result['orders'][0]['new_total_amount'])
+        self.assertIn('Explicit mapping required', result['orders'][0]['reconciliation_required'][0])
+        self.order.discount_amount = Decimal('100')
+        self.order.save()
+        result = history.plan_history(self.api, SOURCE, MAPPING)
+        self.assertIn('discount exceeds', result['orders'][0]['reconciliation_required'][0])
+        self.assertFalse(self.api.writes)
 
 
 class CatalogueStaffHTTPTests(LiveServerTestCase):
