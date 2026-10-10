@@ -3,6 +3,7 @@ import PlanningFridge, { KitchenKeeper } from "./PlanningFridge";
 import { IngredientDrawing } from "./PantryScene";
 import ServingScene from "./ServingScene";
 import RescueReceipt from "./RescueReceipt";
+import RescueMenu from "./RescueMenu";
 import { rescueOutcome } from "./rescueOutcome";
 import "./rescueDemo.css";
 const choices = [
@@ -197,26 +198,15 @@ export default function RescueDemo() {
                           {outcome.sales} assumed sales for {selected.name}
                         </strong>
                       </div>
-                      <fieldset>
-                        <legend>Choose a fictional action</legend>
-                        {choices.map((item) => (
-                          <label key={item.id}>
-                            <input
-                              type="radio"
-                              name="rescue-action"
-                              checked={action === item.id}
-                              onChange={() => {
-                                setAction(item.id);
-                                reset();
-                              }}
-                            />
-                            {item.name}
-                            {item.id === "bundle" && (
-                              <small> · scenario’s suggested plan</small>
-                            )}
-                          </label>
-                        ))}
-                      </fieldset>
+                      <RescueMenu
+                        choices={choices}
+                        action={action}
+                        demandOffset={demandOffset}
+                        onChange={(id) => {
+                          setAction(id);
+                          reset();
+                        }}
+                      />
                       <p className="pd-note">
                         The bundle suggestion is authored for this
                         demonstration, not produced by the forecasting model.

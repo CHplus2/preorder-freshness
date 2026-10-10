@@ -99,3 +99,9 @@ Validation: 29 predictive tests including preset arithmetic, shared quieter-dema
 Replaced repeated financial prose in the illustrative rescue result with a receipt. Revenue and expenses share a visual scale; tap stock, sides or setup to inspect the authored cost. It shows signed contribution and difference versus the same-demand baseline. Explicitly explains that remaining-stock exposure is already included in the RM 80 stock cost, so it must not be deducted again. No net-profit, realized savings or model-outcome claim is introduced.
 
 Validation: 29 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. After restarting Vite in the resumed environment, fixture browser checks passed for cost selection, RM 128 bundle expenses, RM 88 contribution and +RM 58 baseline difference, plus fridge/action flow, pause/restart, reduced motion, mobile overflow and zero API writes. Receipt screenshot reviewed. Live backend and Vercel production remain unverified.
+
+## Batch 16 — illustrated rescue menu
+
+Replaced the plain fictional-action radio list with original illustrated menu cards: chicken dish, 20% special and side bundle. Each shows assumed sale price, sales/unsold portions under the current demand offset, and side/setup costs. Cards retain native radio controls and keyboard behavior; the bundle badge explicitly attributes the suggestion to the authored story. Decorative meals do not establish verified product/recipe mappings. The existing storyboard, playback and receipt remain intact.
+
+Validation: 29 predictive tests, existing frontend/UX/planner/checkout suites, production build and changed-file lint passed. After starting Vite, fixture browser checks passed for menu selection, full fridge/playback/receipt flow, pause/restart, reduced motion, mobile overflow and zero API writes. Menu screenshot reviewed. Live backend and production deployment remain unverified.

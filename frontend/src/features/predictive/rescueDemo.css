@@ -332,3 +332,59 @@
   font-size: 13px;
   line-height: 1.6;
 }
+.pd .fc-rescue-menu-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.pd .fc-rescue-demo .fc-rescue-menu-cards label {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 12px;
+  padding: 14px;
+  border: 2px solid #d0c2a8;
+  border-radius: 18px;
+  background: #fff9ec;
+  cursor: pointer;
+}
+.pd .fc-rescue-demo .fc-rescue-menu-cards label.selected {
+  border-color: #426b58;
+  background: #edf0e5;
+}
+.pd .fc-rescue-menu-cards svg {
+  width: 100%;
+  height: auto;
+}
+.pd .fc-rescue-menu-cards strong {
+  font-size: 15px;
+}
+.pd .fc-rescue-menu-cards span,
+.pd .fc-rescue-menu-cards small {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.pd .fc-rescue-menu-cards .fc-menu-price {
+  font-size: 21px;
+  font-weight: 600;
+}
+.pd .fc-menu-price small {
+  display: block;
+  font-weight: 400;
+}
+.pd .fc-menu-suggestion {
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #426b58;
+  color: #fffdf7;
+}
+@media (max-width: 1150px) {
+  .pd .fc-rescue-menu-cards {
+    grid-template-columns: 1fr;
+  }
+  .pd .fc-rescue-menu-cards svg {
+    max-width: 180px;
+    justify-self: center;
+  }
+}
