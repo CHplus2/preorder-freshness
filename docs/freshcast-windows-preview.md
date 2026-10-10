@@ -115,3 +115,14 @@ Repository evidence:
 Inspect the failed deployment's build log before applying a fix. No production
 redeploy, environment-variable change, migration, retraining or feature rebuild
 was performed to address the failure.
+
+## Newly discovered remote bundle workflow
+
+During this check the remote integration branch advanced with `3c51468`, adding
+`.github/workflows/freshcast-bundle.yml`. That change was preserved. If its
+GitHub Actions run completes successfully, users can download its
+`freshcast-demo-bundle` artifact from the run page. This is a **regenerated**
+bundle, not guaranteed identical to the current cloud model. Its success and
+artifact availability could not be verified through the blocked GitHub API.
+No workflow dispatch or retraining was initiated in this session. This workflow
+provides a potential artifact-transfer path, not a hosted application preview.

@@ -393,3 +393,9 @@ inspection identifies a read-only PostgreSQL migration-check build gate and a
 confirmed omission of optional ML dependencies and ignored artifacts from a
 plain Git deployment. These are kept separate from the unobserved build error.
 Deployment log text was requested; no production deploy or migration performed.
+
+A concurrent remote update `3c51468` added a GitHub Actions downloadable-bundle
+workflow. Preserved it by rebasing only the local documentation commit onto the
+updated integration head. The workflow's execution/success is unverified; it
+regenerates a bundle rather than exporting exact cloud model bytes. No workflow
+was triggered by this session, and no force-push was used.
