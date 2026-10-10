@@ -2,6 +2,8 @@
 
 Prepared 3 October 2026. 24 proposed products for one Malaysian home kitchen: everyday rice meals, noodles and preorder bakes. Prices, purchase costs, quantities and timings below are planning assumptions, not supplier quotes or tested recipes. Trial yields and timed production before live acceptance. No existing records have been changed.
 
+Menu photographs for the fictional live demo are now tracked separately in [DAPUR-KITA-MENU-PHOTOS.md](DAPUR-KITA-MENU-PHOTOS.md), with image URLs in the starter JSON. They are licensed illustrations; the proposed recipes remain the menu specifications.
+
 ## Full catalogue index
 
 1. Nasi Lemak Telur — RM 7.50
