@@ -134,9 +134,64 @@ previous inventory deductions. The private report excludes customer and
 address fields. Keep it outside Git and treat the recast records as synthetic
 demo history; they cannot establish model accuracy on real business orders.
 
-Historical rewriting is **not implemented or applied**. Existing staff APIs
-allow status transitions, not replacement order items/accepted recipes or
-ledger edits. A tested, transactional database migration with backup and
-reconciliation is required after inspecting this plan. A Vercel token alone
-does not provide database credentials. The planner does not solve that access
-requirement or alter CatBoost inputs.
+Existing staff APIs allow status transitions, not replacement order items or
+ledger edits. The explicitly guarded management command below performs that
+separate operation. The read-only HTTP planner does not alter CatBoost inputs.
+
+## Explicit one-time fictional-data rewrite
+
+`recast_dapur_kita_demo` synchronizes the guide catalogue and recasts fictional
+orders **in one database transaction**. It replaces accepted recipes and
+preparation snapshots, unit prices, line subtotals, discounted food totals and
+full-order payment event amounts. It preserves order/item IDs, customer
+associations, order dates, delivery dates, quantities, status, shipping fees,
+discount amounts and receipt/refund outcomes. The proposed mapping remains
+synthetic; it is not evidence of real purchases of these dishes.
+
+The command refuses wallet orders, structured ingredient consumption, unknown
+menu mappings, conflicting material units, excessive discounts and payment
+events that do not match the original full-order amount. Those cases require
+separate reconciliation. Legacy inventory-deduction flags without structured
+consumption are cleared; stock quantities and old inventory logs are unchanged.
+Preparation times/plans are cleared for review because the new recipes have
+not actually been scheduled or cooked. Ingredient cost/profit remains unknown
+where consumption is unrecorded.
+
+New guide menus are active. Old retail products are archived; obsolete retail
+categories are removed after order replacement. Their original labels and
+catalogue fields are preserved in the backup, and archived products' category
+references become NULL. Unrelated raw materials with stock/history remain;
+no inventory template is inserted as actual stock.
+
+Before/after records are persisted in the existing **OrderAmendment** table
+(`myapp_orderamendment`, in the configured Django schema) as part of the same
+transaction. There is one audit record per order; the first also contains the
+original catalogue and recipe records. This backup lives in Supabase, alongside
+the data, rather than only in the cloud workspace. It contains no credentials
+or customer addresses. Staff can inspect it through the existing accepted-recipe
+API's `amendments` field. Restoring a completed rewrite requires a separately
+reviewed inverse operation; it is not an automatic reset.
+
+```powershell
+# Plan on the explicitly configured database; no writes:
+python backend/manage.py recast_dapur_kita_demo
+
+# Explicitly apply only the reviewed fictional snapshot:
+python backend/manage.py recast_dapur_kita_demo --apply --confirm-fictional --expected-fingerprint <reviewed-sha256>
+```
+
+The fingerprint checks the order/item identities, quantities, prices, totals,
+payment/status fields and legacy consumption flags. A changed snapshot stops
+the transaction. Repeating the same completed operation returns its recorded
+result without rewriting data or duplicating audit records.
+
+For the owner-authorized Vercel operation, `deploy/apply_dapur_kita_demo.py`
+is an **explicit one-off operator build command**, requiring deployment-scoped
+`DAPUR_KITA_CONFIRMED_FICTIONAL=1` and `DAPUR_KITA_DEMO_FINGERPRINT`. It first
+finishes normal release checks, model provisioning and the frontend build,
+then runs the transactional command using Vercel's existing database settings.
+If the rewrite succeeds but packaging later fails, the database changes remain;
+the existing live app can still serve them, and a retry uses the audit marker
+to avoid duplicate changes. The usual tracked `build.py` and `vercel.json`
+remain unchanged and do not run this data rewrite. There is no new public
+data-rewriting endpoint. Future normal deployments need no rewrite flags.
