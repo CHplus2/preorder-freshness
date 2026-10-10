@@ -51,3 +51,16 @@ test("valid manager assumptions export their costs and negative benefit with exp
   assert.match(text, /Hypothetical net benefit: (?:-RM\s*|RM\s*-)42\.00/);
   assert.match(text, /Excludes sales revenue, shortage recovery/);
 });
+test("manual review notes remain self-reported and separate from backend guidance", () => {
+  const text = decisionBrief({ baseline, risk: baseline.ingredient_risks[0], alternative: "Review purchasing", isFixture: true, reviewed: ["Supplier prices and delivery lead time"], handoffNote: "  Call supplier before ordering.  " });
+  assert.match(text, /SELF-REPORTED, NOT SYSTEM VERIFICATION/);
+  assert.match(text, /Marked reviewed: Supplier prices and delivery lead time/);
+  assert.match(text, /Manager handoff note \(user-entered\):\nCall supplier before ordering\./);
+  assert.match(text, /These notes do not approve or execute an action/);
+  assert.match(text, /BASELINE BACKEND GUIDANCE\nDefer replenishment/);
+});
+test("unmarked review never implies verification or a prefilled handoff note", () => {
+  const text = decisionBrief({baseline, risk: baseline.ingredient_risks[0], alternative:"Review purchasing", isFixture:true});
+  assert.match(text, /No checks marked reviewed/);
+  assert.doesNotMatch(text, /Manager handoff note \(user-entered\)/);
+});

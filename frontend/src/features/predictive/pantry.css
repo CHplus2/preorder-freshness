@@ -1104,3 +1104,34 @@
     transition: none;
   }
 }
+.pd .fc-verification-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px;
+  border-bottom: 1px solid #ded5c2;
+  cursor: pointer;
+}
+.pd .fc-verification-check input {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  accent-color: #446c55;
+}
+.pd .fc-verification-note {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+.pd .fc-verification-note textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #a5b29e;
+  border-radius: 12px;
+  font: inherit;
+  resize: vertical;
+  background: #fffdf7;
+  color: #344d3c;
+}

@@ -37,3 +37,9 @@ Batch 4 validation: all 18 predictive tests and existing frontend/UX/planner/che
 Added a waste/shortage map to the action comparison workbench. A circle marks baseline and a diamond marks the returned promotion scenario; axes use ingredient-specific independent kg scales, with exact quantities in accessible SVG text. A plain-language summary calls out opposing waste/shortage movements rather than declaring a winner. Missing scenarios remain unavailable; overlapping points and zero values are explained. No cost estimates, confidence intervals, causal effects or action execution are inferred.
 
 Batch 5 validation: 21 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. Fixture browser checks passed for unavailable scenarios, baseline/promotion switching, accessible map quantities, unknown costs and mobile overflow; desktop screenshot reviewed. Live backend and Vercel deployment remain unverified.
+
+## Batch 6 — manager verification and handoff
+
+Final recommendation now has an interactive three-item checklist for reviewing real batches/handling, recipes/mapping, and suppliers, plus an optional manager note. Marks remain self-reported and do not imply system verification, approval, food safety or action execution. Downloaded drafts include manual review status and user-entered notes separately from backend guidance. Local review state resets on ingredient/source/forecast changes or reload, with no storage or API writes.
+
+Batch 6 validation: 23 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. Fixture browser checks covered checklist interaction, draft-download content and labels, within-ingredient navigation retention, reload reset, mobile overflow and zero API writes. Live backend and Vercel deployment were not verified.

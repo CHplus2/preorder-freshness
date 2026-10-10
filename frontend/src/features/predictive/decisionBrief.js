@@ -14,6 +14,8 @@ export function decisionBrief({
   isFixture,
   estimate,
   percent,
+  reviewed = [],
+  handoffNote = "",
 }) {
   return [
     "FRESHCAST — MANAGER DECISION SLIP",
@@ -56,6 +58,15 @@ export function decisionBrief({
     "Check verified recipes and menu mappings.",
     "Confirm supplier prices and delivery lead time.",
     "No guaranteed savings, purchase execution, promotion activation or food safety assessment.",
+    "",
+    "MANUAL MANAGER REVIEW — SELF-REPORTED, NOT SYSTEM VERIFICATION",
+    ...(reviewed.length
+      ? reviewed.map((label) => `Marked reviewed: ${label}`)
+      : ["No checks marked reviewed."]),
+    "These notes do not approve or execute an action.",
+    ...(handoffNote.trim()
+      ? ["Manager handoff note (user-entered):", handoffNote.trim()]
+      : []),
     "",
     "RESPONSE WARNINGS",
     ...baseline.warnings,

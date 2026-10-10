@@ -4,6 +4,7 @@ import PantryScene from "./PantryScene";
 import DecisionRehearsal from "./DecisionRehearsal";
 import ActionComparison from "./ActionComparison";
 import ReviewQueue from "./ReviewQueue";
+import VerificationChecklist from "./VerificationChecklist";
 import { decisionBrief } from "./decisionBrief";
 import ProblemEvidence from "./ProblemEvidence";
 import { problemSummary } from "./problemSummary";
@@ -127,7 +128,7 @@ export default function DecisionAssistant({
         className="pantry-decision-counter"
       >
         <DecisionJourney
-          key={`${baseline.center_id}:${baseline.week}:${risk.ingredient_id}`}
+          key={`${isFixture}:${JSON.stringify(baseline)}:${risk.ingredient_id}`}
           risk={risk}
           baseline={baseline}
           scenario={scenario}
@@ -177,6 +178,8 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
     }
     previousStep.current = step;
   }, [step]);
+  const [reviewed, setReviewed] = useState([]);
+  const [handoffNote, setHandoffNote] = useState("");
   const [cost, setCost] = useState("");
   const [percent, setPercent] = useState("");
   const scenarioRisk = scenario?.ingredient_risks.find(
@@ -195,6 +198,8 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
       isFixture,
       estimate,
       percent,
+      reviewed,
+      handoffNote,
     });
     const url = URL.createObjectURL(
       new Blob([body], { type: "text/plain;charset=utf-8" }),
@@ -490,18 +495,12 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
               This selection and any worksheet estimates do not replace the
               backend’s guidance.
             </p>
-            <div className="fc-check-before">
-              <h3>Before you act</h3>
-              <ul>
-                <li>Confirm actual batches, handling and expiry.</li>
-                <li>Check which verified recipes use this ingredient.</li>
-                <li>Confirm supplier prices and delivery lead time.</li>
-              </ul>
-              <p className="pd-note">
-                This is decision support, not a guaranteed saving or food safety
-                assessment. No action has been executed.
-              </p>
-            </div>
+            <VerificationChecklist
+              reviewed={reviewed}
+              setReviewed={setReviewed}
+              note={handoffNote}
+              setNote={setHandoffNote}
+            />
             <div className="fc-brief-actions">
               <button className="admin-primary" onClick={downloadBrief}>
                 Download decision slip
