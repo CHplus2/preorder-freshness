@@ -1,0 +1,92 @@
+.pd .fc-review-queue {
+  margin: 24px 0;
+  padding: 24px;
+  background: #eee4d1;
+  border: 2px solid #c6b18d;
+  border-radius: 22px;
+}
+.pd .fc-review-queue header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
+}
+.pd .fc-review-queue h2 {
+  margin: 8px 0;
+}
+.pd .fc-queue-count {
+  white-space: nowrap;
+  border-radius: 20px;
+  padding: 10px 14px;
+  background: #fffdf7;
+  color: #344d3c;
+}
+.pd .fc-queue-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0;
+}
+.pd .fc-queue-controls button {
+  min-height: 44px;
+  background: #fffdf7;
+  color: #344d3c;
+  border: 1px solid #9aab94;
+  border-radius: 12px;
+}
+.pd .fc-queue-controls button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.pd .fc-queue-tickets {
+  padding: 0;
+  margin: 22px 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.pd .fc-queue-tickets li {
+  background: #fffdf7;
+  border: 1px solid #cdbb9a;
+  border-top: 6px solid #839b77;
+  border-radius: 8px 8px 18px 18px;
+  padding: 18px;
+  box-shadow: 0 4px 0 #dac9ab;
+  overflow-wrap: anywhere;
+}
+.pd .fc-queue-tickets h3 {
+  margin: 12px 0;
+}
+.pd .fc-queue-tickets dl div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  margin: 8px 0;
+}
+.pd .fc-queue-tickets dd {
+  margin: 0;
+  font-weight: 600;
+}
+.pd .fc-queue-empty {
+  padding: 18px;
+  border: 1px dashed #ac9677;
+  border-radius: 14px;
+}
+@media (max-width: 900px) {
+  .pd .fc-queue-tickets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .pd .fc-review-queue {
+    padding: 16px;
+  }
+  .pd .fc-review-queue header {
+    flex-direction: column;
+  }
+  .pd .fc-queue-tickets {
+    grid-template-columns: 1fr;
+  }
+}

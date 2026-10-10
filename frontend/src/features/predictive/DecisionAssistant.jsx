@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import PantryScene from "./PantryScene";
+import DecisionRehearsal from "./DecisionRehearsal";
+import ActionComparison from "./ActionComparison";
+import ReviewQueue from "./ReviewQueue";
+import RiskLens from "./RiskLens";
+import { riskLens } from "./riskLens";
+import VerificationChecklist from "./VerificationChecklist";
+import { decisionBrief } from "./decisionBrief";
 import ProblemEvidence from "./ProblemEvidence";
 import { problemSummary } from "./problemSummary";
 import { rankRisks } from "./api";
@@ -26,11 +33,29 @@ const steps = [
   "Compare tradeoffs",
   "Review recommendation",
 ];
-export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
-  const risks = rankRisks(baseline.ingredient_risks).filter(
+export default function DecisionAssistant({
+  baseline,
+  scenario,
+  onPromotion,
+  isFixture,
+}) {
+  const priorityRisks = rankRisks(baseline.ingredient_risks).filter(
     (r) => r.risk_type !== "none",
   );
   const [params, setParams] = useSearchParams();
+  const lens = ["waste", "shortage"].includes(params.get("lens"))
+    ? params.get("lens")
+    : "priority";
+  const risks = riskLens(priorityRisks, lens);
+  function changeLens(value) {
+    const ordered = riskLens(priorityRisks, value);
+    const next = new URLSearchParams(params);
+    next.set("lens", value);
+    if (ordered[0]) next.set("ingredient", ordered[0].ingredient_id);
+    next.delete("step");
+    next.delete("action");
+    setParams(next, { replace: true });
+  }
   const decisionRef = useRef(null);
   const ingredient = params.get("ingredient") || "";
   function setIngredient(value) {
@@ -63,7 +88,19 @@ export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
     );
   return (
     <section className="fc-assistant">
+      <details className="fc-kitchen-tools">
+        <summary>
+          Kitchen focus ·{" "}
+          {lens === "priority"
+            ? "backend priority"
+            : lens === "waste"
+              ? "waste first"
+              : "shortages first"}
+        </summary>
+        <RiskLens risks={priorityRisks} lens={lens} onChange={changeLens} />
+      </details>
       <PantryScene
+        key={`${lens}:${risk.ingredient_id}`}
         risks={risks}
         selected={risk.ingredient_id}
         onSelect={(id) => {
@@ -80,6 +117,16 @@ export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
         center={baseline.center_id}
         week={baseline.week}
       />
+      <details className="fc-kitchen-tools">
+        <summary>Open manager review queue</summary>
+        <ReviewQueue
+          key={`${isFixture}:${JSON.stringify(baseline)}`}
+          risks={risks}
+          selected={risk.ingredient_id}
+          onSelect={setIngredient}
+          isFixture={isFixture}
+        />
+      </details>
       <details className="pantry-list-view">
         <summary>List view & priority rules</summary>
         <div className="fc-issue-picker">
@@ -98,8 +145,13 @@ export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
             </select>
           </label>
           <p>
-            {risks.length} issues · ordered by the backend’s waste-cost, expiry
-            and shortage rules. Unknown cost does not mean no risk.
+            {risks.length} issues ·{" "}
+            {lens === "priority"
+              ? "backend waste-cost, expiry and shortage order"
+              : lens === "waste"
+                ? "largest expiring-unused quantity first"
+                : "largest shortfall quantity first"}
+            . Unknown cost does not mean no risk.
           </p>
         </div>
       </details>
@@ -111,17 +163,18 @@ export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
         className="pantry-decision-counter"
       >
         <DecisionJourney
-          key={`${baseline.center_id}:${baseline.week}:${risk.ingredient_id}`}
+          key={`${isFixture}:${JSON.stringify(baseline)}:${risk.ingredient_id}`}
           risk={risk}
           baseline={baseline}
           scenario={scenario}
           onPromotion={onPromotion}
+          isFixture={isFixture}
         />
       </div>
     </section>
   );
 }
-function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
+function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
   const [params, setParams] = useSearchParams();
   const value = Number(params.get("step") || 0);
   const step = Number.isInteger(value) && value >= 0 && value < 5 ? value : 0;
@@ -160,6 +213,8 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
     }
     previousStep.current = step;
   }, [step]);
+  const [reviewed, setReviewed] = useState([]);
+  const [handoffNote, setHandoffNote] = useState("");
   const [cost, setCost] = useState("");
   const [percent, setPercent] = useState("");
   const scenarioRisk = scenario?.ingredient_risks.find(
@@ -170,6 +225,28 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
     cost,
     percent,
   );
+  function downloadBrief() {
+    const body = decisionBrief({
+      baseline,
+      risk,
+      alternative: actions.find((a) => a.id === action).title,
+      isFixture,
+      estimate,
+      percent,
+      reviewed,
+      handoffNote,
+    });
+    const url = URL.createObjectURL(
+      new Blob([body], { type: "text/plain;charset=utf-8" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `freshcast-decision-center-${baseline.center_id}-week-${baseline.week}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
   const actions = [
     {
       id: "purchasing",
@@ -309,7 +386,13 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
             <h2 ref={headingRef} tabIndex={-1}>
               Compare costs, benefits and risks
             </h2>
-            <h3>API evidence · {risk.ingredient_id}</h3>
+            <ActionComparison
+              key={risk.ingredient_id}
+              risk={risk}
+              scenarioRisk={scenarioRisk}
+              isFixture={isFixture}
+            />
+            <h3>Exact API evidence · {risk.ingredient_id}</h3>
             <div className="pd-table-wrap">
               <table>
                 <caption>
@@ -409,20 +492,12 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
                 </label>
               </div>
               {estimate ? (
-                <div className="fc-facts" role="status">
-                  <div>
-                    <span>Hypothetical avoided waste cost</span>
-                    <strong>{money(estimate.avoidedLoss)}</strong>
-                  </div>
-                  <div>
-                    <span>Hypothetical remaining waste cost</span>
-                    <strong>{money(estimate.remainingLoss)}</strong>
-                  </div>
-                  <div>
-                    <span>Hypothetical net benefit</span>
-                    <strong>{money(estimate.netBenefit)}</strong>
-                  </div>
-                </div>
+                <DecisionRehearsal
+                  baselineCost={risk.potential_waste_cost_myr}
+                  estimate={estimate}
+                  percent={percent}
+                  onPercent={setPercent}
+                />
               ) : (
                 <p role="status">
                   {risk.potential_waste_cost_myr === null
@@ -455,19 +530,23 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
               This selection and any worksheet estimates do not replace the
               backend’s guidance.
             </p>
-            <div className="fc-check-before">
-              <h3>Before you act</h3>
-              <ul>
-                <li>Confirm actual batches, handling and expiry.</li>
-                <li>Check which verified recipes use this ingredient.</li>
-                <li>Confirm supplier prices and delivery lead time.</li>
-              </ul>
-              <p className="pd-note">
-                This is decision support, not a guaranteed saving or food safety
-                assessment. No action has been executed.
-              </p>
+            <VerificationChecklist
+              reviewed={reviewed}
+              setReviewed={setReviewed}
+              note={handoffNote}
+              setNote={setHandoffNote}
+            />
+            <div className="fc-brief-actions">
+              <button className="admin-primary" onClick={downloadBrief}>
+                Download decision slip
+              </button>
+              <button onClick={() => setStep(3)}>Revisit tradeoffs</button>
             </div>
-            <button onClick={() => setStep(3)}>Revisit tradeoffs</button>
+            <p className="pd-note">
+              Take a draft briefing to your team. It includes source labels,
+              baseline guidance, verification checks, and any valid worksheet
+              assumptions. Downloading does not execute a decision.
+            </p>
           </>
         )}
         <div className="fc-journey-controls">

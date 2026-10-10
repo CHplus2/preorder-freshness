@@ -1,3 +1,5 @@
+import { useState } from "react";
+import KitchenWalkthrough from "./KitchenWalkthrough";
 import {
   ArrowUpRight,
   PackageCheck,
@@ -22,7 +24,7 @@ const labels = {
   expiry_surplus_and_shortage: "Waste + stock gap",
 };
 // Decorative packaging only. This does not infer a recipe, unit or product mapping.
-function IngredientDrawing({ name }) {
+export function IngredientDrawing({ name }) {
   const grain = /rice|flour|grain/i.test(name),
     bottle = /milk|oil|sauce/i.test(name),
     vegetable = /tomato|onion|carrot|vegetable/i.test(name);
@@ -178,24 +180,27 @@ export default function PantryScene({
   center,
   week,
 }) {
+  const [sceneView, setSceneView] = useState("kitchen");
   const selectedRisk = risks.find((r) => r.ingredient_id === selected);
   return (
     <section className="pantry-scene" aria-label="Interactive FreshCast pantry">
-      <div className="pantry-storefront">
-        <StoreIllustration />
-        <div className="pantry-sign">
-          <span>YOUR KITCHEN, ONE STEP AHEAD</span>
-          <h2>FreshCast Pantry</h2>
+      {sceneView === "crates" && (
+        <div className="pantry-storefront">
+          <StoreIllustration />
+          <div className="pantry-sign">
+            <span>YOUR KITCHEN, ONE STEP AHEAD</span>
+            <h2>FreshCast Pantry</h2>
+          </div>
+          <div className="pantry-window-label">
+            <ShoppingBasket size={16} /> Center {center} · Week {week}
+          </div>
+          <div className="pantry-open-tag">
+            DECISION SUPPORT
+            <br />
+            <small>No actions executed</small>
+          </div>
         </div>
-        <div className="pantry-window-label">
-          <ShoppingBasket size={16} /> Center {center} · Week {week}
-        </div>
-        <div className="pantry-open-tag">
-          DECISION SUPPORT
-          <br />
-          <small>No actions executed</small>
-        </div>
-      </div>
+      )}
       <div className="pantry-counter">
         <div className="pantry-counter-heading">
           <div>
@@ -212,80 +217,104 @@ export default function PantryScene({
           </span>
         </div>
         <p className="pantry-how-to">
-          Select an ingredient to open its decision story.
+          Click an ingredient to inspect its risk. Choose Explore this decision
+          to work through your options.
         </p>
-        <div className="pantry-floor">
-          <div
-            className="pantry-crates"
-            role="group"
-            aria-label="Ingredient planning issues"
+        <div className="fc-scene-switch" role="group" aria-label="Kitchen view">
+          <button
+            aria-pressed={sceneView === "kitchen"}
+            onClick={() => setSceneView("kitchen")}
           >
-            {risks.map((r, i) => (
-              <button
-                key={r.ingredient_id}
-                className={`pantry-crate ${selected === r.ingredient_id ? "is-selected" : ""}`}
-                aria-pressed={selected === r.ingredient_id}
-                aria-label={`Inspect ${r.ingredient_id}: ${labels[r.risk_type]}`}
-                onClick={() => onSelect(r.ingredient_id)}
-              >
-                <span
-                  className={`pantry-risk-tag ${r.shortfall_kg > 0 ? "gap" : "waste"}`}
-                >
-                  {labels[r.risk_type]}
-                </span>
-                <IngredientDrawing name={r.ingredient_id} />
-                <span className="pantry-crate-label">
-                  <strong>{r.ingredient_id}</strong>
-                  <span>
-                    {r.expiring_unused_kg > 0
-                      ? `${qty(r.expiring_unused_kg)} kg expiring unused`
-                      : `${qty(r.shortfall_kg)} kg shortfall`}
-                  </span>
-                  <small>
-                    {money(r.potential_waste_cost_myr)} · potential waste
-                  </small>
-                </span>
-                <span className="pantry-crate-footer">
-                  <span>CASE {String(i + 1).padStart(2, "0")}</span>
-                  <span>
-                    {selected === r.ingredient_id ? "Selected" : "Open story"}{" "}
-                    <ArrowUpRight size={14} />
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
-          <aside className="pantry-order-slip">
-            <div className="pantry-slip-top">
-              <Sparkles size={18} />
-              <span>MANAGER’S NOTE</span>
-            </div>
-            <h3>
-              {selectedRisk
-                ? `Let’s look at ${selectedRisk.ingredient_id}.`
-                : "Your pantry briefing"}
-            </h3>
-            <p>
-              {selectedRisk
-                ? problemSummary(selectedRisk)
-                : "A successful calculation returned no ingredient issues. This does not establish food safety."}
-            </p>
-            {selectedRisk && (
-              <button
-                className="pantry-review-case"
-                onClick={() => onSelect(selectedRisk.ingredient_id)}
-              >
-                Review this case <ArrowUpRight size={16} />
-              </button>
-            )}
-            <span className="pantry-slip-stamp">
-              FORECAST → EXPLAIN → DECIDE
-            </span>
-            <p className="pantry-slip-disclaimer">
-              Planning illustration · not a live stock map.
-            </p>
-          </aside>
+            Explore kitchen
+          </button>
+          <button
+            aria-pressed={sceneView === "crates"}
+            onClick={() => setSceneView("crates")}
+          >
+            Crate view
+          </button>
         </div>
+        {sceneView === "kitchen" ? (
+          <KitchenWalkthrough
+            risks={risks}
+            selected={selected}
+            onSelect={onSelect}
+            renderIngredient={(name) => <IngredientDrawing name={name} />}
+          />
+        ) : (
+          <div className="pantry-floor">
+            <div
+              className="pantry-crates"
+              role="group"
+              aria-label="Ingredient planning issues"
+            >
+              {risks.map((r, i) => (
+                <button
+                  key={r.ingredient_id}
+                  className={`pantry-crate ${selected === r.ingredient_id ? "is-selected" : ""}`}
+                  aria-pressed={selected === r.ingredient_id}
+                  aria-label={`Inspect ${r.ingredient_id}: ${labels[r.risk_type]}`}
+                  onClick={() => onSelect(r.ingredient_id)}
+                >
+                  <span
+                    className={`pantry-risk-tag ${r.shortfall_kg > 0 ? "gap" : "waste"}`}
+                  >
+                    {labels[r.risk_type]}
+                  </span>
+                  <IngredientDrawing name={r.ingredient_id} />
+                  <span className="pantry-crate-label">
+                    <strong>{r.ingredient_id}</strong>
+                    <span>
+                      {r.expiring_unused_kg > 0
+                        ? `${qty(r.expiring_unused_kg)} kg expiring unused`
+                        : `${qty(r.shortfall_kg)} kg shortfall`}
+                    </span>
+                    <small>
+                      {money(r.potential_waste_cost_myr)} · potential waste
+                    </small>
+                  </span>
+                  <span className="pantry-crate-footer">
+                    <span>CASE {String(i + 1).padStart(2, "0")}</span>
+                    <span>
+                      {selected === r.ingredient_id ? "Selected" : "Open story"}{" "}
+                      <ArrowUpRight size={14} />
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+            <aside className="pantry-order-slip">
+              <div className="pantry-slip-top">
+                <Sparkles size={18} />
+                <span>MANAGER’S NOTE</span>
+              </div>
+              <h3>
+                {selectedRisk
+                  ? `Let’s look at ${selectedRisk.ingredient_id}.`
+                  : "Your pantry briefing"}
+              </h3>
+              <p>
+                {selectedRisk
+                  ? problemSummary(selectedRisk)
+                  : "A successful calculation returned no ingredient issues. This does not establish food safety."}
+              </p>
+              {selectedRisk && (
+                <button
+                  className="pantry-review-case"
+                  onClick={() => onSelect(selectedRisk.ingredient_id)}
+                >
+                  Review this case <ArrowUpRight size={16} />
+                </button>
+              )}
+              <span className="pantry-slip-stamp">
+                FORECAST → EXPLAIN → DECIDE
+              </span>
+              <p className="pantry-slip-disclaimer">
+                Planning illustration · not a live stock map.
+              </p>
+            </aside>
+          </div>
+        )}
         <p className="pantry-scene-note">
           Highest-priority issues appear first. Stock and costs are simulated.
         </p>
