@@ -31,11 +31,15 @@ actual business impact and forecast accuracy require separate evidence.
 4. Have the teammate's UI make source, assumptions and action consequences easy
    to understand. Backend response validation must accept any future local mode
    explicitly; the current frontend requires the Genpact/simulated source schema.
+   A [local planning API and frontend handoff](LOCAL-KITCHEN-INTEGRATION.md) are now
+   implemented, with confirmed booking requirements rather than model forecasts.
 5. Present a realistic route to validated local forecasting after enough dated
    history and repeated menu observations exist. The executed local aggregate
    [booking experiment](LOCAL-BOOKING-EXPERIMENT.md) failed to beat the stronger
    baseline and should remain offline.
 
 The current hosted interface is functional as a model-backed Genpact prototype.
-The local kitchen forecasting connection remains incomplete. Retraining a small
-demo history alone does not close that gap or establish business value.
+The local planning backend is tested, but the hosted Decision Assistant's local
+mode still needs UI integration and successful deployment. Reliable local
+forecasting remains unestablished. Retraining a small demo history alone does
+not close those gaps or establish business value.

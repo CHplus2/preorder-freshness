@@ -13,6 +13,10 @@ volume from the minimal local snapshot. See
 [LOCAL-BOOKING-EXPERIMENT.md](../../docs/LOCAL-BOOKING-EXPERIMENT.md) for executed
 results, reproduction and why this candidate is not used by the live APIs.
 
+For known-order requirements and actual database stock, the separate staff-only
+`local-plan/` endpoint requires no trained model. See the
+[local kitchen integration handoff](../../docs/LOCAL-KITCHEN-INTEGRATION.md).
+
 ## Reproduce after a reset
 
 Prerequisites: Linux Python 3.12, `uv`, `curl`, and HTTPS access to
