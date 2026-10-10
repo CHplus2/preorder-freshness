@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import PantryScene from "./PantryScene";
 import { rankRisks } from "./api";
 import { estimateTradeoff } from "./decisionMath";
 const qty = (n) =>
@@ -28,6 +29,7 @@ export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
     (r) => r.risk_type !== "none",
   );
   const [params, setParams] = useSearchParams();
+  const decisionRef = useRef(null);
   const ingredient = params.get("ingredient") || "";
   function setIngredient(value) {
     const next = new URLSearchParams(params);
@@ -39,44 +41,81 @@ export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
   const risk = risks.find((r) => r.ingredient_id === ingredient) || risks[0];
   if (!risk)
     return (
-      <section className="pd-card" role="status">
-        <h2>No ingredient problems reported</h2>
-        <p>
-          The calculation returned no waste or shortage issues for this center.
-          Review the secondary analytics for evidence; this is not a food safety
-          guarantee.
-        </p>
-      </section>
+      <>
+        <PantryScene
+          risks={[]}
+          selected=""
+          onSelect={setIngredient}
+          center={baseline.center_id}
+          week={baseline.week}
+        />
+        <section className="pd-card" role="status">
+          <h2>No ingredient problems reported</h2>
+          <p>
+            The calculation returned no waste or shortage issues for this
+            center. Review the secondary analytics for evidence; this is not a
+            food safety guarantee.
+          </p>
+        </section>
+      </>
     );
   return (
     <section className="fc-assistant">
-      <div className="fc-issue-picker">
-        <label>
-          Choose a problem to work through
-          <select
-            aria-label="Ingredient problem"
-            value={risk.ingredient_id}
-            onChange={(e) => setIngredient(e.target.value)}
-          >
-            {risks.map((r) => (
-              <option key={r.ingredient_id} value={r.ingredient_id}>
-                {r.ingredient_id} · {issues[r.risk_type]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <p>
-          {risks.length} issues · ordered by the backend’s waste-cost, expiry
-          and shortage rules. Unknown cost does not mean no risk.
-        </p>
-      </div>
-      <DecisionJourney
-        key={`${baseline.center_id}:${baseline.week}:${risk.ingredient_id}`}
-        risk={risk}
-        baseline={baseline}
-        scenario={scenario}
-        onPromotion={onPromotion}
+      <PantryScene
+        risks={risks}
+        selected={risk.ingredient_id}
+        onSelect={(id) => {
+          setIngredient(id);
+          decisionRef.current?.scrollIntoView({
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+              .matches
+              ? "auto"
+              : "smooth",
+            block: "start",
+          });
+          decisionRef.current?.focus({ preventScroll: true });
+        }}
+        center={baseline.center_id}
+        week={baseline.week}
       />
+      <details className="pantry-list-view">
+        <summary>List view & priority rules</summary>
+        <div className="fc-issue-picker">
+          <label>
+            Choose a problem to work through
+            <select
+              aria-label="Ingredient problem"
+              value={risk.ingredient_id}
+              onChange={(e) => setIngredient(e.target.value)}
+            >
+              {risks.map((r) => (
+                <option key={r.ingredient_id} value={r.ingredient_id}>
+                  {r.ingredient_id} · {issues[r.risk_type]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p>
+            {risks.length} issues · ordered by the backend’s waste-cost, expiry
+            and shortage rules. Unknown cost does not mean no risk.
+          </p>
+        </div>
+      </details>
+      <div
+        ref={decisionRef}
+        tabIndex={-1}
+        role="region"
+        aria-label="Ingredient decision journey"
+        className="pantry-decision-counter"
+      >
+        <DecisionJourney
+          key={`${baseline.center_id}:${baseline.week}:${risk.ingredient_id}`}
+          risk={risk}
+          baseline={baseline}
+          scenario={scenario}
+          onPromotion={onPromotion}
+        />
+      </div>
     </section>
   );
 }
