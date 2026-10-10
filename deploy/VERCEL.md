@@ -6,12 +6,25 @@ if this Vercel project qualifies for the Large Functions path below.
 
 ## Verified deployment status: 2026-10-10
 
+Following the user's subsequent request to put the completed application on their
+usual Vercel site, the live alias was explicitly assigned to
+dpl_24jfu8mggfzXmMZVCSs4ZiZTQcp5. Open:
+https://preorder-freshness.vercel.app/admin/ai/decisions
+Vercel's alias API confirms this assignment. Live HTTP checks returned 200 for the
+FreshCast route and its assets; the served predictive JavaScript contains the new
+FreshCast Pantry and visual ingredient evidence. Anonymous auth checks return
+`authenticated: false`, and staff-only predictive metrics return 403 as expected.
+Authenticated hosted predictions remain a separate check; the real-model browser
+walkthrough passed locally. No main merge, production migration or business-data
+write was performed. Previous live deployment for rollback:
+dpl_5hRGTgzFYZiQxWWSH52a34nGQuhW.
+
 The original model-backed candidate is now **READY** on the existing Hobby project:
 `https://preorder-freshness-7kxvk8uwe-heroch94-3036s-projects.vercel.app/admin/ai/decisions`
 (deployment `dpl_Ba3dM3DM9RpavB5q9azYaBUPbgBb`, integration commit `7b190c3`).
 The build verified all eight inputs and successfully enabled Large Functions beta
-for the Python app. The public `preorder-freshness.vercel.app` alias still points
-to its previous deployment; no custom-domain promotion occurred.
+for the Python app. At initial candidate validation, the public live alias still
+pointed to its previous deployment; the later authorized switch is recorded above.
 
 The newer candidate also includes teammate dashboard head `7efaee4`, integrated
 by merge `fde26ef`, and reached **READY** with the same model bundle:
@@ -86,7 +99,7 @@ A future Git-triggered build has no ignored archive. It must use an authorized
 HTTPS bundle URL/checksum or be replaced by another direct upload from this
 retained archive. Merging branches alone does not transfer the model. The original
 archive is now in the private Vercel deployment source and was read back and
-verified, while the public live-domain assignment remains unchanged.
+verified. Its subsequent authorized live-domain switch is recorded above.
 
 ## Current verified limits and remaining eligibility check
 
@@ -156,21 +169,23 @@ Manual Vercel dashboard configuration does not require providing Codex a token.
 
 ## Verification and promotion
 
-Deploy the integration branch as a Vercel Preview. Confirm actual build package
-size/eligibility and valid existing staff authentication + CSRF, then all five
-predictive endpoints, center 13/week 146, four simulated ingredient risks and
-the complete five-step Decision Assistant including a promotion POST. Expect
-baseline total approximately 21,916.11 orders and scenario total 49,246.95.
+Future releases should first use the Production-target candidate route with
+automatic live-domain assignment disabled, retaining existing staff authentication
+and CSRF. Verify all five predictive endpoints, center 13/week 146, four simulated
+ingredient risks and the complete five-step assistant including a promotion POST.
+Expect approximately 21,916.11 baseline orders and 49,246.95 scenario orders.
 Retain external-history/SIMULATED/UNMAPPED labels and hypothetical-cost warnings.
-Only then provide the exact Preview URL, results, production-setting differences
-and rollback deployment to the user for the approval required by their original
-deployment request. No production settings or deployment were changed here.
+Record the rollback deployment and obtain any authorization still required by the
+active user request before promoting another release. The current release's
+live-domain switch was authorized by the user's later request and completed as
+recorded above; this does not authorize a main merge or production migrations.
 
 The existing model hash remains
 `b7608c307e17bb6d2b5b4ca15c4e495394cc405035de8c947522574da28b91a9`;
-WAPE 28.23% versus 34.81% baseline. Eleven deployment/provisioning tests passed,
+WAPE 28.23% versus 34.81% baseline. Twelve deployment/provisioning tests passed,
 and the actual original archive passed the offline Vercel provisioning rehearsal.
-This is not proof of a successful hosted Vercel deployment.
+Both subsequent Vercel builds reached READY. Authenticated hosted predictions
+remain distinct from build/static-route checks and local real-model validation.
 
 Existing GitHub CI on the prior 8e6df60 commit also reports a failed Django test
 step; its log-download host remains blocked, so that failure is undiagnosed.

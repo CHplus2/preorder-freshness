@@ -623,3 +623,24 @@ allowlist addition is saved for environment review, not assumed active. The publ
 live domain remains on its prior deployment. Do not merge main or promote
 automatically. Future Git builds still need secure bundle provisioning or another
 direct source upload; merging main alone does not transfer ignored model files.
+
+
+## Task 14: make the completed application available on the usual Vercel URL
+
+The user explicitly requested putting the completed application on Vercel for
+manual use. Assigned the existing preorder-freshness.vercel.app alias to the
+READY model-backed pantry deployment dpl_24jfu8mggfzXmMZVCSs4ZiZTQcp5 through
+Vercel's supported alias API. The mutation returned HTTP200, and a subsequent
+read confirmed that exact live deployment ID. Previous deployment retained for
+rollback: dpl_5hRGTgzFYZiQxWWSH52a34nGQuhW.
+
+Live /admin/ai/decisions returns HTTP200. Its index-CvXbOxIu.js loads the merged
+PredictiveDashboard-C8aNJDA_.js, whose content includes FreshCast Pantry and the
+visual ingredient evidence. The anonymous auth endpoint returns HTTP200 with
+authenticated=false; anonymous predictive metrics return HTTP403, preserving
+staff protection. Authenticated hosted model/API validation remains unverified
+independently; the actual-model local browser walkthrough and previously reported
+Python/frontend checks passed. Users can use their existing staff login at the
+normal live URL. No new login, main merge, model retraining, production migration
+or business-data mutation was performed. Genpact/SIMULATED/UNMAPPED limitations
+and WAPE28.23% versus baseline34.81% remain unchanged.
