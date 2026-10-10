@@ -1,10 +1,14 @@
 """Build packaging preserves existing inputs and places files outside public assets."""
 from pathlib import Path
+import os
+import subprocess
+import sys
 from tempfile import TemporaryDirectory
 import unittest
 
 from backend.predictive_ai.provision_bundle import FILES
 from deploy.provision_vercel import publish_verified_bundle
+from deploy.provision_vercel import EXPECTED_DEMO_SHA256, ROOT
 
 
 class VercelBundleTests(unittest.TestCase):
@@ -41,3 +45,18 @@ class VercelBundleTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 publish_verified_bundle(staged, destination)
             self.assertFalse((destination / FILES[0]).exists())
+
+    def test_direct_archive_corruption_is_refused_without_publishing(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / 'corrupt.tar.gz'
+            archive.write_bytes(b'corrupted-archive')
+            environment = os.environ.copy()
+            environment['FRESHCAST_BUNDLE_SHA256'] = EXPECTED_DEMO_SHA256
+            destination = root / 'runtime'
+            result = subprocess.run([sys.executable, str(ROOT / 'deploy' / 'provision_vercel.py'),
+                                     '--archive', str(archive), '--destination', str(destination)],
+                                    env=environment, capture_output=True, text=True, timeout=30)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('checksum mismatch', result.stderr)
+            self.assertFalse(destination.exists())

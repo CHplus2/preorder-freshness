@@ -526,3 +526,38 @@ PostgreSQL bindings are still prerequisites. deploy/VERCEL.md explains the exact
 settings and same-platform Preview acceptance/promotion procedure. Production
 settings, data and deployment remain untouched. The judging demo is not yet
 verified ready online.
+
+## Task 11: direct upload path for the existing trained bundle
+
+The user asked why model deployment cannot proceed independently of the dashboard
+merge. It can. PR #4 was still OPEN at this check, but the original model bundle
+was staged under ignored `.freshcast-deploy/runtime-bundle.tar.gz` and verified
+against digest 697f8e10ee6b2c1b794ee38ec81067477870315fb7c51a1280684e7f0601361a.
+The direct Vercel build now auto-detects this uploaded archive and verifies it
+without needing an external artifact URL. Git/Docker ignore it; CLI upload has an
+explicit allowlist; the final function excludes the archive while including the
+eight verified private runtime inputs. No model or dataset was committed.
+
+Twelve deployment tests passed, including a corrupted direct archive failing
+without publishing files. The actual no-argument provisioner discovered the
+original local archive, verified all inputs and preserved identical source files.
+Model SHA-256 remains b7608c307e17bb6d2b5b4ca15c4e495394cc405035de8c947522574da28b91a9;
+original evaluation WAPE remains 28.23% versus 34.81%. No retraining occurred.
+
+Installed Vercel CLI 62.7.0 and diagnosed local config/cache paths. `whoami`
+reports logged out and `deploy --dry` reports no existing credentials. Source
+upload selection, linking, provider packaging and hosted inference are therefore
+unverified. Required Vercel account access is already recorded in the cloud draft.
+The direct Production-environment route can use --prod --skip-domain to reuse the
+existing Production bindings before assigning the live domain; no new Preview
+configuration or Render payment is necessary. Preserve the original approval
+requirement for concrete production changes/promotion. No deployment occurred.
+
+GitHub metadata additionally confirms an existing successful downloadable-bundle
+workflow run 38030646738 and artifact 11661229551 (30-day retention). That workflow
+previously retrained a bundle; it was not dispatched here and exact equivalence
+to the original cloud weights is unverified. Its signed download redirects to
+productionresultssa2.blob.core.windows.net, which the proxy blocks. Do not call it
+an exact original-model backup. Repository/Production Actions-secret metadata
+returns Resource not accessible by integration (403), despite repository-role
+metadata showing admin. GitHub access is not Vercel credential access.

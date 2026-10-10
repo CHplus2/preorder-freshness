@@ -1,6 +1,7 @@
 """Put a checksum-verified existing bundle in the private Python function tree."""
 import argparse
 import hashlib
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -10,6 +11,9 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from backend.predictive_ai.provision_bundle import FILES
+
+EXPECTED_DEMO_SHA256 = '697f8e10ee6b2c1b794ee38ec81067477870315fb7c51a1280684e7f0601361a'
+LOCAL_ARCHIVE = ROOT / '.freshcast-deploy' / 'runtime-bundle.tar.gz'
 
 
 def publish_verified_bundle(staged, destination):
@@ -31,7 +35,9 @@ def publish_verified_bundle(staged, destination):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--archive', help='Local verified archive for an offline build rehearsal')
+    parser.add_argument('--archive', default=os.getenv('FRESHCAST_BUNDLE_ARCHIVE') or
+                        (str(LOCAL_ARCHIVE) if LOCAL_ARCHIVE.is_file() else None),
+                        help='Local verified archive; direct uploads auto-detect .freshcast-deploy/runtime-bundle.tar.gz')
     parser.add_argument('--destination', default=str(ROOT / 'backend' / 'predictive_ai'))
     args = parser.parse_args()
     with tempfile.TemporaryDirectory() as tmp:
@@ -40,7 +46,11 @@ def main():
                    '--destination', str(staged)]
         if args.archive:
             command += ['--archive', args.archive]
-        subprocess.run(command, check=True)
+        environment = os.environ.copy()
+        if args.archive:
+            # The directly uploaded existing archive is pinned even without remote URL settings.
+            environment.setdefault('FRESHCAST_BUNDLE_SHA256', EXPECTED_DEMO_SHA256)
+        subprocess.run(command, check=True, env=environment)
         publish_verified_bundle(staged, args.destination)
     print('Eight verified FreshCast inputs ready for private Python function packaging.')
 
