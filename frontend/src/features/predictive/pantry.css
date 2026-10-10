@@ -1135,3 +1135,45 @@
   background: #fffdf7;
   color: #344d3c;
 }
+.pd .fc-risk-lens {
+  padding: 22px;
+  margin: 18px 0;
+  background: #f6f0e2;
+  border: 1px solid #d3c3a7;
+  border-radius: 22px;
+}
+.pd .fc-risk-lens h2 {
+  margin: 8px 0 18px;
+}
+.pd .fc-risk-lens-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.pd .fc-risk-lens-options button {
+  display: grid;
+  gap: 10px;
+  text-align: left;
+  padding: 18px;
+  min-height: 44px;
+  background: #fffdf7;
+  color: #344d3c;
+  border: 2px solid #d3c3a7;
+  border-radius: 16px;
+  white-space: normal;
+}
+.pd .fc-risk-lens-options button[aria-pressed="true"] {
+  border-color: #446c55;
+  background: #e5ecdc;
+}
+.pd .fc-risk-lens-options button strong {
+  font-size: 18px;
+}
+.pd .fc-risk-lens-options button small {
+  font-size: 13px;
+}
+@media (max-width: 650px) {
+  .pd .fc-risk-lens-options {
+    grid-template-columns: 1fr;
+  }
+}

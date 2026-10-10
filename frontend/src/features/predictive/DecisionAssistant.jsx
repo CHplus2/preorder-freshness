@@ -4,6 +4,8 @@ import PantryScene from "./PantryScene";
 import DecisionRehearsal from "./DecisionRehearsal";
 import ActionComparison from "./ActionComparison";
 import ReviewQueue from "./ReviewQueue";
+import RiskLens from "./RiskLens";
+import { riskLens } from "./riskLens";
 import VerificationChecklist from "./VerificationChecklist";
 import { decisionBrief } from "./decisionBrief";
 import ProblemEvidence from "./ProblemEvidence";
@@ -37,10 +39,23 @@ export default function DecisionAssistant({
   onPromotion,
   isFixture,
 }) {
-  const risks = rankRisks(baseline.ingredient_risks).filter(
+  const priorityRisks = rankRisks(baseline.ingredient_risks).filter(
     (r) => r.risk_type !== "none",
   );
   const [params, setParams] = useSearchParams();
+  const lens = ["waste", "shortage"].includes(params.get("lens"))
+    ? params.get("lens")
+    : "priority";
+  const risks = riskLens(priorityRisks, lens);
+  function changeLens(value) {
+    const ordered = riskLens(priorityRisks, value);
+    const next = new URLSearchParams(params);
+    next.set("lens", value);
+    if (ordered[0]) next.set("ingredient", ordered[0].ingredient_id);
+    next.delete("step");
+    next.delete("action");
+    setParams(next, { replace: true });
+  }
   const decisionRef = useRef(null);
   const ingredient = params.get("ingredient") || "";
   function setIngredient(value) {
@@ -73,7 +88,9 @@ export default function DecisionAssistant({
     );
   return (
     <section className="fc-assistant">
+      <RiskLens risks={priorityRisks} lens={lens} onChange={changeLens} />
       <PantryScene
+        key={lens}
         risks={risks}
         selected={risk.ingredient_id}
         onSelect={(id) => {
@@ -115,8 +132,13 @@ export default function DecisionAssistant({
             </select>
           </label>
           <p>
-            {risks.length} issues · ordered by the backend’s waste-cost, expiry
-            and shortage rules. Unknown cost does not mean no risk.
+            {risks.length} issues ·{" "}
+            {lens === "priority"
+              ? "backend waste-cost, expiry and shortage order"
+              : lens === "waste"
+                ? "largest expiring-unused quantity first"
+                : "largest shortfall quantity first"}
+            . Unknown cost does not mean no risk.
           </p>
         </div>
       </details>

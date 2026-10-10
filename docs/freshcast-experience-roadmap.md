@@ -43,3 +43,9 @@ Batch 5 validation: 21 predictive tests, existing frontend/UX/planner/checkout s
 Final recommendation now has an interactive three-item checklist for reviewing real batches/handling, recipes/mapping, and suppliers, plus an optional manager note. Marks remain self-reported and do not imply system verification, approval, food safety or action execution. Downloaded drafts include manual review status and user-entered notes separately from backend guidance. Local review state resets on ingredient/source/forecast changes or reload, with no storage or API writes.
 
 Batch 6 validation: 23 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. Fixture browser checks covered checklist interaction, draft-download content and labels, within-ingredient navigation retention, reload reset, mobile overflow and zero API writes. Live backend and Vercel deployment were not verified.
+
+## Batch 7 — kitchen risk lens
+
+Managers can switch between the default backend priority order, waste-first quantities and shortage-first quantities. The selected lens opens the leading issue, persists as URL context, reorders the scene/list and next-issue queue navigation, and keeps every issue available. Equal quantities preserve backend order. Unknown costs remain unknown; quantity ordering is explicitly a viewing preference, not a new recommendation. Review queue tickets survive lens changes; switching the selected ingredient starts its own review state. No model reruns or API writes are triggered.
+
+Validation: 26 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. Fixture browser checks passed for focus selection, backend default, queue retention, mobile overflow and zero API writes. Live backend and production deployment remain unverified.
