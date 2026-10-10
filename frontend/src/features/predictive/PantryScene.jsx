@@ -5,6 +5,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import "./pantry.css";
+import { problemSummary } from "./problemSummary";
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
 const money = (n) =>
@@ -211,6 +212,10 @@ export default function PantryScene({
             {risks.length} planning issues
           </span>
         </div>
+        <p className="pantry-how-to">
+          Start here: select a crate → understand the problem → compare actions
+          → leave with a plan.
+        </p>
         <div className="pantry-floor">
           <div
             className="pantry-crates"
@@ -266,7 +271,7 @@ export default function PantryScene({
             </h3>
             <p>
               {selectedRisk
-                ? selectedRisk.explanation
+                ? problemSummary(selectedRisk)
                 : "A successful calculation returned no ingredient issues. This does not establish food safety."}
             </p>
             {selectedRisk && (

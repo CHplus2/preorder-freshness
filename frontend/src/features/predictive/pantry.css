@@ -528,3 +528,126 @@
   background: #345740;
   color: #fff;
 }
+.admin-shell .pantry-how-to {
+  font-size: 12px;
+  color: #67573d;
+  background: #fffcf2;
+  border-left: 3px solid #a9b792;
+  padding: 10px 14px;
+  margin: 0 0 20px;
+}
+.fc-problem h2[tabindex] {
+  scroll-margin-top: 115px;
+  outline: none;
+}
+.fc-problem h2[tabindex]:focus-visible {
+  outline: 2px solid #648363;
+  outline-offset: 5px;
+}
+.admin-shell .fc-problem-summary {
+  font-size: 20px;
+  line-height: 1.6;
+  color: #3d513b;
+  font-weight: 600;
+}
+.fc-evidence {
+  margin: 24px 0;
+  padding: 20px;
+  background: #f6f0e2;
+  border: 1px solid #deceb1;
+  border-radius: 10px;
+}
+.fc-evidence figcaption {
+  font-size: 13px;
+  font-weight: 650;
+  color: #5e503b;
+  margin-bottom: 18px;
+}
+.fc-evidence-flow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 24px 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+.fc-evidence-node {
+  background: #fffcf4;
+  padding: 18px;
+  border: 1px solid #d9ccb5;
+  border-radius: 8px;
+  min-width: 0;
+}
+.admin-shell .fc-evidence-node h3 {
+  font-size: 13px;
+  margin: 10px 0;
+}
+.fc-evidence-node > strong {
+  display: block;
+  font-size: 25px;
+  color: #304b3c;
+}
+.fc-evidence-node > span {
+  font-size: 11px;
+  color: #75664c;
+}
+.fc-evidence-node p {
+  font-size: 11px;
+  margin-bottom: 0;
+}
+.fc-evidence-bar {
+  height: 9px;
+  background: #e9e0cd;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+.fc-evidence-bar span {
+  display: block;
+  height: 100%;
+  background: #688364;
+}
+.fc-evidence-outcome {
+  background: #fff4df;
+  border-color: #d8b787;
+}
+.fc-evidence-outcome .fc-evidence-bar span {
+  background: #b2824d;
+}
+.fc-evidence-arrow {
+  align-self: center;
+  color: #987c54;
+}
+.fc-check-before {
+  background: #f6f0e2;
+  border: 1px solid #deceb1;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 20px 0;
+}
+.fc-check-before ul {
+  padding-left: 20px;
+  font-size: 13px;
+  color: #53655a;
+  line-height: 1.9;
+}
+@media (max-width: 1050px) {
+  .fc-evidence-flow {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fc-evidence-outcome {
+    grid-column: 1/-1;
+  }
+  .fc-evidence-arrow {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .fc-evidence-flow {
+    grid-template-columns: 1fr;
+  }
+  .fc-evidence {
+    padding: 14px;
+  }
+  .fc-evidence-outcome {
+    grid-column: auto;
+  }
+}
