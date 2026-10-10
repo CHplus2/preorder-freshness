@@ -12,7 +12,7 @@
     "test:ux": "node src/components/ProductUx.test.js",
     "test:planner": "node src/components/PlannerSnapshot.test.js",
     "test:checkout": "node src/components/AvailabilityResult.test.js",
-    "test:predictive": "node --test src/features/predictive/api.test.js src/features/predictive/decisionMath.test.js src/features/predictive/decisionBrief.test.js src/features/predictive/replayEvidence.test.js src/features/predictive/riskTradeoff.test.js src/features/predictive/riskLens.test.js"
+    "test:predictive": "node --test src/features/predictive/api.test.js src/features/predictive/decisionMath.test.js src/features/predictive/decisionBrief.test.js src/features/predictive/replayEvidence.test.js src/features/predictive/riskTradeoff.test.js src/features/predictive/riskLens.test.js src/features/predictive/rescueOutcome.test.js"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^9.1.1",

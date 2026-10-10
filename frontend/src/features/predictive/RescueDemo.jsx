@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import PlanningFridge, { KitchenKeeper } from "./PlanningFridge";
 import { IngredientDrawing } from "./PantryScene";
 import ServingScene from "./ServingScene";
+import { rescueOutcome } from "./rescueOutcome";
 import "./rescueDemo.css";
 const choices = [
   {
@@ -36,9 +37,12 @@ export default function RescueDemo() {
   const [progress, setProgress] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [showShift, setShowShift] = useState(false);
+  const [demandOffset, setDemandOffset] = useState(0);
   const stageHeading = useRef(null);
   const selected = choices.find((item) => item.id === action);
-  const sold = Math.floor((selected.sold * progress) / 4);
+  const outcome = rescueOutcome(selected, demandOffset);
+  const baselineOutcome = rescueOutcome(choices[0], demandOffset);
+  const sold = Math.floor((outcome.sales * progress) / 4);
   const finished = progress === 4;
   const stage = !inspected ? 0 : finished ? 3 : showShift ? 2 : 1;
   useEffect(() => {
@@ -95,6 +99,7 @@ export default function RescueDemo() {
             setInspected(false);
             setShowShift(false);
             setAction("original");
+            setDemandOffset(0);
             reset();
           }}
         >
@@ -157,13 +162,40 @@ export default function RescueDemo() {
                     <div>
                       <h3>20 portions need to sell before expiry</h3>
                       <p>
-                        Our fictional baseline sells 11. Which plan would you
-                        explore?
+                        Our fictional baseline sells {baselineOutcome.sales}.
+                        Which plan would you explore?
                       </p>
                     </div>
                   </div>
                   {!showShift && (
                     <>
+                      <div className="fc-rescue-demand">
+                        <label htmlFor="rescue-demand-offset">
+                          Assumed customer demand adjustment:{" "}
+                          {demandOffset > 0 ? "+" : ""}
+                          {demandOffset} portions
+                        </label>
+                        <input
+                          id="rescue-demand-offset"
+                          type="range"
+                          min="-4"
+                          max="4"
+                          step="1"
+                          value={demandOffset}
+                          onChange={(event) => {
+                            setDemandOffset(Number(event.target.value));
+                            reset();
+                          }}
+                        />
+                        <p>
+                          Quieter ← preset story → busier. The same adjustment
+                          applies to all three plans, capped at 20 portions.
+                          This is your assumption, not a model forecast.
+                        </p>
+                        <strong>
+                          {outcome.sales} assumed sales for {selected.name}
+                        </strong>
+                      </div>
                       <fieldset>
                         <legend>Choose a fictional action</legend>
                         {choices.map((item) => (
@@ -262,29 +294,39 @@ export default function RescueDemo() {
                       >
                         <div>
                           <span>Original menu</span>
-                          <strong>11 sold / 9 unsold</strong>
-                          <span className="fc-rescue-sales-meter">
-                            <i style={{ width: "55%" }} />
-                          </span>
-                          <small>RM 110 revenue · RM 30 contribution</small>
-                        </div>
-                        <div>
-                          <span>{selected.name}</span>
                           <strong>
-                            {selected.sold} sold / {20 - selected.sold} unsold
+                            {baselineOutcome.sales} sold /{" "}
+                            {baselineOutcome.unsold} unsold
                           </strong>
                           <span className="fc-rescue-sales-meter">
                             <i
                               style={{
-                                width: `${(selected.sold / 20) * 100}%`,
+                                width: `${(baselineOutcome.sales / 20) * 100}%`,
                               }}
                             />
                           </span>
                           <small>
-                            RM {selected.sold * selected.price} revenue · RM{" "}
-                            {selected.sold * selected.price -
+                            RM {baselineOutcome.revenue} revenue · RM{" "}
+                            {baselineOutcome.contribution} contribution
+                          </small>
+                        </div>
+                        <div>
+                          <span>{selected.name}</span>
+                          <strong>
+                            {outcome.sales} sold / {outcome.unsold} unsold
+                          </strong>
+                          <span className="fc-rescue-sales-meter">
+                            <i
+                              style={{
+                                width: `${(outcome.sales / 20) * 100}%`,
+                              }}
+                            />
+                          </span>
+                          <small>
+                            RM {outcome.revenue} revenue · RM{" "}
+                            {outcome.revenue -
                               80 -
-                              selected.sold * selected.side -
+                              outcome.sales * selected.side -
                               selected.setup}{" "}
                             contribution
                           </small>
@@ -293,28 +335,28 @@ export default function RescueDemo() {
 
                       <h3>What changed in this fictional scenario?</h3>
                       <p>
-                        {selected.sold} sold · {20 - selected.sold} unsold.
-                        Baseline: 11 sold · 9 unsold.
+                        {outcome.sales} sold · {outcome.unsold} unsold.
+                        Baseline: {baselineOutcome.sales} sold ·{" "}
+                        {baselineOutcome.unsold} unsold.
                       </p>
                       <p>
-                        Illustrative revenue: RM{" "}
-                        {selected.sold * selected.price}. Remaining-stock cost
-                        exposure: RM {(20 - selected.sold) * 4}.
+                        Illustrative revenue: RM {outcome.revenue}.
+                        Remaining-stock cost exposure: RM {outcome.unsold * 4}.
                       </p>
                       <p>
                         Contribution after all chicken stock, sides and setup:
                         RM{" "}
-                        {selected.sold * selected.price -
+                        {outcome.revenue -
                           80 -
-                          selected.sold * selected.side -
+                          outcome.sales * selected.side -
                           selected.setup}{" "}
-                        (baseline RM 30).
+                        (baseline RM {baselineOutcome.contribution}).
                       </p>
                       <p>
-                        Why suggest the bundle here? Its assumed 18 sales leave
-                        2 portions and RM 88 contribution. This follows the
-                        example’s assumptions; it does not prove a real
-                        promotion effect.
+                        The bundle suggestion belongs to the preset story. Your
+                        demand adjustment is {demandOffset} portions for every
+                        plan. These comparisons do not prove real promotion
+                        effects.
                       </p>
                     </div>
                   )}
@@ -329,10 +371,10 @@ export default function RescueDemo() {
                     </p>
                     <p>
                       Try interpreting sales ±2 portions:{" "}
-                      {Math.max(0, selected.sold - 2)}–
-                      {Math.min(20, selected.sold + 2)} sold;{" "}
-                      {20 - Math.min(20, selected.sold + 2)}–
-                      {20 - Math.max(0, selected.sold - 2)} unsold. This is an
+                      {Math.max(0, outcome.sales - 2)}–
+                      {Math.min(20, outcome.sales + 2)} sold;{" "}
+                      {20 - Math.min(20, outcome.sales + 2)}–
+                      {20 - Math.max(0, outcome.sales - 2)} unsold. This is an
                       illustrative sensitivity assumption, not a calibrated
                       uncertainty interval.
                     </p>
