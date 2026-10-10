@@ -81,3 +81,9 @@ Validation: 26 predictive tests, existing frontend/UX/planner/checkout suites, b
 Replaced the demo's dot-based playback with an original illustrated restaurant: awning, lanterns, chef, serving counter, twenty plates and decorative customers. Preset sales empty the plates; customers animate only during playback and stay static under reduced motion. The final outcome board compares original and selected plans on a common twenty-portion scale, with illustrative revenue and contribution labels. It preserves all Batch 11 source/assumption disclosures and adds no model, endpoint, transaction or causal claim.
 
 Validation: 26 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. Fixture browser checks passed for fridge/action flow, pause/restart, baseline/bundle quantities and contribution arithmetic, reduced motion, mobile overflow and zero API writes. Updated screenshot reviewed; live backend and production deployment remain unverified.
+
+## Batch 13 — focused rescue-story stages
+
+Rescue demo now progresses through fridge inspection, action choice, a full-width illustrated shift and a compact impact reveal. A four-step indicator marks the current stage. Taking a plan to the serving counter hides fridge/action clutter; Try another plan returns to choice and resets playback. Results retain a smaller restaurant illustration alongside the assumed outcomes. Stage-heading focus follows transitions for keyboard/screen-reader users. Source disclosures, hypothetical assumptions and the independent API inventory remain intact.
+
+Validation: 26 predictive tests, existing frontend/UX/planner/checkout suites, build and changed-file lint passed. Updated fixture browser flow passed for staged fridge/action selection, playback pause, baseline/bundle results, retry, restart, reduced motion, mobile overflow and zero API writes. Live backend and Vercel production remain unverified.
