@@ -58,4 +58,5 @@ test("purchase comparison uses CSRF and a separately validated hypothetical resp
   assert.equal(call.options.headers["X-CSRFToken"], "test-csrf");
   assert.equal(result.scenario.sources.operational, "DATABASE_WITH_HYPOTHETICAL_PURCHASE");
   await assert.rejects(loadLocalScenario({}, { fetchImpl: async () => { throw Error("Must not call"); } }), /CSRF/);
+  await assert.rejects(loadLocalScenario({}, { csrfToken: "test-csrf", fetchImpl: async () => ({ ok: false, status: 400, json: async () => ({ code: "invalid_parameters" }) }) }), /purchase quantity/);
 });

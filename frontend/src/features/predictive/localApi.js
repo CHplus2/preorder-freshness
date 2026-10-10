@@ -54,14 +54,22 @@ export function validateLocalPlan(d, { scenario = false } = {}) {
 
 export async function loadLocalPlan(horizon = 7, options = {}) {
   requireValid(integer(horizon) && horizon <= 28);
-  return validateLocalPlan(await requestJSON(`local-plan/?horizon_days=${horizon}`, options));
+  return validateLocalPlan(await localRequest(`local-plan/?horizon_days=${horizon}`, options));
 }
 
 export async function loadLocalScenario(purchase, options = {}) {
-  const d = await requestJSON("local-scenario/", { ...options, body: purchase });
+  const d = await localRequest("local-scenario/", { ...options, body: purchase });
   requireValid(d?.api_version === "1" && d.mode === "local_purchase_scenario" && strings(d.warnings) && units.has(d.purchase?.unit));
   validateLocalPlan(d.baseline);
   validateLocalPlan(d.scenario, { scenario: true });
   requireValid(d.baseline.window.start_date === d.scenario.window.start_date && d.baseline.window.end_date === d.scenario.window.end_date);
   return d;
+}
+
+async function localRequest(path, options) {
+  try { return await requestJSON(path, options); }
+  catch (error) {
+    if (error.code === "invalid_parameters") error.message = "Check the planning window, purchase quantity, unit cost and dates. Arrival must be within the window and expiry must be on or after arrival.";
+    throw error;
+  }
 }
