@@ -561,3 +561,55 @@ productionresultssa2.blob.core.windows.net, which the proxy blocks. Do not call 
 an exact original-model backup. Repository/Production Actions-secret metadata
 returns Resource not accessible by integration (403), despite repository-role
 metadata showing admin. GitHub access is not Vercel credential access.
+
+## Task 12: deploy the original model bundle on Vercel
+
+Scoped Vercel project access was supplied securely and verified. The original
+archive was uploaded as private deployment source, using Vercel SDK ignore rules
+and the supported file/deployment APIs. No .env or database was uploaded. The
+Production-target candidate dpl_Ba3dM3DM9RpavB5q9azYaBUPbgBb (integration 7b190c3)
+reached READY on the existing Hobby project with Fluid Compute and Large Functions
+beta. The build verified eight runtime inputs; no training or migrations ran.
+The public preorder-freshness.vercel.app alias remained on its previous deployment;
+autoAssignCustomDomains was false. The candidate URL is recorded in deploy/VERCEL.md.
+
+Authenticated source readback returned the exact original 5,899,808-byte archive,
+SHA256 697f8e10ee6b2c1b794ee38ec81067477870315fb7c51a1280684e7f0601361a. The model
+bundle is therefore preserved outside Codex while Vercel retains that deployment.
+This is not a permanent-storage guarantee or an automatic Git-build provisioner.
+Hosted staff predictions still require verification; Codex egress blocks the
+candidate hostname and Vercel/FYP authentication is retained. A user screenshot
+shows chicken values matching the real-model local calculation, unlike the
+frontend fixtures, but does not by itself verify all hosted endpoints.
+
+## Task 13: integrate the latest illustrated pantry UI
+
+Merged feature/ai-dashboard head 7efaee4 into integration/dormathon-demo, whose
+prior head was 7b190c3. The merge was clean. Teammate changes add the illustrated
+FreshCast Pantry, four ingredient crates, API-based visual ingredient evidence,
+plain-language summaries and the final verification checklist. No backend API
+schema, forecasting implementation or teammate-authored component was rewritten.
+The authoritative docs/predictive-api-contract.md is unchanged.
+
+Validation: twelve predictive JavaScript tests, the existing frontend test script,
+five Django predictive tests (including real model, permissions, CSRF, invalid
+parameters and missing files), and the frontend production build passed. A real
+Chromium walkthrough used the existing staff login endpoint and an isolated
+SQLite database with actual model/API responses, without request interception or
+mock responses. All five endpoints returned valid data. Pantry ingredient
+selection, all five journey steps, visual evidence and UI-triggered promotion
+POST succeeded. A 390px mobile layout had no horizontal overflow and no browser
+page errors. Screenshots/reports are local review artifacts, not committed data.
+
+Actual model totals remain 21,916.11 baseline orders and 49,246.95 hypothetical
+promotion orders, with four simulated ingredient risks. Chicken's 1,819.30kg
+simulated eligible stock minus 691.808559kg forecast ingredient need leaves
+1,127.491441kg expiring unused; at simulated RM15/kg the exposure is RM16,912.37.
+Only five Genpact meal IDs have simulated recipes; 46 unmapped meals are disclosed
+and excluded from ingredient need. These estimates do not use website orders or
+local inventory. Existing model hash and holdout WAPE remain unchanged: 28.23%
+versus historical baseline 34.81%. No retraining occurred.
+
+The updated source/model-backed Vercel candidate will be uploaded separately from
+Git so the ignored bundle is included. Hosted manual validation and live-domain
+promotion remain separate steps; do not merge main or promote automatically.

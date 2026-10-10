@@ -4,6 +4,37 @@ The user wants a free demo on the existing Vercel site. Render is an unused
 fallback; do not apply its paid Blueprint. No external compute host is required
 if this Vercel project qualifies for the Large Functions path below.
 
+## Verified deployment status: 2026-10-10
+
+The original model-backed candidate is now **READY** on the existing Hobby project:
+`https://preorder-freshness-7kxvk8uwe-heroch94-3036s-projects.vercel.app/admin/ai/decisions`
+(deployment `dpl_Ba3dM3DM9RpavB5q9azYaBUPbgBb`, integration commit `7b190c3`).
+The build verified all eight inputs and successfully enabled Large Functions beta
+for the Python app. The public `preorder-freshness.vercel.app` alias still points
+to its previous deployment; no custom-domain promotion occurred.
+
+Scoped Vercel project access now works through the Codex network-secret binding.
+The CLI rejects that proxy placeholder before making a request, so the actual
+upload used the supported HTTPS API: hashed source uploads to `/v2/files`, then
+`/v13/deployments` with `target: production` and `autoAssignCustomDomains: false`.
+The source manifest used Vercel's SDK ignore rules and tracked files plus the
+single private archive. No `.env` or database files were uploaded. Large Functions
+was enabled for this deployment's build/runtime; no project-wide env changes,
+paid upgrades, retraining or production migrations were performed.
+
+Authenticated source readback verified the exact original archive outside Codex:
+`GET /v8/deployments/dpl_Ba3dM3DM9RpavB5q9azYaBUPbgBb/files/92be8d7965e758f330391f70f98efbd918f0fb77?teamId=team_ov7DxJtlllqPWthsBUNxCgrc`
+on `api.vercel.com`. The JSON `data` field is base64; decoding yields 5,899,808
+bytes with the original SHA-256 listed below. This recovery path requires scoped
+Vercel authentication and retention of the deployment; it is not a public link
+or a guarantee of permanent storage. Never put a token in the URL or repository.
+
+Hosted staff/API validation remains separate from a successful build. Existing
+Vercel protection and FYP staff authentication are retained. Codex egress needs
+the generated deployment hostname allowed before browser/HTTP checks there.
+Latest pantry UI integration and local browser validation are recorded in
+`DORMATHON_REPORT.md`; use the latest candidate URL supplied with that task.
+
 ## Direct upload of the original model: no separate storage required initially
 
 The original verified archive has now been staged locally at
@@ -21,13 +52,12 @@ The current auto-detection and checksum verification succeeded against all eight
 original files, leaving existing identical inputs unchanged. Twelve tests passed,
 including corrupted-direct-archive rejection without publishing any files.
 
-Vercel CLI 62.7.0 was installed and its commands checked. `whoami` reports logged
-out; `deploy --dry` reports no existing credentials. Thus the actual CLI upload
-selection, project link, build and deployed inference remain unverified. Codex
-GitHub authentication does not supply Vercel account access. Provide a scoped
-`VERCEL_TOKEN` securely in Codex environment settings, not chat. Once connected,
-inspect the existing project/plan/settings and link it; do not create a new paid
-project or overwrite credentials. Project/org IDs can be discovered after access.
+Vercel CLI 62.7.0 was installed and its commands checked. Normal CLI deployment
+remains an option on a developer machine with normal Vercel authentication. Codex
+uses the scoped proxy-backed `VERCEL_TOKEN` through `api.vercel.com` instead;
+do not copy or extract the credential into local CLI configuration. The existing
+project/org IDs were discovered through authorized project access, and its
+non-secret `.vercel/project.json` binding is Git-ignored.
 
 The user wants existing **Production** environment bindings, not Preview:
 
@@ -47,8 +77,9 @@ request is obtained before applying it, after the candidate is reviewable.
 
 A future Git-triggered build has no ignored archive. It must use an authorized
 HTTPS bundle URL/checksum or be replaced by another direct upload from this
-retained archive. Merging branches alone does not transfer the model. No archive
-has yet left this workspace and no deployment/domain change occurred.
+retained archive. Merging branches alone does not transfer the model. The original
+archive is now in the private Vercel deployment source and was read back and
+verified, while the public live-domain assignment remains unchanged.
 
 ## Current verified limits and remaining eligibility check
 
@@ -64,9 +95,9 @@ On 2026-10-10 Vercel's official documentation was reachable:
 The tested inference container's Python packages occupy about 797 MiB, so the
 supported-dependency candidate should use Large Functions rather than assume
 the standard bundle will fit. Container package size is not an actual Vercel
-build-size measurement. Project eligibility, actual function packaging, cold
-starts and authenticated hosted predictions still require a Vercel Preview
-build/test. Keep the existing free/Hobby plan and its usage limits; do not
+build-size measurement. The Production-target test build now successfully enabled
+Large Functions and reached READY on Hobby. Cold starts and authenticated hosted
+predictions still require verification. Keep the existing free/Hobby plan and its usage limits; do not
 upgrade or add paid compute/storage without approval.
 
 ## Prepared code
@@ -110,11 +141,10 @@ to configure Preview; Production bindings are not automatically shared with it.
 4. Leave `PREDICTIVE_DATA_DIR`/`PREDICTIVE_ARTIFACT_DIR` unset to use packaged
    defaults. Render's `/var/data` settings do not belong in this Vercel deployment.
 
-Codex has no working Vercel account credentials or project binding currently.
-For agent-managed project inspection/deployment, supply `VERCEL_TOKEN` securely
-in Codex environment settings scoped to `api.vercel.com`, plus non-secret
-`VERCEL_PROJECT_ID` and `VERCEL_ORG_ID`. Never paste secret values into chat.
-Secure requirements were saved in the cloud draft; saving is not deployment.
+For future agent-managed project inspection/deployment, retain `VERCEL_TOKEN`
+securely in Codex environment settings scoped to `api.vercel.com`. Project/org
+IDs can be discovered after access; they need not be required editor fields.
+Never paste secret values into chat. Saving cloud settings is not deployment.
 Manual Vercel dashboard configuration does not require providing Codex a token.
 
 ## Verification and promotion

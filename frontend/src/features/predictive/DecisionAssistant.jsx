@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import PantryScene from "./PantryScene";
+import ProblemEvidence from "./ProblemEvidence";
+import { problemSummary } from "./problemSummary";
 import { rankRisks } from "./api";
 import { estimateTradeoff } from "./decisionMath";
 const qty = (n) =>
@@ -28,6 +31,7 @@ export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
     (r) => r.risk_type !== "none",
   );
   const [params, setParams] = useSearchParams();
+  const decisionRef = useRef(null);
   const ingredient = params.get("ingredient") || "";
   function setIngredient(value) {
     const next = new URLSearchParams(params);
@@ -39,44 +43,81 @@ export default function DecisionAssistant({ baseline, scenario, onPromotion }) {
   const risk = risks.find((r) => r.ingredient_id === ingredient) || risks[0];
   if (!risk)
     return (
-      <section className="pd-card" role="status">
-        <h2>No ingredient problems reported</h2>
-        <p>
-          The calculation returned no waste or shortage issues for this center.
-          Review the secondary analytics for evidence; this is not a food safety
-          guarantee.
-        </p>
-      </section>
+      <>
+        <PantryScene
+          risks={[]}
+          selected=""
+          onSelect={setIngredient}
+          center={baseline.center_id}
+          week={baseline.week}
+        />
+        <section className="pd-card" role="status">
+          <h2>No ingredient problems reported</h2>
+          <p>
+            The calculation returned no waste or shortage issues for this
+            center. Review the secondary analytics for evidence; this is not a
+            food safety guarantee.
+          </p>
+        </section>
+      </>
     );
   return (
     <section className="fc-assistant">
-      <div className="fc-issue-picker">
-        <label>
-          Choose a problem to work through
-          <select
-            aria-label="Ingredient problem"
-            value={risk.ingredient_id}
-            onChange={(e) => setIngredient(e.target.value)}
-          >
-            {risks.map((r) => (
-              <option key={r.ingredient_id} value={r.ingredient_id}>
-                {r.ingredient_id} · {issues[r.risk_type]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <p>
-          {risks.length} issues · ordered by the backend’s waste-cost, expiry
-          and shortage rules. Unknown cost does not mean no risk.
-        </p>
-      </div>
-      <DecisionJourney
-        key={`${baseline.center_id}:${baseline.week}:${risk.ingredient_id}`}
-        risk={risk}
-        baseline={baseline}
-        scenario={scenario}
-        onPromotion={onPromotion}
+      <PantryScene
+        risks={risks}
+        selected={risk.ingredient_id}
+        onSelect={(id) => {
+          setIngredient(id);
+          decisionRef.current?.scrollIntoView({
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+              .matches
+              ? "auto"
+              : "smooth",
+            block: "start",
+          });
+          decisionRef.current?.focus({ preventScroll: true });
+        }}
+        center={baseline.center_id}
+        week={baseline.week}
       />
+      <details className="pantry-list-view">
+        <summary>List view & priority rules</summary>
+        <div className="fc-issue-picker">
+          <label>
+            Choose a problem to work through
+            <select
+              aria-label="Ingredient problem"
+              value={risk.ingredient_id}
+              onChange={(e) => setIngredient(e.target.value)}
+            >
+              {risks.map((r) => (
+                <option key={r.ingredient_id} value={r.ingredient_id}>
+                  {r.ingredient_id} · {issues[r.risk_type]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p>
+            {risks.length} issues · ordered by the backend’s waste-cost, expiry
+            and shortage rules. Unknown cost does not mean no risk.
+          </p>
+        </div>
+      </details>
+      <div
+        ref={decisionRef}
+        tabIndex={-1}
+        role="region"
+        aria-label="Ingredient decision journey"
+        className="pantry-decision-counter"
+      >
+        <DecisionJourney
+          key={`${baseline.center_id}:${baseline.week}:${risk.ingredient_id}`}
+          risk={risk}
+          baseline={baseline}
+          scenario={scenario}
+          onPromotion={onPromotion}
+        />
+      </div>
     </section>
   );
 }
@@ -102,6 +143,23 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
     next.set("action", value);
     setParams(next, { replace: true });
   }
+  const headingRef = useRef(null);
+  const previousStep = useRef(null);
+  useEffect(() => {
+    if (
+      previousStep.current !== step &&
+      (previousStep.current !== null || step > 0)
+    ) {
+      headingRef.current?.focus({ preventScroll: true });
+      headingRef.current?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "start",
+      });
+    }
+    previousStep.current = step;
+  }, [step]);
   const [cost, setCost] = useState("");
   const [percent, setPercent] = useState("");
   const scenarioRisk = scenario?.ingredient_risks.find(
@@ -157,12 +215,13 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
         </span>
         {step === 0 && (
           <>
-            <h2>
+            <h2 ref={headingRef} tabIndex={-1}>
               {issues[risk.risk_type]}: {risk.ingredient_id}
             </h2>
+            <p className="fc-problem-summary">{problemSummary(risk)}</p>
             <p>
-              Here is the problem the forecast and simulated inventory
-              calculation suggest you should review.
+              Choose Continue to see why, explore your options, and review a
+              recommended action.
             </p>
             <div className="fc-facts">
               <div>
@@ -186,22 +245,11 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
         )}
         {step === 1 && (
           <>
-            <h2>Why might this happen?</h2>
+            <h2 ref={headingRef} tabIndex={-1}>
+              Why might this happen?
+            </h2>
             <p className="fc-explanation">{risk.explanation}</p>
-            <div className="fc-facts">
-              <div>
-                <span>Forecast ingredient need</span>
-                <strong>{qty(risk.forecast_demand_kg)} kg</strong>
-              </div>
-              <div>
-                <span>Eligible stock</span>
-                <strong>{qty(risk.available_kg)} kg</strong>
-              </div>
-              <div>
-                <span>External meal forecasts</span>
-                <strong>{baseline.meal_forecasts.length} meals</strong>
-              </div>
-            </div>
+            <ProblemEvidence risk={risk} />
             <p>{risk.risk_inputs_note}</p>
             <p className="pd-note">
               The backend derives ingredient need from model orders and
@@ -212,7 +260,9 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
         )}
         {step === 2 && (
           <>
-            <h2>What could you do?</h2>
+            <h2 ref={headingRef} tabIndex={-1}>
+              What could you do?
+            </h2>
             <p>
               Choose an action to explore. The backend purchasing guidance stays
               visible throughout; selecting an alternative does not make it an
@@ -256,7 +306,9 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
         )}
         {step === 3 && (
           <>
-            <h2>Compare costs, benefits and risks</h2>
+            <h2 ref={headingRef} tabIndex={-1}>
+              Compare costs, benefits and risks
+            </h2>
             <h3>API evidence · {risk.ingredient_id}</h3>
             <div className="pd-table-wrap">
               <table>
@@ -383,7 +435,9 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
         )}
         {step === 4 && (
           <>
-            <h2>Recommended action to review</h2>
+            <h2 ref={headingRef} tabIndex={-1}>
+              Recommended action to review
+            </h2>
             <div className="fc-recommendation">
               <span className="pd-eyebrow">
                 BASELINE BACKEND GUIDANCE · SIMULATED OPERATIONS
@@ -401,12 +455,18 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion }) {
               This selection and any worksheet estimates do not replace the
               backend’s guidance.
             </p>
-            <p className="pd-note">
-              Before deciding: verify actual stock, expiry handling, recipe
-              mappings, supplier lead times and prices. The API does not
-              establish an optimal purchase, guaranteed savings or food safety.
-              No action has been executed.
-            </p>
+            <div className="fc-check-before">
+              <h3>Before you act</h3>
+              <ul>
+                <li>Confirm actual batches, handling and expiry.</li>
+                <li>Check which verified recipes use this ingredient.</li>
+                <li>Confirm supplier prices and delivery lead time.</li>
+              </ul>
+              <p className="pd-note">
+                This is decision support, not a guaranteed saving or food safety
+                assessment. No action has been executed.
+              </p>
+            </div>
             <button onClick={() => setStep(3)}>Revisit tradeoffs</button>
           </>
         )}

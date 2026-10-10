@@ -486,13 +486,13 @@ function DashboardContent({ view }) {
   const data = current.scenario || current.baseline;
   const metrics = options?.metrics.metrics;
   return (
-    <main className="pd">
+    <main className={`pd ${view === "decisions" ? "pd-visual" : ""}`}>
       <header className="pd-header">
         <div>
           <span className="pd-eyebrow">
             DORMATHON 2026 · DEMAND & INVENTORY INTELLIGENCE
           </span>
-          <h1>FreshCast · What should your kitchen do next?</h1>
+          <h1>A fresher kitchen starts with one good decision.</h1>
           <p>
             Start with an ingredient problem, explore your options, and review
             the reasoning before deciding.
