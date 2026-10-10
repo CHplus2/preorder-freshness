@@ -4,6 +4,10 @@ This deploys the **existing Django app and built React UI**, preserving sessions
 CSRF, staff authorization and the v1 predictive contract. No model training or
 migration runs on startup. Existing production Vercel settings remain unchanged.
 
+The user selected Render for the isolated hosted preview. See [RENDER.md](RENDER.md)
+and the root `render.yaml` for the candidate, prerequisites and guarded demo
+settings. No Render service has been created yet.
+
 ## Diagnosis and hosting choice
 
 The live `source_data_unavailable` error means the three historical files are

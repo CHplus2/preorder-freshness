@@ -451,3 +451,37 @@ A preview-host choice/access and secure artifact upload path remain missing;
 network changes must be activated before remote investigation/testing resumes.
 Production promotion requires the user's approval after a real hosted preview
 passes. The live prototype is not yet verified ready for judging.
+
+## Task 9: Render preview candidate
+
+The user selected Render. Added a candidate root Blueprint for the integration
+branch, manual deploys, a standard paid service targeting at least 2 GB memory,
+and a 1 GB persistent disk. Current pricing, plan allocation and provider-side
+schema validation remain unverified because Render docs/API HTTPS CONNECT returned
+proxy HTTP 403. No service or billable resource was created.
+
+Dedicated `config.render_preview_settings` retains the existing application,
+restricts the preview to its own `/var/data/freshcast-demo.sqlite3`, rejects other
+database URLs, scopes hosts/origins to the Render hostname, enables HTTPS session
+and CSRF cookies, and keeps email in memory. Existing production settings, API
+contract, teammate React sources and model weights are unchanged.
+
+The Docker candidate rebuilt successfully with approved TLS trust and reused
+the unchanged frontend/dependency build layers. Nine deployment tests passed,
+including production-database refusal, host restriction, HTTPS CSRF settings,
+archive integrity and existing Vercel release/entrypoint checks. A Docker run
+using the actual Render settings, copied isolated test database and read-only
+verified model bundle passed all five predictive endpoints through a genuine
+staff login with CSRF enforcement (Django test client simulating HTTPS, not a
+Render-hosted browser). The session cookie is secure; real CatBoost baseline
+total remains 21,916.11 orders with four ingredient risks, promotion total
+49,246.95 orders. WAPE remains 28.23% versus 34.81%; no retraining occurred.
+
+`deploy/RENDER.md` explains isolated initialization, artifact transfer, startup,
+manual acceptance and the production approval gate. The model/archive still
+exist only in this cloud workspace; secure upload has not occurred. Render
+account/workspace access, a secure artifact upload route and approval of actual
+service/disk charges remain prerequisites. No hosted URL or judging-readiness
+claim is made. Saved cloud configuration adds Render network domains and scoped
+RENDER_API_KEY plus RENDER_OWNER_ID requirements; review/save/publication remains
+outstanding. These are Codex environment requirements, not production settings.
