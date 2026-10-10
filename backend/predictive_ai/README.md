@@ -8,6 +8,11 @@ For the separate local preorder retraining audit and its current data blockers,
 see [LOCAL-PREORDER-TRAINING.md](../../docs/LOCAL-PREORDER-TRAINING.md). The local
 audit is preparation only; it never replaces the trained Genpact demo model.
 
+A separate creation-date experiment can train aggregate recorded-booking
+volume from the minimal local snapshot. See
+[LOCAL-BOOKING-EXPERIMENT.md](../../docs/LOCAL-BOOKING-EXPERIMENT.md) for executed
+results, reproduction and why this candidate is not used by the live APIs.
+
 ## Reproduce after a reset
 
 Prerequisites: Linux Python 3.12, `uv`, `curl`, and HTTPS access to

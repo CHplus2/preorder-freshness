@@ -36,6 +36,12 @@ Future local forecasts require usable dated history, chronology-safe features,
 baseline evaluation and explicit handling of bookings already counted. See
 [the actual local training audit](LOCAL-PREORDER-TRAINING.md).
 
+An [offline aggregate booking experiment](LOCAL-BOOKING-EXPERIMENT.md) has now
+trained CatBoost on the database export's creation-date counts. Its target is
+gross recorded booking intent, including eventually cancelled/unpaid orders.
+It cannot produce menu-specific ingredient needs, and it did not outperform
+the four-week-average baseline. The live source labels above remain unchanged.
+
 Both excess expiry stock and shortages are relevant. Shortfall is required
 quantity minus eligible stock, floored at zero; replenishment also includes a
 verified safety-stock policy. Neither a forecast nor a calculation proves that

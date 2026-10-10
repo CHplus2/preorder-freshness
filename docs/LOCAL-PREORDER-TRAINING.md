@@ -19,8 +19,12 @@ historical menu names/prices were subsequently reassigned to the new catalogue;
 they do not demonstrate demand for those dishes. Do not turn those reassigned
 identities into purported real training labels.
 
-**No local CatBoost candidate has been trained. Local model and baseline WAPE
-are unavailable (`null`), not zero.** The original Genpact model is preserved:
+**No local fulfilment CatBoost candidate has been trained. Fulfilment-model and
+baseline WAPE are unavailable (`null`), not zero.** A later separate
+[recorded-booking experiment](LOCAL-BOOKING-EXPERIMENT.md) did train an aggregate
+CatBoost candidate using creation dates. It is an offline demo experiment with
+a different target and failed to beat the trailing-average baseline. It does not
+resolve these fulfilment-data blockers. The original Genpact model is preserved:
 28.23% WAPE versus 34.81% previous-observation baseline on weeks 136–145. Those
 scores do not measure Dapur Kita accuracy. The five predictive APIs continue to
 use that original model and explicitly simulated operations.

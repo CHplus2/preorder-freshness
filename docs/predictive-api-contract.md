@@ -19,7 +19,7 @@ read or modified by this demo. A real-data adapter requires an explicit,
 verified mapping and unit conversion; it is outside this initial contract.
 
 The separate local preorder readiness audit does not change these endpoints or
-their demand source. No locally trained model is currently available; see
+their demand source. No local model is exposed by these endpoints; see
 [local training preparation](LOCAL-PREORDER-TRAINING.md). Both expiry surplus
 and shortage risks are calculated. Explanations include shortfall, illustrative
 replenishment and safety stock; no purchase is executed.
@@ -29,6 +29,12 @@ Database order storage is distinct from these prediction sources; see
 deployment transfer route `/api/internal/freshcast-bundle/` is not a dashboard
 API and cannot access business records. Its bearer credential is server-only;
 the existing staff authentication rules below remain unchanged.
+
+A separate [local recorded-booking CatBoost experiment](LOCAL-BOOKING-EXPERIMENT.md)
+is trained offline. It predicts aggregate recorded booking volume, not menu
+fulfilment or ingredient use, and did not beat the trailing-average baseline.
+It is not deployed or compatible with this Genpact response schema. Do not
+replace these metrics/source labels with its experimental results.
 
 ## HTTP rules
 
