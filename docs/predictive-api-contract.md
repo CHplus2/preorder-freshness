@@ -5,8 +5,9 @@ Dashboard branch: `feature/ai-dashboard`.
 
 ## Availability and scope
 
-As of the initial audit, **none of the endpoints below exist**. The original
-Genpact CSVs, trained artifact and evaluation metrics are missing. Current URLs
+**None of the endpoints below exist yet**. The Genpact CSVs have now been
+downloaded and the CatBoost artifact evaluated locally (28.23% WAPE versus
+34.81% baseline on weeks 136–145). Django integration remains pending. Current URLs
 must not be treated as available or a 404 as an empty forecast. Update this
 status and add endpoint tests when implementation proceeds after Step 1.
 

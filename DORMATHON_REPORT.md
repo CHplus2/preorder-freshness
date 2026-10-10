@@ -137,3 +137,99 @@ No training, model artifact, evaluation metrics or simulated operational inputs
 were generated. Training and baseline comparison remain blocked until the three
 original files are available in this cloud machine at
 `backend/predictive_ai/data/`. No API implementation or frontend change occurred.
+
+## Task 3: genuine Genpact training and chronological evaluation completed
+
+This entry supersedes the missing-data blockers above. On 2026-10-10, all three
+source files were downloaded over verified HTTPS from the user-specified
+`https://raw.githubusercontent.com/devarti19/Food-Demand-Forecasting/master/`
+URLs into `backend/predictive_ai/data/`. These are a public mirror of the dataset;
+structural validation does not establish independent publisher provenance.
+
+CSV validation passed: 456,548 sales records, 51 meal metadata records and
+77 center metadata records. Required columns were present, no required cells
+were missing, no duplicate center/meal/week keys existed, metadata joins were
+complete, numerical values were finite, and orders/prices were nonnegative.
+History covers weeks 1–145 and 3,597 observed center/meal series.
+File SHA-256 hashes, schema, sizes, gap counts and leakage checks are saved in
+local ignored `backend/predictive_ai/artifacts/dataset_audit.json`.
+
+Executed training using the separate Python 3.12 ML environment:
+
+```bash
+/workspace/venv-ml/bin/python backend/predictive_ai/train_model.py
+/workspace/venv-ml/bin/python -m backend.predictive_ai.evaluate_model
+/workspace/venv-ml/bin/python -m unittest discover -s backend/predictive_ai/tests -v
+/workspace/venv-ml/bin/python backend/predictive_ai/generate_demo_inputs.py
+/workspace/venv-ml/bin/python backend/predictive_ai/predict_week.py
+```
+
+The existing trainer used CatBoost 1.2.10 with 200 iterations, depth 6, learning
+rate 0.08, seed 42, four threads, and log1p order targets. Training used weeks
+4–135 (415,010 rows); chronological validation used weeks 136–145 (32,821 rows).
+No holdout-driven hyperparameter tuning or early stopping was performed. The
+saved artifact is the evaluated model trained through week 135, not a model
+refitted on all 145 weeks. Its week-146 demonstration uses available history
+through week 145 as input features without retraining weights.
+
+| Evaluation | WAPE (%) |
+| --- | ---: |
+| CatBoost | 28.2349399823 |
+| Previous-observation baseline (`lag1`) | 34.8076211617 |
+
+CatBoost improves WAPE by 6.57 percentage points, or 18.88% relative to baseline,
+and beats it in each of the ten held-out weeks. The independent evaluation
+script reloads `demand_model.cbm`, recomputes predictions, confirms they are
+finite, and reproduces both saved aggregate metrics exactly to two decimals.
+It saves per-week metrics and all held-out predictions locally.
+
+Leakage checks passed on the downloaded data: current targets do not affect
+their own feature vectors; modifying all held-out targets does not alter any
+training feature; `num_orders` is excluded from the feature list. Six isolated
+unit tests cover these invariants, observation-gap handling, future feature
+shape, explicit missing-history/source errors, and WAPE arithmetic.
+
+### Limitations and next work
+
+There are 21,504 observation gaps longer than one week, with a maximum gap of
+122 weeks. Lag and rolling features use previous observed rows; missing weeks
+are not imputed as zero. Validation scores only observed center/meal/week rows,
+not all absent combinations. Holdout prediction uses actual previous observed
+orders as rolling one-step inputs, including observations from earlier holdout
+weeks, which is valid for rolling prediction but not recursive multi-week
+forecasting. There is no final independent test set or statistical confidence
+interval, and repeated tuning on this holdout would compromise its independence.
+
+Validation uses observed prices and promotion flags for each target week,
+assuming they are known at forecast time. The future-row generator instead
+carries latest prices and sets both promotion flags from a scenario switch;
+this covariate mismatch limits extrapolation claims. Promotion flags are
+observational, not causal uplift evidence. New/dormant items and missing demand
+records require separate consideration. This weekly external dataset does not
+prove generalization to Dapur Kita or daily demand accuracy.
+
+The week-146 CLI prediction succeeded for center 13 using the actual trained
+CatBoost artifact. The three generated operational CSVs are explicitly simulated
+recipes, ingredient inventory/costs and supplier assumptions, not original
+Genpact or real kitchen records. Predictions remain external meal IDs and are
+not mapped to local FYP products. The CLI forecast includes unmapped meals while
+risk calculation only includes the five simulated recipe meals; do not treat
+that risk result as a complete center inventory assessment. The starter risk
+engine issues from Task 1 (per-batch costs, incomplete recipe coverage,
+inventory-only ingredients and deterministic tie order) still need correction
+before API integration; this task establishes forecasting readiness only.
+
+Local ignored artifacts:
+
+- `backend/predictive_ai/artifacts/demand_model.cbm`
+- `backend/predictive_ai/artifacts/metrics.json`
+- `backend/predictive_ai/artifacts/dataset_audit.json`
+- `backend/predictive_ai/artifacts/evaluation_details.json`
+- `backend/predictive_ai/artifacts/validation_predictions.csv`
+- `backend/predictive_ai/artifacts/demo_output.json`
+
+Data and all model/evaluation artifacts remain excluded from Git. Only the
+independent evaluation script, isolated feature tests, and documentation are
+committed. No Django tables, payment logic, React files or API routes changed.
+The API contract's availability section now reflects completed local training
+while correctly marking routes unimplemented. Integration remains a later task.
