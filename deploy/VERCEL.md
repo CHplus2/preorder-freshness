@@ -1,8 +1,42 @@
 # Direct FreshCast deployment on Vercel
 
-## Verified live release — 10 October 2026
+## Stable bundle source repair — 10 October 2026
 
-The live alias `https://preorder-freshness.vercel.app` now serves Git-source
+The Production build of integration commit `2db0d0c` failed because its
+`FRESHCAST_BUNDLE_URL` used the main website alias. That alias had moved to a
+dashboard feature deployment without `/api/internal/freshcast-bundle/`; the
+download returned HTTP 404. This was not model training failure or a database
+migration problem.
+
+The verified original archive now has a dedicated source:
+
+`https://preorder-freshness-model-bundle.vercel.app/api/internal/freshcast-bundle/`
+
+Source deployment: `dpl_CJLNBM5zPogshz5iTVpJYRQj2uyN`, READY, source `4f483e1`,
+with the original ignored archive uploaded privately for bootstrap. Its source
+hostname is explicitly allowed by Django. The alias is manually pinned to this
+deployment and is **not** a project production domain, so normal website releases
+do not automatically move it. Keep this deployment and alias; do not repoint or
+delete them when changing the frontend.
+
+The Vercel access exception applies only to this source alias. The archive still
+requires the separate bearer token; anonymous requests returned HTTP 403 and
+authenticated provisioning verified all eight runtime inputs against the
+unchanged SHA-256. Django staff authentication remains in place. No global Vercel
+protection policy was disabled, and no database migration or business-data write
+was performed.
+
+Production `FRESHCAST_BUNDLE_URL` now uses this source. The digest and token
+bindings were preserved. Preview remains independent and requires its own safe
+database/configuration. Build errors now report safe HTTP status or connection
+failure without exposing signed URLs or credentials. Sixteen integrity,
+packaging, entrypoint and build-gate tests plus three Django transfer tests passed.
+The website's Git-only rebuild must still reach READY and pass staff API checks;
+source availability alone does not establish that release's readiness.
+
+## Earlier verified live release — 10 October 2026
+
+At that verification, the live alias `https://preorder-freshness.vercel.app` served Git-source
 production deployment `dpl_8yrHqPPmdU3Sfo1Qp1W9ueeUfcNB`, backend source commit
 `a4f396b` on `integration/dormathon-demo`. This deployment cloned GitHub and
 successfully downloaded the protected archive; no model/archive was uploaded
@@ -51,7 +85,8 @@ and noncacheable. The frontend never receives the credential.
 
 Production build/runtime settings for this path:
 
-- `FRESHCAST_BUNDLE_URL`: HTTPS URL of the protected transfer endpoint.
+- `FRESHCAST_BUNDLE_URL`: HTTPS URL of the protected transfer endpoint on the
+  dedicated source alias above, independent of the main website alias.
 - `FRESHCAST_BUNDLE_SHA256`: the original pinned digest below.
 - `FRESHCAST_BUNDLE_TOKEN`: encrypted build download credential.
 - `FRESHCAST_BUNDLE_EXPORT_TOKEN`: encrypted server transfer credential matching
@@ -65,10 +100,10 @@ extracts the eight inputs, and retains the exact archive for subsequent builds.
 It neither retrains nor applies migrations. Keep the prior working deployment
 until its successor is READY and passes model/API checks.
 
-If the transfer URL uses the live application alias, that alias must continue
-to serve this integration code and its verified archive. Repointing it to old
-`main`, deleting all retained deployments, rotating only one credential or
-changing the digest independently will break later downloads. This is a free
+Do not use the main website alias as the transfer URL: a frontend-only release
+can remove the transfer route. Keep the dedicated source deployment/alias,
+rotate download/export credentials together, and preserve the pinned digest.
+Deleting the source or changing its digest independently breaks builds. This is a free
 demo provision path, not independent artifact storage or permanent backup.
 An external private object store can replace the URL later without changing
 prediction endpoints. Production settings do not automatically configure Preview;
