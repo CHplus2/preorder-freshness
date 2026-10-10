@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import PantryScene from "./PantryScene";
 import DecisionRehearsal from "./DecisionRehearsal";
 import ActionComparison from "./ActionComparison";
+import ReviewQueue from "./ReviewQueue";
 import { decisionBrief } from "./decisionBrief";
 import ProblemEvidence from "./ProblemEvidence";
 import { problemSummary } from "./problemSummary";
@@ -87,6 +88,13 @@ export default function DecisionAssistant({
         }}
         center={baseline.center_id}
         week={baseline.week}
+      />
+      <ReviewQueue
+        key={`${isFixture}:${JSON.stringify(baseline)}`}
+        risks={risks}
+        selected={risk.ingredient_id}
+        onSelect={setIngredient}
+        isFixture={isFixture}
       />
       <details className="pantry-list-view">
         <summary>List view & priority rules</summary>
