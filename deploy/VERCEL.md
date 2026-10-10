@@ -1,5 +1,48 @@
 # Direct FreshCast deployment on Vercel
 
+## Git-build bundle transfer
+
+`Set a server-side HTTPS FRESHCAST_BUNDLE_URL` means the Git checkout has no
+ignored archive and no configured download source. It is independent of the
+preorder database and cannot be fixed by merging more branches or retraining.
+
+The evaluated original archive can now be retained privately in the Python
+function as `backend/predictive_ai/artifacts/runtime-bundle.tar.gz`. A deployment
+that already contains it can transfer it at `/api/internal/freshcast-bundle/`
+using a separate deployment-only bearer credential. Anonymous visitors, staff
+sessions and credentials in query strings cannot download it. The route reads
+one fixed, checksum-verified file, never database records. Responses are private
+and noncacheable. The frontend never receives the credential.
+
+Production build/runtime settings for this path:
+
+- `FRESHCAST_BUNDLE_URL`: HTTPS URL of the protected transfer endpoint.
+- `FRESHCAST_BUNDLE_SHA256`: the original pinned digest below.
+- `FRESHCAST_BUNDLE_TOKEN`: encrypted build download credential.
+- `FRESHCAST_BUNDLE_EXPORT_TOKEN`: encrypted server transfer credential matching
+  the download credential. This is separate from staff login and Vercel tokens.
+- `VERCEL_SUPPORT_LARGE_FUNCTIONS=1`: the existing Hobby-compatible beta path.
+
+Bootstrap once with a direct source upload containing the verified ignored
+archive and the export credential. Verify the hosted transfer before attempting
+a Git-only build. That build downloads the archive, verifies SHA-256, safely
+extracts the eight inputs, and retains the exact archive for subsequent builds.
+It neither retrains nor applies migrations. Keep the prior working deployment
+until its successor is READY and passes model/API checks.
+
+If the transfer URL uses the live application alias, that alias must continue
+to serve this integration code and its verified archive. Repointing it to old
+`main`, deleting all retained deployments, rotating only one credential or
+changing the digest independently will break later downloads. This is a free
+demo provision path, not independent artifact storage or permanent backup.
+An external private object store can replace the URL later without changing
+prediction endpoints. Production settings do not automatically configure Preview;
+Preview still needs its own safe database and corresponding bundle settings.
+
+The five staff predictive endpoints and their source labels are unchanged.
+See [data sources](../docs/FRESHCAST-DATA-SOURCES.md) for why the Genpact forecast
+must not be joined to local product/inventory IDs.
+
 The user wants a free demo on the existing Vercel site. Render is an unused
 fallback; do not apply its paid Blueprint. No external compute host is required
 if this Vercel project qualifies for the Large Functions path below.

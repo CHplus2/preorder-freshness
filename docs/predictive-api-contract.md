@@ -24,6 +24,12 @@ their demand source. No locally trained model is currently available; see
 and shortage risks are calculated. Explanations include shortfall, illustrative
 replenishment and safety stock; no purchase is executed.
 
+Database order storage is distinct from these prediction sources; see
+[data-source clarification](FRESHCAST-DATA-SOURCES.md). A separate protected
+deployment transfer route `/api/internal/freshcast-bundle/` is not a dashboard
+API and cannot access business records. Its bearer credential is server-only;
+the existing staff authentication rules below remain unchanged.
+
 ## HTTP rules
 
 Base: `/api/admin/predictive/`; trailing slashes required. JSON UTF-8. All

@@ -6,7 +6,7 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 
-from backend.predictive_ai.provision_bundle import FILES
+from backend.predictive_ai.provision_bundle import FILES, RETAINED_ARCHIVE
 from deploy.provision_vercel import publish_verified_bundle
 from deploy.provision_vercel import EXPECTED_DEMO_SHA256, ROOT
 
@@ -60,3 +60,14 @@ class VercelBundleTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('checksum mismatch', result.stderr)
             self.assertFalse(destination.exists())
+
+    def test_retained_archive_collision_is_checked_before_publishing_inputs(self):
+        with TemporaryDirectory() as tmp:
+            root=Path(tmp);staged=self.staged(root);destination=root/'runtime'
+            (staged/RETAINED_ARCHIVE).write_bytes(b'verified-original-archive')
+            existing=destination/RETAINED_ARCHIVE
+            existing.parent.mkdir(parents=True)
+            existing.write_bytes(b'existing-other-archive')
+            with self.assertRaisesRegex(ValueError,'refusing to overwrite'):
+                publish_verified_bundle(staged,destination)
+            self.assertFalse((destination/FILES[0]).exists())
