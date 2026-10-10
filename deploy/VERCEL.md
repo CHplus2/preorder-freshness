@@ -1,5 +1,40 @@
 # Direct FreshCast deployment on Vercel
 
+## Verified live release — 10 October 2026
+
+The live alias `https://preorder-freshness.vercel.app` now serves Git-source
+production deployment `dpl_8yrHqPPmdU3Sfo1Qp1W9ueeUfcNB`, backend source commit
+`a4f396b` on `integration/dormathon-demo`. This deployment cloned GitHub and
+successfully downloaded the protected archive; no model/archive was uploaded
+from Codex for that build. Python provisioning, React build and function
+packaging completed and Vercel reported READY.
+
+Hosted verification after alias assignment passed:
+
+- Authenticated staff requests to all five predictive APIs; 51 predictions and
+  four ingredient risks for center 13, week 146.
+- Original model metrics: 28.23% WAPE versus 34.81% baseline. No retraining.
+- Baseline forecast total 21,916.11 portions and promotion scenario 49,246.95;
+  scenarios remain observational assumptions, not causal uplift.
+- Browser: FreshCast Pantry in Live API mode, ingredient selection and assistant
+  navigation, all 24 storefront photos, product/admin photos and mobile layout;
+  no JavaScript page errors.
+- Protected archive download: 5,899,808 bytes with the pinned SHA-256 below;
+  anonymous requests return 403. The same verified archive is retained in the
+  Git-built function for the next build.
+- 21 focused local tests passed: eight Django predictive/transfer tests, ten
+  integrity/packaging tests and three read-only build-release gate tests.
+
+The production settings listed below have been configured securely. Production
+uses the existing database bindings; no migration, order or stock changes were
+performed in this task. Preview has independent environment settings and still
+requires a configured safe database; a successful Production build does not
+establish Preview readiness. No branch was merged into main.
+
+Retained bootstrap: `dpl_4YdFao55QbYEuJVMtKEr5GP22FHj`. Previous working release:
+`dpl_EVfnX9xfMAdB8zpDCAmJFTRvSEHC`. Keep these private-source recovery copies.
+The older deployment records below are historical, not the current live status.
+
 ## Git-build bundle transfer
 
 `Set a server-side HTTPS FRESHCAST_BUNDLE_URL` means the Git checkout has no
