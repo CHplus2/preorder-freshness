@@ -200,3 +200,7 @@ GROQ_CHAT_MODEL = os.getenv('GROQ_CHAT_MODEL', 'llama-3.3-70b-versatile')
 PUBLIC_APP_URL = os.getenv('PUBLIC_APP_URL', '')
 PASSWORD_RESET_TIMEOUT = 3600
 RECOMMENDATION_EXPERIMENT = os.getenv('RECOMMENDATION_EXPERIMENT', 'False') == 'True'
+
+# Optional server-side model/data bundle; provision separately from Git.
+PREDICTIVE_DATA_DIR = os.getenv('PREDICTIVE_DATA_DIR', str(BASE_DIR / 'predictive_ai' / 'data'))
+PREDICTIVE_ARTIFACT_DIR = os.getenv('PREDICTIVE_ARTIFACT_DIR', str(BASE_DIR / 'predictive_ai' / 'artifacts'))

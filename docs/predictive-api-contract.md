@@ -1,20 +1,21 @@
 # Predictive API contract — Dormathon 2026
 
-Version: `1` (proposed, not implemented). Backend branch: `feature/ai-backend`.
+Version: `1` (implemented). Backend branch: `feature/ai-backend`.
 Dashboard branch: `feature/ai-dashboard`.
 
 ## Availability and scope
 
-**None of the endpoints below exist yet**. The Genpact CSVs have now been
-downloaded and the CatBoost artifact evaluated locally (28.23% WAPE versus
-34.81% baseline on weeks 136–145). Django integration remains pending. Current URLs
-must not be treated as available or a 404 as an empty forecast. Update this
-status and add endpoint tests when implementation proceeds after Step 1.
+**All five endpoints below are implemented**. The evaluated CatBoost artifact
+achieved 28.23% WAPE versus 34.81% baseline on weeks 136–145. A complete separately
+provisioned bundle and optional ML dependencies are required; Git alone does not
+supply them. See `backend/predictive_ai/README.md` for reset and deployment steps.
+Generated operations currently cover center 13 only; other centers return HTTP
+503 `operational_data_unavailable`. No empty/fabricated forecast is substituted.
 
 The forecasting domain is external Genpact **weekly** center/meal demand.
 `meal_id` is never a Dapur Kita `Product.id`. Recipe, stock, costs and supplier
 inputs initially use explicit simulated operational data. No local FYP stock is
-read or modified by this proposed demo. A real-data adapter requires an explicit,
+read or modified by this demo. A real-data adapter requires an explicit,
 verified mapping and unit conversion; it is outside this initial contract.
 
 ## HTTP rules
@@ -125,7 +126,7 @@ are assumed and response is not a causal comparison. Default forecast is
 
 ## Errors and synchronization
 
-Proposed predictive error body:
+Predictive error body:
 
 ```json
 {"code": "model_unavailable", "detail": "Train and evaluate the demand model before requesting forecasts."}
@@ -139,5 +140,4 @@ CSV contents or tracebacks. Dashboard should render these states explicitly.
 
 Backend endpoint tests must enforce field names, finite JSON numbers, staff
 permissions, CSRF, invalid input, missing model/data, FEFO and no database writes.
-Update this document in the same commit as endpoint/schema changes. Until then,
-frontend mocks must be explicitly labeled fixtures and must not imply readiness.
+Update this document in the same commit as endpoint/schema changes. Frontend mocks must be explicitly labeled fixtures.

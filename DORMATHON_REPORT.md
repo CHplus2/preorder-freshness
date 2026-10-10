@@ -233,3 +233,71 @@ independent evaluation script, isolated feature tests, and documentation are
 committed. No Django tables, payment logic, React files or API routes changed.
 The API contract's availability section now reflects completed local training
 while correctly marking routes unimplemented. Integration remains a later task.
+
+## Task 4: artifact reproducibility and Django integration
+
+Completed on `feature/ai-backend` on 2026-10-10. The genuine `demand_model.cbm`
+was present (approximately 1.1 MB), loaded successfully by CatBoost in the Django
+Python 3.13 runtime, and produced forecasts through the new staff-only APIs.
+The model is still local/Git-ignored; no live deployment was performed.
+
+Added routes under `/api/admin/predictive/`: GET `metrics/`, `centers/`,
+`forecast/`, `inventory-risk/`; POST `what-if/`. The API contract now marks these
+routes implemented. Prediction and scenario calculations are nonpersistent,
+require staff access, enforce session POST CSRF, validate parameters, and
+return explicit unavailable errors for absent/incompatible models, data or
+simulated operations. Optional ML libraries load after permission checks and
+bundle checks; ordinary FYP routes do not import CatBoost. The service caches
+history/model per worker using file signatures and bounds inference threads.
+
+No verified mapping connects Genpact meals to FYP products, so only explicitly
+SIMULATED recipes, batches and suppliers are accepted. Current operations cover
+center 13. Missing recipe coverage is reported; other centers return HTTP 503
+rather than fabricated inventory. The service does not query or mutate FYP
+inventory, order, payment or product tables. No migrations or frontend changes.
+
+The risk engine now exposes batch-level FEFO allocation, deterministic batch-ID
+ties, zero consumption for expired batches, ingredient stock with zero forecast
+demand, per-batch surplus costs, unknown-cost warnings and null monetary totals,
+ranked monetary/expiry/shortfall risks and explainable purchasing suggestions.
+Supplier lead time and promotion uplift are explicitly unverified. Quantity and
+cost validation rejects invalid values; duplicate recipe/batch keys are rejected.
+
+Reproduction is committed as `backend/predictive_ai/reproduce.sh`, with exact
+ML versions in `requirements-ml.lock` and fixed SHA-256 checks for the three
+source CSVs. Executed the complete script successfully: dependency preparation,
+source verification, CatBoost training, reload evaluation, simulated operations
+and CLI predictions. It reproduced 28.23% CatBoost WAPE versus 34.81% baseline
+on weeks 136–145. Source download into a fresh environment was verified in Task 3;
+this repeat used and reverified the retained CSVs. Cross-platform byte identity
+is not promised; retraining requires Python 3.12, uv/curl and network access.
+
+Artifact availability and deployment instructions are in
+`backend/predictive_ai/README.md`. Git does not transport ignored artifacts.
+For another local machine, run the script or transfer model, metrics, three
+source CSVs and three operational CSVs. Install optional locked ML dependencies
+into the Django interpreter without synchronizing away its existing packages.
+Use `PREDICTIVE_DATA_DIR` and `PREDICTIVE_ARTIFACT_DIR` to select external
+server-side directories. Deploy the complete versioned bundle into the image
+or a persistent read-only mount, provision dependencies, restart workers and
+run authenticated smoke checks. Do not expose the raw data or model as static
+assets. Existing hosting configuration is unchanged and requires separate
+provider validation for native ML dependencies and bundle/resource limits.
+
+Executed validation:
+
+- Django system check and migration-drift check passed; no migrations needed.
+- Full isolated SQLite backend suite: 211 tests, 209 passed, two PostgreSQL-only
+  tests skipped. Five new tests cover staff/anonymous permissions, CSRF, genuine
+  predictions and zero database queries during simulation, invalid parameters,
+  and absent source/model handling.
+- Eight standalone ML/risk tests passed, including FEFO and unknown-cost handling.
+- Full reproduction/evaluation script passed with the same held-out WAPE.
+- Frontend production build passed as required by Step 2; no React source changed.
+- Git whitespace check passed; CSVs, CBM and generated outputs remain ignored.
+
+Limitations from Task 3 remain: rolling weekly external forecasts, prior-observed
+rather than necessarily prior-week lags, known-covariate assumptions, no causal
+promotion claim or demonstrated real-world savings. Deployment to another host
+and real local-product adaptation remain unverified. The evaluated weights remain
+trained through week 135 and are not silently refitted on holdout weeks.
