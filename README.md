@@ -1,201 +1,118 @@
-# Dapur Kita
+# FreshCast — Kitchen Decision Assistant
 
-## Documentation
+FreshCast helps a food business spot ingredient shortages and potential waste, understand their causes, and compare purchasing decisions. It is integrated into **Dapur Kita**, an existing React and Django preorder application for a Malaysian home kitchen.
 
-- [Stage 16 saved-plan conflict warnings](docs/FYP-IMPLEMENTATION-STAGE-16.md): equipment and closure overlaps, including unattended work, shown on affected planner tasks.
+**Demo:** [Open the FreshCast Decision Assistant](https://preorder-freshness.vercel.app/admin/ai/decisions?source=local) · **Integrated branch:** `integration/dormathon-demo`
 
-- [Stage 15 printable shopping checklist](docs/FYP-IMPLEMENTATION-STAGE-15.md): ingredient totals, need dates, order references and incomplete-recipe warnings.
+Owner screens require an existing staff account. Request demonstration access from the project team; credentials are not published in this repository. No merge into `main` is required to use the linked deployed demo.
 
-- [Dapur Kita manual-entry catalogue](docs/DAPUR-KITA-MANUAL-ENTRY.md): 24 Malaysian home-kitchen menus, recipes, preparation settings, 35 raw materials and matching stock templates. No automatic import or live replacement.
+## What the product does
 
-- [Stage 14 planner reliability](docs/FYP-IMPLEMENTATION-STAGE-14.md): loading/error states prevent stale operational views and calendar exports.
+The decision assistant guides the owner through five steps: **Detect → Categorize → Prioritize → Explain → Decide**.
 
-- [Stage 13 recommendation evidence export](docs/FYP-IMPLEMENTATION-STAGE-13.md): downloadable engagement figures with timestamped reporting windows and interpretation notes.
+- Convert upcoming confirmed preorders into ingredient requirements using accepted recipe snapshots.
+- Allocate dated inventory using first-expiry-first-out (FEFO), excluding expired, held and otherwise ineligible batches.
+- Identify shortages, ingredients likely to expire unused, and estimated financial exposure where costs are known.
+- Explain the contributing orders, quantities, preparation dates and batch eligibility.
+- Compare a hypothetical purchase, including arrival date, expiry and unit cost, without changing stock or placing an order.
 
-- [Stage 12 recommendation engagement](docs/FYP-IMPLEMENTATION-STAGE-12.md): independent reporting, basket-add counts and explicit interpretation limits.
+The surrounding FYP application provides menu, recipe, inventory, checkout, order and preparation-planning workflows. See the [FYP user manual](docs/FYP-USER-MANUAL.md) for those screens.
 
-- [Stage 11 preparation-time preview](docs/FYP-IMPLEMENTATION-STAGE-11.md): sample quantities, batch duration breakdown and configuration warnings in the menu editor.
+## Two distinct data modes
 
-- [Stage 10 batch planning and order progress](docs/FYP-IMPLEMENTATION-STAGE-10.md): opt-in independent recipe batches, scheduling retries and customer fulfilment stages.
+| Mode | Inputs | Output |
+| --- | --- | --- |
+| **My kitchen** — default | Database preorders, accepted recipes and inventory batches | Calculated requirements, shortages, expiry risks and purchase comparisons for known orders. No demand model is used. |
+| **Genpact evaluated model demo** | Public historical weekly meal demand, prices, promotion flags and fulfillment-center information | Genuine CatBoost forecasts, with separately labelled simulated recipes, inventory and supplier assumptions. |
 
-- [Stage 9 inventory attention list](docs/FYP-IMPLEMENTATION-STAGE-9.md): held/expiring batches, recorded stock value and Malaysia date consistency.
+The hosted kitchen records are **fictional demo transactions stored in the database**, not evidence of real customer sales. The local planning flow does not predict additional future customers. Genpact meal and center IDs are not mapped to Dapur Kita menu items; the external model is not presented as an accurate forecast of this shop's customer demand. Frontend fixture mode is also labelled separately.
 
-- [Stage 8 daily packing list](docs/FYP-IMPLEMENTATION-STAGE-8.md): date-based quantities, per-order checks and a printable dispatch preparation sheet.
+### Forecast evaluation
 
-- [Stage 7 owner order queue](docs/FYP-IMPLEMENTATION-STAGE-7.md): combined search/filters, delivery sorting and overdue indicators.
+The deployed Genpact model was trained through week **135** and evaluated on chronologically held-out weeks **136–145** using prior-only demand features.
 
-- [Stage 6 consolidated shopping list](docs/FYP-IMPLEMENTATION-STAGE-6.md): ingredient totals, earliest needed dates and per-order shortages.
+| Method | Held-out WAPE |
+| --- | ---: |
+| CatBoost | **28.23%** |
+| Previous-observation baseline | **34.81%** |
 
-- [Database release repair](docs/RELEASE-REPAIR-2026-09-30.md): production migrations applied, preserved orders, backup evidence and the Vercel migration check.
+WAPE is total absolute prediction error divided by total observed demand, multiplied by 100; lower is better. It is not classification accuracy, and the model does not outperform the baseline on every individual slice. Week 146 forecasts have no observed targets in this dataset. Evaluation uses rolling one-week-ahead history; it does not establish multiweek or own-store forecast performance. See the [data-source explanation](docs/FRESHCAST-DATA-SOURCES.md) and [demo runbook](docs/FRESHCAST-DEMO-RUNBOOK.md).
 
-- [Stage 5 pricing simulator](docs/FYP-IMPLEMENTATION-STAGE-5.md): compare prices, bulk discounts and ingredient-cost increases without changing live offers.
+## Try the demo
 
-- [Stage 4 contribution CSV export](docs/FYP-IMPLEMENTATION-STAGE-4.md): complete bounded date-range exports, missing-cost handling, privacy and verification.
+1. Sign in as staff and open `/admin/ai/decisions?source=local`.
+2. Check the planning window and coverage: only eligible paid, scheduled, undeducted preorders contribute to requirements. Review excluded orders rather than interpreting them as zero demand.
+3. Select an ingredient and follow the five-step assistant. Inspect the linked preorder and inventory evidence.
+4. Compare a hypothetical purchase using the material's displayed unit. Late arrival or expiry before preparation ends cannot cover the requirement.
+5. Switch the data source to **Genpact** to inspect the separate evaluated-model example. `/admin/ai/inventory?source=live` also includes the illustrated inventory/rescue interface.
 
-- [Stage 3 owner setup checklist](docs/FYP-IMPLEMENTATION-STAGE-3.md): saved-data checks for branding, contact, recipes, preparation, costs and inventory follow-up.
+The runbook includes a dated example. Records and dates may change; refresh the kitchen data and use the current response rather than promising permanently fixed quantities.
 
-- [Stage 2 delivery rescheduling](docs/FYP-IMPLEMENTATION-STAGE-2.md): customer/owner preview and confirmation, cutoff policy, preserved order terms, change history and verification.
+## Run locally on Windows
 
-- [Stage 1 FYP implementation and rollout](docs/FYP-IMPLEMENTATION-STAGE-1.md): accepted recipes, payment records, date-aware discovery, batch traceability, contribution reporting, migration requirements and test limits. This supersedes older descriptions of mutable accepted recipes and editable payment-status flags below.
-
-- [UI/UX, accessibility and performance audit](docs/AUDIT-2026-09-28.md): baseline evidence, implemented fixes, tests, remaining issues and FYP reporting limits.
-
-- [Multilingual Kitchen Help](docs/KITCHEN-HELP.md): features, Groq setup, privacy and limits.
-
-- [Testing and FYP evidence](docs/TESTING.md): existing tests, safe execution, report evidence and manual UI checks.
-
-- [Preparation planning explained](docs/PREPARATION-PLANNING.md): inputs, formulas, overlap examples, batch limits, troubleshooting and a reusable chatbot prompt.
-- [Operations and feature status](docs/OPERATIONS-AND-FEATURE-STATUS.md): accounting, supplier-management status, photos, freshness and integration limits.
-- [Vercel + Supabase deployment](DEPLOYMENT.md) and the [five-page business content brief](WEBSITE-CONTENT.md).
-
-A React + Django single-vendor preorder application for a Malaysian home kitchen. The earlier grocery catalogue is preserved; owners can create or edit menus and attach ingredient recipes.
-
-## Run locally
-
-Backend (run from `backend`):
+Prerequisites: **Python 3.13**, **Node.js 24**, npm and Git. From the repository root in PowerShell:
 
 ```powershell
-venv/Scripts/python.exe manage.py migrate
-venv/Scripts/python.exe manage.py runserver
+git switch integration/dormathon-demo
+py -3.13 -m venv venv
+.\venv\Scripts\python.exe -m pip install -r requirements.txt -r backend/predictive_ai/requirements-ml.lock
+npm ci --prefix frontend
+
+# Use local SQLite instead of any inherited hosted database configuration.
+$env:PYTHON_DOTENV_DISABLED = '1'
+Remove-Item Env:DATABASE_URL, Env:VERCEL -ErrorAction SilentlyContinue
+$env:SECRET_KEY = (& .\venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(50))")
+.\venv\Scripts\python.exe manage.py migrate
+.\venv\Scripts\python.exe manage.py createsuperuser
+.\venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
 ```
 
-Frontend (run from `frontend`):
+In a second terminal at the repository root:
 
 ```powershell
-npm install
-npm run dev
+npm --prefix frontend run dev
 ```
 
-Open http://127.0.0.1:5173. Use your existing staff account for owner screens. Create an owner with `manage.py createsuperuser` if needed. No demo credentials are embedded.
+Open `http://127.0.0.1:5173/admin/ai/decisions?source=local`. Vite forwards `/api` requests to local Django on port 8000, preserving the existing session login and CSRF protection. A new local database starts without the hosted demo records: configure menus, recipes, dated stock and reviewed preorders using the [FYP manual](docs/FYP-USER-MANUAL.md). Do not run these migration/setup commands against production.
 
-## Owner workflow
+### Trained-model bundle
 
-1. **Settings:** customise the kitchen name, tagline, story, social link, contact email, travel/contingency buffer and automatic bulk discount (0–50%).
-2. **Inventory:** create raw materials such as chicken, rice, salt and oil. Choose one consistent unit per material. Create separate batches for each receipt and expiry. Units cannot change after recipes or batches use them.
-3. **Menu:** record ingredients and quantities per portion, advance notice, portions per batch, ordered preparation steps and daily portion capacity. Current stock is calculated from the recipe, not typed into a menu stock field.
-4. **Planner:** view order, preparation or delivery dates on a month calendar, check ingredient shortfalls, open delivery directions and export calendar reminders.
-5. **Orders:** move Pending → Processing → Cooked → Shipped → Delivered. Cooked deducts ingredients once, earliest expiry first, inside a database transaction. Insufficient stock rolls back the whole change. Cancellation after cooking does not restore consumed food.
-6. **Reports:** see 28-day net food sales, paid orders, average order value, a seven-day sales trend, all-time gross menu sales and a simple demand estimate.
+Git does **not** contain historical CSVs, simulated operational CSVs, model weights or databases. My-kitchen planning works without the ML bundle; Genpact mode requires all eight matched runtime files, including `demand_model.cbm` and `metrics.json`.
 
-## Freshness model
+Provision a verified bundle outside public/static assets and set server-side `PREDICTIVE_DATA_DIR` and `PREDICTIVE_ARTIFACT_DIR` to its directories. See [model reproduction and local provisioning](backend/predictive_ai/README.md) and the [current Vercel deployment guide](deploy/VERCEL.md) for checksum-verified bundle delivery. Do not retrain inside an API request, expose bundle credentials to React, or assume cloning the repository downloads the model.
 
-Every batch has its own storage type, location, quantity, receipt date, expiry source and optional hold flag.
+## API and architecture
 
-- **Printed expiry:** enter the date from packaging.
-- **Manufacture date:** add a documented shelf life to the manufacture date.
-- **Unpackaged / wet-market purchase:** add a documented storage duration to receipt date.
-- Calculated methods require a guidance note. They do not invent a duration from the food name or an image. Opening/thawing dates and documented limits can shorten the effective deadline; the earliest applicable deadline is used. Unknown handling or known breaches force a hold. Storage changes do not automatically extend shelf life.
-- Expired, held and future-received batches cannot contribute to available stock or cooking deduction. Date-only expiry remains usable through the recorded date in Malaysia time.
-- Customer menu details show a qualified ingredient status. This describes current stock, not the batches a future meal will use, and cannot guarantee food safety.
+**React + Vite → Django REST API → session/staff authorization → database planning or CatBoost inference.**
 
-Reference: [FoodSafety.gov cold storage chart](https://www.foodsafety.gov/food-safety-charts/cold-food-storage-charts). Raw chicken guidance is 1–2 refrigerated days at 4°C or below. Unknown handling or broken cold storage cannot be resolved by a date calculation. Frozen quality durations are not equivalent to safety expiry dates.
-
-## Scheduling and stock planning
-
-Delivery is supported up to 90 days ahead, 09:00 to before 21:00 Malaysia time. The planner works backwards from delivery minus the delivery buffer, placing continuous preparation steps around one worker, equipment availability, business hours and existing bookings. Step duration scales with batches. Separate menus can overlap when resources permit; tasks are not automatically interrupted.
-
-Advance notice is a minimum delay before preparation starts. Daily menu portion limits apply in addition to resource checks. Existing accepted orders are not automatically moved. This conservative greedy scheduler can reject arrangements that a human could improve; it is not an optimal production solver.
-
-See [the complete preparation guide](docs/PREPARATION-PLANNING.md) before configuring menu timing. It explains why elapsed order time differs from summed step duration and what unattended steps actually permit.
-
-Preorders do not reserve or deduct ingredients. The shopping plan allocates existing stock once in preparation order and excludes stock expiring before preparation. The owner must purchase shortages before cooking. Recipe edits affect future cooking deductions for unconsumed orders; avoid changing recipes for accepted orders without reviewing them.
-
-Express is an owner-confirmed request and retains preparation lead time. No courier is automatically booked. Directions open a map service; this is not live GPS tracking, automatic address validation, traffic ETA calculation or route optimisation. No delivery time is guaranteed.
-
-## Notifications
-
-Calendar export includes preparation and delivery events with a 30-minute reminder. Import into your calendar app. Re-export after changes; it is a snapshot, not a live feed.
-
-An optional email command previews due work without sending:
-
-```powershell
-venv/Scripts/python.exe manage.py send_order_reminders
-```
-
-To enable actual email, configure these environment variables in the backend environment, using your mail provider’s settings:
-
-```dotenv
-EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-EMAIL_HOST=your-smtp-host
-EMAIL_PORT=587
-EMAIL_HOST_USER=your-account
-EMAIL_HOST_PASSWORD=your-secret
-EMAIL_USE_TLS=True
-DEFAULT_FROM_EMAIL=your-verified-sender
-OWNER_NOTIFICATION_EMAIL=your-owner-address
-```
-
-Then schedule one worker every 15 minutes to run `manage.py send_order_reminders --send`. Each run attempts up to 3 emails for events within the next 24 hours or overdue by at most 24 hours, skipping recorded successes. Failed sends can be retried. Sending and recording are not a distributed atomic operation, so a crash immediately after delivery may produce a duplicate on retry. No scheduler, SMTP account or Telegram integration is configured automatically. No external messages were sent during development.
-
-## Storefront, recommendations and marketing
-
-- Five public pages: Home, Our Story, Menu, How It Works and Contact, with mobile navigation, occasion tabs, scroll reveals and guided customer help.
-- English storefront UI; Kitchen Help supports English, Bahasa Melayu and Simplified Chinese. Full-site translation is not implemented.
-- Customer reviews require a delivered order and allow one review per menu/customer.
-- Owner-configured social links and automatic bulk discounts. Discounts apply to food, not delivery fees; shipping thresholds use the pre-discount subtotal.
-- Local recommendations rank prior purchases, preferred categories and popularity, exclude unavailable current recipes and provide a cold-start fallback. No paid AI API is required.
-- Forecast uses historical paid portions with a baseline/trend comparison when sufficient history exists. It is an estimate, not guaranteed demand; use confirmed preorders first.
-- SEO basics: meaningful title, description, Open Graph text, semantic headings, responsive layout. Production canonical URLs, sitemap, structured business data and server rendering/prerendering remain deployment work. There is no visitor/campaign attribution or marketing conversion tracking yet.
-
-## Payments
-
-Cash on delivery works. The existing wallet is explicitly a **demo credit ledger**, not blockchain settlement. PayPal checkout is disabled because the previous client-only flow lacked server verification. Real payment integrations require verified provider credentials, server-created amounts, webhook verification and reconciliation; no cryptocurrency or real payment service has been activated.
+The authoritative [JSON API contract](docs/predictive-api-contract.md) documents the five original predictive endpoints, held-out backtest, local planning and purchase scenario. UI response validation preserves source labels, native ingredient units and unknown costs. Hypothetical comparisons do not write inventory records.
 
 ## Verification
 
+Use the isolated local database configuration above in a dedicated test terminal:
+
 ```powershell
-# Backend: run from backend, explicitly isolate tests from live Supabase
-$env:PYTHON_DOTENV_DISABLED='1'
-$env:SECRET_KEY='local-test-only'
-$env:DATABASE_URL='sqlite:///:memory:'
-venv/Scripts/python.exe manage.py test myapp --noinput
-venv/Scripts/python.exe manage.py makemigrations --check --dry-run
-# Frontend
-npm run build
+.\venv\Scripts\python.exe manage.py test myapp --noinput
+npm --prefix frontend test
+npm --prefix frontend run test:predictive
+npm --prefix frontend run test:ux
+npm --prefix frontend run build
+.\venv\Scripts\python.exe -m unittest discover -s tests -v
+npm ci --prefix escrow --ignore-scripts
+npm --prefix escrow test
 ```
 
-Use a separate terminal for these test-only environment variables; close it before running the normal server.\n\nTests cover expiry sources, missing guidance, invalid quantities, stock exclusions, FEFO, repeat cooking, atomic shortage rollback, status transitions, date lead time, capacity, discounts, private inventory, verified reviews, shopping allocation, recipe validation, reminders, recommendation cold start and unit protection.
+Both GitHub application/escrow jobs passed for the payment-maintenance release. Local checks exercised the provisioned CatBoost model, database planning, purchase comparisons and browser flows. PostgreSQL-only concurrency tests require PostgreSQL; real-model checks are explicitly skipped when the bundle is absent. See [payment/CI verification](docs/FYP-PAYMENT-MAINTENANCE.md) and the [demo runbook](docs/FRESHCAST-DEMO-RUNBOOK.md) for evidence and limits.
 
-Migrations 0006–0008 extend the existing ingredient work. Migration 0006 marks earlier orders as already deducted because previous checkout deducted immediately. A local pre-migration backup is kept in ignored `backend/backups/pre-dapur.sqlite3`.
+## Scope and documentation
 
-## Project scope
+This project extends a pre-existing FYP; it was not built entirely from scratch during the hackathon. Forecasting data comes from an external public dataset. Store records, rescue exercises and inventory assumptions are labelled according to their source. Financial comparisons are estimates, not achieved savings or proof of food safety. Testnet escrow is a separate unaudited lab, not a checkout payment integration; see [escrow setup and rules](escrow/README.md).
 
-The strongest target is sellers preparing food in batches: lunch boxes, family meals, kuih, baked goods and celebrations. Home-based food includes both meals and snacks. Whether customers want weekly lunch plans should be established through interviews; the app currently supports separate dated orders, not recurring meal subscriptions. Competitor scheduling limits and claims that no other platform offers freshness monitoring need current evidence before being used in an academic report.
+- [Demo walkthrough](docs/FRESHCAST-DEMO-RUNBOOK.md)
+- [API contract](docs/predictive-api-contract.md)
+- [Current deployment and model bundle](deploy/VERCEL.md) — Production and Preview have separate settings; Preview still needs its own database configuration.
+- [Connected kitchen planning](docs/LOCAL-KITCHEN-INTEGRATION.md)
+- [FYP user manual](docs/FYP-USER-MANUAL.md) and [technical handoff](docs/FYP-TECHNICAL-HANDOFF.md)
+- [Preserved FYP documentation index and background](docs/DAPUR-KITA-FYP-README.md)
 
-
-### Hosted reminder trigger and manual payments
-Apply migration 0013 before deploying this version (python manage.py migrate).
-In Settings, enter your business bank transfer instructions and/or a DuitNow QR image URL,
-then enable manual payments. Checkout snapshots these details on each order. Transfers remain
-unpaid until an owner verifies their bank records and marks the order paid. This is not bank API verification.
-
-For hosted email reminders, configure the SMTP variables above and a random CRON_SECRET
-of at least 32 characters. Configure an external scheduler to GET /api/reminders/run/ with
-Authorization: Bearer followed by CRON_SECRET every 15 minutes (or more often for higher volumes).
-Do not include the secret in the URL. No scheduler is automatically installed.
-Each invocation attempts up to 3 messages; failures return HTTP 503 so the scheduler can retry.
-Only events within the next 24 hours or overdue by at most 24 hours are included.
-SMTP delivery and database recording cannot be atomic: a process crash after sending can still
-cause a duplicate on retry. Keep credentials in the hosting environment, never in Git.
-Settings shows configuration readiness, not a guarantee that a scheduler or SMTP delivery works.
-
-
-### Ingredient evidence and costing (migration 0014)
-Inventory now records source, supplier, label meaning, original printed deadline, opening/thawing dates
-and their documented day limits, handling evidence and batch unit purchase cost.
-The effective deadline is the earliest applicable date. Uncertain handling / known breaches force a hold.
-The system does not infer microbiological safety from dates, AI or a single temperature reading.
-It does not model a continuous time-temperature history. Hourly/same-day rules require owner review.
-
-Sales > Costs, wastage and pricing provides current recipe contribution estimates:
-menu price minus recipe quantities times ingredient unit-cost assumptions minus per-portion packaging.
-These are current estimates, not historical or net profit. Missing costs remain unknown.
-The selected date range filters operating expenses and waste; it does not change current recipe costs.
-Wastage reduces inventory atomically and freezes its estimated cost. Void incorrect expenses instead
-of deleting the ledger. Use one inventory unit consistently; RM/kg and RM/g must not be confused.
-Do not count stock purchases as overhead and again as consumed recipe cost in your own calculations.
-
-The scheduler continues to assume one worker and one unit of each named equipment type.
-Each step runs continuously. Zero allowed wait joins consecutive steps within one menu; separate
-menus can overlap when equipment and worker time allow. Extra batches extend each step; the
-scheduler does not yet pipeline individual batches or reserve a continuous whole-order block.
+Detailed FYP reports remain in `docs/`; this README is the entry point for reviewers and developers.
