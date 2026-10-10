@@ -8,9 +8,11 @@ Implemented: replace generic tabs with illustrated Kitchen, Fridge & stock room,
 
 Validation: frontend build and existing tests, predictive tests, changed-file lint, and contract-fixture browser checks for station navigation, active state, counts, selection retention, errors, and mobile overflow. This does not establish Vercel deployment or live backend readiness.
 
-## Batch 2 — evidence playback (planned)
+## Batch 2 — evidence playback (implemented)
 
-Add a short, controllable playback of the returned weekly demand and hypothetical FEFO allocations. Animate consumption and remaining stock using returned quantities; provide play/pause/restart and a textual equivalent. Clearly distinguish decorative service activity from forecasted orders and from recorded transactions. No individual customer arrivals, intraday curves, daily forecasts, daily expiry deadlines, or new action effects can be inferred from v1. Keep the playback useful for explaining allocation, with a static reduced-motion view.
+Implemented in Inventory evidence: a four-stage weekly replay of demand, batch eligibility, returned allocation, and waste/shortage outcomes. Play/pause/restart, manual stage selection and Next controls reveal existing API results without recalculating FEFO or interpolating stock through fictional time. Batch trails are scoped to the selected ingredient and sorted by expiry; excluded batches remain identified. Missing evidence stays unavailable and zero results stay zero. A static final view is the reduced-motion default, with manual navigation still available. Changing ingredient or response context resets playback.
+
+Illustrated package/bowl transfer and allocation bar reveals are decorative explanations, not customer arrivals or recorded transactions. No daily curves, deadlines, action effects, revenue or profit are inferred. Center-wide returned meal forecasts are summed as such; they are not treated as verified orders for the selected ingredient. Exact full batch tables remain available below. Validation includes 18 predictive tests, frontend tests/build/lint, plus browser pause/restart/reduced-motion/missing-data and mobile checks using contract fixtures. Live backend and Vercel deployment remain separate validation.
 
 ## Batch 3 — action outcomes (requires agreed backend outputs)
 

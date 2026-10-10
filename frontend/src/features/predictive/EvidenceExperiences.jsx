@@ -5,6 +5,7 @@ import { rankRisks } from "./api";
 import { problemSummary } from "./problemSummary";
 import { IngredientDrawing } from "./PantryScene";
 import PlanningFridge, { KitchenKeeper } from "./PlanningFridge";
+import ForecastReplay from "./ForecastReplay";
 import "./evidenceExperiences.css";
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
@@ -131,7 +132,7 @@ export function DemandExplorer({ rows, scenario, week, isFixture }) {
   );
 }
 
-export function InventoryExplorer({ data }) {
+export function InventoryExplorer({ data, isFixture }) {
   const [filter, setFilter] = useState("all");
   const [inspected, setInspected] = useState(null);
   const [params] = useSearchParams();
@@ -145,13 +146,10 @@ export function InventoryExplorer({ data }) {
       filter === "all" ||
       (filter === "waste" ? r.expiring_unused_kg > 0 : r.shortfall_kg > 0),
   );
-  const selected = rows.find((r) => r.ingredient_id === inspected) || rows[0];
-  const batches = data.batch_allocations
-    .filter((r) => r.ingredient_id === selected?.ingredient_id)
-    .toSorted(
-      (a, b) =>
-        a.expiry_week - b.expiry_week || a.batch_id.localeCompare(b.batch_id),
-    );
+  const selected =
+    rows.find(
+      (r) => r.ingredient_id === (inspected || params.get("ingredient")),
+    ) || rows[0];
   const decisionParams = new URLSearchParams(params);
   if (selected) decisionParams.set("ingredient", selected.ingredient_id);
   decisionParams.set("step", "0");
@@ -247,47 +245,12 @@ export function InventoryExplorer({ data }) {
                 <strong>{money(selected.potential_waste_cost_myr)}</strong>
               </span>
             </div>
-            <h4>Batch trail · earliest expiry first</h4>
-            <p className="pd-note">
-              Hypothetical FEFO allocation. Week buckets are not calendar
-              deadlines or a food safety assessment.
-            </p>
-            {!batches.length ? (
-              <p role="status">
-                No batch allocations returned for this ingredient.
-              </p>
-            ) : (
-              <ol className="fc-batch-trail">
-                {batches.map((b) => {
-                  const total = b.consumed_kg + b.remaining_kg;
-                  return (
-                    <li key={b.batch_id}>
-                      <div>
-                        <strong>{b.batch_id}</strong>
-                        <span>
-                          Expiry week {b.expiry_week} ·{" "}
-                          {b.eligible
-                            ? "Eligible"
-                            : `Excluded: ${b.exclusion_reason}`}
-                        </span>
-                      </div>
-                      <div className="fc-batch-bar" aria-hidden="true">
-                        <span
-                          style={{
-                            width: `${total ? (b.consumed_kg / total) * 100 : 0}%`,
-                          }}
-                        />
-                      </div>
-                      <p>
-                        {qty(b.consumed_kg)} kg allocated ·{" "}
-                        {qty(b.remaining_kg)} kg remaining ·{" "}
-                        {money(b.potential_waste_cost_myr)} potential waste
-                      </p>
-                    </li>
-                  );
-                })}
-              </ol>
-            )}
+            <ForecastReplay
+              key={`${data.center_id}:${data.week}:${data.promotion_scenario}:${selected.ingredient_id}`}
+              data={data}
+              risk={selected}
+              isFixture={isFixture}
+            />
             {selected.risk_type !== "none" && (
               <Link
                 className="fc-open-decision"

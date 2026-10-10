@@ -171,12 +171,13 @@ function Forecast({ baseline, scenario, meal, setMeal, isFixture }) {
     </section>
   );
 }
-function Inventory({ data }) {
+function Inventory({ data, isFixture }) {
   return (
     <>
       <InventoryExplorer
         key={`${data.center_id}:${data.week}:${data.promotion_scenario}`}
         data={data}
+        isFixture={isFixture}
       />
       <details className="pd-card">
         <summary>Exact ingredient risk table</summary>
@@ -642,7 +643,7 @@ function DashboardContent({ view }) {
               setMeal={(value) => choose("meal", value)}
             />
           ) : view === "inventory" ? (
-            <Inventory data={data} />
+            <Inventory data={data} isFixture={mode === "demo"} />
           ) : (
             <>
               <DecisionAssistant
