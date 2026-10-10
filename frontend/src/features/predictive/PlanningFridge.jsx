@@ -112,8 +112,12 @@ export function KitchenKeeper() {
     </svg>
   );
 }
-export default function PlanningFridge({ children, count }) {
-  const [open, setOpen] = useState(true);
+export default function PlanningFridge({
+  children,
+  count,
+  initialOpen = true,
+}) {
+  const [open, setOpen] = useState(initialOpen);
   const id = useId();
   return (
     <section

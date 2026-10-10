@@ -7,6 +7,7 @@ import { loadOptions, loadDashboard, rankRisks } from "./api";
 import "./predictive.css";
 import DecisionAssistant from "./DecisionAssistant";
 import RestaurantStations from "./RestaurantStations";
+import RescueDemo from "./RescueDemo";
 import { DemandExplorer, InventoryExplorer } from "./EvidenceExperiences";
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
@@ -601,6 +602,7 @@ function DashboardContent({ view }) {
         status={current.status}
         isFixture={mode === "demo"}
       />
+      {view === "inventory" && <RescueDemo />}
       {current.status === "loading" && (
         <div className="pd-state" role="status">
           Loading predictive API data…
