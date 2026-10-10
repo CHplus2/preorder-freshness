@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { NavLink, useSearchParams } from "react-router-dom";
-import { Activity, AlertTriangle, ShoppingCart, RefreshCw } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getCookie } from "../../utils/cookieUtils";
 import { loadOptions, loadDashboard, rankRisks } from "./api";
 import "./predictive.css";
 import DecisionAssistant from "./DecisionAssistant";
+import RestaurantStations from "./RestaurantStations";
 import { DemandExplorer, InventoryExplorer } from "./EvidenceExperiences";
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
@@ -22,11 +23,6 @@ const issues = {
   expiry_surplus_and_shortage: "Expiry surplus + shortage",
   none: "No reported risk",
 };
-const tabs = [
-  { id: "forecast", label: "Demand analytics", icon: Activity },
-  { id: "inventory", label: "Inventory evidence", icon: AlertTriangle },
-  { id: "decisions", label: "Decision assistant", icon: ShoppingCart },
-];
 function Empty({ text }) {
   return (
     <div className="pd-empty" role="status">
@@ -598,20 +594,12 @@ function DashboardContent({ view }) {
           </label>
         </div>
       </details>
-      <div className="pd-tabs" aria-label="Predictive dashboards">
-        {[tabs[2], tabs[0], tabs[1]].map(({ id, label, icon: Icon }) => (
-          <NavLink
-            key={id}
-            to={{
-              pathname: `/admin/ai/${id}`,
-              search: params.toString() ? `?${params}` : "",
-            }}
-          >
-            <Icon size={18} />
-            {label}
-          </NavLink>
-        ))}
-      </div>
+      <RestaurantStations
+        params={params}
+        baseline={current.baseline}
+        status={current.status}
+        isFixture={mode === "demo"}
+      />
       {current.status === "loading" && (
         <div className="pd-state" role="status">
           Loading predictive API data…
