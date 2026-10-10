@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { getCookie } from "../../utils/cookieUtils";
 import { loadOptions, loadDashboard, rankRisks } from "./api";
 import "./predictive.css";
+import DecisionAssistant from "./DecisionAssistant";
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
 const money = (n) =>
@@ -21,9 +22,9 @@ const issues = {
   none: "No reported risk",
 };
 const tabs = [
-  { id: "forecast", label: "Demand forecast", icon: Activity },
-  { id: "inventory", label: "Inventory risk", icon: AlertTriangle },
-  { id: "decisions", label: "Decision support", icon: ShoppingCart },
+  { id: "forecast", label: "Demand analytics", icon: Activity },
+  { id: "inventory", label: "Inventory evidence", icon: AlertTriangle },
+  { id: "decisions", label: "Decision assistant", icon: ShoppingCart },
 ];
 function Empty({ text }) {
   return (
@@ -402,7 +403,7 @@ function loss(rows) {
     ? `${money(known)} known subtotal · incomplete costs`
     : money(known);
 }
-export default function PredictiveDashboard({ view = "forecast" }) {
+export default function PredictiveDashboard({ view = "decisions" }) {
   const { isAuthenticated, isAdmin } = useAuth();
   if (isAuthenticated === null || isAdmin === null)
     return (
@@ -472,7 +473,11 @@ function DashboardContent({ view }) {
   function choose(name, value) {
     const next = new URLSearchParams(params);
     next.set(name, value);
-    if (name === "center" || name === "source") next.delete("meal");
+    if (name === "center" || name === "source") {
+      for (const field of ["meal", "ingredient", "step", "action"])
+        next.delete(field);
+    }
+    if (name === "scenario") next.set("step", "3");
     if (name === "source") next.delete("center");
     setParams(next, { replace: true });
   }
@@ -487,10 +492,10 @@ function DashboardContent({ view }) {
           <span className="pd-eyebrow">
             DORMATHON 2026 · DEMAND & INVENTORY INTELLIGENCE
           </span>
-          <h1>Plan demand. Protect freshness.</h1>
+          <h1>FreshCast · What should your kitchen do next?</h1>
           <p>
-            External weekly meal forecasting with simulated inventory decision
-            support.
+            Start with an ingredient problem, explore your options, and review
+            the reasoning before deciding.
           </p>
         </div>
         <button onClick={() => setRetry((n) => n + 1)}>
@@ -509,67 +514,75 @@ function DashboardContent({ view }) {
             : "All displayed demand, metrics and operations are synthetic frontend fixtures, not actual model predictions."}
         </p>
       </div>
-      <div className="pd-controls">
-        <label>
-          Data source
-          <select
-            aria-label="Data source"
-            value={mode}
-            onChange={(e) => choose("source", e.target.value)}
-          >
-            <option value="live">Live API</option>
-            <option value="demo">Frontend fixtures</option>
-          </select>
-        </label>
-        <label>
-          Fulfillment center
-          <select
-            aria-label="Fulfillment center"
-            disabled={!options?.centers.centers.length}
-            value={
-              center ||
-              (data?.center_id ??
-                options?.centers.centers.find((c) => c.center_id === 13)
-                  ?.center_id ??
-                options?.centers.centers[0]?.center_id ??
-                "")
-            }
-            onChange={(e) => choose("center", e.target.value)}
-          >
-            {!options && <option value="">Loading centers</option>}
-            {options?.centers.centers.map((c) => (
-              <option key={c.center_id} value={c.center_id}>
-                Center {c.center_id} · {c.center_type}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Forecast horizon
-          <input
-            aria-label="Forecast horizon"
-            readOnly
-            value={
-              options
-                ? `Week ${options.centers.forecast_week} · 1 week`
-                : "Not loaded"
-            }
-          />
-        </label>
-        <label>
-          Nonpersistent scenario
-          <select
-            aria-label="Nonpersistent scenario"
-            value={promo ? "promotion" : "baseline"}
-            onChange={(e) => choose("scenario", e.target.value)}
-          >
-            <option value="baseline">Baseline · no promotion</option>
-            <option value="promotion">Promotion · what-if simulation</option>
-          </select>
-        </label>
-      </div>
+      <details className="fc-context" open={view !== "decisions"}>
+        <summary>
+          Kitchen context & data source ·{" "}
+          {data
+            ? `Center ${data.center_id}, week ${data.week}`
+            : "configure this session"}
+        </summary>
+        <div className="pd-controls">
+          <label>
+            Data source
+            <select
+              aria-label="Data source"
+              value={mode}
+              onChange={(e) => choose("source", e.target.value)}
+            >
+              <option value="live">Live API</option>
+              <option value="demo">Frontend fixtures</option>
+            </select>
+          </label>
+          <label>
+            Fulfillment center
+            <select
+              aria-label="Fulfillment center"
+              disabled={!options?.centers.centers.length}
+              value={
+                center ||
+                (data?.center_id ??
+                  options?.centers.centers.find((c) => c.center_id === 13)
+                    ?.center_id ??
+                  options?.centers.centers[0]?.center_id ??
+                  "")
+              }
+              onChange={(e) => choose("center", e.target.value)}
+            >
+              {!options && <option value="">Loading centers</option>}
+              {options?.centers.centers.map((c) => (
+                <option key={c.center_id} value={c.center_id}>
+                  Center {c.center_id} · {c.center_type}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Forecast horizon
+            <input
+              aria-label="Forecast horizon"
+              readOnly
+              value={
+                options
+                  ? `Week ${options.centers.forecast_week} · 1 week`
+                  : "Not loaded"
+              }
+            />
+          </label>
+          <label>
+            Nonpersistent scenario
+            <select
+              aria-label="Nonpersistent scenario"
+              value={promo ? "promotion" : "baseline"}
+              onChange={(e) => choose("scenario", e.target.value)}
+            >
+              <option value="baseline">Baseline · no promotion</option>
+              <option value="promotion">Promotion · what-if simulation</option>
+            </select>
+          </label>
+        </div>
+      </details>
       <div className="pd-tabs" aria-label="Predictive dashboards">
-        {tabs.map(({ id, label, icon: Icon }) => (
+        {[tabs[2], tabs[0], tabs[1]].map(({ id, label, icon: Icon }) => (
           <NavLink
             key={id}
             to={{
@@ -607,44 +620,13 @@ function DashboardContent({ view }) {
             </span>
             <strong>
               {data.promotion_scenario
-                ? "WHAT-IF PROMOTION · NOT CAUSAL UPLIFT"
+                ? view === "decisions"
+                  ? "Baseline issue · promotion comparison available"
+                  : "WHAT-IF PROMOTION · NOT CAUSAL UPLIFT"
                 : mode === "demo"
                   ? "Baseline fixture · no model run"
                   : "Baseline model forecast"}
             </strong>
-          </div>
-          <div className="pd-stats">
-            <div>
-              <span>Predicted orders · entire center</span>
-              <strong>
-                {qty(
-                  data.meal_forecasts.reduce(
-                    (s, r) => s + r.predicted_orders,
-                    0,
-                  ),
-                )}
-              </strong>
-              <small>
-                {data.meal_forecasts.length} external meals · not bookings
-              </small>
-            </div>
-            <div>
-              <span>Ingredients with reported risk</span>
-              <strong>
-                {
-                  data.ingredient_risks.filter((r) => r.risk_type !== "none")
-                    .length
-                }
-              </strong>
-              <small>Simulated operational inputs</small>
-            </div>
-            <div>
-              <span>Potential waste cost · MYR</span>
-              <strong className="pd-loss-total">
-                {loss(data.ingredient_risks)}
-              </strong>
-              <small>Not measured spoilage or realized loss</small>
-            </div>
           </div>
           {view === "forecast" ? (
             <Forecast
@@ -657,42 +639,62 @@ function DashboardContent({ view }) {
           ) : view === "inventory" ? (
             <Inventory data={data} />
           ) : (
-            <Decisions
-              baseline={current.baseline}
-              scenario={current.scenario}
-              data={data}
-            />
+            <>
+              <DecisionAssistant
+                baseline={current.baseline}
+                scenario={current.scenario}
+                onPromotion={() => {
+                  if (promo) {
+                    choose("step", "3");
+                    setRetry((n) => n + 1);
+                  } else choose("scenario", "promotion");
+                }}
+              />
+              <details className="pd-card">
+                <summary>
+                  Secondary analytics · center-wide scenario comparison
+                </summary>
+                <Decisions
+                  baseline={current.baseline}
+                  scenario={current.scenario}
+                  data={data}
+                />
+              </details>
+            </>
           )}
         </>
       )}
       {metrics && (
-        <section className="pd-card">
-          <h2>
-            {mode === "demo"
-              ? "Fixture metrics · not evaluated"
-              : "Model evaluation · returned metrics"}
-          </h2>
-          <div className="pd-comparison">
-            <div>
-              <h3>Model WAPE</h3>
-              <strong>{qty(metrics.model_wape_percent)}%</strong>
+        <details className="pd-card">
+          <summary>Secondary analytics · model evaluation</summary>
+          <section className="pd-card">
+            <h2>
+              {mode === "demo"
+                ? "Fixture metrics · not evaluated"
+                : "Model evaluation · returned metrics"}
+            </h2>
+            <div className="pd-comparison">
+              <div>
+                <h3>Model WAPE</h3>
+                <strong>{qty(metrics.model_wape_percent)}%</strong>
+              </div>
+              <div>
+                <h3>Lag-1 baseline WAPE</h3>
+                <strong>{qty(metrics.lag1_baseline_wape_percent)}%</strong>
+              </div>
             </div>
-            <div>
-              <h3>Lag-1 baseline WAPE</h3>
-              <strong>{qty(metrics.lag1_baseline_wape_percent)}%</strong>
-            </div>
-          </div>
-          <p>
-            Validation weeks {metrics.validation_start_week}–
-            {metrics.validation_end_week} · {qty(metrics.validation_rows)} rows.
-            Lower WAPE is better. Model beats baseline:{" "}
-            {metrics.model_beats_baseline ? "yes" : "no"}.
-          </p>
-          <p className="pd-note">
-            Aggregate holdout error is not an uncertainty interval for an
-            individual meal.
-          </p>
-        </section>
+            <p>
+              Validation weeks {metrics.validation_start_week}–
+              {metrics.validation_end_week} · {qty(metrics.validation_rows)}{" "}
+              rows. Lower WAPE is better. Model beats baseline:{" "}
+              {metrics.model_beats_baseline ? "yes" : "no"}.
+            </p>
+            <p className="pd-note">
+              Aggregate holdout error is not an uncertainty interval for an
+              individual meal.
+            </p>
+          </section>
+        </details>
       )}
       <Warnings
         items={[

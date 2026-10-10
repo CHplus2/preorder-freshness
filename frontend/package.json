@@ -12,7 +12,7 @@
     "test:ux": "node src/components/ProductUx.test.js",
     "test:planner": "node src/components/PlannerSnapshot.test.js",
     "test:checkout": "node src/components/AvailabilityResult.test.js",
-    "test:predictive": "node --test src/features/predictive/api.test.js"
+    "test:predictive": "node --test src/features/predictive/api.test.js src/features/predictive/decisionMath.test.js"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^9.1.1",

@@ -203,7 +203,7 @@ function AppContent() {
   const [mobileOpen,setMobileOpen]=useState(false);
   const ownerPage=location.pathname.startsWith('/admin/');
   const publicLinks=[['/','Home'],['/story','Our story'],['/menu','Menu'],['/how-it-works','How it works'],['/contact','Contact']];
-  const ownerLinks=[['/admin/planner','Planner'],['/admin/products','Menus'],['/admin/inventory','Inventory'],['/admin/orders','Orders'],['/admin/reports','Sales'],['/admin/ai/forecast','AI Planning'],['/admin/settings','Settings'],['/admin/customers','Customers'],['/','View storefront']];
+  const ownerLinks=[['/admin/planner','Planner'],['/admin/products','Menus'],['/admin/inventory','Inventory'],['/admin/orders','Orders'],['/admin/reports','Sales'],['/admin/ai/decisions','FreshCast'],['/admin/settings','Settings'],['/admin/customers','Customers'],['/','View storefront']];
   const navigation=ownerPage?ownerLinks:publicLinks;
   const closeMenu=()=>setMobileOpen(false);
   useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[location.pathname]);
