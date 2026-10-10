@@ -3,7 +3,7 @@
 You are working inside my existing Software Engineering FYP repository, NOT a new greenfield web app.
 
 ## Critical constraints
-- Work on the `hackathon/freshcast` branch only. Do NOT switch branches or overwrite uncommitted work without first asking.
+- Work on `feature/ai-backend` for Dormathon 2026. Preserve all uncommitted work. Commit tested task changes and push to `origin/feature/ai-backend`; never push to main, force-push, or automatically merge.
 - Preserve the current FYP features, checkout, wallet/payments, authentication, FEFO, inventory logs, admin screens and database. NO destructive migrations, database resets, data deletion, or payment/API calls.
 - First inspect the actual LOCAL code and model definitions; do not assume the GitHub default branch matches this working copy. The GitHub main branch previously examined had only Product.stock and did not show RawMaterial, MenuIngredient or InventoryItem. Determine if newer FYP inventory models exist here. Report what you found.
 - I am adapting a hackathon-only `backend/predictive_ai/` starter. Treat its Python code as a starting point, review it for bugs, DO NOT build a second FastAPI backend, and do not train on fabricated sales without explicit demo labeling.
