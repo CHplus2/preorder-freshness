@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import PlanningFridge, { KitchenKeeper } from "./PlanningFridge";
 import { IngredientDrawing } from "./PantryScene";
 import ServingScene from "./ServingScene";
+import RescueReceipt from "./RescueReceipt";
 import { rescueOutcome } from "./rescueOutcome";
 import "./rescueDemo.css";
 const choices = [
@@ -333,24 +334,17 @@ export default function RescueDemo() {
                         </div>
                       </div>
 
-                      <h3>What changed in this fictional scenario?</h3>
+                      <RescueReceipt
+                        plan={selected}
+                        outcome={outcome}
+                        baseline={baselineOutcome}
+                      />
                       <p>
                         {outcome.sales} sold · {outcome.unsold} unsold.
                         Baseline: {baselineOutcome.sales} sold ·{" "}
-                        {baselineOutcome.unsold} unsold.
-                      </p>
-                      <p>
-                        Illustrative revenue: RM {outcome.revenue}.
-                        Remaining-stock cost exposure: RM {outcome.unsold * 4}.
-                      </p>
-                      <p>
-                        Contribution after all chicken stock, sides and setup:
-                        RM{" "}
-                        {outcome.revenue -
-                          80 -
-                          outcome.sales * selected.side -
-                          selected.setup}{" "}
-                        (baseline RM {baselineOutcome.contribution}).
+                        {baselineOutcome.unsold} unsold. Remaining-stock cost
+                        exposure: RM {outcome.exposure} (already included in
+                        stock cost).
                       </p>
                       <p>
                         The bundle suggestion belongs to the preset story. Your
