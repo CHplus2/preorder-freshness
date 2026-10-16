@@ -27,3 +27,13 @@ export function decisionSlip({plan,risk,action,reviewed,note,worksheet,signedRev
     worksheet,reviewed,note,signed_review:signedReview,assumptions:plan.decision_support.assumptions,
     definition:'Advisory evidence only. Financial scenarios are assumptions, not realised savings or causal promotion uplift.'},null,2);
 }
+
+export function kitchenReadiness(support) {
+  const menus = support.menus;
+  return {
+    menus: menus.length,
+    forecasted: menus.filter((m) => m.forecast_portions !== null).length,
+    evaluated: menus.filter((m) => m.confidence === "evaluated").length,
+    missingRecipes: menus.filter((m) => !m.recipe_complete).length,
+  };
+}

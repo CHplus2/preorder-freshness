@@ -121,3 +121,31 @@
     grid-template-columns: 1fr;
   }
 }
+.pd .local-menu-tickets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+  margin: 18px 0;
+}
+.pd .local-menu-tickets article {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 18px;
+  background: #fffdf7;
+  border: 1px solid #c8b99e;
+  border-top: 5px solid #6c8b60;
+  border-radius: 18px;
+}
+.pd .local-menu-tickets svg {
+  width: 100px;
+  height: 80px;
+  justify-self: center;
+}
+.pd .local-menu-tickets small {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.pd .local-readiness {
+  border-left: 5px solid #6c8b60;
+}

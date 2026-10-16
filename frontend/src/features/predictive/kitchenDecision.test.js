@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {marketingWorksheet,workflowLinks,decisionSlip} from './kitchenDecision.js';
+import {marketingWorksheet,workflowLinks,decisionSlip,kitchenReadiness} from './kitchenDecision.js';
 import {readReviews,saveReview,saveOutcomeNote} from './kitchenReviewStore.js';
 
 test('workflow links carry real ingredient context and preserve native units',()=>{
@@ -45,4 +45,31 @@ test('decision export preserves provenance, selected action and signed evidence'
     risk:{ingredient_name:'Rice',unit:'g',menus:[]},action:'wait',reviewed:[],note:'Check records',worksheet:null,signedReview:{token:'signature'}});
   const parsed=JSON.parse(text);assert.equal(parsed.source,'LOCAL_KITCHEN');assert.equal(parsed.signed_review.token,'signature');
   assert.equal(parsed.baseline.unit,'g');assert.match(parsed.definition,/not realised/);
+});
+
+test("forecast readiness keeps zero estimates distinct from absent history and does not use upcoming booking count", () => {
+  const support = {
+    menus: [
+      { forecast_portions: 0, confidence: "limited", recipe_complete: true },
+      {
+        forecast_portions: null,
+        confidence: "unavailable",
+        recipe_complete: false,
+      },
+      { forecast_portions: 12, confidence: "evaluated", recipe_complete: true },
+    ],
+  };
+  assert.deepEqual(kitchenReadiness(support), {
+    menus: 3,
+    forecasted: 2,
+    evaluated: 1,
+    missingRecipes: 1,
+  });
+  assert.equal(support.menus[0].forecast_portions, 0);
+  assert.deepEqual(kitchenReadiness({ menus: [] }), {
+    menus: 0,
+    forecasted: 0,
+    evaluated: 0,
+    missingRecipes: 0,
+  });
 });

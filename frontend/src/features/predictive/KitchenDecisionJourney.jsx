@@ -65,7 +65,7 @@ export default function KitchenDecisionJourney({
   const lens = ["waste", "shortage"].includes(params.get("lens"))
     ? params.get("lens")
     : "priority";
-  const risks = support.ingredient_risks.filter((r) => r.signal !== "watch");
+  const risks = support.ingredient_risks;
   const ordered = [...risks].sort((a, b) =>
     lens === "waste"
       ? (b.forecast_waste_cost_myr ?? -1) - (a.forecast_waste_cost_myr ?? -1)
@@ -95,7 +95,7 @@ export default function KitchenDecisionJourney({
     kitchenActions.find(
       (a) =>
         a.id ===
-        (selected?.signal === "review"
+        (["review", "watch"].includes(selected?.signal)
           ? "wait"
           : selected?.signal === "forecast_waste"
             ? "menu"
@@ -147,7 +147,7 @@ export default function KitchenDecisionJourney({
           </div>
         </section>
         <section className="pd-card">
-          <h2>No current action flagged</h2>
+          <h2>No ingredient evidence available for a decision</h2>
           <p>
             No actionable signal is currently returned. Check forecast history,
             recipe coverage and excluded orders above. An empty review board
@@ -618,7 +618,7 @@ export default function KitchenDecisionJourney({
               <h3>
                 {r.shortfall_quantity > 0
                   ? "Cover the confirmed gap before speculative demand"
-                  : r.signal === "review"
+                  : ["review", "watch"].includes(r.signal)
                     ? "Verify the evidence before buying or promoting"
                     : "Review expiring surplus before placing the next purchase"}
               </h3>
@@ -692,56 +692,88 @@ export function MenuEvidence({ support, risk }) {
     (m) => !risk || risk.menus.some((r) => r.product_id === m.product_id),
   );
   return (
-    <div className="pd-table-wrap">
-      <table>
-        <caption>
-          Local menu demand · selected on validation; latest 14 days held out
-          when sufficient history exists
-        </caption>
-        <thead>
-          <tr>
-            <th>Menu</th>
-            <th>Expected portions</th>
-            <th>Additional to bookings</th>
-            <th>Method</th>
-            <th>Test MAE/day</th>
-            <th>Evidence</th>
-          </tr>
-        </thead>
-        <tbody>
-          {menus.map((m) => (
-            <tr key={m.product_id}>
-              <td>{m.product_name}</td>
-              <td>
-                {m.forecast_portions === null
-                  ? "Insufficient history"
-                  : qty(m.forecast_portions)}
-              </td>
-              <td>
-                {m.additional_forecast_portions === null
-                  ? "Not projected"
-                  : qty(m.additional_forecast_portions)}
-              </td>
-              <td>{m.method.replaceAll("_", " ")}</td>
-              <td>
-                {m.evaluation
-                  ? m.evaluation.test[m.method].mae
-                  : "Not evaluated"}
-              </td>
-              <td>
-                {m.history_days} days · {m.confidence}
-                {!m.recipe_complete ? " · recipe missing" : ""}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {!menus.length && (
-        <p>
-          No active mapped menu with eligible sales history. Review recipes and
-          sales status before using forecast quantities.
-        </p>
-      )}
+    <div>
+      <div
+        className="local-menu-tickets"
+        aria-label="Local menu forecast tickets"
+      >
+        {menus.map((m) => (
+          <article key={m.product_id}>
+            <IngredientDrawing name={m.product_name} />
+            <h3>{m.product_name}</h3>
+            <strong>
+              {m.forecast_portions === null
+                ? "History needed"
+                : `${qty(m.forecast_portions)} estimated portions`}
+            </strong>
+            <span>
+              {m.additional_forecast_portions === null
+                ? "Additional demand unavailable"
+                : `${qty(m.additional_forecast_portions)} additional to bookings`}
+            </span>
+            <small>
+              {m.history_days} recorded-history days · {m.confidence}
+            </small>
+            <Link to="/admin/products?review=recipes">
+              {m.recipe_complete ? "Review recipe" : "Recipe needs review"}
+            </Link>
+          </article>
+        ))}
+      </div>
+      <details>
+        <summary>Exact menu forecast evidence</summary>
+        <div className="pd-table-wrap">
+          <table>
+            <caption>
+              Local menu demand · selected on validation; latest 14 days held
+              out when sufficient history exists
+            </caption>
+            <thead>
+              <tr>
+                <th>Menu</th>
+                <th>Expected portions</th>
+                <th>Additional to bookings</th>
+                <th>Method</th>
+                <th>Test MAE/day</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              {menus.map((m) => (
+                <tr key={m.product_id}>
+                  <td>{m.product_name}</td>
+                  <td>
+                    {m.forecast_portions === null
+                      ? "Insufficient history"
+                      : qty(m.forecast_portions)}
+                  </td>
+                  <td>
+                    {m.additional_forecast_portions === null
+                      ? "Not projected"
+                      : qty(m.additional_forecast_portions)}
+                  </td>
+                  <td>{m.method.replaceAll("_", " ")}</td>
+                  <td>
+                    {m.evaluation
+                      ? m.evaluation.test[m.method].mae
+                      : "Not evaluated"}
+                  </td>
+                  <td>
+                    {m.history_days} days · {m.confidence}
+                    {!m.recipe_complete ? " · recipe missing" : ""}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!menus.length && (
+            <p>
+              No active mapped menu with eligible sales history. Review recipes
+              and sales status before using forecast quantities.
+            </p>
+          )}
+        </div>
+      </details>
       <KitchenForecastReplay menus={menus} />
     </div>
   );

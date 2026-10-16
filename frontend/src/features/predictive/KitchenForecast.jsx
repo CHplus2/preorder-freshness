@@ -29,10 +29,10 @@ export default function KitchenForecast({ revision }) {
           <p>Includes unpaid or unfinished preorders. This estimates recorded order volume, not realised sales. Cancelled and refunded orders are excluded.</p></div>}
       </>}
       {data.database_coverage && <p>{Object.entries(data.database_coverage.by_status).map(([status, count]) => `${count} ${status}`).join(' · ')}</p>}
-      {data.recent_orders?.length > 0 && <div className="pd-table-wrap"><table><caption>Latest stored orders · up to 50 · independent of stock-planning eligibility</caption>
+      {data.recent_orders?.length > 0 && <details><summary>Recorded order details</summary><div className="pd-table-wrap"><table><caption>Latest stored orders · up to 50 · independent of stock-planning eligibility</caption>
         <thead><tr><th>Order</th><th>Delivery / estimated date</th><th>Status</th><th>Payment</th><th>Portions</th></tr></thead>
         <tbody>{data.recent_orders.map(order => <tr key={order.order_id}><td>#{order.order_id}</td><td>{order.sales_date}{order.date_basis === 'preorder_date_fallback' ? ' (preorder-date estimate)' : ''}</td><td>{order.status}</td><td>{order.payment_status}</td><td>{order.portions}</td></tr>)}</tbody>
-      </table></div>}
+      </table></div></details>}
       {data.evaluation && <details><summary>Optional model comparison · trained on local sales only</summary>
         <p>Model choice: {data.selected_method.replaceAll('_', ' ')} · {data.next_week_portions} portions. The baseline above remains the starting point.</p>
         <div className="pd-table-wrap"><table><caption>Chronological test · {data.evaluation.test_start}–{data.evaluation.test_end} · portions per week</caption>

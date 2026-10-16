@@ -5,6 +5,7 @@ import { loadLocalDecisionPlan } from "./localApi";
 import KitchenDecisionJourney, { MenuEvidence } from "./KitchenDecisionJourney";
 import RestaurantStations from "./RestaurantStations";
 import KitchenForecast from "./KitchenForecast";
+import KitchenReadiness from "./KitchenReadiness";
 import "./localKitchen.css";
 import PlanningFridge from "./PlanningFridge";
 import { IngredientDrawing } from "./PantryScene";
@@ -153,6 +154,7 @@ export default function LocalKitchen({ view }) {
       )}
       {current.status === "ready" && (
         <>
+          {view === "decisions" && <KitchenReadiness plan={plan} />}
           <div className="pd-context">
             <span>
               Stock planning: {plan.window.start_date}–{plan.window.end_date} ·{" "}
