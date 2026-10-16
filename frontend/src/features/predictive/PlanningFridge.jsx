@@ -116,6 +116,7 @@ export default function PlanningFridge({
   children,
   count,
   initialOpen = true,
+  evidenceLabel = "simulated stock",
 }) {
   const [open, setOpen] = useState(initialOpen);
   const id = useId();
@@ -131,8 +132,8 @@ export default function PlanningFridge({
           </span>
           <h4>Your planning fridge</h4>
           <p>
-            {count} ingredient{count === 1 ? "" : "s"} in this view · simulated
-            stock
+            {count} ingredient{count === 1 ? "" : "s"} in this view ·{" "}
+            {evidenceLabel}
           </p>
         </div>
         <button

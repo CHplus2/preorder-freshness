@@ -1,11 +1,13 @@
 # Predictive API contract — Dormathon 2026
 
-Version: `1` (implemented). Backend branch: `feature/ai-backend`.
+Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
 ## Availability and scope
 
-**All five endpoints below are implemented**. The evaluated CatBoost artifact
+**The five Genpact endpoints, `backtest/`, `local-plan/` and `local-scenario/` are implemented**.
+The local plan reads database orders and stock without using a model; its distinct
+schema is documented below. The evaluated Genpact CatBoost artifact
 achieved 28.23% WAPE versus 34.81% baseline on weeks 136–145. A complete separately
 provisioned bundle and optional ML dependencies are required; Git alone does not
 supply them. See `backend/predictive_ai/README.md` for reset and deployment steps.
@@ -15,8 +17,31 @@ Generated operations currently cover center 13 only; other centers return HTTP
 The forecasting domain is external Genpact **weekly** center/meal demand.
 `meal_id` is never a Dapur Kita `Product.id`. Recipe, stock, costs and supplier
 inputs initially use explicit simulated operational data. No local FYP stock is
-read or modified by this demo. A real-data adapter requires an explicit,
-verified mapping and unit conversion; it is outside this initial contract.
+read or modified by those five Genpact endpoints. The separate local plan uses
+accepted order recipes and raw-material IDs; it does not map Genpact meals onto
+the store's menus.
+
+The separate local preorder readiness audit does not change these endpoints or
+their demand source. No local model is exposed by these endpoints; see
+[local training preparation](LOCAL-PREORDER-TRAINING.md). Both expiry surplus
+and shortage risks are calculated. Explanations include shortfall, illustrative
+replenishment and safety stock; no purchase is executed.
+
+Database order storage is distinct from these prediction sources; see
+[data-source clarification](FRESHCAST-DATA-SOURCES.md). A separate protected
+deployment transfer route `/api/internal/freshcast-bundle/` is not a dashboard
+API and cannot access business records. Its bearer credential is server-only;
+the existing staff authentication rules below remain unchanged.
+
+A separate [local recorded-booking CatBoost experiment](LOCAL-BOOKING-EXPERIMENT.md)
+is trained offline. It predicts aggregate recorded booking volume, not menu
+fulfilment or ingredient use, and did not beat the trailing-average baseline.
+It is not deployed or compatible with this Genpact response schema. Do not
+replace these metrics/source labels with its experimental results.
+
+The separate [public bakery benchmark](PUBLIC-BAKERY-DEMO-FEASIBILITY.md) is also
+offline. No bakery forecast/import endpoint is implemented, and its model is not
+used by either the Genpact routes or `local-plan/`.
 
 ## HTTP rules
 
@@ -27,13 +52,45 @@ conventions. Anonymous/nonstaff requests return HTTP 403 under existing DRF
 session defaults. GET is read-only; POST scenarios are nonpersistent and cannot
 send messages, deduct stock, or create orders.
 
-Integers: IDs and week indices; floating-point numbers: forecasts, kg quantities,
-MYR amounts and percentage metrics. Unknown costs are `null`, never zero.
-All output numbers must be finite. Arrays may be empty only after a successful
-calculation. Weekly expiry is an inclusive bucket, not a calendar date or proof
-of food safety. Prices and operational quantities must not be labeled real.
+For Genpact responses, integers are IDs/week indices; floating-point numbers
+are forecasts, kg quantities, MYR amounts and percentage metrics. The local
+plan uses native material units and calendar dates instead. Unknown costs are
+`null`, never zero. All output numbers must be finite. Arrays may be empty only
+after a successful calculation. Genpact weekly expiry is an inclusive bucket,
+not a calendar date or proof of food safety. Its simulated prices and operational
+quantities must not be labelled real shop observations.
 
-## Endpoints
+## Genpact endpoints
+
+### Labelled held-out replay (implemented)
+
+`GET backtest/?center_id=13&week=136` requires both positive integer parameters;
+only weeks 136–145 from the saved artifact's validation metadata are supported.
+Unknown, repeated, missing or additional parameters return 400. No observations
+for a valid selection return 422 `no_eligible_history`. Missing data/model return
+the existing 503 errors. Staff permission is required; POST returns 405;
+responses use `Cache-Control: no-store`. No business database records are written.
+
+Success fields: `api_version: "1"`, `mode: "historical_backtest"`, `center_id`,
+`week`, `model_status: "ready"`, `training_max_week: 135`,
+`evaluation_protocol: "rolling_one_week_ahead"`, `observations` (row count),
+`actual_orders_total`, `sources: {demand: "GENPACT_HISTORICAL", operational:
+"NOT_USED"}`, `warnings`, `scores`, and `meal_comparisons`.
+`scores` contains `catboost` and `previous_observation`; each has
+`wape_percent` (number or null when actual total is zero) and
+`mae_orders_per_meal` (number). Each comparison has integer `meal_id`, numeric
+`actual_orders`, `predicted_orders` and `baseline_orders`.
+
+This replays the already reported holdout, not newly collected independent data.
+Only earlier quantities enter shifted features. Recorded target-week prices and
+promotion flags are assumed known. The previous-observation baseline may span
+missing weeks. Selected scores are not the pooled whole-holdout scores. No stock
+risks are returned; replay is separate from the week-146 future scenario.
+The existing React dashboard does not call this endpoint. After staff login,
+open the endpoint URL directly for a JSON/DRF demonstration or request it using
+the existing session. Do not pass this schema to `validateForecast`.
+
+### Forecast and metrics endpoints
 
 | Method | Relative path | Inputs | Success body |
 | --- | --- | --- | --- |
@@ -124,6 +181,154 @@ flags for this hypothetical scenario; disclose that prices and other covariates
 are assumed and response is not a causal comparison. Default forecast is
 `promotion_scenario: false`.
 
+## Local kitchen planning endpoint
+
+`GET /api/admin/predictive/local-plan/?horizon_days=7` requires the same existing
+Django staff/session permission. Only `horizon_days` is accepted: an integer
+1–28, default 7. Repeated/unknown parameters and invalid integers return HTTP 400
+`invalid_parameters`. POST returns 405. No center/week/Genpact mapping is involved.
+The response uses `Cache-Control: private, no-store` and reads current database
+rows on each call, without altering them. It does not require model artifacts,
+historical CSVs or optional ML dependencies.
+
+This is **known booking planning, not a model forecast or learned baseline**.
+The five Genpact responses and their frontend validator remain unchanged. Do not
+pass a local response into that validator or label it a live CatBoost forecast.
+See [the frontend handoff](LOCAL-KITCHEN-INTEGRATION.md).
+
+Top-level fields:
+
+| Field | Type / meaning |
+| --- | --- |
+| `api_version` | String `"1"` |
+| `mode` / `model_status` | `"local_plan"` / `"not_used"` |
+| `as_of` / `timezone` | Current local ISO date / Django current timezone name |
+| `window` | `start_date`, `end_date` ISO dates, `horizon_days` integer; inclusive |
+| `sources` | `demand: "CONFIRMED_PAID_PREORDERS"`, `operational: "DATABASE"`, `product_mapping: "ACCEPTED_ORDER_RECIPES"` |
+| `coverage` | Integer `active_orders`, `included_orders`, `excluded_orders`, `positive_batches`, `eligible_batches`, `hypothetical_batches` (0 in the baseline) |
+| `included_orders` | Entries: integer `order_id`, `portions`; ISO `preparation_date`, `use_by_date`; `items`: nullable integer `product_id`, string accepted `product_name`, integer `quantity`; `requirements`: integer `raw_material_id`, numeric `quantity`, native `unit` |
+| `excluded_orders` | Entries: integer `order_id`, string `reason` |
+| `ingredient_risks` | Local material rows below, including inventory-only materials |
+| `batch_allocations` | Integer `order_id`, `batch_id`, `raw_material_id`; numeric `quantity`; `unit`; ISO `needed_by`, `use_by_date` |
+| `batches` | Integer `batch_id`, `raw_material_id`; `unit`; numeric `quantity`, `allocated_quantity`, `remaining_quantity`; ISO `received_date`, `expiry_date`; boolean `eligible`, `hypothetical` (false in baseline); string array `exclusion_reasons` |
+| `shortages` | Integer `order_id`, `raw_material_id`; numeric `quantity`; `unit`; ISO `needed_by` |
+| `recommendations` | Integer `priority` starting at 1, `raw_material_id`; `ingredient_id`, `risk_type`, nullable ISO `urgent_by`, `action`, `explanation` |
+| `warnings` | Array of strings, always display source/coverage caveats |
+
+Orders considered are `pending` or `processing` only. Include paid orders whose
+inventory has not already been deducted, with a nonempty reviewed preparation
+plan (`needs_review` absent/false), valid preparation start/end and delivery.
+The start date must fall in the inclusive window; end may fall after it. Require
+batch expiry on/after the preparation end date, conservatively covering the whole
+preparation period. No delivery/consumption dates are invented from creation dates.
+Require a complete accepted recipe snapshot for every item; do not fall back to
+today's mutable menu recipe. Units convert `g` ↔ `kg`, `ml` ↔ `l` and `unit` ↔ `unit`.
+Mass/volume conversions are rejected. Invalid/nonpositive quantities or a missing
+recipe exclude the entire order, avoiding misleading partial requirements.
+
+Exclusion reasons: `inventory_already_deducted`, `not_paid`,
+`preparation_needs_review`, `missing_schedule`, `invalid_schedule`,
+`overdue_preparation`, `outside_horizon`, `missing_items`,
+`missing_accepted_recipe`, `invalid_recipe_quantity_or_unit`.
+Cancelled/delivered/cooked/shipped orders are outside the active-order query, not
+future demand. `coverage` describes only this query; it is not a total order count.
+Unpaid COD orders are also excluded under this conservative paid-order policy.
+
+Positive stock batches are ineligible if quarantined, already expired, not yet
+received, or expiry precedes receipt. These reasons may overlap. Eligible expiry
+dates are inclusive. Allocate order-by-order by preparation timestamp, then order
+ID; within each material use earliest expiry then batch ID. Allocate a batch at
+most once across requirements. Quantities are in each raw material's recorded
+unit, **not always kg**. No demand prediction or safety stock is added.
+
+Local `ingredient_risks` entries:
+
+- `ingredient_id`: stable `"raw-material-<ID>"` string; integer `raw_material_id`;
+  `ingredient_name`, `unit` strings. These IDs identify database materials.
+- `risk_type`: `expiry_surplus`, `shortage`, `expiry_surplus_and_shortage`, `none`.
+- `confirmed_requirement`: sum of accepted per-portion quantities × included
+  item quantities, converted into the material's unit.
+- `eligible_stock`: currently eligible stock; it may expire before an order's
+  preparation end and therefore need not cover the requirement.
+- `allocated_quantity`: sum of advisory FEFO allocations.
+- `shortfall_quantity`: requirement minus allocated quantity, not merely
+  requirement minus on-hand stock.
+- `expiring_unused_quantity`: unallocated eligible stock dated to expire on or
+  before `window.end_date`; excludes already expired/held/not-received batches.
+- `potential_waste_cost_myr`: sum of expiring unused quantities × each batch's
+  recorded `unit_cost`; null if any contributing cost is missing; zero if no
+  expiry surplus. This is estimated exposure, not observed waste or savings.
+- `estimated_purchase_cost_myr`: shortfall × material `estimated_unit_cost`,
+  or null when absent. A recorded estimate, not a supplier quote or lost revenue.
+- `urgent_by`: earliest shortage preparation date or unused batch expiry date,
+  nullable for no risk; `action`, `explanation` are plain strings.
+
+Risks/recommendations sort by risk before no-risk, earliest urgency date, known
+waste cost before unknown, descending known waste exposure, material ID. Do not
+compare gram and litre quantities as a financial/severity ranking. Shortage
+purchasing spend is not treated as the value of lost sales. No supplier lead times,
+causal promotion effects, financial savings, purchases or stock deductions exist
+in this endpoint. The separate hypothetical purchase endpoint below does not
+execute any purchase or predict additional demand.
+
+The frontend must show excluded-order warnings even when requirements/risks are
+empty. A successful empty calculation is **not proof of zero shop demand**. The
+database may contain fictional demo records; `DATABASE` means storage provenance,
+not verified customer activity. Dates and costs remain owner-maintained inputs;
+their use is not a guarantee of food safety or real-business forecast accuracy.
+
+### Local hypothetical purchase comparison (implemented)
+
+`POST /api/admin/predictive/local-scenario/` uses the existing staff session and
+requires CSRF. GET returns 405. Request JSON:
+
+```json
+{
+  "horizon_days": 7,
+  "raw_material_id": 16,
+  "quantity": "300.000",
+  "unit_cost": "0.020000",
+  "arrival_date": "2026-10-12",
+  "expiry_date": "2026-10-16"
+}
+```
+
+This is a shape example, not a current supplier quote. `horizon_days` defaults
+to 7 (1–28). The other five fields are required. Material must exist; quantity
+is positive with at most three decimal places; unit cost is nonnegative with
+at most six decimal places or null (unknown). Dates are ISO calendar dates;
+arrival must be inside the current inclusive window; expiry must be on/after
+arrival. Unknown fields, invalid values and non-object bodies return 400
+`invalid_parameters`; serializer errors may also include an `errors` object.
+The quantity/cost are always in the selected material's native unit. There is
+no arbitrary unit conversion, promotion uplift, demand multiplier or automatic
+supplier selection. Past receipt dates are not accepted.
+
+Success fields: `api_version: "1"`, `mode: "local_purchase_scenario"`, `purchase`,
+`baseline`, `scenario`, `warnings`. `purchase` echoes the validated inputs plus
+`unit` (decimal fields are strings or null). Both plans use the local-plan schema
+above and are calculated from one shared database snapshot. `scenario.sources`
+changes only `operational` to `DATABASE_WITH_HYPOTHETICAL_PURCHASE`.
+
+The hypothetical batch has `batch_id: -1`, `hypothetical: true`; it may appear
+in allocations. All database batch IDs remain positive. Scenario allocations
+require its arrival on/before order preparation start and expiry on/after
+preparation end. Overbuying can create additional expiry exposure. Baseline
+costs remain recorded estimates; assumed new-batch cost stays unknown if null.
+`positive_batches` counts database batches; `hypothetical_batches` is 1 in the
+scenario; `eligible_batches` includes the hypothetical candidate. Scenario
+`eligible_stock` includes the assumed future purchase and is not current
+on-hand inventory. No order, stock, payment or purchasing row is changed.
+Responses use `Cache-Control: private, no-store`.
+
+The existing React assistant now defaults to `source=local` (also when omitted),
+with `horizon=7` by default. It uses a distinct local validator and native units,
+shows coverage/exclusions, menu snapshots and stock evidence, and calls this
+comparison with CSRF. `source=live` retains the Genpact model demonstration;
+`source=demo` retains explicitly labelled frontend fixtures. Local mode never
+loads Genpact metrics or silently substitutes frontend fixtures. Switching
+sources clears selections; editing purchase inputs clears prior comparisons.
+
 ## Errors and synchronization
 
 Predictive error body:
@@ -141,3 +346,62 @@ CSV contents or tracebacks. Dashboard should render these states explicitly.
 Backend endpoint tests must enforce field names, finite JSON numbers, staff
 permissions, CSRF, invalid input, missing model/data, FEFO and no database writes.
 Update this document in the same commit as endpoint/schema changes. Frontend mocks must be explicitly labeled fixtures.
+
+# Local delivery forecast (implemented 2026-10-16)
+
+`GET /api/admin/predictive/local-forecast/` is staff-only, takes no parameters,
+and returns `Cache-Control: private, no-store`. It does not load Genpact CSVs,
+CatBoost or optional ML packages. Its response is independent of `local-plan/`:
+historical orders do not need accepted ingredient recipes to contribute to sales.
+
+The target is aggregate **portions**, not distinct order count, per completed
+Monday–Sunday week in the Django application timezone. `history` also reports
+distinct orders per week. Only paid, delivered orders are eligible; refunded,
+cancelled, unfinished and invalid/future dates are excluded. The current partial
+week is excluded from training. `forecast_week_start` identifies the full current
+week forecast from the last completed week. `next_week_portions` is the one-step
+forecast after that completed history, not a forecast for seven days from now.
+
+Dates use `delivery_at`, falling back to the existing preorder `created_at` date
+when missing. `estimated_date_orders` reports eligible orders using that fallback.
+These are imputed reporting dates, not recovered delivery facts. No delivery
+promises, preparation schedules, payment states or inventory are changed.
+The sales analytics endpoints use this delivery-date basis too, and recognise
+paid delivered sales rather than treating paid future bookings as realised sales.
+
+Response fields include `source: LOCAL_KITCHEN`, `status`, `eligible_orders`,
+`estimated_date_orders`, `excluded_orders`, `history_weeks`, `history`,
+`selected_method`, `next_week_portions`, `candidate_model_trained`, `model`,
+`evaluation`, and `warnings`. Empty eligible history returns
+`status: insufficient_history` and a null forecast, not zero demand.
+
+Short histories use `moving_average_4_weeks` and `status: baseline_only`.
+At 14 or more completed weeks, reserve the latest ceil(20%) for testing and the
+preceding ceil(20%) for validation; at least eight earlier training weeks are
+required. Compare moving average, last week, and ridge autoregression with fixed
+regularization 10 and intercept/lag1/lag2/prior-four-week-mean features. Choose the
+method by validation MAE only. Fit regression on train+validation for the test;
+all test predictions use only actual earlier observations, so this is a rolling
+one-week evaluation, not an unattended multiweek forecast. Report each method's
+test MAE and WAPE (null when actual test volume is zero). Refit coefficients on
+all completed history for production inference; saved coefficients can be used
+with `myapp.services.kitchen_forecast.predict`.
+
+The model artifact and prepared training records can be exported against the
+configured kitchen database, without raw customer details:
+
+```sh
+python backend/manage.py train_kitchen_forecast --output work/kitchen-forecast.json
+```
+
+Use a new output filename for each run. The JSON contains aggregate history,
+evaluation, fitted coefficients and `prepared_orders` with `preorder_date`,
+`sales_date`, `sales_date_basis`, portions and order ID. Missing delivery dates
+therefore have complete, explicitly marked dates in the training dataset. Files
+are private (0600) and must stay outside Git. No trained-model accuracy on the
+user's kitchen can be claimed until its populated database is available.
+
+Missing calendar weeks are zero **recorded sales**, with recording coverage and
+menu availability unverified. Demo orders remain demo evidence. Aggregate demand
+cannot identify dish-specific ingredients; confirmed bookings still drive stock
+planning, and forecast quantities must not be blindly added to them.
