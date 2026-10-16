@@ -121,6 +121,7 @@ def local_plan(horizon_days=7, hypothetical_purchase=None, snapshot=None):
         row = {'batch_id': batch.pk, 'raw_material_id': batch.raw_material_id,
                'hypothetical': hypothetical,
                'unit': materials[batch.raw_material_id].unit, 'quantity': float(batch.quantity),
+               'unit_cost': float(batch.unit_cost) if batch.unit_cost is not None else None,
                'received_date': str(batch.received_date), 'expiry_date': str(batch.expiry_date),
                'eligible': eligible, 'exclusion_reasons': reasons,
                'allocated_quantity': 0.0, 'remaining_quantity': float(batch.quantity)}

@@ -31,7 +31,11 @@ def local_planning(request):
             or not re.fullmatch(r'[0-9]{1,2}', value) or not 1 <= int(value) <= 28):
         return Response({'code': 'invalid_parameters',
                          'detail': 'Use only horizon_days, an integer from 1 to 28.'}, status=400)
-    response = Response(local_plan(int(value)))
+    plan = local_plan(int(value))
+    if request.resolver_match.url_name == 'local-decisions':
+        from ..services.kitchen_decisions import decision_support
+        plan['decision_support'] = decision_support(plan)
+    response = Response(plan)
     response['Cache-Control'] = 'private, no-store'
     return response
 
@@ -62,6 +66,11 @@ def local_scenario(request):
         return Response({'code': 'invalid_parameters', 'detail': 'Choose an existing material, arrival within the planning window, and expiry on or after arrival.'}, status=400)
     baseline = local_plan(values['horizon_days'], snapshot=snapshot)
     scenario = local_plan(values['horizon_days'], hypothetical_purchase=values, snapshot=snapshot)
+    if request.resolver_match.url_name == 'local-decision-scenario':
+        from ..services.kitchen_decisions import decision_support, demand_snapshot
+        demand = demand_snapshot()
+        baseline['decision_support'] = decision_support(baseline, snapshot=demand)
+        scenario['decision_support'] = decision_support(scenario, snapshot=demand)
     purchase = {key: str(value) if key in ('quantity', 'unit_cost', 'arrival_date', 'expiry_date') and value is not None else value
                 for key, value in values.items()}
     purchase['unit'] = materials[values['raw_material_id']].unit

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { loadLocalPlan, loadLocalScenario, validateLocalPlan, loadLocalForecast, validateLocalForecast } from "./localApi.js";
+import { loadLocalPlan, loadLocalScenario, validateLocalPlan, loadLocalForecast, validateLocalForecast,loadLocalDecisionPlan,validateDecisionPlan } from "./localApi.js";
 
 test('local forecast accepts empty history without loading Genpact endpoints', async () => {
   const data = { api_version: '1', source: 'LOCAL_KITCHEN', status: 'insufficient_history',
@@ -46,6 +46,20 @@ function plan() {
     shortages: [{ order_id: 1, raw_material_id: 5, quantity: 150, unit: "g", needed_by: "2026-10-11" }],
     recommendations: [{ priority: 1, ingredient_id: "raw-material-5", raw_material_id: 5, risk_type: "shortage", urgent_by: "2026-10-11", action: "Review replenishment.", explanation: "Known requirements." }], warnings: ["Known bookings only."] };
 }
+
+test('decision contract joins native-unit stock evidence with local menu forecasts',async()=>{
+  const p=plan();
+  p.decision_support={source:'LOCAL_KITCHEN',assumptions:['No causal uplift'],alert_count:0,review_count:1,menus:[],
+    ingredient_risks:[{...p.ingredient_risks[0],signal:'review',alert_reason:'Verify missing history',
+      forecast_requirement:20,forecast_shortfall:0,forecast_expiring_unused:0,waste_sensitivity_low:0,waste_sensitivity_high:5,
+      forecast_waste_cost_myr:null,menus:[]}]};
+  const requests=[];
+  const result=await loadLocalDecisionPlan(7,{fetchImpl:async url=>{requests.push(url);return {ok:true,json:async()=>p};}});
+  assert.equal(result.ingredient_risks[0].unit,'g');
+  assert.deepEqual(requests,['/api/admin/predictive/local-decisions/?horizon_days=7']);
+  assert.throws(()=>validateDecisionPlan({...p,decision_support:{...p.decision_support,source:'GENPACT'}}));
+  assert.throws(()=>validateDecisionPlan({...p,decision_support:{...p.decision_support,ingredient_risks:[{...p.decision_support.ingredient_risks[0],forecast_requirement:-1}]}}));
+});
 
 test("local contract preserves native units, menu snapshots, exclusions and unknown costs", () => {
   const d = validateLocalPlan(plan());

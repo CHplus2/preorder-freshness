@@ -349,6 +349,33 @@ Update this document in the same commit as endpoint/schema changes. Frontend moc
 
 # Local delivery forecast (implemented 2026-10-16)
 
+## Forecast-to-decision integration
+
+`GET local-decisions/?horizon_days=1..28` returns the existing local-plan envelope
+plus `decision_support` (source LOCAL_KITCHEN): per-menu daily baseline forecasts,
+chronological evaluation, recipe coverage, ingredient projections, sensitivity
+ranges, alert/review counts and assumptions. `POST local-decision-scenario/`
+accepts the existing local-scenario purchase fields and returns enriched baseline
+and hypothetical-purchase plans, both recalculated from stored records. These
+endpoints are staff-only, private/no-store and do not mutate operational records.
+The inherited `model_status: not_used` describes confirmed-order allocation;
+`decision_support.forecast_status` separately reports evaluated_baselines,
+limited_baselines or insufficient_history for the forecasting layer.
+
+`POST local-reviews/` accepts request_id UUID, raw_material_id, horizon_days,
+action (purchasing/menu/marketing/wait), optional note (1000 chars), nullable
+nonnegative action_cost and nullable assumed_avoided_percent (0..100). It returns
+a signed, fresh snapshot and token for browser storage/export, not a server log.
+`POST local-review-outcomes/` accepts only token, verifies its signature/one-year
+age, and returns recorded waste for snapshot batches and calendar-day delivered
+paid portions for mapped menus. Both require staff session/CSRF and perform only
+database reads. Invalid/tampered tokens return 400. Neither sends marketing,
+deducts inventory, reschedules orders or records financial transactions.
+
+See [Showcase local kitchen guide](SHOWCASE-LOCAL-KITCHEN.md) for the complete
+target, evaluation splits, forecast de-duplication, false-alarm policy, browser
+review persistence, worksheet assumptions, limitations and impact protocol.
+
 The local decision assistant and forecast page both display the website-order
 baseline. Stock-planning exclusions do not hide this panel. The response includes
 `database_coverage` (all order counts by status), `recent_orders` (latest 50 order

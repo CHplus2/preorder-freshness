@@ -5,18 +5,18 @@ export default function KitchenForecast({ revision }) {
   const [state, setState] = useState({});
   useEffect(() => {
     const controller = new AbortController();
-    setState({ loading: true });
     loadLocalForecast({ signal: controller.signal }).then(data => {
-      if (!controller.signal.aborted) setState({ data });
-    }).catch(error => { if (!controller.signal.aborted) setState({ error: error.message }); });
+      if (!controller.signal.aborted) setState({ data, revision });
+    }).catch(error => { if (!controller.signal.aborted) setState({ error: error.message, revision }); });
     return () => controller.abort();
   }, [revision]);
-  const data = state.data;
+  const current = state.revision === revision ? state : {loading:true};
+  const data = current.data;
   return <section className="pd-card" aria-label="Kitchen demand forecast">
     <h2>Your website orders & local baseline</h2>
     <p>A four-week moving average uses this website’s database, without Genpact. Sales are grouped by delivery week; missing delivery dates use a marked preorder-date estimate.</p>
-    {state.loading && <p role="status">Evaluating kitchen history…</p>}
-    {state.error && <p role="alert">{state.error}</p>}
+    {current.loading && <p role="status">Evaluating kitchen history…</p>}
+    {current.error && <p role="alert">{current.error}</p>}
     {data && <>
       <p><strong>{data.database_coverage?.total_orders ?? data.eligible_orders} orders loaded from your website</strong> · {data.eligible_orders} paid, delivered historical orders · {data.estimated_date_orders} estimated sales dates</p>
       {data.baseline?.next_week_portions != null ? <>
