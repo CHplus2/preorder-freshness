@@ -140,7 +140,7 @@ export default function RestaurantStations({
     {
       id: "forecast",
       name: "Order counter",
-      label: isLocal ? "Confirmed preorders" : "Demand analytics",
+      label: isLocal ? "Kitchen forecast & preorders" : "Demand analytics",
       detail: available
         ? isLocal ? `${baseline.coverage.included_orders} included orders · accepted recipes` : `${baseline.meal_forecasts.length} external meal forecasts`
         : unavailable,
@@ -177,7 +177,7 @@ export default function RestaurantStations({
       </div>
       <p className="fc-stations-caption">
         Illustrated navigation ·{" "}
-        {isLocal ? "database preorder and stock evidence; no demand model used" : isFixture
+        {isLocal ? "local sales forecasts and confirmed-order stock evidence" : isFixture
           ? "frontend fixtures, no model run"
           : "API demand with simulated stock and costs"}
         . No live restaurant activity is shown.

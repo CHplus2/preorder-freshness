@@ -4,6 +4,7 @@ import { RefreshCw } from "lucide-react";
 import { getCookie } from "../../utils/cookieUtils";
 import { loadLocalPlan, loadLocalScenario } from "./localApi";
 import RestaurantStations from "./RestaurantStations";
+import KitchenForecast from "./KitchenForecast";
 import { estimateTradeoff } from "./decisionMath";
 import "./localKitchen.css";
 
@@ -46,8 +47,8 @@ export default function LocalKitchen({ view }) {
     <header className="pd-header"><div><span className="pd-eyebrow">FRESHCAST · YOUR KITCHEN</span>
       <h1>Less waste. A better kitchen plan.</h1><p>Your confirmed preorders, accepted recipes and dated stock.</p></div>
       <button onClick={() => { setComparison(null); setRetry((n) => n + 1); }}><RefreshCw size={16} /> Refresh kitchen data</button></header>
-    <div className="pd-source live" role="status"><strong>MY KITCHEN · Database planning · No demand model used</strong>
-      <p>This site contains fictional demo transactions. Requirements and risks are calculated from stored orders, recipe commitments and inventory; they are not Genpact predictions.</p></div>
+    <div className="pd-source live" role="status"><strong>MY KITCHEN · Local sales forecasts & confirmed-order planning</strong>
+      <p>Forecasts use kitchen sales history. Stock requirements use confirmed orders and accepted recipes. Database records may include fictional demo transactions.</p></div>
     <div className="pd-controls">
       <label>Data source<select aria-label="Data source" value="local" onChange={(e) => choose("source", e.target.value)}>
         <option value="local">My kitchen · database orders & stock</option><option value="live">Genpact · evaluated model demo</option><option value="demo">Frontend fixtures · no model run</option>
@@ -58,6 +59,7 @@ export default function LocalKitchen({ view }) {
       </select></label>
     </div>
     <RestaurantStations params={params} baseline={plan} status={current.status} isLocal />
+    {view === "forecast" && <KitchenForecast revision={retry} />}
     {current.status === "loading" && <p className="pd-state" role="status">Loading current orders, recipes and stock…</p>}
     {current.status === "error" && <section className="pd-state" role="alert"><h2>Unable to load kitchen data</h2><p>{current.error}</p>
       <button onClick={() => setRetry((n) => n + 1)}>Try again</button></section>}

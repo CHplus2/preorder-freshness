@@ -346,3 +346,62 @@ CSV contents or tracebacks. Dashboard should render these states explicitly.
 Backend endpoint tests must enforce field names, finite JSON numbers, staff
 permissions, CSRF, invalid input, missing model/data, FEFO and no database writes.
 Update this document in the same commit as endpoint/schema changes. Frontend mocks must be explicitly labeled fixtures.
+
+# Local delivery forecast (implemented 2026-10-16)
+
+`GET /api/admin/predictive/local-forecast/` is staff-only, takes no parameters,
+and returns `Cache-Control: private, no-store`. It does not load Genpact CSVs,
+CatBoost or optional ML packages. Its response is independent of `local-plan/`:
+historical orders do not need accepted ingredient recipes to contribute to sales.
+
+The target is aggregate **portions**, not distinct order count, per completed
+Monday–Sunday week in the Django application timezone. `history` also reports
+distinct orders per week. Only paid, delivered orders are eligible; refunded,
+cancelled, unfinished and invalid/future dates are excluded. The current partial
+week is excluded from training. `forecast_week_start` identifies the full current
+week forecast from the last completed week. `next_week_portions` is the one-step
+forecast after that completed history, not a forecast for seven days from now.
+
+Dates use `delivery_at`, falling back to the existing preorder `created_at` date
+when missing. `estimated_date_orders` reports eligible orders using that fallback.
+These are imputed reporting dates, not recovered delivery facts. No delivery
+promises, preparation schedules, payment states or inventory are changed.
+The sales analytics endpoints use this delivery-date basis too, and recognise
+paid delivered sales rather than treating paid future bookings as realised sales.
+
+Response fields include `source: LOCAL_KITCHEN`, `status`, `eligible_orders`,
+`estimated_date_orders`, `excluded_orders`, `history_weeks`, `history`,
+`selected_method`, `next_week_portions`, `candidate_model_trained`, `model`,
+`evaluation`, and `warnings`. Empty eligible history returns
+`status: insufficient_history` and a null forecast, not zero demand.
+
+Short histories use `moving_average_4_weeks` and `status: baseline_only`.
+At 14 or more completed weeks, reserve the latest ceil(20%) for testing and the
+preceding ceil(20%) for validation; at least eight earlier training weeks are
+required. Compare moving average, last week, and ridge autoregression with fixed
+regularization 10 and intercept/lag1/lag2/prior-four-week-mean features. Choose the
+method by validation MAE only. Fit regression on train+validation for the test;
+all test predictions use only actual earlier observations, so this is a rolling
+one-week evaluation, not an unattended multiweek forecast. Report each method's
+test MAE and WAPE (null when actual test volume is zero). Refit coefficients on
+all completed history for production inference; saved coefficients can be used
+with `myapp.services.kitchen_forecast.predict`.
+
+The model artifact and prepared training records can be exported against the
+configured kitchen database, without raw customer details:
+
+```sh
+python backend/manage.py train_kitchen_forecast --output work/kitchen-forecast.json
+```
+
+Use a new output filename for each run. The JSON contains aggregate history,
+evaluation, fitted coefficients and `prepared_orders` with `preorder_date`,
+`sales_date`, `sales_date_basis`, portions and order ID. Missing delivery dates
+therefore have complete, explicitly marked dates in the training dataset. Files
+are private (0600) and must stay outside Git. No trained-model accuracy on the
+user's kitchen can be claimed until its populated database is available.
+
+Missing calendar weeks are zero **recorded sales**, with recording coverage and
+menu availability unverified. Demo orders remain demo evidence. Aggregate demand
+cannot identify dish-specific ingredients; confirmed bookings still drive stock
+planning, and forecast quantities must not be blindly added to them.

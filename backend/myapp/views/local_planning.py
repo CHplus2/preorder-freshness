@@ -13,6 +13,17 @@ from ..services.local_planning import local_plan, planning_snapshot
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
+def local_forecast(request):
+    if request.query_params:
+        return Response({'code': 'invalid_parameters', 'detail': 'This endpoint takes no query parameters.'}, status=400)
+    from ..services.kitchen_forecast import kitchen_forecast
+    response = Response(kitchen_forecast())
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
 def local_planning(request):
     params = request.query_params
     value = params.get('horizon_days', '7')

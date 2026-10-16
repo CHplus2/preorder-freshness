@@ -61,7 +61,7 @@ def product_sales_report(request):
     """
     sales = (
         OrderItem.objects
-        .filter(order__payment_status="paid").exclude(order__status="cancelled")
+        .filter(order__payment_status="paid", order__status="delivered")
         .values("product__id", "product_name")
         .annotate(
             total_quantity=Sum("quantity"),

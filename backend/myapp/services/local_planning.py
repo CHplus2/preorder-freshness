@@ -94,7 +94,7 @@ def local_plan(horizon_days=7, hypothetical_purchase=None, snapshot=None):
             continue
         included.append({'order_id': order.pk, 'preparation_date': str(day), 'use_by_date': str(use_by),
                          'portions': sum(i.quantity for i in items),
-                         'items': [{'product_id': i.product_id, 'product_name': i.product_name,
+                         'items': [{'product_id': i.product_id, 'product_name': i.product_name or f'Menu #{i.product_id}',
                                     'quantity': i.quantity} for i in items],
                          'requirements': [{'raw_material_id': key, 'quantity': float(quantity),
                                            'unit': materials[key].unit} for key, quantity in sorted(needs.items())]})

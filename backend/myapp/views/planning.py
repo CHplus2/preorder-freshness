@@ -2,8 +2,8 @@ from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
 from django.utils import timezone
-from django.db.models import Sum, Prefetch
-from django.db.models.functions import TruncDate
+from django.db.models import Sum, Prefetch, Count, Q
+from django.db.models.functions import TruncDate, Coalesce
 from ..models import ProductIngredient
 from ..serializers import OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
@@ -63,25 +63,30 @@ def sales_summary():
     from ..services.forecast import estimate
     today = timezone.localdate()
     history_start = today-timedelta(days=84)
-    daily_rows = list(OrderItem.objects.filter(order__payment_status='paid', order__created_at__date__gte=history_start,
-        order__created_at__date__lt=today).exclude(order__status='cancelled')
-        .annotate(day=TruncDate('order__created_at')).values('day').annotate(n=Sum('quantity')).order_by('day'))
+    sales_items = OrderItem.objects.filter(order__payment_status='paid', order__status='delivered').annotate(
+        sales_at=Coalesce('order__delivery_at', 'order__created_at'))
+    daily_rows = list(sales_items.filter(sales_at__date__gte=history_start, sales_at__date__lt=today)
+        .annotate(day=TruncDate('sales_at')).values('day').annotate(n=Sum('quantity')).order_by('day'))
     daily_map = {row['day']:row['n'] for row in daily_rows}
     first = daily_rows[0]['day'] if daily_rows else today
     forecast = estimate([daily_map.get(first+timedelta(days=i),0) for i in range((today-first).days)])
-    since = timezone.now() - timedelta(days=28)
-    history = OrderItem.objects.filter(order__payment_status='paid', order__created_at__gte=since).exclude(order__status='cancelled')
+    since = today - timedelta(days=27)
+    history = sales_items.filter(sales_at__date__range=(since, today))
     units = history.aggregate(n=Sum('quantity'))['n'] or 0
-    paid = Order.objects.filter(payment_status='paid', created_at__gte=since).exclude(status='cancelled')
+    paid = Order.objects.filter(payment_status='paid', status='delivered').annotate(
+        sales_at=Coalesce('delivery_at', 'created_at')).filter(sales_at__date__range=(since, today))
     net = paid.aggregate(n=Sum('total_amount'))['n'] or Decimal('0')
-    count = paid.count()
-    by_day = {str(r["day"]): r["n"] for r in paid.annotate(day=TruncDate("created_at")).values("day").annotate(n=Sum("total_amount"))}
+    counts = paid.aggregate(total=Count('pk'), estimated=Count('pk', filter=Q(delivery_at__isnull=True)))
+    count = counts['total']
+    by_day = {str(r["day"]): r["n"] for r in paid.annotate(day=TruncDate("sales_at")).values("day").annotate(n=Sum("total_amount"))}
     trend = []
     for offset in range(6,-1,-1):
         day = timezone.localdate() - timedelta(days=offset)
         value = by_day.get(str(day), Decimal('0'))
         trend.append({'date': str(day), 'sales': str(value)})
     return {'analytics': {'net_food_sales': str(net), 'paid_orders': count,
+        'date_basis': 'Delivery date; missing delivery dates use preorder date as an estimate.',
+        'estimated_date_orders': counts['estimated'],
         'average_order_value': str(round(net/count,2) if count else 0), 'trend': trend},
         'forecast': {**forecast, 'observed_portions_28_days': units}}
 

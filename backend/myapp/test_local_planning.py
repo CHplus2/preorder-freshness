@@ -68,6 +68,13 @@ class LocalPlanningTests(TestCase):
         self.assertEqual(response.data['ingredient_risks'], [])
         self.assertEqual(response['Cache-Control'], 'private, no-store')
 
+    def test_legacy_empty_menu_snapshot_has_a_display_label(self):
+        order = self.order()
+        order.items.update(product_name='')
+        response = self.client.get(URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['included_orders'][0]['items'][0]['product_name'], f'Menu #{self.menu.pk}')
+
     def test_multiday_shortfall_and_expiry_surplus_exclude_ineligible_batches(self):
         order = self.order(preparation_end_at=self.start + timedelta(days=1),
                            delivery_at=self.start + timedelta(days=1, hours=3))

@@ -1,6 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { loadLocalPlan, loadLocalScenario, validateLocalPlan } from "./localApi.js";
+import { loadLocalPlan, loadLocalScenario, validateLocalPlan, loadLocalForecast, validateLocalForecast } from "./localApi.js";
+
+test('local forecast accepts empty history without loading Genpact endpoints', async () => {
+  const data = { api_version: '1', source: 'LOCAL_KITCHEN', status: 'insufficient_history',
+    forecast_week_start: '2026-10-12', eligible_orders: 0, history_weeks: 0, estimated_date_orders: 0,
+    next_week_portions: null, selected_method: null, history: [], warnings: [] };
+  const calls = [];
+  const result = await loadLocalForecast({ fetchImpl: async (url) => {
+    calls.push(url); return { ok: true, json: async () => data };
+  } });
+  assert.equal(result.next_week_portions, null);
+  assert.deepEqual(calls, ['/api/admin/predictive/local-forecast/']);
+  assert.throws(() => validateLocalForecast({ ...data, source: 'GENPACT_HISTORICAL' }));
+  assert.throws(() => validateLocalForecast({ ...data, next_week_portions: -1 }));
+  assert.throws(() => validateLocalForecast({ ...data, status: 'evaluated' }));
+});
 
 function plan() {
   return { api_version: "1", mode: "local_plan", model_status: "not_used", as_of: "2026-10-10", timezone: "Asia/Kuala_Lumpur",

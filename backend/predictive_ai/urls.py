@@ -1,8 +1,9 @@
 from django.urls import path
 from myapp.views import predictive
-from myapp.views.local_planning import local_planning, local_scenario
+from myapp.views.local_planning import local_planning, local_scenario, local_forecast
 
 urlpatterns=[
+    path('local-forecast/', local_forecast),
     path('local-plan/', local_planning),
     path('local-scenario/', local_scenario),
     path('backtest/', predictive.backtest),

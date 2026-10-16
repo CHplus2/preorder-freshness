@@ -57,6 +57,24 @@ export async function loadLocalPlan(horizon = 7, options = {}) {
   return validateLocalPlan(await localRequest(`local-plan/?horizon_days=${horizon}`, options));
 }
 
+export function validateLocalForecast(data) {
+  requireValid(data?.api_version === '1' && data.source === 'LOCAL_KITCHEN' &&
+    ['insufficient_history', 'baseline_only', 'evaluated'].includes(data.status) &&
+    date(data.forecast_week_start) && count(data.eligible_orders) && count(data.history_weeks) &&
+    count(data.estimated_date_orders) && nullable(data.next_week_portions) && strings(data.warnings) &&
+    Array.isArray(data.history) && data.history.every(r => date(r.week_start) && count(r.orders) && number(r.portions)) &&
+    (data.selected_method === null || text(data.selected_method)));
+  if (data.status === 'evaluated') requireValid(data.evaluation && date(data.evaluation.test_start) &&
+    date(data.evaluation.test_end) && ['train_weeks', 'validation_weeks', 'test_weeks'].every(k => integer(data.evaluation[k])) &&
+    data.evaluation.test && ['moving_average_4_weeks', 'last_week', 'ridge_autoregression'].every(m =>
+      number(data.evaluation.test[m]?.mae_portions_per_week) && nullable(data.evaluation.test[m]?.wape_percent)));
+  return data;
+}
+
+export async function loadLocalForecast(options = {}) {
+  return validateLocalForecast(await localRequest('local-forecast/', options));
+}
+
 export async function loadLocalScenario(purchase, options = {}) {
   const d = await localRequest("local-scenario/", { ...options, body: purchase });
   requireValid(d?.api_version === "1" && d.mode === "local_purchase_scenario" && strings(d.warnings) && units.has(d.purchase?.unit));
