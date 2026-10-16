@@ -97,15 +97,25 @@ def kitchen_forecast(*, today=None):
     today = today or timezone.localdate()
     cutoff = monday(today)
     totals, orders_per_week, excluded = Counter(), Counter(), Counter()
+    recorded, recorded_counts, statuses = Counter(), Counter(), Counter()
+    recent_orders = []
     fallback = eligible = 0
     for order, day, basis in dated_orders():
+        portions = sum(i.quantity for i in order.items.all())
+        statuses[order.status] += 1
+        recent_orders.append({'order_id': order.pk, 'sales_date': str(day),
+            'date_basis': basis, 'status': order.status, 'payment_status': order.payment_status,
+            'portions': portions})
+        if (order.status != 'cancelled' and order.payment_status != 'refunded' and portions > 0
+                and timezone.localtime(order.created_at).date() <= day < cutoff):
+            recorded[monday(day)] += portions
+            recorded_counts[monday(day)] += 1
         if order.status != 'delivered' or order.payment_status != 'paid':
             excluded['not_delivered_and_paid'] += 1
             continue
         if day >= cutoff or timezone.localtime(order.created_at).date() > day:
             excluded['incomplete_week_or_invalid_dates'] += 1
             continue
-        portions = sum(i.quantity for i in order.items.all())
         if portions <= 0:
             excluded['empty_order'] += 1
             continue
@@ -122,11 +132,28 @@ def kitchen_forecast(*, today=None):
             day += timedelta(days=7)
     values = [totals[w] for w in weeks]
     result = forecast_history(values, [str(w) for w in weeks])
+    # Always expose a simple local baseline before any candidate model result.
+    baseline = round(predict('moving_average_4_weeks', values), 1) if values else None
+    recorded_weeks = []
+    if recorded:
+        day = min(recorded)
+        while day < cutoff:
+            recorded_weeks.append(day)
+            day += timedelta(days=7)
+    recorded_values = [recorded[w] for w in recorded_weeks]
+    recorded_baseline = round(predict('moving_average_4_weeks', recorded_values), 1) if recorded_values else None
     return {'api_version': '1', 'source': 'LOCAL_KITCHEN', 'as_of': str(today),
             'timezone': timezone.get_current_timezone_name(),
             'target': 'Paid delivered portions per completed Monday–Sunday delivery week',
             'date_basis': 'delivery_at; missing dates use preorder (created_at) date, explicitly estimated',
             'eligible_orders': eligible, 'estimated_date_orders': fallback,
+            'baseline': {'method': 'moving_average_4_weeks', 'next_week_portions': baseline},
+            'recorded_preorders': {'target': 'Recorded non-cancelled preorder portions, including unpaid and unfinished orders; not realised sales',
+                'eligible_orders': sum(recorded_counts.values()), 'history_weeks': len(recorded_weeks),
+                'next_week_portions': recorded_baseline, 'method': 'moving_average_4_weeks',
+                'history': [{'week_start': str(w), 'portions': recorded[w], 'orders': recorded_counts[w]} for w in recorded_weeks]},
+            'database_coverage': {'total_orders': len(recent_orders), 'by_status': dict(statuses)},
+            'recent_orders': sorted(recent_orders, key=lambda r: (r['sales_date'], r['order_id']), reverse=True)[:50],
             'excluded_orders': dict(excluded), 'forecast_week_start': str(cutoff),
             'history': [{'week_start': str(w), 'portions': totals[w], 'orders': orders_per_week[w]} for w in weeks],
             **result,

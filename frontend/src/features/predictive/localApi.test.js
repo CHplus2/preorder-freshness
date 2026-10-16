@@ -17,6 +17,22 @@ test('local forecast accepts empty history without loading Genpact endpoints', a
   assert.throws(() => validateLocalForecast({ ...data, status: 'evaluated' }));
 });
 
+test('unfinished website orders remain visible without being counted as sales', () => {
+  const data = { api_version: '1', source: 'LOCAL_KITCHEN', status: 'insufficient_history',
+    forecast_week_start: '2026-10-12', eligible_orders: 0, history_weeks: 0, estimated_date_orders: 0,
+    next_week_portions: null, selected_method: null, history: [], warnings: [],
+    baseline: { method: 'moving_average_4_weeks', next_week_portions: null },
+    database_coverage: { total_orders: 23, by_status: { pending: 23 } },
+    recorded_preorders: { target: 'Recorded preorders, not sales', eligible_orders: 23, history_weeks: 1,
+      next_week_portions: 46, history: [{ week_start: '2026-10-05', portions: 46, orders: 23 }] },
+    recent_orders: [{ order_id: 1, sales_date: '2026-10-05', date_basis: 'preorder_date_fallback',
+      status: 'pending', payment_status: 'unpaid', portions: 2 }] };
+  assert.equal(validateLocalForecast(data).database_coverage.total_orders, 23);
+  assert.equal(data.eligible_orders, 0);
+  assert.throws(() => validateLocalForecast({ ...data, database_coverage: { total_orders: '23' } }));
+  assert.throws(() => validateLocalForecast({ ...data, recorded_preorders: { ...data.recorded_preorders, history: null } }));
+});
+
 function plan() {
   return { api_version: "1", mode: "local_plan", model_status: "not_used", as_of: "2026-10-10", timezone: "Asia/Kuala_Lumpur",
     sources: { demand: "CONFIRMED_PAID_PREORDERS", operational: "DATABASE", product_mapping: "ACCEPTED_ORDER_RECIPES" },

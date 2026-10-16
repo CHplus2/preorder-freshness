@@ -64,6 +64,16 @@ export function validateLocalForecast(data) {
     count(data.estimated_date_orders) && nullable(data.next_week_portions) && strings(data.warnings) &&
     Array.isArray(data.history) && data.history.every(r => date(r.week_start) && count(r.orders) && number(r.portions)) &&
     (data.selected_method === null || text(data.selected_method)));
+  if (data.baseline !== undefined) requireValid(data.baseline?.method === 'moving_average_4_weeks' && nullable(data.baseline.next_week_portions));
+  if (data.database_coverage !== undefined) requireValid(count(data.database_coverage?.total_orders) &&
+    data.database_coverage.by_status && Object.values(data.database_coverage.by_status).every(count));
+  if (data.recorded_preorders !== undefined) requireValid(text(data.recorded_preorders?.target) &&
+    count(data.recorded_preorders.eligible_orders) && count(data.recorded_preorders.history_weeks) &&
+    nullable(data.recorded_preorders.next_week_portions) && Array.isArray(data.recorded_preorders.history) &&
+    data.recorded_preorders.history.every(r => date(r.week_start) && count(r.orders) && number(r.portions)));
+  if (data.recent_orders !== undefined) requireValid(Array.isArray(data.recent_orders) && data.recent_orders.every(r =>
+    integer(r.order_id) && date(r.sales_date) && text(r.status) && text(r.payment_status) && number(r.portions) &&
+    ['delivery_at', 'preorder_date_fallback'].includes(r.date_basis)));
   if (data.status === 'evaluated') requireValid(data.evaluation && date(data.evaluation.test_start) &&
     date(data.evaluation.test_end) && ['train_weeks', 'validation_weeks', 'test_weeks'].every(k => integer(data.evaluation[k])) &&
     data.evaluation.test && ['moving_average_4_weeks', 'last_week', 'ridge_autoregression'].every(m =>

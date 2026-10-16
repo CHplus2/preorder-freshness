@@ -59,14 +59,16 @@ export default function LocalKitchen({ view }) {
       </select></label>
     </div>
     <RestaurantStations params={params} baseline={plan} status={current.status} isLocal />
-    {view === "forecast" && <KitchenForecast revision={retry} />}
+    {view !== "inventory" && <KitchenForecast revision={retry} />}
     {current.status === "loading" && <p className="pd-state" role="status">Loading current orders, recipes and stock…</p>}
     {current.status === "error" && <section className="pd-state" role="alert"><h2>Unable to load kitchen data</h2><p>{current.error}</p>
       <button onClick={() => setRetry((n) => n + 1)}>Try again</button></section>}
     {current.status === "ready" && <>
-      <div className="pd-context"><span>{plan.window.start_date}–{plan.window.end_date} · {plan.timezone}</span><strong>{plan.coverage.included_orders} included paid orders · {plan.coverage.excluded_orders} excluded</strong></div>
-      {!plan.coverage.included_orders && <section className="pd-card" role="status"><h2>No eligible confirmed orders in this window</h2>
-        <p>This does not mean zero demand. Review payment, accepted recipes and preparation dates in <Link to="/admin/orders">Orders</Link> and <Link to="/admin/planner">Planner</Link>. Inventory-only expiry risks can still appear.</p></section>}
+      <div className="pd-context"><span>Stock planning: {plan.window.start_date}–{plan.window.end_date} · {plan.timezone}</span><strong>{plan.coverage.included_orders} orders ready for stock planning · {plan.coverage.excluded_orders} need review or fall outside this window</strong></div>
+      {!plan.coverage.included_orders && <section className="pd-card" role="status"><h2>No orders ready for stock allocation in this window</h2>
+        <p>Your order history and local baseline are independent of this stock-planning filter. Review the reasons below before changing orders.</p>
+        <ul>{Object.entries(plan.excluded_orders.reduce((counts, order) => ({...counts, [order.reason]: (counts[order.reason] || 0) + 1}), {})).map(([reason, count]) => <li key={reason}>{count} orders: {reason.replaceAll('_', ' ')}</li>)}</ul>
+        <Link to="/admin/orders">Review orders</Link> · <Link to="/admin/planner">Review schedules</Link></section>}
       {view === "forecast" ? <OrderEvidence plan={plan} /> : view === "inventory" ? <StockEvidence plan={plan} /> :
         <LocalJourney key={JSON.stringify([key, plan])} plan={plan} comparison={pair}
           onComparison={(data) => setComparison({ key, data })} onClear={() => setComparison(null)} />}

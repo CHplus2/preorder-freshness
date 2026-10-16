@@ -349,6 +349,20 @@ Update this document in the same commit as endpoint/schema changes. Frontend moc
 
 # Local delivery forecast (implemented 2026-10-16)
 
+The local decision assistant and forecast page both display the website-order
+baseline. Stock-planning exclusions do not hide this panel. The response includes
+`database_coverage` (all order counts by status), `recent_orders` (latest 50 order
+IDs, effective dates with provenance, statuses, payment states and portions; no
+customer details), and `baseline` (four-week sales moving average). The baseline
+is shown first, independently of the optional fitted-model comparison.
+
+`recorded_preorders` separately reports historical non-cancelled, non-refunded
+preorder volume and its four-week moving average. It includes unpaid/unfinished
+orders and is explicitly **not realised sales**. This fallback is visible when
+there is no eligible paid delivered sales history. Both series use completed
+effective-delivery weeks and explicit preorder-date fallbacks. Future/current
+week records remain visible in `recent_orders` but do not enter either baseline.
+
 `GET /api/admin/predictive/local-forecast/` is staff-only, takes no parameters,
 and returns `Cache-Control: private, no-store`. It does not load Genpact CSVs,
 CatBoost or optional ML packages. Its response is independent of `local-plan/`:
