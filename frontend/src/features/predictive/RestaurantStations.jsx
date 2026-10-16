@@ -126,7 +126,7 @@ export default function RestaurantStations({
       name: "Kitchen",
       label: "Decision assistant",
       detail: available
-        ? `${baseline.ingredient_risks.filter((r) => r.risk_type !== "none").length} planning issues to review`
+        ? isLocal && baseline.decision_support ? `${baseline.decision_support.alert_count} planning signals · ${baseline.decision_support.review_count} cases to verify` : `${baseline.ingredient_risks.filter((r) => r.risk_type !== "none").length} planning issues to review`
         : unavailable,
     },
     {
@@ -142,7 +142,7 @@ export default function RestaurantStations({
       name: "Order counter",
       label: isLocal ? "Kitchen forecast & preorders" : "Demand analytics",
       detail: available
-        ? isLocal ? `${baseline.coverage.included_orders} included orders · accepted recipes` : `${baseline.meal_forecasts.length} external meal forecasts`
+        ? isLocal ? `${baseline.decision_support?.menus.filter(m=>m.forecast_portions!==null).length ?? 0} local menu forecasts · ${baseline.coverage.included_orders} stock-ready orders` : `${baseline.meal_forecasts.length} external meal forecasts`
         : unavailable,
     },
   ];

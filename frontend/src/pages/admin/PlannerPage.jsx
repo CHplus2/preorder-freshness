@@ -5,7 +5,8 @@ import PackingList from '../../components/PackingList';
 import ShoppingList from '../../components/ShoppingList';
 import {useEffect,useMemo,useState} from 'react';
 import axios from 'axios';
-import {Link} from 'react-router-dom';
+import {Link,useSearchParams} from 'react-router-dom';
+import FreshCastWorkflowContext from '../../components/FreshCastWorkflowContext';
 import KitchenAvailability from '../../components/KitchenAvailability';
 import PlannerCalendar from '../../components/PlannerCalendar';
 import PlanReview from '../../components/PlanReview';
@@ -15,7 +16,10 @@ const time=d=>new Date(d).toLocaleTimeString('en-MY',{timeZone:'Asia/Kuala_Lumpu
 const full=d=>d?new Date(d).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur'}):'Not scheduled';
 const stamp=d=>new Date(d).toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
 export default function PlannerPage(){
- const [date,setDate]=useState(()=>malaysiaDate(new Date())),[view,setView]=useState('work');
+ const [params]=useSearchParams();
+ const requestedDate=params.get('date');
+ const [date,setDate]=useState(()=>/^\d{4}-\d{2}-\d{2}$/.test(requestedDate||'')&&Number.isFinite(Date.parse(requestedDate))&&new Date(requestedDate).toISOString().slice(0,10)===requestedDate?requestedDate:malaysiaDate(new Date())),
+   [view,setView]=useState(()=>['work','orders','awaiting','shopping','packing'].includes(params.get('view'))?params.get('view'):'work');
  const [plan,setPlan]=useState(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[retry,setRetry]=useState(0);
  const [loadedAt,setLoadedAt]=useState(null);
  useEffect(()=>{const c=new AbortController();axios.get('/api/admin/planning/',{signal:c.signal}).then(r=>{if(!c.signal.aborted){setPlan(r.data);setLoadedAt(new Date().toISOString());}}).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))}).finally(()=>{if(!c.signal.aborted)setLoading(false)});return()=>c.abort();},[retry]);
@@ -33,7 +37,7 @@ export default function PlannerPage(){
   for(const o of plan?.orders || []){const tasks=o.preparation_plan?.tasks || [];for(const [i,t] of tasks.entries())lines.push('BEGIN:VEVENT',`UID:${o.id}-task-${i}@dapur-kita`,`DTSTAMP:${stamp(new Date())}`,`DTSTART:${stamp(t.start)}`,`DTEND:${stamp(t.end)}`,`SUMMARY:Prepare order ${o.id} step ${i+1}`,'BEGIN:VALARM','TRIGGER:-PT15M','ACTION:DISPLAY',`DESCRIPTION:Prepare order ${o.id} step ${i+1}`,'END:VALARM','END:VEVENT');if(o.delivery_at)lines.push('BEGIN:VEVENT',`UID:${o.id}-delivery@dapur-kita`,`DTSTAMP:${stamp(new Date())}`,`DTSTART:${stamp(o.delivery_at)}`,`DTEND:${stamp(new Date(Date.parse(o.delivery_at)+30*60000))}`,`SUMMARY:Deliver order ${o.id}`,'END:VEVENT')}
   lines.push('END:VCALENDAR');const url=URL.createObjectURL(new Blob([lines.join('\r\n')],{type:'text/calendar'}));const a=document.createElement('a');a.href=url;a.download='kitchen-plan.ics';a.click();URL.revokeObjectURL(url);
  };
- return <main className="dk-workspace planner-page"><div className="admin-page-heading"><div><span className="admin-kicker">KITCHEN OPERATIONS</span><h1>Planner</h1><p>See what needs doing, when, and which equipment it uses.</p></div><button disabled={loading} onClick={refresh}>{loading?'Refreshing...':'Refresh'}</button></div>
+ return <main className="dk-workspace planner-page"><FreshCastWorkflowContext/><div className="admin-page-heading"><div><span className="admin-kicker">KITCHEN OPERATIONS</span><h1>Planner</h1><p>See what needs doing, when, and which equipment it uses.</p></div><button disabled={loading} onClick={refresh}>{loading?'Refreshing...':'Refresh'}</button></div>
  <PlannerSnapshot loading={loading} error={error} hasPlan={!!plan} loadedAt={loadedAt} onRetry={refresh}>
  {(plan?.setup_menus?.length>0 || day.unscheduled.length>0) && <section className="planner-setup" aria-label="Planning setup">
    {plan?.setup_menus?.length>0 && <div className="planner-setup-row"><div><h2>{plan.setup_menus.length} {plan.setup_menus.length===1?'menu needs':'menus need'} preparation steps</h2><p>Add cooking steps and timings for a detailed schedule.</p></div><Link className="text-link" to="/admin/products?review=preparation">Edit preparation steps</Link></div>}

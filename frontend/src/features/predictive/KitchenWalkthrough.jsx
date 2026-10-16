@@ -11,7 +11,7 @@ const spots = [
   [54, 49],
   [76, 73],
 ];
-function KitchenRoom() {
+export function KitchenRoom() {
   return (
     <svg viewBox="0 0 1000 650" className="fc-room-art" aria-hidden="true">
       <defs>

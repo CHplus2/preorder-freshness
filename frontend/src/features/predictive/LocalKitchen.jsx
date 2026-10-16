@@ -1,40 +1,22 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
-import { getCookie } from "../../utils/cookieUtils";
-import { loadLocalPlan, loadLocalScenario } from "./localApi";
+import { loadLocalDecisionPlan } from "./localApi";
+import KitchenDecisionJourney, { MenuEvidence } from "./KitchenDecisionJourney";
 import RestaurantStations from "./RestaurantStations";
 import KitchenForecast from "./KitchenForecast";
+import "./localKitchen.css";
 import PlanningFridge from "./PlanningFridge";
 import { IngredientDrawing } from "./PantryScene";
-import KitchenWalkthrough from "./KitchenWalkthrough";
-import StockNeedInspection from "./StockNeedInspection";
-import DecisionRehearsal from "./DecisionRehearsal";
-import { estimateTradeoff } from "./decisionMath";
-import "./localKitchen.css";
 
 const qty = (v) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 3 }).format(v);
-const money = (v) =>
-  v === null
-    ? "Unknown cost"
-    : new Intl.NumberFormat("en-MY", {
-        style: "currency",
-        currency: "MYR",
-      }).format(v);
 const issues = {
   expiry_surplus: "Potential ingredient waste",
   shortage: "Confirmed-order shortage",
   expiry_surplus_and_shortage: "Waste and shortage exposure",
   none: "No reported issue",
 };
-const steps = [
-  "Spot the problem",
-  "Understand why",
-  "Explore actions",
-  "Compare tradeoffs",
-  "Review recommendation",
-];
 
 export default function LocalKitchen({ view }) {
   const [params, setParams] = useSearchParams();
@@ -43,12 +25,13 @@ export default function LocalKitchen({ view }) {
   const [state, setState] = useState({});
   const [comparison, setComparison] = useState(null);
   const key = JSON.stringify([horizon, view, retry]);
+  const validHorizon = /^(?:[1-9]|1[0-9]|2[0-8])$/.test(horizon);
   useEffect(() => {
     const controller = new AbortController();
-    if (!/^(?:[1-9]|1[0-9]|2[0-8])$/.test(horizon)) {
+    if (!validHorizon) {
       return () => controller.abort();
     }
-    loadLocalPlan(Number(horizon), { signal: controller.signal })
+    loadLocalDecisionPlan(Number(horizon), { signal: controller.signal })
       .then((data) => {
         if (!controller.signal.aborted)
           setState({ key, status: "ready", data });
@@ -58,8 +41,8 @@ export default function LocalKitchen({ view }) {
           setState({ key, status: "error", error: error.message });
       });
     return () => controller.abort();
-  }, [horizon, view, retry, key]);
-  const current = !/^(?:[1-9]|1[0-9]|2[0-8])$/.test(horizon)
+  }, [horizon, view, retry, key, validHorizon]);
+  const current = !validHorizon
     ? { status: "error", error: "Choose a planning window from 1 to 28 days." }
     : state.key === key
       ? state
@@ -146,7 +129,16 @@ export default function LocalKitchen({ view }) {
         status={current.status}
         isLocal
       />
-      {view === "forecast" && <KitchenForecast revision={retry} />}
+      {view === "forecast" ? (
+        <KitchenForecast revision={retry} />
+      ) : (
+        view !== "inventory" && (
+          <details className="pd-card">
+            <summary>Local sales history & baseline evidence</summary>
+            <KitchenForecast revision={retry} />
+          </details>
+        )
+      )}
       {current.status === "loading" && (
         <p className="pd-state" role="status">
           Loading current orders, recipes and stock…
@@ -163,31 +155,51 @@ export default function LocalKitchen({ view }) {
         <>
           <div className="pd-context">
             <span>
-              {plan.window.start_date}–{plan.window.end_date} · {plan.timezone}
+              Stock planning: {plan.window.start_date}–{plan.window.end_date} ·{" "}
+              {plan.timezone}
             </span>
             <strong>
-              {plan.coverage.included_orders} included paid orders ·{" "}
-              {plan.coverage.excluded_orders} excluded
+              {plan.coverage.included_orders} orders ready for stock planning ·{" "}
+              {plan.coverage.excluded_orders} need review or fall outside this
+              window
             </strong>
           </div>
           {!plan.coverage.included_orders && (
-            <section className="pd-card" role="status">
-              <h2>No eligible confirmed orders in this window</h2>
+            <details className="pd-card">
+              <summary>
+                No confirmed orders ready for stock allocation · review coverage
+              </summary>
               <p>
-                This does not mean zero demand. Review payment, accepted recipes
-                and preparation dates in <Link to="/admin/orders">Orders</Link>{" "}
-                and <Link to="/admin/planner">Planner</Link>. Inventory-only
-                expiry risks can still appear.
+                Your order history and local baseline are independent of this
+                stock-planning filter. Review the reasons below before changing
+                orders.
               </p>
-            </section>
+              <ul>
+                {Object.entries(
+                  plan.excluded_orders.reduce(
+                    (counts, order) => ({
+                      ...counts,
+                      [order.reason]: (counts[order.reason] || 0) + 1,
+                    }),
+                    {},
+                  ),
+                ).map(([reason, count]) => (
+                  <li key={reason}>
+                    {count} orders: {reason.replaceAll("_", " ")}
+                  </li>
+                ))}
+              </ul>
+              <Link to="/admin/orders">Review orders</Link> ·{" "}
+              <Link to="/admin/planner">Review schedules</Link>
+            </details>
           )}
           {view === "forecast" ? (
             <OrderEvidence plan={plan} />
           ) : view === "inventory" ? (
             <StockEvidence plan={plan} />
           ) : (
-            <LocalJourney
-              key={JSON.stringify([key, plan])}
+            <KitchenDecisionJourney
+              key={key}
               plan={plan}
               comparison={pair}
               onComparison={(data) => setComparison({ key, data })}
@@ -234,6 +246,7 @@ function OrderEvidence({ plan }) {
         Known bookings, not predictions of future customers. Names and recipes
         are accepted order snapshots.
       </p>
+      <MenuEvidence support={plan.decision_support} />
       {plan.included_orders.map((o) => (
         <article key={o.order_id} className="local-order">
           <h3>
@@ -308,9 +321,10 @@ function RiskTable({ plan }) {
 
 function StockEvidence({ plan }) {
   const [inspected, setInspected] = useState("");
-  const risk =
-    plan.ingredient_risks.find((r) => r.ingredient_id === inspected) ||
-    plan.ingredient_risks[0];
+  const selected =
+    plan.decision_support.ingredient_risks.find(
+      (r) => r.ingredient_id === inspected,
+    ) || plan.decision_support.ingredient_risks[0];
   const names = new Map(
     plan.ingredient_risks.map((r) => [r.raw_material_id, r.ingredient_name]),
   );
@@ -319,78 +333,111 @@ function StockEvidence({ plan }) {
       <section className="pd-card">
         <h2>Your kitchen planning fridge</h2>
         <p>
-          Recorded database stock and confirmed-order requirements. Quantities
-          retain each ingredient’s native unit; this is not a Genpact forecast.
+          Recorded stock, confirmed bookings and additional forecast demand
+          retain their distinct meanings and native units.
         </p>
         <div className="local-fridge-inspection">
           <PlanningFridge
-            count={plan.ingredient_risks.length}
+            count={plan.decision_support.ingredient_risks.length}
             evidenceLabel="database ingredient records"
           >
             <div className="local-fridge-packages">
-              {plan.ingredient_risks.map((item) => (
+              {plan.decision_support.ingredient_risks.map((r) => (
                 <button
-                  key={item.ingredient_id}
-                  aria-pressed={risk?.ingredient_id === item.ingredient_id}
-                  onClick={() => setInspected(item.ingredient_id)}
-                  aria-label={`Inspect kitchen ingredient ${item.ingredient_name}`}
+                  key={r.ingredient_id}
+                  aria-label={`Inspect kitchen ingredient ${r.ingredient_name}`}
+                  aria-pressed={selected?.ingredient_id === r.ingredient_id}
+                  onClick={() => setInspected(r.ingredient_id)}
                 >
-                  <IngredientDrawing name={item.ingredient_name} />
-                  <strong>{item.ingredient_name}</strong>
+                  <IngredientDrawing name={r.ingredient_name} />
+                  <strong>{r.ingredient_name}</strong>
                   <span>
-                    {qty(item.expiring_unused_quantity)} {item.unit} potentially
-                    expiring unused
+                    {qty(r.forecast_expiring_unused)} {r.unit} projected unused
                   </span>
                 </button>
               ))}
             </div>
           </PlanningFridge>
           <aside aria-label="Selected kitchen ingredient">
-            {risk ? (
+            {selected ? (
               <>
-                <h3>{risk.ingredient_name}</h3>
-                <p>{risk.explanation}</p>
+                <h3>{selected.ingredient_name}</h3>
+                <p>{selected.alert_reason}</p>
                 <dl>
                   {[
-                    ["Confirmed need", risk.confirmed_requirement],
-                    ["Eligible stock", risk.eligible_stock],
-                    ["Expiring unused", risk.expiring_unused_quantity],
-                    ["Shortfall", risk.shortfall_quantity],
+                    ["Extra forecast need", selected.forecast_requirement],
+                    [
+                      "Projected unused at expiry",
+                      selected.forecast_expiring_unused,
+                    ],
+                    ["Confirmed shortfall", selected.shortfall_quantity],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <dt>{label}</dt>
                       <dd>
-                        {qty(value)} {risk.unit}
+                        {qty(value)} {selected.unit}
                       </dd>
                     </div>
                   ))}
                 </dl>
                 <p>
-                  Potential waste exposure:{" "}
-                  {money(risk.potential_waste_cost_myr)}. Urgent by:{" "}
-                  {risk.urgent_by || "Not reported"}.
-                </p>
-                <p>{risk.action}</p>
-                <p className="pd-note">
-                  Leftover after known bookings is exposure, not proof it will
-                  be wasted. Unbooked future demand is not allocated by this
-                  endpoint.
+                  {selected.signal.replaceAll("_", " ")} · sensitivity{" "}
+                  {qty(selected.waste_sensitivity_low)}–
+                  {qty(selected.waste_sensitivity_high)} {selected.unit}
                 </p>
               </>
             ) : (
               <p>
-                No ingredient records returned. Check order coverage and
-                data-source warnings.
+                No ingredient evidence returned. Check coverage, recipes and
+                recorded stock.
               </p>
             )}
           </aside>
         </div>
       </section>
       <details className="pd-card">
-        <summary>Exact ingredient risk table</summary>
+        <summary>Exact forecast and ingredient risk evidence</summary>
         <section>
           <h2>Database stock & ingredient risks</h2>
-          <p>Advisory FEFO allocation; no stock is deducted.</p>
+          <p>
+            Advisory FEFO allocation; no stock is deducted. Forecast demand
+            beyond booked portions is projected through the recorded expiry
+            dates.
+          </p>
+          <div className="pd-table-wrap">
+            <table>
+              <caption>
+                Forecast-linked stock evidence · native ingredient units
+              </caption>
+              <thead>
+                <tr>
+                  <th>Ingredient</th>
+                  <th>Extra forecast need</th>
+                  <th>Projected unused at expiry</th>
+                  <th>Sensitivity range</th>
+                  <th>Signal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {plan.decision_support.ingredient_risks.map((r) => (
+                  <tr key={r.ingredient_id}>
+                    <td>{r.ingredient_name}</td>
+                    <td>
+                      {qty(r.forecast_requirement)} {r.unit}
+                    </td>
+                    <td>
+                      {qty(r.forecast_expiring_unused)} {r.unit}
+                    </td>
+                    <td>
+                      {qty(r.waste_sensitivity_low)}–
+                      {qty(r.waste_sensitivity_high)} {r.unit}
+                    </td>
+                    <td>{r.signal.replaceAll("_", " ")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <RiskTable plan={plan} />
         </section>
       </details>
@@ -434,592 +481,6 @@ function StockEvidence({ plan }) {
             </table>
           </div>
         </section>
-      </details>
-    </>
-  );
-}
-
-function LocalJourney({ plan, comparison, onComparison, onClear }) {
-  const [params, setParams] = useSearchParams();
-  const risks = plan.ingredient_risks.filter((r) => r.risk_type !== "none");
-  const selected =
-    risks.find((r) => r.ingredient_id === params.get("ingredient")) || risks[0];
-  const stepValue = Number(params.get("step") || 0);
-  const step =
-    Number.isInteger(stepValue) && stepValue >= 0 && stepValue <= 4
-      ? stepValue
-      : 0;
-  const heading = useRef(null);
-  const previousStep = useRef(null);
-  useEffect(() => {
-    heading.current?.focus({ preventScroll: true });
-    if (previousStep.current !== null || step > 0)
-      heading.current?.scrollIntoView({ block: "start", behavior: "auto" });
-    previousStep.current = step;
-  }, [step, selected?.ingredient_id]);
-  function choose(name, value) {
-    const next = new URLSearchParams(params);
-    next.set(name, String(value));
-    if (name === "ingredient") {
-      next.delete("step");
-      onClear();
-    }
-    setParams(next, { replace: true });
-  }
-  const navigation = (
-    <ol className="fc-steps" aria-label="Decision journey">
-      {steps.map((label, index) => (
-        <li key={label}>
-          <button
-            disabled={!selected}
-            onClick={() => choose("step", index)}
-            aria-current={step === index ? "step" : undefined}
-          >
-            <span>{index + 1}</span>
-            {label}
-          </button>
-        </li>
-      ))}
-    </ol>
-  );
-  if (!selected)
-    return (
-      <section className="fc-assistant">
-        {navigation}
-        <section className="pd-card" role="status">
-          <h2>No shortage or expiry surplus found for included orders</h2>
-          <p>
-            No decision is selected. Review coverage and excluded orders; this
-            does not establish zero demand.
-          </p>
-          <Link to="/admin/orders">Review orders</Link> ·{" "}
-          <Link to="/admin/inventory">Review inventory</Link>
-        </section>
-      </section>
-    );
-  const r = selected;
-  return (
-    <section className="fc-assistant">
-      <div className="pantry-scene">
-        <div className="pantry-counter">
-          <span className="pantry-kicker">YOUR KITCHEN, YOUR RECORDS</span>
-          <h2>Which ingredient needs your attention?</h2>
-          <KitchenWalkthrough
-            key={r.ingredient_id}
-            risks={risks}
-            selected={r.ingredient_id}
-            local
-            renderIngredient={(name) => <IngredientDrawing name={name} />}
-            onSelect={(id) => {
-              choose("ingredient", id);
-              requestAnimationFrame(() => {
-                heading.current?.focus({ preventScroll: true });
-                heading.current?.scrollIntoView({
-                  block: "start",
-                  behavior: "auto",
-                });
-              });
-            }}
-          />
-        </div>
-      </div>
-      <details className="pantry-list-view">
-        <summary>List view & priority rules</summary>
-        <div
-          className="local-risk-board"
-          aria-label="Kitchen ingredient priorities"
-        >
-          {risks.map((risk, index) => (
-            <button
-              key={risk.ingredient_id}
-              aria-pressed={r.ingredient_id === risk.ingredient_id}
-              onClick={() => choose("ingredient", risk.ingredient_id)}
-            >
-              <span className="pd-eyebrow">
-                PRIORITY {index + 1} · {risk.urgent_by}
-              </span>
-              <strong>{risk.ingredient_name}</strong>
-              <span>{issues[risk.risk_type]}</span>
-            </button>
-          ))}
-        </div>
-        <label>
-          Ingredient problem
-          <select
-            aria-label="Ingredient problem"
-            value={r.ingredient_id}
-            onChange={(e) => choose("ingredient", e.target.value)}
-          >
-            {risks.map((risk) => (
-              <option key={risk.ingredient_id} value={risk.ingredient_id}>
-                {risk.ingredient_name} · {issues[risk.risk_type]}
-              </option>
-            ))}
-          </select>
-        </label>
-      </details>
-      {navigation}
-      <section className="pd-card fc-problem" aria-live="polite">
-        <span className="pd-eyebrow">
-          STEP {step + 1} OF 5 · DATABASE KITCHEN PLAN
-        </span>
-        <h2 ref={heading} tabIndex={-1}>
-          {step === 0
-            ? `${issues[r.risk_type]}: ${r.ingredient_name}`
-            : steps[step]}
-        </h2>
-        {step === 0 && (
-          <>
-            <div className="fc-facts">
-              <div>
-                <span>Expiring unused</span>
-                <strong>
-                  {qty(r.expiring_unused_quantity)} {r.unit}
-                </strong>
-              </div>
-              <div>
-                <span>Confirmed-order shortfall</span>
-                <strong>
-                  {qty(r.shortfall_quantity)} {r.unit}
-                </strong>
-              </div>
-              <div>
-                <span>Potential waste exposure</span>
-                <strong>{money(r.potential_waste_cost_myr)}</strong>
-              </div>
-            </div>
-            <p>
-              Urgent by {r.urgent_by}. These are calculated planning risks for
-              stored demo records, not observed waste or ML demand predictions.
-            </p>
-          </>
-        )}
-        {step === 1 && (
-          <>
-            <p className="fc-explanation">{r.explanation}</p>
-            <StockNeedInspection risk={r} local />
-            <div className="fc-facts">
-              <div>
-                <span>Accepted recipe requirement</span>
-                <strong>
-                  {qty(r.confirmed_requirement)} {r.unit}
-                </strong>
-              </div>
-              <div>
-                <span>Eligible stock</span>
-                <strong>
-                  {qty(r.eligible_stock)} {r.unit}
-                </strong>
-              </div>
-              <div>
-                <span>Allocated through preparation end</span>
-                <strong>
-                  {qty(r.allocated_quantity)} {r.unit}
-                </strong>
-              </div>
-            </div>
-            <ul>
-              {plan.included_orders
-                .filter((o) =>
-                  o.requirements.some(
-                    (q) => q.raw_material_id === r.raw_material_id,
-                  ),
-                )
-                .map((o) => (
-                  <li key={o.order_id}>
-                    Order #{o.order_id}:{" "}
-                    {o.items
-                      .map((i) => `${i.product_name} × ${i.quantity}`)
-                      .join(", ")}{" "}
-                    · usable through {o.use_by_date}
-                  </li>
-                ))}
-            </ul>
-            <p>
-              Expired, quarantined, not-received and too-early-expiring batches
-              cannot cover these dated needs. Earlier-expiring eligible stock is
-              allocated first.
-            </p>
-          </>
-        )}
-        {step === 2 && (
-          <>
-            <h3>{r.action}</h3>
-            <fieldset className="fc-actions">
-              <legend>Possible actions</legend>
-              {[
-                [
-                  "purchasing",
-                  "Adjust purchasing",
-                  r.action,
-                  "/admin/inventory",
-                  "Review inventory",
-                ],
-                [
-                  "menu",
-                  "Review preparation and menu priorities",
-                  "Use accepted recipe evidence and check other ingredients before prioritizing a dish.",
-                  "/admin/products",
-                  "Review kitchen menus",
-                ],
-                [
-                  "schedule",
-                  "Review order and preparation timing",
-                  "Check expiry, preparation capacity and accepted commitments before changing a schedule.",
-                  "/admin/planner",
-                  "Open kitchen planner",
-                ],
-              ].map(([id, title, detail, path, label]) => (
-                <label
-                  key={id}
-                  className={
-                    (params.get("action") || "purchasing") === id
-                      ? "selected"
-                      : ""
-                  }
-                >
-                  <input
-                    type="radio"
-                    name="local-decision-action"
-                    checked={(params.get("action") || "purchasing") === id}
-                    onChange={() => choose("action", id)}
-                  />
-                  <span>
-                    <strong>{title}</strong>
-                    <span>{detail}</span>
-                    <Link to={path}>{label}</Link>
-                  </span>
-                </label>
-              ))}
-            </fieldset>
-            <p>
-              {r.shortfall_quantity > 0
-                ? `Review buying ${qty(r.shortfall_quantity)} ${r.unit} to cover the dated shortfall. Estimated ingredient spend: ${money(r.estimated_purchase_cost_myr)}; verify supplier price and arrival.`
-                : "Review safe uses for leftovers and avoid unnecessary additional buying."}
-            </p>
-            <p>
-              Rescheduling can affect freshness and capacity. Review accepted
-              commitments in the planner rather than silently changing an order.
-            </p>
-            <Link to="/admin/planner">Open kitchen planner</Link> ·{" "}
-            <Link to="/admin/inventory">Inspect recorded batches</Link>
-            <p>
-              Select Continue to compare a hypothetical purchase or a waste-cost
-              worksheet. No action is executed.
-            </p>
-          </>
-        )}
-        {step === 3 && (
-          <LocalComparison
-            key={r.ingredient_id}
-            plan={plan}
-            risk={r}
-            comparison={comparison}
-            onComparison={onComparison}
-            onClear={onClear}
-          />
-        )}
-        {step === 4 && (
-          <>
-            <div className="fc-recommendation">
-              <span className="pd-eyebrow">
-                DATABASE REQUIREMENTS · ADVISORY GUIDANCE
-              </span>
-              <h3>{r.action}</h3>
-              <p>{r.explanation}</p>
-            </div>
-            <p>
-              Check the included orders, batch handling, supplier price, arrival
-              and expiry before acting. A comparison does not place a purchase
-              or deduct stock.
-            </p>
-            <Link to="/admin/orders">Review affected orders</Link> ·{" "}
-            <Link to="/admin/inventory">Review inventory</Link>
-          </>
-        )}
-        <div className="fc-journey-controls">
-          <button
-            disabled={step === 0}
-            onClick={() => choose("step", step - 1)}
-          >
-            Back
-          </button>
-          <span>{steps[step]}</span>
-          {step < 4 && (
-            <button
-              className="admin-primary"
-              onClick={() => choose("step", step + 1)}
-            >
-              Continue
-            </button>
-          )}
-        </div>
-      </section>
-    </section>
-  );
-}
-
-function LocalComparison({ plan, risk, comparison, onComparison, onClear }) {
-  const [quantity, setQuantity] = useState(
-    String(risk.shortfall_quantity || ""),
-  );
-  const [unitCost, setUnitCost] = useState("");
-  const [arrival, setArrival] = useState(plan.window.start_date);
-  const [expiry, setExpiry] = useState("");
-  const [cost, setCost] = useState("");
-  const [percent, setPercent] = useState("");
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
-  const controller = useRef(null);
-  useEffect(() => () => controller.current?.abort(), []);
-  const scenarioRisk =
-    comparison?.purchase.raw_material_id === risk.raw_material_id
-      ? comparison.scenario.ingredient_risks.find(
-          (r) => r.raw_material_id === risk.raw_material_id,
-        )
-      : null;
-  const estimate = estimateTradeoff(
-    risk.potential_waste_cost_myr,
-    cost,
-    percent,
-  );
-  function edit(setter, value) {
-    controller.current?.abort();
-    setStatus("");
-    setError("");
-    onClear();
-    setter(value);
-  }
-  async function calculate(event) {
-    event.preventDefault();
-    controller.current?.abort();
-    const pending = new AbortController();
-    controller.current = pending;
-    setStatus("loading");
-    setError("");
-    onClear();
-    try {
-      const result = await loadLocalScenario(
-        {
-          horizon_days: plan.window.horizon_days,
-          raw_material_id: risk.raw_material_id,
-          quantity,
-          unit_cost: unitCost === "" ? null : unitCost,
-          arrival_date: arrival,
-          expiry_date: expiry,
-        },
-        { csrfToken: getCookie("csrftoken"), signal: pending.signal },
-      );
-      if (!pending.signal.aborted) {
-        setStatus("ready");
-        onComparison(result);
-      }
-    } catch (e) {
-      if (!pending.signal.aborted) {
-        setStatus("error");
-        setError(e.message);
-      }
-    }
-  }
-  return (
-    <>
-      <h3>Hypothetical purchase · {risk.ingredient_name}</h3>
-      <p>
-        Recalculates FEFO against a fresh database snapshot. Arrival must be by
-        preparation start and expiry must cover preparation end. Supplier
-        availability and safe handling are assumptions.
-      </p>
-      <form onSubmit={calculate} className="local-purchase-form">
-        <label>
-          Purchase quantity ({risk.unit})
-          <input
-            aria-label="Purchase quantity"
-            required
-            type="number"
-            min="0.001"
-            step="0.001"
-            value={quantity}
-            onChange={(e) => edit(setQuantity, e.target.value)}
-          />
-        </label>
-        <label>
-          Assumed cost per {risk.unit} (MYR)
-          <input
-            aria-label="Purchase unit cost"
-            type="number"
-            min="0"
-            step="0.000001"
-            value={unitCost}
-            placeholder="Unknown if blank"
-            onChange={(e) => edit(setUnitCost, e.target.value)}
-          />
-        </label>
-        <label>
-          Assumed arrival date
-          <input
-            aria-label="Purchase arrival date"
-            type="date"
-            required
-            min={plan.window.start_date}
-            max={plan.window.end_date}
-            value={arrival}
-            onChange={(e) => edit(setArrival, e.target.value)}
-          />
-        </label>
-        <label>
-          Assumed expiry date
-          <input
-            aria-label="Purchase expiry date"
-            type="date"
-            required
-            min={arrival}
-            value={expiry}
-            onChange={(e) => edit(setExpiry, e.target.value)}
-          />
-        </label>
-        <button disabled={status === "loading"}>
-          {status === "loading"
-            ? "Calculating comparison…"
-            : "Compare purchase"}
-        </button>
-      </form>
-      {error && <p role="alert">{error}</p>}
-      {scenarioRisk && (
-        <section
-          className="local-outcome-cards"
-          aria-label="Kitchen outcome comparison"
-        >
-          {[
-            ["Shortfall", "shortfall_quantity"],
-            ["Expiring unused", "expiring_unused_quantity"],
-          ].map(([label, field]) => {
-            const before = comparison.baseline.ingredient_risks.find(
-              (item) => item.raw_material_id === risk.raw_material_id,
-            )[field];
-            const after = scenarioRisk[field];
-            const max = Math.max(before, after, 1);
-            return (
-              <article key={field}>
-                <h3>{label}</h3>
-                <p>
-                  Baseline:{" "}
-                  <strong>
-                    {qty(before)} {risk.unit}
-                  </strong>
-                </p>
-                <div className="local-outcome-bar" aria-hidden="true">
-                  <i style={{ width: `${(before / max) * 100}%` }} />
-                </div>
-                <p>
-                  With assumed purchase:{" "}
-                  <strong>
-                    {qty(after)} {risk.unit}
-                  </strong>
-                </p>
-                <div className="local-outcome-bar scenario" aria-hidden="true">
-                  <i style={{ width: `${(after / max) * 100}%` }} />
-                </div>
-                <p>
-                  {after > before ? "+" : ""}
-                  {qty(after - before)} {risk.unit} difference
-                </p>
-              </article>
-            );
-          })}
-          <p>
-            No purchase or stock change has been executed. Lower shortage can
-            come with more expiry exposure.
-          </p>
-        </section>
-      )}
-      {scenarioRisk && (
-        <details>
-          <summary>Exact purchase comparison evidence</summary>
-          <div className="pd-table-wrap">
-            <table>
-              <caption>
-                Same confirmed orders · hypothetical purchase · no stock changes
-              </caption>
-              <thead>
-                <tr>
-                  <th>Measure</th>
-                  <th>Current database</th>
-                  <th>With assumed purchase</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  ["Shortfall", "shortfall_quantity"],
-                  ["Expiring unused", "expiring_unused_quantity"],
-                ].map(([label, field]) => (
-                  <tr key={field}>
-                    <td>{label}</td>
-                    <td>
-                      {qty(
-                        comparison.baseline.ingredient_risks.find(
-                          (r) => r.raw_material_id === risk.raw_material_id,
-                        )[field],
-                      )}{" "}
-                      {risk.unit}
-                    </td>
-                    <td>
-                      {qty(scenarioRisk[field])} {risk.unit}
-                    </td>
-                  </tr>
-                ))}
-                <tr>
-                  <td>Potential waste exposure</td>
-                  <td>{money(risk.potential_waste_cost_myr)}</td>
-                  <td>{money(scenarioRisk.potential_waste_cost_myr)}</td>
-                </tr>
-              </tbody>
-            </table>
-            <p role="status">{scenarioRisk.action}</p>
-          </div>
-        </details>
-      )}
-      <details className="fc-worksheet">
-        <summary>
-          Optional waste-cost worksheet · hypothetical assumptions
-        </summary>
-        <p>
-          These assumptions estimate avoided waste exposure only. They do not
-          predict promotion uplift, revenue, shortage recovery or realized
-          savings.
-        </p>
-        <div className="fc-assumption-inputs">
-          <label>
-            Assumed total action cost (MYR)
-            <input
-              aria-label="Assumed total action cost (MYR)"
-              type="number"
-              min="0"
-              value={cost}
-              onChange={(e) => setCost(e.target.value)}
-            />
-          </label>
-          <label>
-            Assumed waste avoided (%)
-            <input
-              aria-label="Assumed waste avoided (%)"
-              type="number"
-              min="0"
-              max="100"
-              value={percent}
-              onChange={(e) => setPercent(e.target.value)}
-            />
-          </label>
-        </div>
-        {estimate ? (
-          <DecisionRehearsal
-            baselineCost={risk.potential_waste_cost_myr}
-            estimate={estimate}
-            percent={percent}
-            onPercent={setPercent}
-          />
-        ) : (
-          <p>Enter assumptions; missing costs remain unknown.</p>
-        )}
       </details>
     </>
   );

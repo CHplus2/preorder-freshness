@@ -9,6 +9,8 @@ import ExpiryFields from "../../components/ExpiryFields";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { getCookie } from "../../utils/cookieUtils";
+import {useSearchParams} from 'react-router-dom';
+import FreshCastWorkflowContext from '../../components/FreshCastWorkflowContext';
 
 
 const API_URL = "/api/admin";
@@ -35,13 +37,14 @@ const emptyInventoryItem = {
 };
 
 export default function AdminInventoryPage() {
+  const [params]=useSearchParams();
   const [today,setToday]=useState(()=>malaysiaDate(new Date()));
   useEffect(()=>{const timer=setInterval(()=>setToday(malaysiaDate(new Date())),60000);return()=>clearInterval(timer)},[]);
   const [rawMaterials, setRawMaterials] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRawMaterial, setSelectedRawMaterial] = useState("");
+  const [selectedRawMaterial, setSelectedRawMaterial] = useState(()=>/^\d+$/.test(params.get('material')||'')?params.get('material'):"");
   const [freshnessFilter, setFreshnessFilter] = useState("");
 
   const [newRawMaterial, setNewRawMaterial] = useState(null);
@@ -348,13 +351,13 @@ export default function AdminInventoryPage() {
   };
 
   if (initialLoading) return <PageLoading label="Loading inventory..." />;
-  if (initialError) return <div className="admin-inventory-container">
+  if (initialError) return <div className="admin-inventory-container"><FreshCastWorkflowContext/>
     <h1>Inventory</h1><p role="alert">{initialError}</p>
     <button type="button" onClick={() => {setInitialLoading(true);setInitialError("");setRetry(n => n + 1)}}>Try again</button>
   </div>;
 
   return (
-    <div className="admin-inventory-container">
+    <div className="admin-inventory-container"><FreshCastWorkflowContext/>
 
       <div className="admin-header">
         <div>

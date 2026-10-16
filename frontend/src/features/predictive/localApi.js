@@ -162,6 +162,110 @@ export async function loadLocalPlan(horizon = 7, options = {}) {
   );
 }
 
+export function validateDecisionPlan(data, options = {}) {
+  validateLocalPlan(data, options);
+  const d = data.decision_support;
+  requireValid(
+    d?.source === "LOCAL_KITCHEN" &&
+      strings(d.assumptions) &&
+      count(d.alert_count) &&
+      count(d.review_count) &&
+      Array.isArray(d.menus) &&
+      d.menus.every(
+        (m) =>
+          integer(m.product_id) &&
+          text(m.product_name) &&
+          ["mean_28", "mean_7", "same_weekday"].includes(m.method) &&
+          count(m.history_days) &&
+          nullable(m.forecast_portions) &&
+          nullable(m.variable_cost_myr) &&
+          nullable(m.additional_forecast_portions) &&
+          typeof m.recipe_complete === "boolean" &&
+          (m.evaluation === null ||
+            (integer(m.evaluation?.train_days) &&
+              integer(m.evaluation?.validation_days) &&
+              integer(m.evaluation?.test_days) &&
+              m.evaluation.test &&
+              ["mean_28", "mean_7", "same_weekday"].every(
+                (k) =>
+                  number(m.evaluation.test[k]?.mae) &&
+                  nullable(m.evaluation.test[k]?.wape_percent) &&
+                  (m.evaluation.test[k].daily_actual === undefined ||
+                    (Array.isArray(m.evaluation.test[k].daily_actual) &&
+                      m.evaluation.test[k].daily_actual.every(number) &&
+                      Array.isArray(m.evaluation.test[k].daily_predictions) &&
+                      m.evaluation.test[k].daily_predictions.every(number) &&
+                      m.evaluation.test[k].daily_actual.length ===
+                        m.evaluation.test[k].daily_predictions.length)),
+              ))) &&
+          number(m.price_myr) &&
+          ["evaluated", "limited", "unavailable"].includes(m.confidence) &&
+          Array.isArray(m.history),
+      ) &&
+      Array.isArray(d.ingredient_risks) &&
+      d.ingredient_risks.every(
+        (r) =>
+          integer(r.raw_material_id) &&
+          data.ingredient_risks.some(
+            (original) =>
+              original.ingredient_id === r.ingredient_id &&
+              original.unit === r.unit &&
+              original.raw_material_id === r.raw_material_id,
+          ) &&
+          ["confirmed_shortage", "forecast_waste", "review", "watch"].includes(
+            r.signal,
+          ) &&
+          text(r.alert_reason) &&
+          [
+            "forecast_requirement",
+            "forecast_shortfall",
+            "forecast_expiring_unused",
+            "waste_sensitivity_low",
+            "waste_sensitivity_high",
+          ].every((k) => number(r[k])) &&
+          nullable(r.forecast_waste_cost_myr) &&
+          Array.isArray(r.menus) &&
+          r.menus.every(
+            (m) =>
+              integer(m.product_id) &&
+              text(m.product_name) &&
+              number(m.quantity_per_portion),
+          ),
+      ),
+  );
+  requireValid(
+    d.ingredient_risks.length === data.ingredient_risks.length &&
+      new Set(d.ingredient_risks.map((r) => r.raw_material_id)).size ===
+        d.ingredient_risks.length,
+  );
+  return data;
+}
+
+export async function loadLocalDecisionPlan(horizon = 7, options = {}) {
+  requireValid(integer(horizon) && horizon <= 28);
+  return validateDecisionPlan(
+    await localRequest(`local-decisions/?horizon_days=${horizon}`, options),
+  );
+}
+
+export async function loadLocalDecisionScenario(purchase, options = {}) {
+  const data = await localRequest("local-decision-scenario/", {
+    ...options,
+    body: purchase,
+  });
+  requireValid(
+    data?.mode === "local_purchase_scenario" && units.has(data.purchase?.unit),
+  );
+  validateDecisionPlan(data.baseline);
+  validateDecisionPlan(data.scenario, { scenario: true });
+  requireValid(
+    data.baseline.window.start_date === data.scenario.window.start_date &&
+      data.baseline.window.end_date === data.scenario.window.end_date &&
+      data.baseline.window.horizon_days === data.scenario.window.horizon_days,
+  );
+  return data;
+}
+
 export function validateLocalForecast(data) {
   requireValid(
     data?.api_version === "1" &&
@@ -181,6 +285,41 @@ export function validateLocalForecast(data) {
       ) &&
       (data.selected_method === null || text(data.selected_method)),
   );
+  if (data.baseline !== undefined)
+    requireValid(
+      data.baseline?.method === "moving_average_4_weeks" &&
+        nullable(data.baseline.next_week_portions),
+    );
+  if (data.database_coverage !== undefined)
+    requireValid(
+      count(data.database_coverage?.total_orders) &&
+        data.database_coverage.by_status &&
+        Object.values(data.database_coverage.by_status).every(count),
+    );
+  if (data.recorded_preorders !== undefined)
+    requireValid(
+      text(data.recorded_preorders?.target) &&
+        count(data.recorded_preorders.eligible_orders) &&
+        count(data.recorded_preorders.history_weeks) &&
+        nullable(data.recorded_preorders.next_week_portions) &&
+        Array.isArray(data.recorded_preorders.history) &&
+        data.recorded_preorders.history.every(
+          (r) => date(r.week_start) && count(r.orders) && number(r.portions),
+        ),
+    );
+  if (data.recent_orders !== undefined)
+    requireValid(
+      Array.isArray(data.recent_orders) &&
+        data.recent_orders.every(
+          (r) =>
+            integer(r.order_id) &&
+            date(r.sales_date) &&
+            text(r.status) &&
+            text(r.payment_status) &&
+            number(r.portions) &&
+            ["delivery_at", "preorder_date_fallback"].includes(r.date_basis),
+        ),
+    );
   requireValid(
     data.history_weeks === data.history.length &&
       data.estimated_date_orders <= data.eligible_orders,

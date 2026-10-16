@@ -6,6 +6,8 @@ import {
   validateLocalPlan,
   loadLocalForecast,
   validateLocalForecast,
+  loadLocalDecisionPlan,
+  validateDecisionPlan,
 } from "./localApi.js";
 
 test("local forecast accepts empty history without loading Genpact endpoints", async () => {
@@ -38,6 +40,55 @@ test("local forecast accepts empty history without loading Genpact endpoints", a
     validateLocalForecast({ ...data, next_week_portions: -1 }),
   );
   assert.throws(() => validateLocalForecast({ ...data, status: "evaluated" }));
+});
+
+test("unfinished website orders remain visible without being counted as sales", () => {
+  const data = {
+    api_version: "1",
+    source: "LOCAL_KITCHEN",
+    status: "insufficient_history",
+    forecast_week_start: "2026-10-12",
+    eligible_orders: 0,
+    history_weeks: 0,
+    estimated_date_orders: 0,
+    next_week_portions: null,
+    selected_method: null,
+    history: [],
+    warnings: [],
+    baseline: { method: "moving_average_4_weeks", next_week_portions: null },
+    database_coverage: { total_orders: 23, by_status: { pending: 23 } },
+    recorded_preorders: {
+      target: "Recorded preorders, not sales",
+      eligible_orders: 23,
+      history_weeks: 1,
+      next_week_portions: 46,
+      history: [{ week_start: "2026-10-05", portions: 46, orders: 23 }],
+    },
+    recent_orders: [
+      {
+        order_id: 1,
+        sales_date: "2026-10-05",
+        date_basis: "preorder_date_fallback",
+        status: "pending",
+        payment_status: "unpaid",
+        portions: 2,
+      },
+    ],
+  };
+  assert.equal(validateLocalForecast(data).database_coverage.total_orders, 23);
+  assert.equal(data.eligible_orders, 0);
+  assert.throws(() =>
+    validateLocalForecast({
+      ...data,
+      database_coverage: { total_orders: "23" },
+    }),
+  );
+  assert.throws(() =>
+    validateLocalForecast({
+      ...data,
+      recorded_preorders: { ...data.recorded_preorders, history: null },
+    }),
+  );
 });
 
 function plan() {
@@ -144,6 +195,62 @@ function plan() {
     warnings: ["Known bookings only."],
   };
 }
+
+test("decision contract joins native-unit stock evidence with local menu forecasts", async () => {
+  const p = plan();
+  p.decision_support = {
+    source: "LOCAL_KITCHEN",
+    assumptions: ["No causal uplift"],
+    alert_count: 0,
+    review_count: 1,
+    menus: [],
+    ingredient_risks: [
+      {
+        ...p.ingredient_risks[0],
+        signal: "review",
+        alert_reason: "Verify missing history",
+        forecast_requirement: 20,
+        forecast_shortfall: 0,
+        forecast_expiring_unused: 0,
+        waste_sensitivity_low: 0,
+        waste_sensitivity_high: 5,
+        forecast_waste_cost_myr: null,
+        menus: [],
+      },
+    ],
+  };
+  const requests = [];
+  const result = await loadLocalDecisionPlan(7, {
+    fetchImpl: async (url) => {
+      requests.push(url);
+      return { ok: true, json: async () => p };
+    },
+  });
+  assert.equal(result.ingredient_risks[0].unit, "g");
+  assert.deepEqual(requests, [
+    "/api/admin/predictive/local-decisions/?horizon_days=7",
+  ]);
+  assert.throws(() =>
+    validateDecisionPlan({
+      ...p,
+      decision_support: { ...p.decision_support, source: "GENPACT" },
+    }),
+  );
+  assert.throws(() =>
+    validateDecisionPlan({
+      ...p,
+      decision_support: {
+        ...p.decision_support,
+        ingredient_risks: [
+          {
+            ...p.decision_support.ingredient_risks[0],
+            forecast_requirement: -1,
+          },
+        ],
+      },
+    }),
+  );
+});
 
 test("local contract preserves native units, menu snapshots, exclusions and unknown costs", () => {
   const d = validateLocalPlan(plan());

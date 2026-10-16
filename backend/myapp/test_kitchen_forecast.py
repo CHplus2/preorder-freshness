@@ -80,6 +80,31 @@ class KitchenForecastTests(TestCase):
         self.assertEqual(Decimal(data['analytics']['net_food_sales']), 90)
         self.assertEqual(data['forecast']['observed_portions_28_days'], 9)
 
+    def test_all_23_unfinished_orders_visible_without_fabricating_sales(self):
+        for i in range(23):
+            self.order(created=self.now-timedelta(days=40), delivery=None, status='pending',
+                       payment='unpaid', quantity=2)
+        report = kitchen_forecast(today=self.today)
+        self.assertEqual(report['database_coverage']['total_orders'], 23)
+        self.assertEqual(report['database_coverage']['by_status'], {'pending': 23})
+        self.assertEqual(len(report['recent_orders']), 23)
+        self.assertEqual(report['eligible_orders'], 0)
+        self.assertIsNone(report['baseline']['next_week_portions'])
+        self.assertEqual(report['recorded_preorders']['eligible_orders'], 23)
+        self.assertIsNotNone(report['recorded_preorders']['next_week_portions'])
+        self.assertEqual(sum(r['portions'] for r in report['recorded_preorders']['history']), 46)
+        self.assertEqual(report['recent_orders'][0]['date_basis'], 'preorder_date_fallback')
+        self.assertFalse(report['candidate_model_trained'])
+
+    def test_baseline_is_independent_of_model_selection_and_cancelled_history(self):
+        self.order(created=self.now-timedelta(days=40), delivery=self.now-timedelta(days=15), quantity=8)
+        self.order(created=self.now-timedelta(days=40), delivery=None, status='cancelled', quantity=500)
+        with patch('myapp.services.kitchen_forecast.forecast_history', return_value={'next_week_portions': 999}):
+            report = kitchen_forecast(today=self.today)
+        self.assertNotEqual(report['baseline']['next_week_portions'], 999)
+        self.assertEqual(report['recorded_preorders']['eligible_orders'], 1)
+        self.assertEqual(report['database_coverage']['total_orders'], 2)
+
     def test_staff_endpoint_empty_history_and_independence_from_ml_bundle(self):
         url = '/api/admin/predictive/local-forecast/'
         client = APIClient()
