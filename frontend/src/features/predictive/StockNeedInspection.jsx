@@ -1,31 +1,38 @@
 import { useId, useState } from "react";
+import { ingredientPresentation } from "./ingredientPresentation";
 const qty = (value) =>
-  new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(value);
-export default function StockNeedInspection({ risk }) {
+  new Intl.NumberFormat("en-MY", { maximumFractionDigits: 3 }).format(value);
+export default function StockNeedInspection({ risk, local = false }) {
   const [selected, setSelected] = useState("stock");
   const insightId = useId();
-  const max = Math.max(1, risk.available_kg, risk.forecast_demand_kg);
+  const view = ingredientPresentation(risk, local);
+  const max = Math.max(1, view.stock, view.need);
   const items = [
     {
       id: "stock",
       label: "Eligible stock",
-      value: risk.available_kg,
-      explanation:
-        "Simulated stock included by the backend’s eligibility rules.",
+      value: view.stock,
+      explanation: local
+        ? "Recorded stock included by dated backend eligibility rules; held and excluded batches cannot cover these bookings."
+        : "Simulated stock included by the backend’s eligibility rules.",
     },
     {
       id: "need",
-      label: "Forecast need",
-      value: risk.forecast_demand_kg,
-      explanation: "Estimated need from forecast orders and simulated recipes.",
+      label: view.needLabel,
+      value: view.need,
+      explanation: local
+        ? "Requirements from included confirmed paid orders and their accepted recipe snapshots. This is not additional predicted demand."
+        : "Estimated need from forecast orders and simulated recipes.",
     },
   ];
   return (
     <figure
       className="fc-stock-need"
-      aria-label={`Stock versus need for ${risk.ingredient_id}`}
+      aria-label={`Stock versus need for ${view.name}`}
     >
-      <figcaption>Stock versus forecast need</figcaption>
+      <figcaption>
+        Stock versus {local ? "confirmed" : "forecast"} need
+      </figcaption>
       <div className="fc-stock-need-jars">
         {items.map(({ id, label, value }) => (
           <button
@@ -69,7 +76,9 @@ export default function StockNeedInspection({ risk }) {
               />
               <rect x="9" y="9" width="82" height="14" rx="5" fill="#446c55" />
             </svg>
-            <strong>{qty(value)} kg</strong>
+            <strong>
+              {qty(value)} {view.unit}
+            </strong>
             <span>{label}</span>
           </button>
         ))}
@@ -80,10 +89,12 @@ export default function StockNeedInspection({ risk }) {
       <details>
         <summary>How to read this illustration</summary>
         <p className="pd-note">
-          Illustrated amounts share a kilogram scale. Containers are decorative.
-          Waste and shortage use the backend’s separate results below. These
-          amounts are not confirmed demand, verified local recipes or a food
-          safety assessment.
+          Illustrated amounts share a {view.unit} scale. Containers are
+          decorative. Waste and shortage use the backend’s separate results
+          below.{" "}
+          {local
+            ? "Need comes from included paid bookings and accepted recipe snapshots, not a forecast of extra customers. Recorded inputs do not establish food safety."
+            : "These amounts are not confirmed demand, verified local recipes or a food safety assessment."}
         </p>
       </details>
     </figure>

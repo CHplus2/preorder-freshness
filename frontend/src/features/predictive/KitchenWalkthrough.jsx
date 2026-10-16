@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, useSearchParams } from "react-router-dom";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { problemSummary } from "./problemSummary";
+import { ingredientPresentation } from "./ingredientPresentation";
 import StockNeedInspection from "./StockNeedInspection";
 const spots = [
   [22, 34],
@@ -122,6 +122,7 @@ export default function KitchenWalkthrough({
   selected,
   onSelect,
   renderIngredient,
+  local = false,
 }) {
   const [params] = useSearchParams();
   const [inspected, setInspected] = useState(selected);
@@ -140,6 +141,7 @@ export default function KitchenWalkthrough({
     (currentPage + 1) * spots.length,
   );
   const risk = visible.find((r) => r.ingredient_id === inspected) || visible[0];
+  const info = risk ? ingredientPresentation(risk, local) : null;
   return (
     <section className="fc-walkthrough" aria-label="Kitchen hotspot explorer">
       <div className="fc-room">
@@ -149,32 +151,35 @@ export default function KitchenWalkthrough({
         </div>
         <div className="fc-room-stage">
           <KitchenRoom />
-          {visible.map((r, i) => (
-            <button
-              key={r.ingredient_id}
-              type="button"
-              className={`fc-hotspot ${r.shortfall_kg > 0 ? "gap" : "waste"}`}
-              style={{ left: `${spots[i][0]}%`, top: `${spots[i][1]}%` }}
-              aria-label={`Inspect marker ${currentPage * spots.length + i + 1}: ${r.ingredient_id}`}
-              aria-pressed={risk?.ingredient_id === r.ingredient_id}
-              onClick={() => setInspected(r.ingredient_id)}
-            >
-              <span>{currentPage * spots.length + i + 1}</span>
-              <span className="fc-hotspot-ingredient" aria-hidden="true">
-                {renderIngredient?.(r.ingredient_id)}
-              </span>
-              <span className="fc-hotspot-label">
-                {r.ingredient_id}
-                <small>
-                  {r.expiring_unused_kg > 0 && r.shortfall_kg > 0
-                    ? "Waste + shortage"
-                    : r.shortfall_kg > 0
-                      ? "Shortage risk"
-                      : "Waste risk"}
-                </small>
-              </span>
-            </button>
-          ))}
+          {visible.map((r, i) => {
+            const v = ingredientPresentation(r, local);
+            return (
+              <button
+                key={r.ingredient_id}
+                type="button"
+                className={`fc-hotspot ${v.shortage > 0 ? "gap" : "waste"}`}
+                style={{ left: `${spots[i][0]}%`, top: `${spots[i][1]}%` }}
+                aria-label={`Inspect marker ${currentPage * spots.length + i + 1}: ${v.name}`}
+                aria-pressed={risk?.ingredient_id === r.ingredient_id}
+                onClick={() => setInspected(r.ingredient_id)}
+              >
+                <span>{currentPage * spots.length + i + 1}</span>
+                <span className="fc-hotspot-ingredient" aria-hidden="true">
+                  {renderIngredient?.(v.name)}
+                </span>
+                <span className="fc-hotspot-label">
+                  {v.name}
+                  <small>
+                    {v.waste > 0 && v.shortage > 0
+                      ? "Waste + shortage"
+                      : v.shortage > 0
+                        ? "Shortage risk"
+                        : "Waste risk"}
+                  </small>
+                </span>
+              </button>
+            );
+          })}
           {[
             {
               id: "inventory",
@@ -218,35 +223,41 @@ export default function KitchenWalkthrough({
         <span className="pantry-kicker">INGREDIENT INSPECTION</span>
         {risk && (
           <div className="fc-inspector-package" aria-hidden="true">
-            {renderIngredient?.(risk.ingredient_id)}
+            {renderIngredient?.(info.name)}
           </div>
         )}
         <div aria-live="polite">
-          <h3>{risk?.ingredient_id || "No issues reported"}</h3>
+          <h3>{info?.name || "No issues reported"}</h3>
           <p>
             {risk
-              ? problemSummary(risk)
+              ? info.summary
               : "The calculation returned no ingredient risks."}
           </p>
-          {risk && <StockNeedInspection key={risk.ingredient_id} risk={risk} />}
+          {risk && (
+            <StockNeedInspection
+              key={risk.ingredient_id}
+              risk={risk}
+              local={local}
+            />
+          )}
           {risk && (
             <dl className="fc-inspector-quantities">
               <div>
                 <dt>May expire unused</dt>
                 <dd>
                   {new Intl.NumberFormat("en-MY", {
-                    maximumFractionDigits: 2,
-                  }).format(risk.expiring_unused_kg)}{" "}
-                  kg
+                    maximumFractionDigits: 3,
+                  }).format(info.waste)}{" "}
+                  {info.unit}
                 </dd>
               </div>
               <div>
                 <dt>Expected shortfall</dt>
                 <dd>
                   {new Intl.NumberFormat("en-MY", {
-                    maximumFractionDigits: 2,
-                  }).format(risk.shortfall_kg)}{" "}
-                  kg
+                    maximumFractionDigits: 3,
+                  }).format(info.shortage)}{" "}
+                  {info.unit}
                 </dd>
               </div>
             </dl>
@@ -272,8 +283,9 @@ export default function KitchenWalkthrough({
           </button>
         )}
         <p className="pd-note">
-          Stock and costs are simulated. This scene does not show actual storage
-          locations.
+          {local
+            ? "Database ingredient records and confirmed booking requirements. The scene does not show verified storage locations or additional predicted demand."
+            : "Stock and costs are simulated. This scene does not show actual storage locations."}
         </p>
         {pages > 1 && (
           <div className="fc-room-pages">
