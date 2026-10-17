@@ -23,6 +23,16 @@ export function costMaterials(data) {
  for(const row of rows)requireValid(id(row.id) && typeof row.name==='string' && typeof row.unit==='string' && (row.estimated_unit_cost===null || nonnegative(row.estimated_unit_cost)));
  return rows;
 }
+export function costCatalogue(data) {
+ const rows=responseList(data);
+ for(const row of rows)requireValid(id(row.id) && ['active','paused','archived'].includes(row.selling_status));
+ return rows;
+}
+export function costMenuSelection(menus,catalogue,includeArchived=false) {
+ const status=new Map(catalogue.map(row=>[row.id,row.selling_status]));
+ return menus.filter(menu=>status.has(menu.id) && (includeArchived || status.get(menu.id)!=='archived'))
+  .map(menu=>({...menu,selling_status:status.get(menu.id)}));
+}
 export function costLots(data) {
  const rows=responseList(data);
  for(const row of rows)requireValid(id(row.id) && typeof row.raw_material_name==='string' && typeof row.unit==='string' && typeof row.batch_code==='string' && nonnegative(row.quantity));

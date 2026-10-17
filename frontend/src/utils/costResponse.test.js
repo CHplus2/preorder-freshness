@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {costReport,contributionReport,pricingResponse,costMaterials,costLots,costExpenses} from './costResponse.js';
+import {costReport,contributionReport,pricingResponse,costMaterials,costLots,costExpenses,costCatalogue,costMenuSelection} from './costResponse.js';
 const period={start:'2026-10-01',end:'2026-10-06'};
 const menu={id:1,name:'Rice',price:'10',missing:[],ingredient_cost:'12',packaging_cost:'0',estimated_contribution:'-2',estimated_margin_percent:'-20'};
 const costs={...period,operating_expenses:'0',known_waste_cost:'0',unpriced_waste_records:0,menus:[menu],waste:[]};
@@ -23,3 +23,12 @@ for(const [validate,row] of [
  [costExpenses,{id:1,date:'2026-10-06',amount:'0',category:'utilities',note:'Test',voided:false}]
 ]){assert.deepEqual(validate([row]),[row]);assert.throws(()=>validate([{}]),e=>e.code==='INVALID_RESPONSE');assert.throws(()=>validate([{...row,id:0}]),e=>e.code==='INVALID_RESPONSE');}
 console.log('Pricing and supporting cost records validated, including unknown costs and losses.');
+const catalogue=costCatalogue([{id:1,selling_status:'archived'},{id:2,selling_status:'active'},{id:3,selling_status:'paused'}]);
+const menuRows=[{...menu,id:1},{...menu,id:2},{...menu,id:3},{...menu,id:4}];
+assert.deepEqual(costMenuSelection(menuRows,catalogue).map(row=>row.id),[2,3]);
+assert.deepEqual(costMenuSelection(menuRows,catalogue,true).map(row=>row.id),[1,2,3]);
+assert.equal(costMenuSelection(menuRows,catalogue,true)[0].selling_status,'archived');
+assert.equal(menuRows[0].selling_status,undefined);
+assert.deepEqual(costMenuSelection(menuRows,[]),[]);
+for(const data of [[{id:1}],[{id:1,selling_status:'unknown'}],null])assert.throws(()=>costCatalogue(data),e=>e.code==='INVALID_RESPONSE');
+console.log('Cost menu selection uses recorded status, preserves paused items, hides archived items by default and excludes unknown identities.');

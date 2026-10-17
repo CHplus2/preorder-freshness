@@ -5,7 +5,7 @@ import {readApiError} from '../utils/apiError';
 import {getCookie} from '../utils/cookieUtils';
 const money = value => value == null ? 'Unavailable' : `RM ${value}`;
 
-export default function PricingPreview({menus}) {
+export default function PricingPreview({menus,unavailableReason=''}) {
   const [form,setForm] = useState({product:'', portions:'10', price:'', discount_percent:'0', ingredient_increase_percent:'0', additional_cost_per_portion:'0'});
   const [result,setResult] = useState(null);
   const [error,setError] = useState('');
@@ -18,12 +18,12 @@ export default function PricingPreview({menus}) {
     catch(e){setError(readApiError(e));}finally{setBusy(false);}
   };
   return <section className="dk-panel"><h3>Test a price or bulk offer</h3>
-    <p>Compare the current offer with a scenario before changing your menu. Nothing here changes live prices or promotions.</p>
-    {!menus.length ? <p>Add a menu and recipe to try pricing scenarios.</p> : <form className="fyp-form inline" onSubmit={submit}>
+    <p>Estimate food contribution from current recipe costs, packaging and the costs you enter. This can be available even when an old order has no recorded batch costs. Nothing here changes live prices or promotions.</p>
+    {unavailableReason ? <p role="status">{unavailableReason}</p> : !menus.length ? <p>No menus match this view. Include archived menus to inspect older items, or add a current menu and recipe.</p> : <form className="fyp-form inline" onSubmit={submit}>
       <label>Menu<select required disabled={busy} value={form.product} onChange={e=>{
         const menu=menus.find(m=>String(m.id)===e.target.value);
         setForm({...form,product:e.target.value,price:menu?.price ?? ''});setResult(null);setError('');
-      }}><option value="">Choose a menu</option>{menus.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
+      }}><option value="">Choose a menu</option>{menus.map(m=><option key={m.id} value={m.id}>{m.name}{m.selling_status==='archived'?' · Archived':m.selling_status==='paused'?' · Paused':''}</option>)}</select></label>
       {[
         ['portions','Portions',1,10000,1],['price','Scenario price per portion (RM)',0.01,99999999.99,0.01],
         ['discount_percent','Scenario discount (%)',0,50,0.1],
@@ -42,7 +42,7 @@ export default function PricingPreview({menus}) {
         return <article key={key}><h4>{title}</h4><p>Price {money(row.price)} · discount {row.discount_percent}%</p>
           <p>Food revenue after discount: {money(row.food_revenue)}</p>
           <p>Ingredient estimate: {money(row.ingredient_cost)} · packaging: {money(row.packaging_cost)} · other costs: {money(row.additional_cost)}</p>
-          <p><strong>Estimated contribution: {money(row.contribution)}</strong> ({row.margin_percent ?? 'unavailable'}%)</p>
+          <p><strong>Estimated contribution: {money(row.contribution)}</strong>{row.margin_percent!==null && ` (${row.margin_percent}%)`}</p>
           <p>Per portion: {money(row.per_portion)}. Estimated price to cover entered costs at this discount: {money(row.break_even_price)}.</p>
           {row.below_cost && <p role="status">This offer is below the entered costs.</p>}
         </article>;

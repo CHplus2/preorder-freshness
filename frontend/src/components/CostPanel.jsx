@@ -3,11 +3,12 @@ import axios from 'axios';
 import {apiError,readApiError} from '../utils/apiError';
 import {getCookie} from '../utils/cookieUtils';
 import {malaysiaDate} from '../utils/planner';
-import {costReport,costMaterials,costLots,costExpenses} from '../utils/costResponse';
+import {costReport,costMaterials,costLots,costExpenses,costCatalogue,costMenuSelection} from '../utils/costResponse';
 import PricingPreview from './PricingPreview';
 const money=v=>v==null?'Not recorded':'RM '+Number(v).toFixed(2);
 export default function CostPanel(){
  const [report,setReport]=useState(null),[materials,setMaterials]=useState([]),[lots,setLots]=useState([]),[expenses,setExpenses]=useState([]);
+ const [catalogue,setCatalogue]=useState(null),[catalogueError,setCatalogueError]=useState(''),[includeArchived,setIncludeArchived]=useState(false);
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);
  const [range,setRange]=useState(()=>({start:malaysiaDate(new Date(Date.now()-27*86400000)),end:malaysiaDate(new Date())}));
  const [expense,setExpense]=useState({date:malaysiaDate(new Date()),category:'utilities',amount:'',note:''});
@@ -15,17 +16,23 @@ export default function CostPanel(){
  const expenseKey=useRef(crypto.randomUUID()),wasteKey=useRef(crypto.randomUUID());
  const feedback=useRef(null);
  useEffect(()=>{if(error || message){feedback.current?.scrollIntoView({block:'center'});feedback.current?.focus({preventScroll:true})}},[error,message]);
+ useEffect(()=>{const c=new AbortController();setCatalogue(null);setCatalogueError('');
+ axios.get('/api/products/',{signal:c.signal}).then(a=>{if(!c.signal.aborted)setCatalogue(costCatalogue(a.data));}).catch(e=>{if(!axios.isCancel(e))setCatalogueError(readApiError(e));});
+ return()=>c.abort();},[retry]);
  useEffect(()=>{const c=new AbortController();
  Promise.all([axios.get('/api/admin/costs/',{params:range,signal:c.signal}),axios.get('/api/admin/raw-materials/',{signal:c.signal}),axios.get('/api/admin/inventory-items/',{signal:c.signal}),axios.get('/api/admin/expenses/',{signal:c.signal})]).then(([a,b,d,e])=>{const report=costReport(a.data),materials=costMaterials(b.data),lots=costLots(d.data),expenses=costExpenses(e.data);setReport(report);setMaterials(materials);setLots(lots);setExpenses(expenses)}).catch(e=>{if(!axios.isCancel(e))setError(readApiError(e))});return()=>c.abort()},[range,retry]);
  const mutate=async(url,data,method='post')=>{if(busy)return false;setBusy(true);setError('');setMessage('');try{await axios[method](url,data,{headers:{'X-CSRFToken':getCookie('csrftoken')}});setReport(null);setRetry(n=>n+1);setMessage('Saved.');return true}catch(e){setError(apiError(e));return false}finally{setBusy(false)}};
+ const visibleMenus=report && catalogue ? costMenuSelection(report.menus,catalogue,includeArchived) : [];
  return <section id="costs" className="cost-workspace"><h2>Costs, wastage and pricing</h2><p>Menu estimates use today's ingredient costs and packaging. They exclude discounts, labour, delivery, overhead and tax; they are not net profit.</p>
  <div className="admin-fields">{['start','end'].map(key=><label key={key}>{key==='start'?'Period starts':'Period ends'}<input type="date" value={range[key]} onChange={e=>{if(e.target.value){setReport(null);setError('');setRange({...range,[key]:e.target.value});}}}/></label>)}</div>
  {(error || message) && <div ref={feedback} tabIndex={-1} role={error?'alert':'status'} className="cost-feedback"><p>{error || message}</p>{error && <button type="button" disabled={busy} onClick={()=>{setReport(null);setError('');setMessage('');setRetry(n=>n+1)}}>Refresh cost records</button>}</div>}
  {!report && !error && <p role="status">Loading costs...</p>}
  {report && <><div className="admin-metrics"><article><span>Operating expenses in period</span><strong>{money(report.operating_expenses)}</strong></article><article><span>Recorded wastage cost in period</span><strong>{money(report.known_waste_cost)}</strong><small>{report.unpriced_waste_records} waste records have unknown costs, excluded from this total.</small></article></div>
- <h3>Current menu contribution estimates · per portion</h3><p>Contribution = menu price minus ingredient estimate minus packaging. Dates above filter expenses and wastage, not these current recipe estimates.</p>
- <PricingPreview key={retry} menus={report.menus}/>
- {report.menus.map(m=><article className="admin-order-summary" key={m.id}><h3>{m.name}</h3><p>Price {money(m.price)} / Ingredients {money(m.ingredient_cost)} / Packaging {money(m.packaging_cost)}</p>{m.missing.length?<p>Complete these costs first: {m.missing.join(', ')}.</p>:<p><strong>Estimated contribution: {money(m.estimated_contribution)} ({m.estimated_margin_percent}%)</strong> before other costs and discounts.</p>}</article>)}
+ <h3>Menu contribution estimates · per portion</h3><p>Contribution = menu price minus ingredient estimate minus packaging. Dates above filter expenses and wastage, not these current recipe estimates.</p>
+ <div className="cost-menu-scope"><label><input type="checkbox" checked={includeArchived} onChange={e=>setIncludeArchived(e.target.checked)}/>Include archived menus in pricing tools</label><p>Archived items are hidden by default. This changes this view only; historical order outcomes are unchanged.</p></div>
+ {catalogueError && <p role="alert">Menu availability could not be loaded: {catalogueError} <button type="button" onClick={()=>setRetry(n=>n+1)}>Retry menu availability</button></p>}
+ <PricingPreview key={`${retry}:${includeArchived}`} menus={visibleMenus} unavailableReason={catalogueError?'Pricing tools are waiting for menu availability. Retry above.':!catalogue?'Loading menu availability…':''}/>
+ {catalogue && <details className="settings-group"><summary>Recipe cost estimates · {visibleMenus.length} menus</summary>{visibleMenus.length===0 && <p>No menus match this view.</p>}{visibleMenus.map(m=><article className="admin-order-summary" key={m.id}><h3>{m.name}{m.selling_status==='archived'?' · Archived':m.selling_status==='paused'?' · Paused':''}</h3><p>Price {money(m.price)} / Ingredients {money(m.ingredient_cost)} / Packaging {money(m.packaging_cost)}</p>{m.missing.length?<p>Complete these costs first: {m.missing.join(', ')}.</p>:<p><strong>Estimated contribution: {money(m.estimated_contribution)}{m.estimated_margin_percent!==null && ` (${m.estimated_margin_percent}%)`}</strong> before other costs and discounts.</p>}</article>)}</details>}
  <details className="settings-group"><summary>Ingredient cost assumptions</summary><p>Enter RM per ingredient inventory unit. RM 12 per kg is RM 0.012 per gram. Update these when supplier prices change. Set packaging costs in Menus.</p>{materials.map(m=><form className="cost-input-row" key={m.id} onSubmit={e=>{e.preventDefault();mutate('/api/admin/raw-materials/'+m.id+'/',{estimated_unit_cost:m.estimated_unit_cost===''?null:m.estimated_unit_cost},'patch')}}><label>{m.name} · RM/{m.unit}<input type="number" min="0" step="0.000001" value={m.estimated_unit_cost ?? ''} onChange={e=>setMaterials(rows=>rows.map(x=>x.id===m.id?{...x,estimated_unit_cost:e.target.value}:x))}/></label><button disabled={busy}>Save cost</button></form>)}</details>
  <details className="settings-group"><summary>Record an operating expense</summary><p>Use for overhead, courier fees, labour or marketing. Do not enter ingredient purchases or packaging here and also count them as recipe costs when calculating a margin.</p>
  <form onSubmit={async e=>{e.preventDefault();if(await mutate('/api/admin/expenses/',{...expense,request_id:expenseKey.current})){expenseKey.current=crypto.randomUUID();setExpense({...expense,amount:'',note:''})}}}>

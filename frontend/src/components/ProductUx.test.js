@@ -31,5 +31,25 @@ try{
  assert.match(inBasket,/no delivery weekday in common/);
  assert.doesNotMatch(inBasket,/href="\/cart"/);
  assert.match(basket([meal('Saturday',[5])],'2026-10-11T16:00'),/cannot be delivered/);
+ const {ContributionSummary,OrderContribution}=await server.ssrLoadModule('/src/components/ContributionEvidence.jsx');
+ const contributionSummary=report=>renderToStaticMarkup(createElement(ContributionSummary,{report}));
+ const contributionBase={known_contribution:'0.00',complete_orders:0,shown:2,order_count:2};
+ assert.match(contributionSummary(contributionBase),/Contribution total unavailable/);
+ assert.doesNotMatch(contributionSummary(contributionBase),/<strong>RM 0.00<\/strong>/);
+ assert.match(contributionSummary({...contributionBase,complete_orders:1}),/<strong>RM 0.00<\/strong>/);
+ assert.match(contributionSummary({...contributionBase,known_contribution:'-2.00',complete_orders:1}),/RM -2.00/);
+ assert.match(contributionSummary({...contributionBase,shown:0,order_count:0}),/No orders were placed/);
+ assert.match(contributionSummary(contributionBase),/date placed/);
+ const contributionRow={order:1,status:'pending',realised:false,food_contribution:null,net_food_revenue:'0',known_ingredient_cost:'0',accepted_packaging_cost:'0',missing:['Missing cooking evidence'],trace:[]};
+ const orderEvidence=changes=>renderToStaticMarkup(createElement(OrderContribution,{row:{...contributionRow,...changes}}));
+ assert.match(orderEvidence({}),/Not realised yet/);
+ assert.match(orderEvidence({status:'delivered'}),/Outcome records incomplete/);
+ assert.match(orderEvidence({status:'delivered',realised:true}),/Cost records incomplete/);
+ assert.match(orderEvidence({status:'delivered',realised:true,payment_status:'unpaid'}),/Payment evidence incomplete/);
+ assert.match(orderEvidence({status:'cancelled'}),/No cooked outcome recorded/);
+ assert.match(orderEvidence({status:'delivered',realised:true,food_contribution:'0.00',missing:[]}),/RM 0.00 food contribution/);
+ assert.match(orderEvidence({status:'delivered',realised:true,food_contribution:'-2.00',missing:[]}),/RM -2.00 food contribution/);
+ assert.match(orderEvidence({}),/missing costs are not treated as zero/);
  console.log('Product UX: loading/error counts, enabled payment options and collapsed demo disclosure passed.');
+ console.log('Financial UX: unavailable vs genuine zero, negative contribution, unrealised and incomplete outcomes passed.');
 }finally{await server.close();}
