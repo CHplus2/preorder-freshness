@@ -115,3 +115,20 @@
 .admin-shell .planner-record-preview{padding-left:20px;margin:12px 0 6px;font-size:14px;line-height:1.7;color:#53655a;overflow-wrap:anywhere}
 .admin-shell .planner-record-more{font-size:13px}
 .admin-shell .planner-forecast-note{font-size:13px;line-height:1.7;color:#53655a;border-top:1px solid #e2e7e3;padding:14px 0;margin:0}
+
+.admin-shell .batch-delivery-dates{margin-top:18px;max-width:900px;min-width:0}
+.admin-shell .batch-delivery-dates>p,.admin-shell .batch-delivery-preview>p{margin:10px 0;font-size:13px;line-height:1.7}
+.admin-shell .batch-delivery-preview{padding:18px;background:#fff;border:1px solid #dce2df;border-radius:10px;margin:12px 0}
+.admin-shell .batch-delivery-preview h3{font-size:16px;margin:0 0 10px}
+.batch-delivery-table{max-width:100%;overflow:auto;margin:14px 0}
+.batch-delivery-table table{width:100%;border-collapse:collapse;min-width:390px;font-size:13px}
+.batch-delivery-table th,.batch-delivery-table td{text-align:left;vertical-align:top;padding:10px;border-bottom:1px solid #dce2df;line-height:1.6}
+.batch-delivery-table caption{text-align:left;color:#53655a;padding:8px 0}
+.batch-delivery-table small{display:block;color:#53655a;margin-top:6px}
+.admin-shell .batch-delivery-confirm{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.6;margin:16px 0}
+.admin-shell .batch-delivery-confirm input{width:18px;height:18px;min-height:18px;flex-shrink:0;margin:3px 0 0}
+.batch-delivery-preview>button{margin:4px 10px 4px 0}
+@media(max-width:600px){.admin-shell .batch-delivery-preview{padding:12px}.batch-delivery-preview>button{width:100%;margin:6px 0}}
+.planner-setup-row>div{min-width:0;flex:1}
+.batch-delivery-dates>button{max-width:100%;white-space:normal}
+@media(max-width:600px){.planner-setup-row>div{width:100%}}

@@ -13,6 +13,7 @@ from ..models import Order, OrderAmendment, Product, Storefront
 from ..serializers import OrderSerializer
 from ..services.commitments import scheduled_item
 from ..services.scheduling import schedule_order, plan_snapshot
+from ..services.initial_delivery import initial_delivery_plan
 
 SALT = 'order-delivery-change-v1'
 CUTOFF_HOURS = 24
@@ -101,16 +102,12 @@ def reschedule_order(request, pk):
     # A changed date needs fresh notice; no reuse of the original order's lead-time window.
     # A first date is an owner-recorded request, never retroactive fulfilment or recipe acceptance.
     # Missing accepted settings use current policies for request validation only; none are saved.
-    planning_items = [scheduled_item(i) if i.preparation_snapshot else i for i in items] if initial_delivery else [scheduled_item(i) for i in items]
-    plan = schedule_order(planning_items, target, store,
-                          now=now, exclude_order_id=order.pk,
-                          allow_manual_review=initial_delivery or bool(order.preparation_plan.get('needs_review')))
     if initial_delivery:
-        notes = 'First delivery date recorded by the owner. Review accepted recipes and confirm a preparation plan before starting work.'
-        if plan.get('needs_review'):
-            notes += ' ' + plan['review_reason']
-        plan = dict(start=None, end=None, tasks=[], needs_review=True, review_reason=notes,
-                    delivery_buffer_minutes=store.delivery_buffer_minutes)
+        plan = initial_delivery_plan(items, target, store, order.pk, now)
+    else:
+        plan = schedule_order([scheduled_item(i) for i in items], target, store,
+                              now=now, exclude_order_id=order.pk,
+                              allow_manual_review=bool(order.preparation_plan.get('needs_review')))
     change_anchor = plan['start'] or target
     if change_anchor <= now + timedelta(hours=CUTOFF_HOURS):
         raise serializers.ValidationError('The new preparation time must also be more than 24 hours away.')

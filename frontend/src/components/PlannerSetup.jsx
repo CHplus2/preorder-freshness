@@ -2,8 +2,9 @@ import {Link} from 'react-router-dom';
 import {planningReadiness} from '../utils/planner';
 import {orderMenuState} from '../utils/orderQueue';
 import useOrderCatalogue from '../hooks/useOrderCatalogue';
+import BatchDeliveryDates from './BatchDeliveryDates';
 
-export default function PlannerSetup({menus,orders,onReview,now}) {
+export default function PlannerSetup({menus,orders,onReview,onSaved,now}) {
  const groups=planningReadiness(orders,now);
  const {catalogue,error,retry}=useOrderCatalogue();
  const classifications={current:0,mixed:0,archived:0,unlinked:0};
@@ -24,6 +25,7 @@ export default function PlannerSetup({menus,orders,onReview,now}) {
    {catalogue ? <div className="planner-readiness-tags" aria-label="Menus in orders missing dates">{Object.entries(classifications).filter(([,count])=>count>0).map(([kind,count])=><span key={kind}>{count} · {labels[kind]}</span>)}</div> : error ? <p role="alert">Menu status could not be checked. <button type="button" onClick={retry}>Retry menu check</button></p> : <p role="status">Checking menu references…</p>}
    <ul className="planner-record-preview">{groups.missingDelivery.slice(0,3).map(order=><li key={order.id}>Order #{order.id} · {(order.items || []).map(item=>item.product_name).filter(Boolean).join(', ') || 'No menu recorded'}</li>)}</ul>
    {groups.missingDelivery.length>3 && <p className="planner-record-more">Plus {groups.missingDelivery.length-3} more in delivery record review.</p>}
+   {onSaved && <BatchDeliveryDates onSaved={onSaved}/>}
   </div><Link className="text-link" to="/admin/orders?review=missing-delivery">Review delivery records</Link></div>}
   {groups.overdue.length>0 && <div className="planner-setup-row"><div>
    <h2>{groups.overdue.length} past-due {groups.overdue.length===1?'order needs':'orders need'} follow-up</h2>

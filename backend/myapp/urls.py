@@ -3,6 +3,7 @@ from .views.account import account_profile
 from .views.setup import setup_checklist
 from .views.pricing import pricing_preview
 from .views.rescheduling import reschedule_order
+from .views.delivery_date_batch import missing_delivery_dates
 from .views.payments import payments
 from .views.outcomes import contribution_report, contribution_export, batch_trace
 from .views.discovery import guided_menu, basket_slots, recommendation_event, recommendation_metrics
@@ -35,6 +36,7 @@ urlpatterns = [
     path('admin/pricing-preview/', pricing_preview),
     path('admin/setup-checklist/', setup_checklist),
     path('orders/<int:pk>/reschedule/', reschedule_order),
+    path('admin/orders/missing-delivery-dates/', missing_delivery_dates),
     path('auth/recovery/', recovery_request),
     path('auth/recovery/confirm/', recovery_confirm),
     path('menu/guide/', guided_menu),

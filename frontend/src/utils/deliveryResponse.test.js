@@ -25,3 +25,18 @@ for(const value of [null,{}, {order:{id:3,delivery_at:stamp},already_applied:fal
   assert.throws(()=>deliveryConfirmation(value,2),{code:'INVALID_RESPONSE'});
 }
 console.log('Delivery policy, preview and confirmation response validation passed.');
+
+const {deliveryDatePreview,deliveryDateConfirmation}=await import('./deliveryDateBatch.js');
+const proposed={mode:'preview',confirm:'signed-batch',note:'Fictional requests only',proposed_dates:[{order_id:2,delivery_at:stamp,payment_status:'unpaid',menus:[{name:'Nasi Ayam',quantity:2}]}],skipped:[{order_id:4,reason:'Preparation already started'}]};
+assert.equal(deliveryDatePreview(proposed),proposed);
+for(const value of [{...proposed,confirm:''},{...proposed,proposed_dates:null},
+ {...proposed,proposed_dates:[{...proposed.proposed_dates[0],delivery_at:'not a date'}]},
+ {...proposed,proposed_dates:[{...proposed.proposed_dates[0],menus:[{name:'Nasi Ayam',quantity:0}]}]},
+ {...proposed,skipped:[{order_id:2,reason:'Same record twice'}]}])assert.throws(()=>deliveryDatePreview(value),{code:'INVALID_RESPONSE'});
+const batchSaved={mode:'applied',updated_order_ids:[2],already_applied:false,remaining_missing_dates:1};
+assert.equal(deliveryDateConfirmation(batchSaved,[2]),batchSaved);
+assert.doesNotThrow(()=>deliveryDateConfirmation({...batchSaved,already_applied:true},[2]));
+for(const value of [{...batchSaved,updated_order_ids:[]},{...batchSaved,updated_order_ids:[2,2]},
+ {...batchSaved,updated_order_ids:[3]},{...batchSaved,remaining_missing_dates:-1},
+ {...batchSaved,already_applied:'false'}])assert.throws(()=>deliveryDateConfirmation(value,[2]),{code:'INVALID_RESPONSE'});
+console.log('Batch date preview and exact saved-cohort validation passed.');
