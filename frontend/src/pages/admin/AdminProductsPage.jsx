@@ -14,6 +14,7 @@ export default function AdminProductsPage() {
   const review=reviewParams.get('review');
   const reviewTitles={recipes:'Menu ingredients',preparation:'Preparation steps',costs:'Menu costs'};
   const [statusFilter,setStatusFilter]=useState('current');
+  const [missingStepsOnly,setMissingStepsOnly]=useState(true);
   const [statusBusy,setStatusBusy]=useState(false);
   const [statusMessage,setStatusMessage]=useState('');
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,7 +102,8 @@ export default function AdminProductsPage() {
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory ? p.category === Number(selectedCategory) : true;
-    return matchesSearch && matchesCategory && (statusFilter==='all' || (statusFilter==='current'?p.selling_status!=='archived':p.selling_status===statusFilter));
+    const matchesPreparation=review!=='preparation' || !missingStepsOnly || (p.selling_status==='active' && !p.preparation_tasks?.length);
+    return matchesSearch && matchesCategory && matchesPreparation && (statusFilter==='all' || (statusFilter==='current'?p.selling_status!=='archived':p.selling_status===statusFilter));
   });
 
   return (
@@ -114,6 +116,7 @@ export default function AdminProductsPage() {
       </div>
 
 {reviewTitles[review] && <p className="menu-state-feedback" role="status"><strong>Review: {reviewTitles[review]}</strong><br/>Choose a menu below. Its editor will open at the relevant section.</p>}
+{review==='preparation' && <label><input type="checkbox" checked={missingStepsOnly} onChange={e=>setMissingStepsOnly(e.target.checked)}/> Show only active menus missing preparation steps</label>}
 <p className="menu-state-intro">Pause a menu to stop new orders. Archive it to remove it from your current menu list. Existing orders keep their recipes and delivery plans.</p>
       {statusMessage && <p className="menu-state-feedback" role="status">{statusMessage}</p>}
       {/* Search & Filter */}
@@ -185,7 +188,7 @@ export default function AdminProductsPage() {
             ))
           ) : (
             <tr>
-              <td colSpan="7">No products found.</td>
+              <td colSpan="7">{review==='preparation' && missingStepsOnly?'No active menus missing preparation steps match these filters. Uncheck the option above to review existing steps.':'No products found.'}</td>
             </tr>
           )}
 

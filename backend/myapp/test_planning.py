@@ -255,3 +255,20 @@ class PlanningTests(TestCase):
         self.assertEqual(response.data['availability']['open_hour'],8)
         self.assertEqual(len(response.data['setup_menus']),1)
         self.assertIsNone(response.data['forecast']['next_7_days_portions'])
+
+    def test_preparation_setup_counts_only_active_menus_and_preserves_old_orders(self):
+        active = self.product('Active meal')
+        archived = self.product('Old grocery', selling_status='archived')
+        paused = self.product('Paused meal', selling_status='paused')
+        self.product('Ready meal', preparation_tasks=[self.task()])
+        old = Order.objects.create(user=self.user, status='pending')
+        OrderItem.objects.create(order=old, product=archived, product_name=archived.name,
+                                 quantity=1, unit_price=10, subtotal=10)
+        self.client.force_authenticate(self.owner)
+        response = self.client.get('/api/admin/planning/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['setup_menus'], [{'id': active.pk, 'name': active.name}])
+        self.assertIn(old.pk, [o['id'] for o in response.data['orders']])
+        archived.refresh_from_db(); paused.refresh_from_db()
+        self.assertEqual(archived.preparation_tasks, [])
+        self.assertEqual(paused.preparation_tasks, [])

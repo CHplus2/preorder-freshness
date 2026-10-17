@@ -72,6 +72,27 @@ class KitchenDecisionTests(TestCase):
         self.assertEqual(d['menus'][0]['evaluation']['test']['mean_28']['mae'],0)
         self.assertEqual(InventoryItem.objects.first().quantity,1500)
 
+    def test_missing_task_plans_do_not_block_delivery_based_sales_forecasts(self):
+        self.history(days=70)
+        self.batch(1500, expiry_days=5)
+        unfinished = Order.objects.create(user=self.buyer, status='pending', payment_status='unpaid')
+        self.assertFalse(Order.objects.filter(status='delivered').exclude(preparation_plan={}).exists())
+        with patch('predictive_ai.service.bundle', side_effect=AssertionError('Kitchen forecast must not load Genpact')):
+            response = self.client.get('/api/admin/predictive/local-decisions/?horizon_days=7')
+        self.assertEqual(response.status_code, 200, response.data)
+        support = response.data['decision_support']
+        menu = support['menus'][0]
+        self.assertEqual(menu['product_id'], self.menu.pk)
+        self.assertEqual(menu['total_recorded_portions'], 140)
+        self.assertGreater(menu['forecast_portions'], 0)
+        self.assertEqual(menu['history'][0]['date'], str(timezone.localdate()-timedelta(days=70)))
+        self.assertIsNotNone(menu['evaluation'])
+        self.assertGreater(support['ingredient_risks'][0]['forecast_requirement'], 0)
+        self.assertIn(unfinished.pk, [o['order_id'] for o in response.data['excluded_orders']])
+        unfinished.refresh_from_db()
+        self.assertEqual(unfinished.payment_status, 'unpaid')
+        self.assertEqual(unfinished.preparation_plan, {})
+
     def test_confirmed_bookings_are_not_added_to_forecast_twice(self):
         self.history()
         self.order(portions=2)

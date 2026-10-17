@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {dailyWork} from './planner.js';
+import {dailyWork,planningReadiness} from './planner.js';
 const date='2026-09-20';
 const task=(start,end,worker=true)=>({name:'Task',start:date+'T'+start+':00+08:00',end:date+'T'+end+':00+08:00',worker,resource:worker?'stove':'fridge'});
 const plan=tasks=>({availability:{open_hour:8,close_hour:16,blocks:[]},orders:[{id:1,status:'pending',items:[],preparation_plan:{tasks}}]});
@@ -44,4 +44,30 @@ test('closure details preserve the reason and clip overlap to selected day',()=>
  p.availability.blocks=[{reason:'Fridge maintenance',start_at:'2026-09-19T22:00:00+08:00',end_at:date+'T01:00:00+08:00'}];
  const c=dailyWork(p,date).tasks[0].conflicts[0];assert.equal(c.name,'Fridge maintenance');assert.equal(c.kind,'closure');
  assert.equal(c.start,Date.parse(date+'T00:00:00+08:00'));assert.equal((c.end-c.start)/60000,60);
+});
+
+test('readiness separates missing dates and overdue records from actionable upcoming plans',()=>{
+ const now=Date.parse('2026-10-17T12:00:00+08:00');
+ const pending=(id,delivery_at,extra={})=>({id,status:'pending',delivery_at,preparation_plan:{},...extra});
+ const rows=[pending(1,null),pending(2,'bad-date'),pending(3,'2026-10-16T12:00:00+08:00'),
+  pending(4,'2026-10-24T18:00:00+08:00',{preparation_plan:{needs_review:true,tasks:[]}}),
+  pending(5,'2026-10-24T18:00:00+08:00',{status:'processing'}),
+  pending(6,'2026-10-24T18:00:00+08:00',{inventory_deducted:true}),
+  pending(7,'2026-10-24T18:00:00+08:00',{preparation_plan:{tasks:[{name:'Manual reservation'}]}}),
+  pending(8,null,{status:'delivered'}),pending(9,null,{status:'cancelled'})];
+ const before=JSON.stringify(rows), groups=planningReadiness(rows,now);
+ assert.deepEqual(groups.missingDelivery.map(o=>o.id),[1,2]);
+ assert.deepEqual(groups.overdue.map(o=>o.id),[3]);
+ assert.deepEqual(groups.needsPlan.map(o=>o.id),[4]);
+ assert.deepEqual(groups.started.map(o=>o.id),[5,6]);
+ assert.equal(JSON.stringify(rows),before);
+});
+
+test('readiness compares actual delivery instants and keeps incomplete plans under review',()=>{
+ const now=Date.parse('2026-10-17T12:00:00+08:00');
+ const rows=[{id:1,status:'pending',delivery_at:'2026-10-17T04:00:00Z',preparation_plan:{}},
+  {id:2,status:'pending',delivery_at:'2026-10-17T04:01:00Z',preparation_plan:{needs_review:true,tasks:[{name:'Unconfirmed'}]}}];
+ const groups=planningReadiness(rows,now);
+ assert.deepEqual(groups.overdue.map(o=>o.id),[1]);
+ assert.deepEqual(groups.needsPlan.map(o=>o.id),[2]);
 });

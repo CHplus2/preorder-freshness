@@ -54,7 +54,7 @@ def planning(request):
                 shopping.append({'order': order.id, 'material_id': key, 'material': materials[key].material_name,
                     'quantity': str(need), 'unit': materials[key].unit, 'needed_by': str(day)})
     store = Storefront.objects.filter(pk=1).first() or Storefront()
-    setup = list(Product.objects.filter(preparation_tasks=[]).values('id', 'name'))
+    setup = list(Product.objects.filter(selling_status='active', preparation_tasks=[]).values('id', 'name'))
     availability = dict(open_hour=store.kitchen_open_hour, close_hour=store.kitchen_close_hour, blocks=list(KitchenBlock.objects.values('start_at','end_at','reason')))
     return Response({'missing_recipes': missing_recipes, 'setup_menus': setup, 'availability': availability, 'allocations': allocations, 'orders': OrderSerializer(orders, many=True).data, 'shopping': shopping, **sales_summary()})
 

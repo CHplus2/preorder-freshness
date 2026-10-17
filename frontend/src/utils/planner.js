@@ -1,5 +1,18 @@
 export const malaysiaDate = value => new Date(value).toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'});
 export const duration = minutes => `${Math.floor(minutes/60)}h ${Math.round(minutes%60)}m`;
+export function planningReadiness(orders, now=Date.now()) {
+ const groups={needsPlan:[],missingDelivery:[],overdue:[],started:[]};
+ for(const order of orders || []) {
+  if(!['pending','processing'].includes(order.status))continue;
+  if(order.preparation_plan?.tasks?.length && !order.preparation_plan?.needs_review)continue;
+  const delivery=Date.parse(order.delivery_at || '');
+  if(!Number.isFinite(delivery))groups.missingDelivery.push(order);
+  else if(delivery<=now)groups.overdue.push(order);
+  else if(order.status!=='pending' || order.inventory_deducted)groups.started.push(order);
+  else groups.needsPlan.push(order);
+ }
+ return groups;
+}
 const overlap=(a,b,c,d)=>Math.max(0,Math.min(b,d)-Math.max(a,c));
 function unionMinutes(intervals){
  let end=-Infinity,total=0;
