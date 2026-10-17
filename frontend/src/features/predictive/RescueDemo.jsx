@@ -334,10 +334,10 @@ export default function RescueDemo() {
                         <div>
                           <span>Original menu</span>
                           <strong>
-                            {baselineOutcome.sales} sold /{" "}
-                            {baselineOutcome.unsold} unsold
+                            {baselineOutcome.sales} of 20 portions sold
                           </strong>
-                          <span className="fc-rescue-sales-meter">
+                          <small>{baselineOutcome.unsold} portions remain unsold</small>
+                          <span className="fc-rescue-sales-meter" aria-hidden="true">
                             <i
                               style={{
                                 width: `${(baselineOutcome.sales / 20) * 100}%`,
@@ -352,9 +352,10 @@ export default function RescueDemo() {
                         <div>
                           <span>{selected.name}</span>
                           <strong>
-                            {outcome.sales} sold / {outcome.unsold} unsold
+                            {outcome.sales} of 20 portions sold
                           </strong>
-                          <span className="fc-rescue-sales-meter">
+                          <small>{outcome.unsold} portions remain unsold</small>
+                          <span className="fc-rescue-sales-meter" aria-hidden="true">
                             <i
                               style={{
                                 width: `${(outcome.sales / 20) * 100}%`,

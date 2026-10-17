@@ -4,9 +4,9 @@ export function planningReadiness(orders, now=Date.now()) {
  const groups={needsPlan:[],missingDelivery:[],overdue:[],started:[]};
  for(const order of orders || []) {
   if(!['pending','processing'].includes(order.status))continue;
-  if(order.preparation_plan?.tasks?.length && !order.preparation_plan?.needs_review)continue;
   const delivery=Date.parse(order.delivery_at || '');
   if(!Number.isFinite(delivery))groups.missingDelivery.push(order);
+  else if(order.preparation_plan?.tasks?.length && !order.preparation_plan?.needs_review)continue;
   else if(delivery<=now)groups.overdue.push(order);
   else if(order.status!=='pending' || order.inventory_deducted)groups.started.push(order);
   else groups.needsPlan.push(order);

@@ -1,4 +1,4 @@
-import {Link} from 'react-router-dom';
+import {Link,useSearchParams} from 'react-router-dom';
 import './OrderCardSpacing.css';
 import DialogFeedback from '../../components/DialogFeedback';
 import PaymentRecords from '../../components/PaymentRecords';
@@ -8,11 +8,15 @@ import ModalDialog from '../../components/ModalDialog';
 import { useEffect, useRef, useState } from "react";
 import { useUI } from "../../contexts/UIContext";
 import { useOrder } from "../../contexts/OrderContext";
-import {filterOrders,overdueOrder} from '../../utils/orderQueue';
+import {filterOrders,overdueOrder,archivedOnlyOrder,hiddenArchivedHistory} from '../../utils/orderQueue';
+import useOrderCatalogue from '../../hooks/useOrderCatalogue';
 
 
 export default function AdminOrdersPage() {
-  const emptyFilters={search:'',status:'',payment:'',date:'',overdue:false,sort:'newest'};
+  const emptyFilters={search:'',status:'',payment:'',date:'',overdue:false,sort:'newest',includeArchived:false};
+  const [params,setParams]=useSearchParams();
+  const review=['missing-delivery','archived-menus'].includes(params.get('review'))?params.get('review'):'';
+  const changeReview=value=>{setFilters(emptyFilters);setParams(value?{review:value}:{});};
   const [filters,setFilters]=useState(emptyFilters);
   const [now,setNow]=useState(()=>Date.now());
   useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
@@ -23,7 +27,9 @@ export default function AdminOrdersPage() {
   const submitting = useRef(false);
   const { formatOrderNumber } = useUI();
   const { adminOrders, fetchAdminOrders, updateOrder, adminOrdersLoading, adminOrdersError } = useOrder();
-  const visibleOrders=filterOrders(adminOrders,filters,now);
+  const {catalogue,error:catalogueError,retry:retryCatalogue}=useOrderCatalogue(adminOrders);
+  const visibleOrders=filterOrders(adminOrders,{...filters,review},now,catalogue);
+  const archivedHistoryCount=adminOrders.filter(order=>hiddenArchivedHistory(order,catalogue)).length;
 
   useEffect(() => {
     fetchAdminOrders();
@@ -51,29 +57,38 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="orders-container">
-      <h1 className="orders-title">All Orders</h1>
+      <h1 className="orders-title">{review==='missing-delivery'?'Review missing delivery dates':review==='archived-menus'?'Orders containing only archived menus':'Orders'}</h1>
+      {review==='missing-delivery' && <p className="order-review-explanation">Only open orders without a valid delivery date appear here. Check the menu names below. Cancel obsolete fictional requests through Edit order; keep genuine bookings for owner review. Missing dates are not evidence of a completed sale.</p>}
+      {review==='archived-menus' && <p className="order-review-explanation">Every item in these orders refers to an archived menu. Open orders still need a decision; archiving a menu does not cancel a booking.</p>}
       <div className="fyp-form inline" aria-label="Filter orders">
+        <label>Review records<select value={review} onChange={e=>changeReview(e.target.value)}><option value="">Order queue</option><option value="missing-delivery">Open orders missing delivery dates</option><option value="archived-menus" disabled={!catalogue}>Archived menus only</option></select></label>
         <label>Search order, customer or menu<input type="search" value={filters.search} onChange={e=>setFilters({...filters,search:e.target.value})}/></label>
         <label>Order status<select value={filters.status} onChange={e=>setFilters({...filters,status:e.target.value})}><option value="">All statuses</option>{['pending','processing','cooked','shipped','delivered','cancelled'].map(s=><option key={s} value={s}>{s}</option>)}</select></label>
         <label>Payment<select value={filters.payment} onChange={e=>setFilters({...filters,payment:e.target.value})}><option value="">All payments</option>{['unpaid','paid','refunded'].map(s=><option key={s} value={s}>{s}</option>)}</select></label>
         <label>Delivery date (Malaysia)<input type="date" value={filters.date} onChange={e=>setFilters({...filters,date:e.target.value})}/></label>
         <label>Sort by<select value={filters.sort} onChange={e=>setFilters({...filters,sort:e.target.value})}><option value="newest">Newest order</option><option value="delivery">Earliest delivery</option></select></label>
       </div>
-      <div className="admin-toolbar"><label className="owner-overdue-filter"><input type="checkbox" checked={filters.overdue} onChange={e=>setFilters({...filters,overdue:e.target.checked})}/> Overdue deliveries only</label><button onClick={()=>setFilters(emptyFilters)}>Clear filters</button><button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Refresh orders</button></div>
+      <div className="admin-toolbar"><label className="owner-overdue-filter"><input type="checkbox" checked={filters.overdue} onChange={e=>setFilters({...filters,overdue:e.target.checked})}/> Overdue deliveries only</label><button onClick={()=>changeReview('')}>Clear filters</button><button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Refresh orders</button></div>
+      <div className="order-history-scope"><label className="owner-overdue-filter"><input type="checkbox" checked={filters.includeArchived || review==='archived-menus'} disabled={review==='archived-menus' || !catalogue} onChange={e=>setFilters({...filters,includeArchived:e.target.checked})}/> Include completed or cancelled archived-menu history</label>
+        <p>Open requests and mixed-menu orders stay visible. {catalogue ? `${archivedHistoryCount} archived-menu history records can be included. Order references stay unchanged; list positions run from 1 through the current results.` : catalogueError ? 'Menu status is unavailable, so no history is hidden.' : 'Checking menu status; all orders remain visible until checked.'}</p>
+        {catalogueError && <p role="alert">Menu status could not be loaded: {catalogueError} <button type="button" onClick={retryCatalogue}>Retry menu status</button></p>}
+      </div>
       {!adminOrdersLoading && !adminOrdersError && <p role="status">Showing {visibleOrders.length} of {adminOrders.length} orders. {adminOrders.filter(o=>overdueOrder(o,now)).length} open orders are past their requested delivery time.</p>}
 
       {adminOrdersError && <p role="alert">{adminOrdersError} <button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Retry loading orders</button></p>}
       {adminOrdersLoading && <p role="status">Loading orders…</p>}
       {adminOrdersError ? null : adminOrders.length > 0 ? (
         <>
-          {!visibleOrders.length && <p>No orders match these filters. Clear filters to see all orders.</p>}
-          {visibleOrders.map((order) => (
+          {!visibleOrders.length && <p>No orders match these filters. Adjust the review filters or include archived history.</p>}
+          {visibleOrders.map((order,index) => (
             <div key={order.id} className="order-card">
 
               {/* HEADER */}
               <div className="order-header">
                 <div>
+                  <p className="order-list-position">List item {index+1} of {visibleOrders.length}</p>
                   <p className="order-id">Order #{formatOrderNumber(order.id)}</p>
+                  {archivedOnlyOrder(order,catalogue) && <span className="order-archived-label">Archived menus only</span>}
                   <p className="order-user">
                     {order.user?.username ?? "Unknown"}
                   </p>

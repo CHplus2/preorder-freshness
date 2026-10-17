@@ -71,3 +71,8 @@ test('readiness compares actual delivery instants and keeps incomplete plans und
  assert.deepEqual(groups.overdue.map(o=>o.id),[1]);
  assert.deepEqual(groups.needsPlan.map(o=>o.id),[2]);
 });
+
+test('saved tasks do not hide an open order with no delivery date',()=>{
+ const groups=planningReadiness([{id:11,status:'pending',delivery_at:null,preparation_plan:{tasks:[{name:'Old task'}]}}]);
+ assert.deepEqual(groups.missingDelivery.map(o=>o.id),[11]);
+});

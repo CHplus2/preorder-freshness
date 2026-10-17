@@ -11,3 +11,8 @@
 @media(max-width:480px){.owner-order-actions{width:100%}.owner-order-actions>button{flex:1 1 130px}.owner-order-footer .order-total{width:100%;margin:0;text-align:right}}
 .admin-shell .owner-overdue-filter{display:inline-flex;align-items:center;gap:10px;margin:0;line-height:1.5}
 .admin-shell .owner-overdue-filter>input[type=checkbox]{width:18px;height:18px;min-height:18px;margin:0;flex-shrink:0}
+
+.orders-container .order-review-explanation,.orders-container .order-history-scope{padding:16px 20px;border:1px solid #dce2df;border-radius:10px;background:#faf8f1;line-height:1.65;margin:16px 0 24px}
+.orders-container .order-history-scope p{margin:8px 0 0;color:#53675a;font-size:14px}
+.orders-container .order-list-position{font-size:13px;color:#53675a;margin:0 0 6px;font-weight:400}
+.orders-container .order-archived-label{display:inline-block;font-size:13px;color:#665c46;background:#f2eddf;padding:4px 8px;border-radius:6px;margin:0 0 8px}

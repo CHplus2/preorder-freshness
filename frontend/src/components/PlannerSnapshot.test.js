@@ -28,6 +28,8 @@ try {
   assert.match(oldRecords,/1 past-due order needs follow-up/);
   assert.doesNotMatch(oldRecords,/upcoming order needs|Plan upcoming orders/);
   assert.match(oldRecords,/source=local/);
+  assert.ok(oldRecords.includes('href="/admin/orders?review=missing-delivery"'));
+  assert.match(oldRecords,/These are open orders, not completed sales/);
   const upcoming=setup([{id:28,status:'pending',delivery_at:'2026-10-24T18:00:00+08:00',preparation_plan:{needs_review:true}}],[{id:20,name:'Active rice'}]);
   assert.match(upcoming,/1 active menu needs preparation steps/);
   assert.match(upcoming,/1 upcoming order needs preparation review/);

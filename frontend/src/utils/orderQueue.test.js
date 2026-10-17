@@ -20,3 +20,28 @@ test('delivery ordering puts unscheduled orders last without mutating input',()=
  assert.equal(filterOrders(rows,{...filters,sort:'delivery'},now)[0].id,21);
  assert.equal(rows[0].id,22);
 });
+
+const catalogue=[{id:1,selling_status:'archived'},{id:20,selling_status:'active'},{id:21,selling_status:'paused'}];
+const oldItems=[{product:1,product_name:'Jasmine Rice'}];
+test('only closed, fully archived history is hidden; open, mixed and unknown records remain',()=>{
+ const rows=[{...order,id:1,status:'delivered',items:oldItems},
+  {...order,id:2,status:'cancelled',items:oldItems},{...order,id:3,items:oldItems},
+  {...order,id:4,status:'delivered',items:[...oldItems,{product:20}]},
+  {...order,id:5,status:'delivered',items:[{product:null}]},
+  {...order,id:6,status:'delivered',items:[]},
+  {...order,id:7,status:'delivered',items:[{product:21}]}];
+ const scoped={...filters,includeArchived:false};
+ assert.deepEqual(filterOrders(rows,scoped,now,catalogue).map(o=>o.id),[7,6,5,4,3]);
+ assert.equal(filterOrders(rows,{...scoped,includeArchived:true},now,catalogue).length,7);
+ assert.equal(filterOrders(rows,scoped,now,null).length,7);
+ assert.deepEqual(filterOrders(rows,{...scoped,review:'archived-menus'},now,catalogue).map(o=>o.id),[3,2,1]);
+ assert.equal(rows[0].id,1);
+});
+test('missing-date review matches planner warnings, including dated tasks with no delivery',()=>{
+ const rows=[{...order,id:1,delivery_at:null},{...order,id:2,delivery_at:'invalid'},
+  {...order,id:3,delivery_at:null,status:'delivered'},
+  {...order,id:4,delivery_at:null,status:'cancelled'},
+  {...order,id:5}, {...order,id:6,delivery_at:null,preparation_plan:{tasks:[{name:'Legacy task'}]}},
+  {...order,id:7,delivery_at:null,status:'processing'}];
+ assert.deepEqual(filterOrders(rows,{...filters,review:'missing-delivery'},now).map(o=>o.id),[7,6,2,1]);
+});
