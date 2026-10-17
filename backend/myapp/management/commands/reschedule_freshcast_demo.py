@@ -28,6 +28,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--order-id', type=int, required=True)
         parser.add_argument('--delivery-at', required=True, help='ISO timestamp with timezone, e.g. 2027-01-13T15:00:00+08:00')
+        parser.add_argument('--allow-manual-review', action='store_true',
+                            help='Allow saving an unscheduled delivery request that still needs owner planning; reserves no tasks.')
         parser.add_argument('--apply', action='store_true')
         parser.add_argument('--confirm-fictional', action='store_true')
         parser.add_argument('--expected-fingerprint')
@@ -44,14 +46,14 @@ class Command(BaseCommand):
         if options['apply'] and not all(options[k] for k in ('confirm_fictional', 'expected_fingerprint', 'actor_id', 'backup')):
             raise CommandError('Apply requires --confirm-fictional, --expected-fingerprint, --actor-id and --backup.')
         with transaction.atomic():
-            # Lock the same scheduling inputs during apply, then recalculate availability.
-            if options['apply']:
-                list(Product.objects.select_for_update().order_by('pk'))
-                list(Order.objects.select_for_update().order_by('pk'))
+            # Same lock order as checkout and delivery changes: store, orders, menus.
             store_query = Storefront.objects.select_for_update() if options['apply'] else Storefront.objects
             store = store_query.filter(pk=1).first()
             if not store:
                 raise CommandError('Existing storefront settings are required; none were created.')
+            if options['apply']:
+                list(Order.objects.select_for_update().order_by('pk'))
+                list(Product.objects.select_for_update().order_by('pk'))
             order = Order.objects.filter(pk=options['order_id']).first()
             if not order:
                 raise CommandError('Order does not exist.')
@@ -61,7 +63,8 @@ class Command(BaseCommand):
             before, _ = reviewed_snapshot()
             context = {'database': before, 'store': list(Storefront.objects.filter(pk=1).values()),
                        'blocks': list(KitchenBlock.objects.order_by('pk').values()),
-                       'order_id': order.pk, 'delivery_at': delivery.isoformat()}
+                       'order_id': order.pk, 'delivery_at': delivery.isoformat(),
+                       'allow_manual_review': options['allow_manual_review']}
             fingerprint = hashlib.sha256(encode(context).encode()).hexdigest()
             if options['apply'] and options['expected_fingerprint'] != fingerprint:
                 raise CommandError('Data or requested delivery changed; run and review a new preview.')
@@ -69,18 +72,22 @@ class Command(BaseCommand):
             if not items or any(not item.product or not item.product.preparation_tasks for item in items):
                 raise CommandError('Every menu must already have detailed preparation tasks.')
             try:
-                plan = schedule_order(items, delivery, store, exclude_order_id=order.pk, notice_from=order.created_at)
+                plan = schedule_order(items, delivery, store, exclude_order_id=order.pk,
+                                      notice_from=order.created_at, allow_manual_review=options['allow_manual_review'])
             except ValidationError as error:
                 if options['apply']:
                     raise CommandError('Schedule remains infeasible; no records were changed: ' + str(error.detail)) from None
-                self.stdout.write(encode({'mode': 'preview', 'ready': False, 'order_id': order.pk,
+                self.stdout.write(encode({'mode': 'preview', 'ready': False, 'requires_manual_planning': False, 'order_id': order.pk,
                                          'detail': error.detail, 'fingerprint': fingerprint}))
                 return
-            result = {'mode': 'preview', 'ready': True, 'order_id': order.pk, 'fingerprint': fingerprint,
+            needs_review = bool(plan.get('needs_review'))
+            result = {'mode': 'preview', 'ready': not needs_review, 'requires_manual_planning': needs_review,
+                      'review_reason': plan.get('review_reason'), 'order_id': order.pk, 'fingerprint': fingerprint,
                       'old_delivery_at': order.delivery_at, 'proposed_delivery_at': delivery,
                       'preparation_start': plan['start'], 'preparation_end': plan['end'],
                       'task_count': len(plan['tasks']),
-                      'note': 'Existing recipe, holding, resource, capacity and working-hour limits remain in force. No payment or stock changes.'}
+                      'note': ('Unscheduled delivery request only. No preparation tasks or kitchen capacity reserved. Owner planning is still required.'
+                               if needs_review else 'Existing recipe, holding, resource, capacity and working-hour limits remain in force. No payment or stock changes.')}
             if options['apply']:
                 actor = get_user_model().objects.filter(pk=options['actor_id'], is_staff=True).first()
                 if not actor:
@@ -97,9 +104,10 @@ class Command(BaseCommand):
                     raise CommandError('Cannot create a new private backup; choose an existing directory and unused filename.') from None
                 original = next(row for row in before['orders'] if row['id'] == order.pk)
                 original_items = [row for row in before['items'] if row['order_id'] == order.pk]
-                for item in items:
-                    item.preparation_snapshot = preparation_snapshot(item.product)
-                    item.save(update_fields=['preparation_snapshot'])
+                if not needs_review:
+                    for item in items:
+                        item.preparation_snapshot = preparation_snapshot(item.product)
+                        item.save(update_fields=['preparation_snapshot'])
                 order.delivery_at = delivery
                 order.preparation_at, order.preparation_end_at = plan['start'], plan['end']
                 order.preparation_plan = dict(plan_snapshot(plan), maintenance_source='fictional_demo')
@@ -109,5 +117,6 @@ class Command(BaseCommand):
                                               'order': original, 'items': original_items})),
                     after=json.loads(encode({'maintenance_source': 'fictional_demo', 'maintenance_id': run_id,
                                              'order': {field: getattr(order, field) for field in ORDER_FIELDS}})))
-                result.update(mode='applied', maintenance_id=run_id)
+                result.update(mode='applied', maintenance_id=run_id,
+                              outcome='delivery_request_saved_needs_review' if needs_review else 'scheduled')
             self.stdout.write(encode(result))

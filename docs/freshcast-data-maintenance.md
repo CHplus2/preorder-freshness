@@ -70,3 +70,18 @@ python backend/manage.py reschedule_freshcast_demo --order-id 29 --delivery-at "
 ```
 
 This is an explicit demo rebooking, not a change to observed sales dates or a model prediction. Order 28 remains for manual planning review. More hours alone do not resolve mutually incompatible finish times and step gaps across five menus; do not silently broaden holding limits, fabricate resources, split charged orders or mark a missing plan as valid.
+
+### Delivery requests requiring manual planning
+
+The admin `Edit order` dialog now includes the existing delivery-change control as well as status controls. The same delivery eligibility, preview and confirmation checks remain in force. A missing button on a deployed build does not establish the exact cause; verify deployment includes the fix before diagnosing a UI rendering fault.
+
+For fictional records, `reschedule_freshcast_demo --allow-manual-review` explicitly permits saving a delivery request when the normal scheduler returns `needs_review`. The delivery must still satisfy weekday, horizon, notice and capacity validation. No recipe/holding/equipment limits are loosened. No preparation start/end/tasks or capacity are reserved when automatic planning fails. Existing accepted preparation snapshots stay unchanged in that case. The order remains pending and must be reviewed in Planner before work starts. Unexpected database failures still propagate. The preview and apply fingerprint include this flag; a preview from strict mode cannot authorize manual-review mode.
+
+For example, preview fictional order 28's later requested delivery with:
+
+```powershell
+$preview = python backend/manage.py reschedule_freshcast_demo --order-id 28 --delivery-at "2026-10-24T18:00:00+08:00" --allow-manual-review | ConvertFrom-Json
+$preview | Format-List
+```
+
+Here `ready: False` with `requires_manual_planning: True` explicitly means **unscheduled**, not success at producing a task plan. Only an intentional apply with this same flag, a reviewed fingerprint, staff actor, fictional confirmation and new private backup can save the changed request. Inspect `outcome`: `delivery_request_saved_needs_review` is a pending delivery request; `scheduled` means an actual task plan was found. The existing Planner manual-window editor can then preview an owner-arranged whole-kitchen reservation, with explicit overlap/handling warnings and confirmation. Such a reservation is not a validated individual recipe schedule.

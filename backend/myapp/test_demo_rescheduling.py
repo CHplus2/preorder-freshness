@@ -98,3 +98,52 @@ class DemoReschedulingTests(TestCase):
             Order.objects.filter(pk=self.order.pk).update(**fields)
             with self.assertRaises(CommandError):
                 self.run_command()
+
+    def test_explicit_manual_review_saves_only_request_without_fabricated_tasks(self):
+        original_snapshot = self.order.items.get().preparation_snapshot
+        requested = self.original + timedelta(days=1)
+        preview = self.run_command('--allow-manual-review', delivery=requested)
+        self.assertFalse(preview['ready'])
+        self.assertTrue(preview['requires_manual_planning'])
+        self.assertEqual(preview['task_count'], 0)
+        self.assertIsNone(preview['preparation_start'])
+        self.order.refresh_from_db(); self.assertEqual(self.order.preparation_plan, {})
+        with TemporaryDirectory() as directory:
+            result = self.run_command('--allow-manual-review', '--apply', '--confirm-fictional',
+                '--expected-fingerprint', preview['fingerprint'], '--actor-id', str(self.actor.pk),
+                '--backup', str(Path(directory)/'request.json'), delivery=requested)
+        self.assertEqual(result['outcome'], 'delivery_request_saved_needs_review')
+        self.order.refresh_from_db(); self.menu.refresh_from_db()
+        self.assertEqual(self.order.status, 'pending')
+        self.assertEqual(self.order.delivery_at, requested)
+        self.assertEqual(self.order.payment_status, 'paid')
+        self.assertTrue(self.order.preparation_plan['needs_review'])
+        self.assertEqual(self.order.preparation_plan['tasks'], [])
+        self.assertIsNone(self.order.preparation_at)
+        self.assertEqual(self.order.items.get().preparation_snapshot, original_snapshot)
+        self.assertEqual(self.menu.max_early_minutes, 0)
+        self.assertFalse(PaymentEvent.objects.exists())
+        self.assertEqual(OrderAmendment.objects.count(), 1)
+
+    def test_manual_review_intent_requires_its_own_fingerprint(self):
+        preview = self.run_command()
+        with TemporaryDirectory() as directory:
+            with self.assertRaises(CommandError):
+                self.run_command('--allow-manual-review', '--apply', '--confirm-fictional',
+                    '--expected-fingerprint', preview['fingerprint'], '--actor-id', str(self.actor.pk),
+                    '--backup', str(Path(directory)/'no.json'))
+        self.assertFalse(OrderAmendment.objects.exists())
+
+    def test_manual_review_cannot_bypass_delivery_horizon(self):
+        delivery = self.later+timedelta(days=100)
+        preview = self.run_command('--allow-manual-review', delivery=delivery)
+        self.assertFalse(preview['ready'])
+        self.assertFalse(preview['requires_manual_planning'])
+        with TemporaryDirectory() as directory:
+            with self.assertRaises(CommandError):
+                self.run_command('--allow-manual-review', '--apply', '--confirm-fictional',
+                    '--expected-fingerprint', preview['fingerprint'], '--actor-id', str(self.actor.pk),
+                    '--backup', str(Path(directory)/'no.json'), delivery=delivery)
+            self.assertFalse((Path(directory)/'no.json').exists())
+        self.order.refresh_from_db(); self.assertEqual(self.order.delivery_at, self.original)
+        self.assertFalse(OrderAmendment.objects.exists())

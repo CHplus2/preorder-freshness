@@ -150,6 +150,14 @@ export default function AdminOrdersPage() {
                 </div>
 
                 {editingOrder.preparation_plan?.needs_review && <p className="owner-order-note"><Link to="/admin/planner">Open Planner</Link>. Set and confirm preparation times in Planner first. You can then move the order to Processing when work starts.</p>}
+                <section aria-label="Delivery time">
+                  <h3>Delivery time</h3>
+                  <p>{editingOrder.delivery_at ? new Date(editingOrder.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'No delivery time recorded'} · Malaysia time</p>
+                  <RescheduleOrder key={editingOrder.id} order={editingOrder} onSaved={async () => {
+                    setEditingOrder(null);
+                    await fetchAdminOrders();
+                  }}/>
+                </section>
                 {/* Status Select */}
                 <label htmlFor="status-select">Order Status:</label>
                 <select
