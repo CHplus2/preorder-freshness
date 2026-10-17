@@ -19,5 +19,25 @@
 .pd .pd-source p { margin: 6px 0 0; font-size: 14px; font-weight: 400; }
 .pd .fc-build-identity { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d5d9ce; color: #5a6b5e; font-size: 12px; font-weight: 400; }
 .pd .fc-build-identity code { color: inherit; font-size: inherit; }
+.pd .fc-build-identity summary { font-size: 12px; font-weight: 400; }
+.pd .fc-workflow-links { display: flex; flex-wrap: wrap; gap: 12px; margin: 18px 0; }
+.pd .fc-workflow-links a {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 10px 16px; border: 1px solid #809982;
+  border-radius: 10px; background: #f3f7ee; color: #244b35;
+  text-decoration: none; font-size: 14px; font-weight: 600; line-height: 1.4;
+}
+.pd .fc-workflow-links a:hover { background: #e2ecd9; text-decoration: underline; }
+.pd .fc-workflow-links a:focus-visible { outline: 3px solid #386747; outline-offset: 3px; }
+.pd .fc-workflow-links a.admin-primary { background: #356449; color: #fff; }
+.pd .fc-workflow-links a.admin-primary:hover { background: #274e38; }
+.pd .local-action-review { padding: 18px; border: 1px solid #c8b99e; border-radius: 14px; margin: 18px 0; background: #fffdf7; }
+.pd .local-action-measures { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; margin: 20px 0; }
+.pd .local-action-measures article { min-width: 0; border: 1px solid #d5d9ce; border-radius: 10px; padding: 14px; }
+.pd .local-action-measures h4 { margin: 0 0 12px; font-size: 14px; }
+.pd .local-action-measures dl { display: grid; gap: 12px; margin: 0; }
+.pd .local-action-measures dt { font-size: 12px; color: #5a6b5e; }
+.pd .local-action-measures dd { margin: 4px 0 0; font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+.pd .fc-actions small { display: block; font-size: 12px; font-weight: 400; line-height: 1.5; margin-top: 4px; }
 .pd .fc-zero-waste-note { padding: 12px 16px; background: #edf3e9; border-radius: 10px; }
 .pd .fc-zero-waste-note strong { font-weight: 600; }

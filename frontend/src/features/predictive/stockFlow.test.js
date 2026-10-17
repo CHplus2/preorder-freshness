@@ -28,7 +28,8 @@ try {
  assert.match(html,/Mee Goreng Telur/);
  assert.match(html,/additional portions ×/);
  assert.match(html,/Demand after 2026-10-19 cannot rescue this batch/);
- assert.ok(html.indexOf('Expires 2026-10-19') < html.indexOf('Whole-stock balance'));
+ assert.ok(html.indexOf('Use by 2026-10-19') < html.indexOf('Whole-stock balance'));
+ assert.match(html,/<details><summary>Batch identity &amp; recorded cost<\/summary>/);
  assert.match(render({...risk,forecast_expiring_unused:0}),/zero projected waste can coexist with a shortage/);
  assert.match(render({...risk,stock_flow:undefined}),/Stock dated later carries forward/);
  const {default:KitchenForecastReplay}=await server.ssrLoadModule('/src/features/predictive/KitchenForecastReplay.jsx');
@@ -41,7 +42,7 @@ try {
  assert.equal((nav.match(/<button/g)||[]).length,5);assert.equal((nav.match(/aria-current="step"/g)||[]).length,1);
  assert.match(renderToStaticMarkup(createElement(SourceNotice,{source:'live'})),/simulated stock/);
  assert.match(renderToStaticMarkup(createElement(SourceNotice,{source:'local',synthetic:true})),/generated history/);
- assert.match(renderToStaticMarkup(createElement(BuildIdentity)),/Stock and expiry experience/);
+ assert.match(renderToStaticMarkup(createElement(BuildIdentity)),/<details><summary>Technical details<\/summary>/);
  const scores=Object.fromEntries(['mean_28','mean_7','same_weekday'].map(key=>[key,{mae:1.12,wape_percent:46.22,daily_actual:[2],daily_predictions:[1]}]));
  const menu={product_id:1,product_name:'Mee Goreng Telur',method:'mean_28',synthetic_history_items:70,
    forecast_portions:16.21,additional_forecast_portions:13.89,history_days:112,price_myr:10,confidence:'evaluated',recipe_complete:true,
@@ -54,7 +55,7 @@ try {
  assert.match(replay,/not an accuracy percentage/);
  const unvalidated={...menu,evaluation:{...menu.evaluation,planning_horizon_test:{horizon_days:28,test:{...menu.evaluation.planning_horizon_test.test,mean_28:{windows:0,mae:null,wape_percent:null,window_total_mae:null}}}}};
  assert.match(renderToStaticMarkup(createElement(KitchenForecastReplay,{menus:[unvalidated]})),/This horizon is unvalidated/);
- const {default:KitchenDecisionJourney}=await server.ssrLoadModule('/src/features/predictive/KitchenDecisionJourney.jsx');
+ const {default:KitchenDecisionJourney,KitchenWorkflowReview,MenuEvidence}=await server.ssrLoadModule('/src/features/predictive/KitchenDecisionJourney.jsx');
  const selected={...risk,ingredient_id:'raw-material-1',raw_material_id:1,ingredient_name:'Fresh yellow noodles',
    signal:'review',shortfall_quantity:0,confirmed_requirement:0,eligible_stock:5400,forecast_waste_cost_myr:1.18,
    waste_sensitivity_low:0,waste_sensitivity_high:1078.495,alert_reason:'Generated history needs verification',
@@ -70,6 +71,31 @@ try {
  assert.match(journey,/Central forecast · Step 1 result/);
  assert.match(journey,/Lower demand → more unused/);
  assert.doesNotMatch(journey,/Projected waste sensitivity:/);
+ const reviewedRisk={...selected,forecast_shortfall:1234};
+ const links={preparation:'/admin/planner',menus:'/admin/products',inventory:'/admin/inventory'};
+ const renderReview=action=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(KitchenWorkflowReview,{action,risk:reviewedRisk,links})));
+ const preparationReview=renderReview('menu');
+ assert.match(preparationReview,/OUTCOME NOT SIMULATED/);
+ assert.match(preparationReview,/1.234 kg/);
+ assert.match(preparationReview,/Not simulated/);
+ assert.match(preparationReview,/No new schedule, sales uplift, cost or benefit/);
+ assert.doesNotMatch(preparationReview,/assumed action cost, with the same/);
+ assert.match(renderReview('wait'),/Unchanged/);
+ const menuWithAdjustments={...menu,demand_adjustments:{delivery_day_excluded:0,lead_time_excluded:2.32,capacity_excluded:0,recorded_orders_offset:0},sensitivity_error_portions_per_day:1.069};
+ const menuEvidence=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(MenuEvidence,{support:{menus:[menuWithAdjustments,{...menuWithAdjustments,product_id:2,product_name:'Other menu'}]},compact:true})));
+ assert.match(menuEvidence,/aria-label="Menu to inspect"/);
+ assert.match(menuEvidence,/16.21 forecast portions · full window/);
+ assert.match(menuEvidence,/13.89 additional portions eligible to plan/);
+ assert.match(menuEvidence,/− 2.32 portions before the earliest permitted delivery/);
+ assert.doesNotMatch(menuEvidence,/0 portions outside/);
+ assert.doesNotMatch(menuEvidence,/<h3>Other menu<\/h3>/);
+ assert.match(menuEvidence,/not a probability range/);
+ for(const [step,action] of [[2,'menu'],[3,'menu'],[3,'wait'],[3,'purchasing']]) {
+   const screen=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:[`/admin/ai/decisions?source=local&step=${step}&action=${action}`]},createElement(KitchenDecisionJourney,{plan,comparison:null,onComparison:()=>{},onClear:()=>{}})));
+   assert.match(screen,/Decision journey/);
+   if(step===3 && action==='menu')assert.match(screen,/OUTCOME NOT SIMULATED/);
+   if(step===3 && action==='purchasing')assert.match(screen,/Compare purchase/);
+ }
  const {default:KitchenPurchaseComparison}=await server.ssrLoadModule('/src/features/predictive/KitchenPurchaseComparison.jsx');
  const comparedRisk={...selected,forecast_waste_cost_myr:2,potential_waste_cost_myr:2,expiring_unused_quantity:196.891};
  const comparison={purchase:{raw_material_id:1},baseline:{ingredient_risks:[comparedRisk],decision_support:{ingredient_risks:[comparedRisk]}},

@@ -461,8 +461,8 @@ export default function KitchenDecisionJourney({
             </details>
             }
             <details className="local-deep-evidence"><summary>Menus behind this forecast · {r.menus.length}</summary><MenuEvidence support={support} risk={r} compact/></details>
-            <Link to={links.menus}>Review menu recipes</Link> ·{" "}
-            <Link to={links.preparation}>Check preparation dates</Link>
+            <div className="fc-workflow-links"><Link to={links.menus}>Review menu recipes</Link>
+            <Link to={links.preparation}>Check preparation dates</Link></div>
           </>
         )}
         {step === 2 && (
@@ -484,12 +484,13 @@ export default function KitchenDecisionJourney({
                   />
                   <span>
                     <strong>{a.title}</strong>
+                    <small>{a.id==='purchasing' ? 'Dated stock simulation' : a.id==='marketing' ? 'Assumption-based worksheet' : 'Workflow review · outcome not simulated'}</small>
                     <span>{a.id==='marketing' && r.forecast_expiring_unused===0 ? 'No expiry surplus is projected. A promotion is not an ingredient rescue for this case.' : a.detail}</span>
                   </span>
                 </label>
               ))}
             </fieldset>
-            <div className="fc-brief-actions">
+            <div className="fc-brief-actions fc-workflow-links">
               <Link
                 className="admin-primary"
                 to={
@@ -542,22 +543,11 @@ export default function KitchenDecisionJourney({
               />
             ) : (
               <>
-                <h3>{action.title}</h3>
-                <p>
-                  {action.id==='wait'?'Check stock, excluded orders and forecast coverage before changing the plan.':'Review menus using this ingredient and confirm preparation capacity.'}
-                </p>
-                <p>
-                  {action.id==='wait'?'Monitoring leaves this forecast unchanged.':'The planner checks actual tasks, equipment and freshness; this option does not calculate a new schedule.'}
-                </p>
-                <Link to={links.preparation}>Review preparation options</Link> ·{" "}
-                <Link to={links.menus}>Review recipes</Link>
+                <KitchenWorkflowReview action={action.id} risk={r} links={links}/>
+                {(r.shortfall_quantity>0 || r.forecast_shortfall>0) && <button onClick={() => choose('action','purchasing')}>Compare a purchase instead</button>}
               </>
             )}
-            <p>
-              Compare against “monitor”: no assumed action cost, with the same
-              baseline exposure. Projected exposure is not measured waste or
-              realised savings.
-            </p>
+            {(action.id==='purchasing' || action.id==='marketing') && <p>Current stock and demand are the baseline. Any compared purchase or marketing assumptions remain hypothetical; no operational action is executed.</p>}
           </>
         )}
         {step === 4 && (
@@ -633,41 +623,65 @@ export default function KitchenDecisionJourney({
   );
 }
 
+export function KitchenWorkflowReview({action, risk, links}) {
+  const monitoring=action==='wait';
+  return <section className="local-action-review" aria-label="Unsimulated workflow review">
+    <span className="pd-eyebrow">WORKFLOW REVIEW · OUTCOME NOT SIMULATED</span>
+    <h3>{monitoring ? 'Monitor before changing the plan' : 'Check preparation feasibility'}</h3>
+    <p>{monitoring ? 'Monitoring keeps the current plan unchanged. Review physical stock and excluded orders before deciding whether to act.' : 'Prioritising a menu may help only if the kitchen can prepare and sell it in time. Open the planner to check tasks, equipment and freshness.'}</p>
+    <div className="local-action-measures" role="group" aria-label="Current forecast versus proposed workflow change">{[
+        ...(risk.shortfall_quantity>0 ? [['Confirmed-order gap',risk.shortfall_quantity]] : []),
+        ['Forecast stock gap',risk.forecast_shortfall],
+        ['Unused stock at expiry',risk.forecast_expiring_unused],
+      ].map(([label,value])=><article key={label}><h4>{label}</h4><dl><div><dt>Current plan</dt><dd>{stockQuantity(value,risk.unit)}</dd></div><div><dt>{monitoring ? 'Continue monitoring' : 'After menu changes'}</dt><dd>{monitoring ? 'Unchanged' : 'Not simulated'}</dd></div></dl></article>)}</div>
+    <p>{monitoring ? 'Monitoring alone does not reduce a gap or expiry exposure. No action cost or benefit is estimated.' : 'No new schedule, sales uplift, cost or benefit has been calculated for this option. The figures above are the baseline, not evidence that this action improves it.'}</p>
+    <div className="fc-workflow-links"><Link to={monitoring ? links.inventory : links.preparation}>{monitoring ? 'Verify stock & expiry' : 'Review kitchen schedule'}</Link><Link to={links.menus}>Review recipes</Link></div>
+  </section>;
+}
+
 export function MenuEvidence({ support, risk, compact = false }) {
+  const [menuId, setMenuId] = useState('');
   const menus = support.menus.filter(
     (m) => !risk || risk.menus.some((r) => r.product_id === m.product_id),
   );
+  const selectedMenu=menus.find(m=>String(m.product_id)===menuId) || menus[0];
+  const visibleMenus=compact ? (selectedMenu ? [selectedMenu] : []) : menus;
   return (
     <div className={compact ? 'local-menu-evidence compact' : 'local-menu-evidence'}>
+      <p>Forecast portions cover the full selected window. Ingredient planning uses only additional demand that meets delivery days, lead time and capacity, after recorded orders are accounted for. Fractions are estimates, not instructions to prepare part of a meal.</p>
+      {compact && menus.length>1 && <label className="local-menu-select">Menu to inspect<select aria-label="Menu to inspect" value={selectedMenu.product_id} onChange={e=>setMenuId(e.target.value)}>{menus.map(m=><option key={m.product_id} value={m.product_id}>{m.product_name}</option>)}</select></label>}
       <div
         className="local-menu-tickets"
         aria-label="Local menu forecast tickets"
       >
-        {menus.map((m) => (
+        {visibleMenus.map((m) => (
           <article key={m.product_id}>
             {!compact && <IngredientDrawing name={m.product_name} />}
             <h3>{m.product_name}</h3>
             <strong>
               {m.forecast_portions === null
                 ? "History needed"
-                : `${qty(m.forecast_portions)} expected portions`}
+                : `${qty(m.forecast_portions)} forecast portions · full window`}
             </strong>
             <span>
               {m.additional_forecast_portions === null
                 ? "Additional demand unavailable"
-                : `${qty(m.additional_forecast_portions)} additional portions to plan`}
+                : `${qty(m.additional_forecast_portions)} additional portions eligible to plan`}
             </span>
             {!compact && <small>
               {m.history_days}-day history window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.synthetic_history_items>0?'synthetic scenario evidence':m.confidence}
             </small>}
             {m.demand_adjustments && m.forecast_portions!==null && <details><summary>Why the planning count differs</summary>
               <p>{qty(m.forecast_portions)} forecast portions across the full window.</p>
-              <ul><li>{qty(m.demand_adjustments.delivery_day_excluded)} outside permitted delivery days</li>
-              <li>{qty(m.demand_adjustments.lead_time_excluded)} before the menu lead time</li>
-              <li>{qty(m.demand_adjustments.capacity_excluded)} above daily capacity</li>
-              <li>{qty(m.demand_adjustments.recorded_orders_offset)} already covered by recorded order portions</li></ul>
-              <p>Remaining: {qty(m.additional_forecast_portions)} additional portions eligible for ingredient planning. The order offset may include unpaid requests to avoid counting them again; confirmed stock requirements are shown separately.</p>
-            {m.sensitivity_error_portions_per_day != null && <p>Demand what-if shift: ±{qty(m.sensitivity_error_portions_per_day)} portions/day.</p>}</details>}
+              <ul>{[
+                ['delivery_day_excluded','outside permitted delivery days'],
+                ['lead_time_excluded','before the earliest permitted delivery (menu lead time)'],
+                ['capacity_excluded','above daily capacity'],
+                ['recorded_orders_offset','already represented by recorded orders'],
+              ].filter(([key])=>m.demand_adjustments[key]>0).map(([key,label])=><li key={key}>− {qty(m.demand_adjustments[key])} portions {label}</li>)}</ul>
+              <p>= {qty(m.additional_forecast_portions)} additional portions eligible for ingredient planning. The estimate is not a confirmed booking or a reserved preparation schedule.</p>
+              {m.demand_adjustments.recorded_orders_offset>0 && <p>The order adjustment can include unpaid requests to avoid counting demand twice. Only eligible confirmed orders reserve stock.</p>}
+            {m.sensitivity_error_portions_per_day != null && <details><summary>Technical demand scenario assumption</summary><p>Demand is shifted by ±{qty(m.sensitivity_error_portions_per_day)} portions per day for the lower/higher-demand comparison. This is not a probability range or a recommended production buffer.</p></details>}</details>}
             {m.forecast_portions === null && <Link to="/admin/orders">Review completed sales history</Link>}
             <Link to="/admin/products?review=recipes">
               {m.recipe_complete ? "Review recipe" : "Recipe needs review"}
@@ -729,7 +743,7 @@ export function MenuEvidence({ support, risk, compact = false }) {
           )}
         </div>
       </details>
-      <KitchenForecastReplay menus={menus} />
+      <details><summary>Technical forecast evaluation &amp; historical replay</summary><KitchenForecastReplay menus={menus} /></details>
     </div>
   );
 }

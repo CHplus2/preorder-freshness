@@ -30,7 +30,7 @@ export function SourceNotice({source, synthetic = false}) {
 
 export function BuildIdentity() {
   const revision = typeof __FRESHCAST_REVISION__ === 'string' ? __FRESHCAST_REVISION__ : 'development';
-  return <footer className="fc-build-identity" aria-label="FreshCast version">FreshCast · Stock and expiry experience · Build <code>{revision}</code></footer>;
+  return <footer className="fc-build-identity"><details><summary>Technical details</summary><p>FreshCast build <code>{revision}</code> · include this version when reporting a problem.</p></details></footer>;
 }
 
 export function ZeroWasteNotice({waste, carried = null, unit, windowLabel}) {

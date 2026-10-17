@@ -15,13 +15,16 @@ export default function StockFlowEvidence({risk, window}) {
     </ol>
     <div className="local-expiry-lots">
       {expiring.map(b => <article key={b.batch_id}>
-        <header><strong>{b.batch_code || `Batch ${b.batch_id}`}</strong><span>Expires {b.expiry_date}</span></header>
+        <header><strong>Expiring stock</strong><span>Use by {b.expiry_date}</span></header>
         <p>{qty(b.opening_quantity)} {risk.unit} starting stock − {qty(b.confirmed_allocated)} {risk.unit} confirmed use − {qty(b.forecast_consumed)} {risk.unit} forecast use before expiry = <strong>{qty(b.projected_remaining)} {risk.unit} projected unused</strong>.</p>
         <div className="local-stock-bar" role="img" aria-label={`Batch ${b.batch_id}: ${qty(b.confirmed_allocated)} confirmed use, ${qty(b.forecast_consumed)} forecast use, ${qty(b.projected_remaining)} remaining ${risk.unit}`}>
           {[['confirmed', b.confirmed_allocated], ['forecast', b.forecast_consumed], ['unused', b.projected_remaining]].map(([name, value]) => <span key={name} className={name} style={{width: `${b.opening_quantity > 0 ? 100 * value / b.opening_quantity : 0}%`}} />)}
         </div>
         <p className="local-stock-legend">Confirmed use · Forecast use · Unused at expiry</p>
-        <p>Recorded unit cost: {b.unit_cost == null ? 'Unknown cost' : `RM ${new Intl.NumberFormat('en-MY', {maximumFractionDigits: 6}).format(b.unit_cost)} / ${risk.unit}`}.</p>
+        <details><summary>Batch identity &amp; recorded cost</summary><p>Batch reference: <code>{b.batch_code || `Batch ${b.batch_id}`}</code>.</p>
+          <p>Recorded unit cost: {b.unit_cost == null ? 'Unknown cost' : `RM ${new Intl.NumberFormat('en-MY', {maximumFractionDigits: 6}).format(b.unit_cost)} / ${risk.unit}`}.</p>
+          <p>Batch references identify individual deliveries of stock. A demo batch is a fictional scenario input.</p>
+        </details>
         <details><summary>When this lot is projected to be used</summary>
           {flow.allocations.filter(a => a.batch_id === b.batch_id).length ? <ul>{flow.allocations.filter(a => a.batch_id === b.batch_id).map(a => <li key={a.date}>{a.date}: {qty(a.quantity)} {risk.unit} additional forecast use</li>)}</ul> : <p>No additional forecast use fits this lot before its expiry.</p>}
           <p>Confirmed allocations are shown separately in the stock breakdown. Demand after {b.expiry_date} cannot rescue this batch.</p>

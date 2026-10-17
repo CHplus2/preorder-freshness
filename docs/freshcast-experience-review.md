@@ -35,8 +35,8 @@ not an autonomous purchasing, promotion or scheduling system.
 The old warning-heavy title (`Needs verification: Butter`) is no longer rendered
 by the current kitchen assistant. The heading is the business issue, such as
 `Stock may run out`, while review reasons remain expandable. A footer reading
-`FreshCast · Stock and expiry experience · Build …` identifies the deployed
-frontend revision. Vercel uses its provided commit SHA; local builds fall back
+`Technical details` disclosure in the footer identifies the deployed frontend
+revision without displaying a build hash in the main experience. Vercel uses its provided commit SHA; local builds fall back
 to Git metadata or `development` when unavailable.
 
 ## Backend and production follow-ups
@@ -75,3 +75,30 @@ production database verification.
   and normal-weight 15px summary text were verified with isolated fixtures.
 - Build metadata was checked with an explicit deployment commit SHA. Deployment
   promotion and live database/API behavior were not verified.
+
+## Follow-up: explain planning counts and action outcomes
+
+Batch references and recorded costs are now under a batch-details disclosure;
+the primary expiry card uses a plain stock label and use-by date. References such
+as `DEMO-FC-INV-16-NEAR` identify seeded fictional stock, not a model or a sale.
+
+The assistant's menu evidence displays one selectable menu at a time. The full
+window forecast and additional eligible planning count have distinct labels;
+only nonzero deductions are listed. Fractional forecast portions are estimates,
+not preparation instructions. Sensitivity assumptions and historical evaluation
+remain available under explicitly technical disclosures.
+
+Preparation review does not simulate a new schedule. Step 4 now separates its
+baseline from an uncalculated outcome, with no invented cost or benefit. Monitoring
+is explicitly unchanged. Cases with a stock gap can switch directly to the
+existing dated purchase comparison, which calls the backend scenario endpoint.
+Workflow links use spaced, keyboard-visible controls with at least 44px targets.
+
+Follow-up validation: all frontend suites and production build passed; regression
+assertions cover folded diagnostics, one-menu evidence, meaningful count
+deductions, uncalculated preparation outcomes and unchanged monitoring. No
+backend algorithms or database records changed.
+Browser checks also verified menu switching, folded batch/build diagnostics,
+switching to purchasing, action-link styling and target size, and responsive
+comparison cards at 320, 390 and 1365px. Both sources' three main views passed
+horizontal-overflow smoke checks; no uncaught page errors were observed.
