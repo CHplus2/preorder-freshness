@@ -12,6 +12,8 @@ import { IngredientDrawing } from "./PantryScene";
 import StockFlowEvidence from "./StockFlowEvidence";
 import KitchenStockStory, {EvidenceNotes} from "./KitchenStockStory";
 import {kitchenCase, caseQuantity, stockQuantity} from "./kitchenPresentation";
+import {SourceNotice, SourceSelector, BuildIdentity} from './FreshCastChrome';
+import {stockViewSelection} from './decisionNavigation';
 
 const qty = (v) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 3 }).format(v);
@@ -87,27 +89,9 @@ export default function LocalKitchen({ view }) {
           <RefreshCw size={16} /> Refresh kitchen data
         </button>
       </header>
-      <div className="pd-source live" role="status">
-        <strong>
-          {demoBatchCount>0 || plan?.decision_support.synthetic_history_items>0 ? 'DEMO SCENARIO · Kitchen records' : 'MY KITCHEN · Database records'}
-        </strong>
-        <p>
-          {demoBatchCount>0 || plan?.decision_support.synthetic_history_items>0 ? 'Includes generated history or fictional stock. Forecasts and costs are estimates for this scenario.' : 'Forecast demand, use expiring stock first, then review what to prepare or buy.'}
-        </p>
-      </div>
+      <SourceNotice source="local" synthetic={demoBatchCount>0 || plan?.decision_support.synthetic_history_items>0}/>
       <div className="pd-controls">
-        <label>
-          Data source
-          <select
-            aria-label="Data source"
-            value="local"
-            onChange={(e) => choose("source", e.target.value)}
-          >
-            <option value="local">My kitchen · database orders & stock</option>
-            <option value="live">Genpact · evaluated model demo</option>
-            <option value="demo">Frontend fixtures · no model run</option>
-          </select>
-        </label>
+        <SourceSelector value="local" onChange={value => choose('source',value)}/>
         <label>
           Planning window
           <select
@@ -238,19 +222,21 @@ export default function LocalKitchen({ view }) {
           </details>
         </>
       )}
+      <BuildIdentity/>
     </main>
   );
 }
 
 function OrderEvidence({ plan }) {
-  const [menuId,setMenuId]=useState('');
+  const [params,setParams]=useSearchParams();
+  const menuId=params.get('menu');
   const menus=plan.decision_support.menus;
   const selected=menus.find(menu=>String(menu.product_id)===menuId) || menus[0];
   return (
     <section className="pd-card">
       <h2>What might customers order?</h2>
       <p>Choose a menu to explore its forecast for {plan.window.start_date}–{plan.window.end_date}.</p>
-      {menus.length>0 && <label className="local-menu-select">Menu<select value={String(selected.product_id)} onChange={event=>setMenuId(event.target.value)}>{menus.map(menu=><option key={menu.product_id} value={menu.product_id}>{menu.product_name}</option>)}</select></label>}
+      {menus.length>0 && <label className="local-menu-select">Menu<select aria-label="Menu" value={String(selected.product_id)} onChange={event=>{const next=new URLSearchParams(params);next.set('menu',event.target.value);setParams(next,{replace:true});}}>{menus.map(menu=><option key={menu.product_id} value={menu.product_id}>{menu.product_name}</option>)}</select></label>}
       {selected?.daily_predictions?.length>0 && <figure className="local-demand-strip"><figcaption>Expected portions by delivery day · forecast estimates</figcaption><div>{selected.daily_predictions.map((value,index)=>{
         const day=new Date(Date.parse(`${plan.window.start_date}T12:00:00Z`)+index*86400000);
         const date=day.toISOString().slice(0,10);
@@ -337,39 +323,50 @@ function RiskTable({ plan }) {
 }
 
 function StockEvidence({ plan }) {
-  const [inspected, setInspected] = useState("");
-  const [page,setPage]=useState(0);
-  const risks=plan.decision_support.ingredient_risks;
+  const [params,setParams]=useSearchParams();
+  const {filter,rows:risks,selected}=stockViewSelection(plan.decision_support.ingredient_risks,params);
+  const [page,setPage]=useState(()=>Math.floor(Math.max(0,risks.findIndex(risk=>risk.ingredient_id===selected?.ingredient_id))/6));
   const pages=Math.max(1,Math.ceil(risks.length/6));
-  const selected =
-    plan.decision_support.ingredient_risks.find(
-      (r) => r.ingredient_id === inspected,
-    ) || plan.decision_support.ingredient_risks[0];
+  const currentPage=Math.min(page,pages-1);
+  function inspect(id) {
+    const next=new URLSearchParams(params);next.set('ingredient',id);setParams(next,{replace:true});
+    setPage(Math.floor(Math.max(0,risks.findIndex(risk=>risk.ingredient_id===id))/6));
+  }
+  function chooseFilter(value) {
+    const next=new URLSearchParams(params);next.set('stock_filter',value);
+    const choice=stockViewSelection(plan.decision_support.ingredient_risks,next).selected;
+    if(choice)next.set('ingredient',choice.ingredient_id);else next.delete('ingredient');
+    setPage(0);setParams(next,{replace:true});
+  }
+  const decisionParams=new URLSearchParams(params);
+  if(selected)decisionParams.set('ingredient',selected.ingredient_id);
+  decisionParams.set('step','0');decisionParams.delete('action');
   const names = new Map(
     plan.ingredient_risks.map((r) => [r.raw_material_id, r.ingredient_name]),
   );
   return (
     <>
       <section className="pd-card">
-        <h2>Your kitchen planning fridge</h2>
+        <h2>Which stock needs a closer look?</h2>
         <p>
           Open the fridge and choose an ingredient to compare forecast need with expiring stock.
         </p>
-        <label className="local-menu-select">Ingredient<select value={selected?.ingredient_id || ''} onChange={event=>{
-          setInspected(event.target.value);setPage(Math.floor(risks.findIndex(risk=>risk.ingredient_id===event.target.value)/6));
-        }}>{risks.map(risk=><option key={risk.ingredient_id} value={risk.ingredient_id}>{risk.ingredient_name} · {kitchenCase(risk).label}</option>)}</select></label>
+        <div className="fc-comparison-switch" role="group" aria-label="Stock issue filter">{[['all','All ingredients'],['waste','Waste exposure'],['shortage','Stock gaps']].map(([value,label])=><button key={value} aria-pressed={filter===value} onClick={()=>chooseFilter(value)}>{label}</button>)}</div>
+        <label className="local-menu-select">Ingredient<select aria-label="Ingredient" value={selected?.ingredient_id || ''} onChange={event=>{
+          inspect(event.target.value);
+        }} disabled={!risks.length}>{!risks.length && <option value="">No matching ingredients</option>}{risks.map(risk=><option key={risk.ingredient_id} value={risk.ingredient_id}>{risk.ingredient_name} · {kitchenCase(risk).label}</option>)}</select></label>
         <div className="local-fridge-inspection">
           <PlanningFridge
-            count={plan.decision_support.ingredient_risks.length}
+            count={risks.length}
             evidenceLabel="database ingredient records"
           >
             <div className="local-fridge-packages">
-              {risks.slice(Math.min(page,pages-1)*6,Math.min(page,pages-1)*6+6).map((r) => (
+              {risks.slice(currentPage*6,currentPage*6+6).map((r) => (
                 <button
                   key={r.ingredient_id}
                   aria-label={`Inspect kitchen ingredient ${r.ingredient_name}`}
                   aria-pressed={selected?.ingredient_id === r.ingredient_id}
-                  onClick={() => setInspected(r.ingredient_id)}
+                  onClick={() => inspect(r.ingredient_id)}
                 >
                   <IngredientDrawing name={r.ingredient_name} />
                   <strong>{r.ingredient_name}</strong>
@@ -404,16 +401,16 @@ function StockEvidence({ plan }) {
                   ))}
                 </dl>
                 <EvidenceNotes risk={selected}/>
+                <Link className="fc-open-decision" to={{pathname:'/admin/ai/decisions',search:`?${decisionParams}`}}>Explore this decision →</Link>
               </>
             ) : (
               <p>
-                No ingredient evidence returned. Check coverage, recipes and
-                recorded stock.
+                No ingredients match this view. Try All ingredients or review stock records.
               </p>
             )}
           </aside>
         </div>
-        {pages>1 && <div className="fc-journey-controls"><button disabled={page===0} onClick={()=>setPage(value=>value-1)}>Previous shelf</button><span>Shelf {page+1} of {pages}</span><button disabled={page>=pages-1} onClick={()=>setPage(value=>value+1)}>Next shelf</button></div>}
+        {pages>1 && <div className="fc-journey-controls"><button disabled={currentPage===0} onClick={()=>setPage(currentPage-1)}>Previous shelf</button><span>Shelf {currentPage+1} of {pages}</span><button disabled={currentPage>=pages-1} onClick={()=>setPage(currentPage+1)}>Next shelf</button></div>}
       </section>
       {selected && <section className="pd-card"><KitchenStockStory risk={selected} window={plan.window}/><details className="local-deep-evidence"><summary>Inspect batches & exact calculations</summary><StockFlowEvidence risk={selected} window={plan.window}/></details></section>}
       <details className="pd-card">

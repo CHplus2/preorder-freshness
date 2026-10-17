@@ -140,7 +140,7 @@ export default function RestaurantStations({
     {
       id: "forecast",
       name: "Order counter",
-      label: isLocal ? "Kitchen forecast & preorders" : "Demand analytics",
+      label: "Demand analytics",
       detail: available
         ? isLocal ? `${baseline.decision_support?.menus.filter(m=>m.forecast_portions!==null).length ?? 0} local menu forecasts · ${baseline.coverage.included_orders} stock-ready orders` : `${baseline.meal_forecasts.length} external meal forecasts`
         : unavailable,

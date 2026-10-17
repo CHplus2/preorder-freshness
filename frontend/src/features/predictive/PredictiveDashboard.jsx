@@ -10,6 +10,7 @@ import RestaurantStations from "./RestaurantStations";
 import RescueDemo from "./RescueDemo";
 import LocalKitchen from "./LocalKitchen";
 import { DemandExplorer, InventoryExplorer } from "./EvidenceExperiences";
+import {SourceNotice, SourceSelector, BuildIdentity} from './FreshCastChrome';
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
 const money = (n) =>
@@ -524,18 +525,8 @@ function GenpactDashboardContent({ view }) {
           <RefreshCw size={16} /> Refresh
         </button>
       </header>
-      <div className={`pd-source ${mode}`} role="status">
-        <strong>
-          {mode === "live"
-            ? "LIVE API · Model demand / SIMULATED operations"
-            : "FRONTEND FIXTURES · No model run"}
-        </strong>
-        <p>
-          {mode === "live"
-            ? "Demand uses the model. Stock, recipes and costs are simulated; external meal IDs are not mapped to your menu."
-            : "All displayed demand, metrics and operations are synthetic frontend fixtures, not actual model predictions."}
-        </p>
-      </div>
+      <SourceNotice source={mode}/>
+      <div className="pd-controls"><SourceSelector value={mode} onChange={value => choose('source',value)}/></div>
       <details className="fc-context" open={view !== "decisions"}>
         <summary>
           Kitchen & data ·{" "}
@@ -544,18 +535,6 @@ function GenpactDashboardContent({ view }) {
             : "configure this session"}
         </summary>
         <div className="pd-controls">
-          <label>
-            Data source
-            <select
-              aria-label="Data source"
-              value={mode}
-              onChange={(e) => choose("source", e.target.value)}
-            >
-              <option value="local">My kitchen · database orders & stock</option>
-              <option value="live">Genpact · evaluated model demo</option>
-              <option value="demo">Frontend fixtures</option>
-            </select>
-          </label>
           <label>
             Fulfillment center
             <select
@@ -723,6 +702,7 @@ function GenpactDashboardContent({ view }) {
           ...(current.scenario ? current.baseline.warnings : []),
         ]}
       />
+      <BuildIdentity/>
     </main>
   );
 }

@@ -157,9 +157,11 @@ export function validateLocalPlan(d, { scenario = false } = {}) {
 
 export async function loadLocalPlan(horizon = 7, options = {}) {
   requireValid(integer(horizon) && horizon <= 28);
-  return validateLocalPlan(
+  const plan=validateLocalPlan(
     await localRequest(`local-plan/?horizon_days=${horizon}`, options),
   );
+  requireValid(plan.window.horizon_days===horizon);
+  return plan;
 }
 
 export function validateDecisionPlan(data, options = {}) {
@@ -268,9 +270,11 @@ export function validateDecisionPlan(data, options = {}) {
 
 export async function loadLocalDecisionPlan(horizon = 7, options = {}) {
   requireValid(integer(horizon) && horizon <= 28);
-  return validateDecisionPlan(
+  const plan=validateDecisionPlan(
     await localRequest(`local-decisions/?horizon_days=${horizon}`, options),
   );
+  requireValid(plan.window.horizon_days===horizon);
+  return plan;
 }
 
 export async function loadLocalDecisionScenario(purchase, options = {}) {

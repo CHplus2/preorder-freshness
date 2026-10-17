@@ -3,6 +3,44 @@ import assert from 'node:assert/strict';
 import {marketingWorksheet,workflowLinks,workflowReturnLink,decisionSlip,kitchenReadiness,riskTiming} from './kitchenDecision.js';
 import {readReviews,saveReview,saveOutcomeNote} from './kitchenReviewStore.js';
 import {stockQuantity,stockStory,kitchenCase,caseQuantity} from './kitchenPresentation.js';
+import {decisionSteps,selectedDecisionStep,stockViewSelection,shoppingContextRows,genpactCarriedStock} from './decisionNavigation.js';
+
+test('both sources share the same five steps and reject unsupported step values',()=>{
+  assert.equal(decisionSteps.length,5);
+  for(const value of ['-1','5','x','1.5'])assert.equal(selectedDecisionStep(value),0);
+  assert.equal(selectedDecisionStep('4'),4);
+});
+
+test('fridge filters include forecast gaps, restore ingredient context and leave empty filters empty',()=>{
+  const risks=[{ingredient_id:'raw-material-1',forecast_shortfall:100,shortfall_quantity:0,forecast_expiring_unused:0},
+    {ingredient_id:'raw-material-2',forecast_shortfall:0,shortfall_quantity:0,forecast_expiring_unused:200}];
+  const params=new URLSearchParams('ingredient=raw-material-2');
+  assert.equal(stockViewSelection(risks,params).selected.ingredient_id,'raw-material-2');
+  params.set('stock_filter','shortage');
+  assert.equal(stockViewSelection(risks,params).selected.ingredient_id,'raw-material-1');
+  params.set('stock_filter','waste');
+  assert.equal(stockViewSelection(risks.slice(0,1),params).rows.length,0);
+  assert.equal(stockViewSelection(risks.slice(0,1),params).selected,undefined);
+});
+
+test('shopping handoff focuses only the ingredient, without inventing forecast purchase rows',()=>{
+  const rows=[{material_id:1,quantity:'10'},{material_id:2,quantity:'20'}];
+  const params=new URLSearchParams('from=freshcast&material=2');
+  assert.deepEqual(shoppingContextRows(rows,params),[rows[1]]);
+  assert.equal(shoppingContextRows(rows,params,true),rows);
+  assert.equal(shoppingContextRows(rows,new URLSearchParams('material=2')),rows);
+  assert.equal(rows.length,2);
+});
+
+test('Genpact carried stock uses eligible later batches, and missing evidence stays unknown',()=>{
+  const risk={ingredient_id:'rice',available_kg:100};
+  assert.equal(genpactCarriedStock({week:146,batch_allocations:[]},risk),null);
+  const data={week:146,batch_allocations:[
+    {ingredient_id:'rice',eligible:true,expiry_week:146,remaining_kg:10},
+    {ingredient_id:'rice',eligible:true,expiry_week:147,remaining_kg:20},
+    {ingredient_id:'rice',eligible:false,expiry_week:148,remaining_kg:100}]};
+  assert.equal(genpactCarriedStock(data,risk),20);
+});
 
 test('chicken shortage story separates expiring supply, later supply and uncovered demand',()=>{
   const risk={unit:'g',forecast_requirement:21841.927,forecast_shortfall:16081.927,shortfall_quantity:0,forecast_expiring_unused:0,

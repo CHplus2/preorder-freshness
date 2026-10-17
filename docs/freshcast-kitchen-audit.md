@@ -105,9 +105,10 @@ browser session. Existing main-bundle size warning remains.
 4. The planner's shopping endpoint and FreshCast confirmed-stock planning have
    different order eligibility rules. The planner can include unpaid/schedule-
    incomplete requests; FreshCast excludes them from confirmed stock allocation.
-   Ingredient context is displayed on the planner, but shopping is not filtered
-   to only that material. These surfaces must not be presented as one identical
-   committed purchasing ledger without a backend eligibility decision.
+   Ingredient context is now preserved through the fridge and planner; shopping
+   can be focused on the reviewed material or switched back to all ingredients.
+   These surfaces must not be presented as one identical committed purchasing
+   ledger without a backend eligibility decision.
 5. A speculative demand date is not a reserved preparation task. The scheduler
    must still validate worker/equipment capacity, holding times and existing
    bookings. No automatic rescue schedule, promotion or purchasing execution is

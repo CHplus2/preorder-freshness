@@ -12,6 +12,8 @@ import ProblemEvidence from "./ProblemEvidence";
 import { problemSummary } from "./problemSummary";
 import { rankRisks } from "./api";
 import { estimateTradeoff } from "./decisionMath";
+import {DecisionSteps, ZeroWasteNotice} from './FreshCastChrome';
+import {selectedDecisionStep, genpactCarriedStock, decisionSteps as steps} from './decisionNavigation';
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
 const money = (n) =>
@@ -26,13 +28,6 @@ const issues = {
   shortage: "Potential ingredient shortage",
   expiry_surplus_and_shortage: "Waste and shortage exposure",
 };
-const steps = [
-  "Spot the problem",
-  "Understand why",
-  "Explore actions",
-  "Compare tradeoffs",
-  "Review recommendation",
-];
 export default function DecisionAssistant({
   baseline,
   scenario,
@@ -69,6 +64,7 @@ export default function DecisionAssistant({
   if (!risk)
     return (
       <>
+        <DecisionSteps disabled/>
         <PantryScene
           risks={[]}
           selected=""
@@ -176,8 +172,7 @@ export default function DecisionAssistant({
 }
 function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
   const [params, setParams] = useSearchParams();
-  const value = Number(params.get("step") || 0);
-  const step = Number.isInteger(value) && value >= 0 && value < 5 ? value : 0;
+  const step = selectedDecisionStep(params.get('step'));
   const action = ["purchasing", "menu", "promotion"].includes(
     params.get("action"),
   )
@@ -272,19 +267,7 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
   ];
   return (
     <>
-      <ol className="fc-steps" aria-label="Decision journey">
-        {steps.map((s, i) => (
-          <li key={s}>
-            <button
-              onClick={() => setStep(i)}
-              aria-current={step === i ? "step" : undefined}
-            >
-              <span>{i + 1}</span>
-              {s}
-            </button>
-          </li>
-        ))}
-      </ol>
+      <DecisionSteps step={step} onChange={setStep}/>
       <section className="pd-card fc-problem" aria-live="polite">
         <span className="pd-eyebrow">
           STEP {step + 1} OF 5 · CENTER {baseline.center_id} · WEEK{" "}
@@ -314,6 +297,7 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
                 <strong>{money(risk.potential_waste_cost_myr)}</strong>
               </div>
             </div>
+            <ZeroWasteNotice waste={risk.expiring_unused_kg} carried={genpactCarriedStock(baseline,risk)} unit="kg" windowLabel={`during week ${baseline.week}`}/>
             <p className="pd-note">
               This is a predicted planning problem using simulated operational
               inputs, not observed waste or a local stock alert.
@@ -323,7 +307,7 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
         {step === 1 && (
           <>
             <h2 ref={headingRef} tabIndex={-1}>
-              Why might this happen?
+              Understand why
             </h2>
             <p className="fc-explanation">{risk.explanation}</p>
             <ProblemEvidence risk={risk} />
@@ -338,7 +322,7 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
         {step === 2 && (
           <>
             <h2 ref={headingRef} tabIndex={-1}>
-              What could you do?
+              Explore actions
             </h2>
             <p>
               Choose an action to explore. The backend purchasing guidance stays

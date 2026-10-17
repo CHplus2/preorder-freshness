@@ -230,6 +230,7 @@ test("decision contract joins native-unit stock evidence with local menu forecas
   assert.deepEqual(requests, [
     "/api/admin/predictive/local-decisions/?horizon_days=7",
   ]);
+  await assert.rejects(()=>loadLocalDecisionPlan(14,{fetchImpl:async()=>({ok:true,json:async()=>p})}),/contract/);
   const methods=['mean_28','mean_7','same_weekday'];
   const horizonTest={horizon_days:7,strategy:'Recursive held-out windows',test:Object.fromEntries(methods.map(k=>[k,{windows:8,mae:1,wape_percent:46.22,window_total_mae:3}]))};
   p.decision_support.menus=[{product_id:1,product_name:'Kitchen menu',method:'mean_28',history_days:70,

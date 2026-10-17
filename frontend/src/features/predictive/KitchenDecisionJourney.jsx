@@ -8,6 +8,8 @@ import KitchenForecastReplay from "./KitchenForecastReplay";
 import StockFlowEvidence from "./StockFlowEvidence";
 import KitchenStockStory, {EvidenceNotes} from "./KitchenStockStory";
 import {kitchenCase, stockQuantity, caseQuantity} from "./kitchenPresentation";
+import {DecisionSteps} from './FreshCastChrome';
+import {decisionSteps as steps, selectedDecisionStep} from './decisionNavigation';
 import {
   decisionSlip,
   kitchenActions,
@@ -33,13 +35,6 @@ const money = (v) =>
         style: "currency",
         currency: "MYR",
       }).format(v);
-const steps = [
-  "Spot the problem",
-  "Understand why",
-  "Explore actions",
-  "Compare tradeoffs",
-  "Review recommendation",
-];
 const positions = [
   [22, 34],
   [43, 24],
@@ -85,9 +80,7 @@ export default function KitchenDecisionJourney({
   const [save, setSave] = useState({}),
     saveKey = useRef(null);
   const heading = useRef(null);
-  const rawStep = Number(params.get("step") || 0),
-    step =
-      Number.isInteger(rawStep) && rawStep >= 0 && rawStep < 5 ? rawStep : 0;
+  const step = selectedDecisionStep(params.get('step'));
   const previousStep=useRef(step);
   const action =
     kitchenActions.find((a) => a.id === params.get("action") && !(a.id==='marketing' && selected?.forecast_expiring_unused===0)) ||
@@ -130,16 +123,7 @@ export default function KitchenDecisionJourney({
   if (!selected)
     return (
       <>
-        <ol className="fc-steps" aria-label="Decision journey">
-          {steps.map((label, i) => (
-            <li key={label}>
-              <button disabled>
-                <span>{i + 1}</span>
-                {label}
-              </button>
-            </li>
-          ))}
-        </ol>
+        <DecisionSteps disabled/>
         <section className="pantry-scene">
           <div className="fc-room">
             <KitchenRoom />
@@ -410,6 +394,7 @@ export default function KitchenDecisionJourney({
       <label>
         Ingredient problem
         <select
+          aria-label="Ingredient problem"
           value={r.ingredient_id}
           onChange={(e) => choose("ingredient", e.target.value)}
         >
@@ -420,19 +405,7 @@ export default function KitchenDecisionJourney({
           ))}
         </select>
       </label>
-      <ol className="fc-steps" aria-label="Decision journey">
-        {steps.map((label, i) => (
-          <li key={label}>
-            <button
-              aria-current={step === i ? "step" : undefined}
-              onClick={() => choose("step", i)}
-            >
-              <span>{i + 1}</span>
-              {label}
-            </button>
-          </li>
-        ))}
-      </ol>
+      <DecisionSteps step={step} onChange={value => choose('step', value)}/>
       <section className="pd-card fc-problem" aria-live="polite">
         <span className="pd-eyebrow">
           STEP {step + 1} OF 5 · {r.ingredient_name}

@@ -7,6 +7,8 @@ import { IngredientDrawing } from "./PantryScene";
 import PlanningFridge, { KitchenKeeper } from "./PlanningFridge";
 import ForecastReplay from "./ForecastReplay";
 import "./evidenceExperiences.css";
+import {ZeroWasteNotice} from './FreshCastChrome';
+import {genpactCarriedStock} from './decisionNavigation';
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
 const money = (n) =>
@@ -133,9 +135,15 @@ export function DemandExplorer({ rows, scenario, week, isFixture }) {
 }
 
 export function InventoryExplorer({ data, isFixture }) {
-  const [filter, setFilter] = useState("all");
-  const [inspected, setInspected] = useState(null);
-  const [params] = useSearchParams();
+  const [params,setParams] = useSearchParams();
+  const filter=['waste','shortage'].includes(params.get('stock_filter'))?params.get('stock_filter'):'all';
+  function setInspected(id) {const next=new URLSearchParams(params);next.set('ingredient',id);setParams(next,{replace:true});}
+  function setFilter(value) {
+    const next=new URLSearchParams(params);next.set('stock_filter',value);
+    const first=rankRisks(data.ingredient_risks).find(risk=>value==='all' || (value==='waste'?risk.expiring_unused_kg>0:risk.shortfall_kg>0));
+    if(first)next.set('ingredient',first.ingredient_id);else next.delete('ingredient');
+    setParams(next,{replace:true});
+  }
   const filters = [
     { id: "all", label: "All ingredients" },
     { id: "waste", label: "Waste exposure" },
@@ -148,7 +156,7 @@ export function InventoryExplorer({ data, isFixture }) {
   );
   const selected =
     rows.find(
-      (r) => r.ingredient_id === (inspected || params.get("ingredient")),
+      (r) => r.ingredient_id === params.get("ingredient"),
     ) || rows[0];
   const decisionParams = new URLSearchParams(params);
   if (selected) decisionParams.set("ingredient", selected.ingredient_id);
@@ -245,6 +253,7 @@ export function InventoryExplorer({ data, isFixture }) {
                 <strong>{money(selected.potential_waste_cost_myr)}</strong>
               </span>
             </div>
+            <ZeroWasteNotice waste={selected.expiring_unused_kg} carried={genpactCarriedStock(data,selected)} unit="kg" windowLabel={`during week ${data.week}`}/>
             <ForecastReplay
               key={`${data.center_id}:${data.week}:${data.promotion_scenario}:${selected.ingredient_id}`}
               data={data}

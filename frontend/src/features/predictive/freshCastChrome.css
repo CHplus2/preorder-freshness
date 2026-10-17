@@ -1,0 +1,23 @@
+.pd.pd-visual .fc-problem-summary,
+.pd.pd-visual .fc-explanation {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.65;
+  letter-spacing: normal;
+  max-width: 74ch;
+}
+.pd .local-evidence-notes li,
+.pd .local-evidence-notes p,
+.pd .fc-zero-waste-note {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: #4b6052;
+}
+.pd .pd-source strong { font-size: 14px; font-weight: 600; }
+.pd .pd-source p { margin: 6px 0 0; font-size: 14px; font-weight: 400; }
+.pd .fc-build-identity { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d5d9ce; color: #5a6b5e; font-size: 12px; font-weight: 400; }
+.pd .fc-build-identity code { color: inherit; font-size: inherit; }
+.pd .fc-zero-waste-note { padding: 12px 16px; background: #edf3e9; border-radius: 10px; }
+.pd .fc-zero-waste-note strong { font-weight: 600; }
