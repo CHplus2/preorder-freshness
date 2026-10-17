@@ -4,7 +4,7 @@ This is an operator tool for owner-confirmed **fictional demo records only**. No
 
 ## Before applying to the intended database
 
-Use the same PostgreSQL database and `DATABASE_SCHEMA` as the intended Vercel deployment, supplied privately through cloud environment Secrets/settings. Do not paste database URLs/passwords in chat or commit them. A local checkout without those settings does not have production data. An isolated maintenance process can use its own temporary SECRET_KEY; no production signing key is required by this command.
+Use the same PostgreSQL database and `DATABASE_SCHEMA` as the intended Vercel deployment, supplied privately through environment settings. The owner's read-only catalogue check identified the current app tables in **`django_app`**, not `public`; set `DATABASE_SCHEMA=django_app` for this deployment. Do not paste database URLs/passwords in chat or commit them. A local checkout without those settings does not have production data. An isolated maintenance process can use its own temporary SECRET_KEY; no production signing key is required by this command. A supplied URL does not establish network connectivity: the managed workspace's database connection failed, while the owner's local PowerShell session subsequently connected successfully.
 
 Preview with the intended flags:
 
@@ -44,3 +44,29 @@ Paying a future order supports confirmed stock planning; it is not a completed h
 ## This batch's access limit
 
 At preparation time the cloud workspace had no DATABASE_URL and no configured authenticated production browser/database session. The tool was exercised only on isolated synthetic test databases. The user's live “18 menus / 22 task plans” counts are not verified or changed until the intended database can be inspected and the fictional-data classification is settled.
+
+## Owner-reported local run and unresolved schedules
+
+The owner subsequently confirmed all affected orders are fictional, connected locally to `django_app`, and ran the maintenance command. Local read-only checks showed 19 archived grocery products and 24 active kitchen menus. All 24 active menus already had preparation steps. Archived products are retained for historical references. The owner reported a partial apply result and subsequently verified orders 28 and 29 were paid. Those two orders still lacked feasible task plans. This is user-reported local evidence, not independent access from the cloud workspace.
+
+Both deliveries were around 09:00, while the storefront had a 90-minute delivery buffer and kitchen hours starting at 08:00. Their menus had zero early-finish allowances. A temporary, unsaved test at 15:00 with a hypothetical 120-minute allowance passed for order 29 and failed for the five-menu order 28. Those hypothetical changes must not be described as saved or as verified food-holding policy.
+
+`reschedule_freshcast_demo` can preview a **single paid pending fictional order** at an explicit timezone-aware delivery time using the original preparation/holding rules. It never changes menu policy, prices, payment status, recipes or stock. It refuses refunded, nonpending or stock-deducted orders. A successful apply saves only that order's delivery/task plan and item preparation snapshots, creates an `OrderAmendment`, and requires an exclusive private before-backup outside the checkout. A fingerprint covers the requested order/date, original database snapshot, storefront settings and kitchen blocks; changes require a fresh preview. Availability is recalculated at apply. If no schedule fits, no write occurs.
+
+For the owner's existing PowerShell session (database variables and virtual environment already configured), exit the Django shell and update the checkout first. Preview the proposed **fictional order 29** change without the earlier hypothetical holding allowance:
+
+```powershell
+git pull --ff-only origin main
+$preview = python backend/manage.py reschedule_freshcast_demo --order-id 29 --delivery-at "2027-01-13T15:00:00+08:00" | ConvertFrom-Json
+$preview | Format-List
+```
+
+Only if there are no errors and `ready` is `True`, apply the exact reviewed intent with the owner's verified staff ID 2:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\FreshCast-backups" | Out-Null
+$backup = "$HOME\FreshCast-backups\before-order29-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
+python backend/manage.py reschedule_freshcast_demo --order-id 29 --delivery-at "2027-01-13T15:00:00+08:00" --apply --confirm-fictional --expected-fingerprint $preview.fingerprint --actor-id 2 --backup $backup
+```
+
+This is an explicit demo rebooking, not a change to observed sales dates or a model prediction. Order 28 remains for manual planning review. More hours alone do not resolve mutually incompatible finish times and step gaps across five menus; do not silently broaden holding limits, fabricate resources, split charged orders or mark a missing plan as valid.
