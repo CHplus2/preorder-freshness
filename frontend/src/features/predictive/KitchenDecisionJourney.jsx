@@ -10,6 +10,7 @@ import {
   kitchenActions,
   marketingWorksheet,
   workflowLinks,
+  riskTiming,
 } from "./kitchenDecision";
 import { getCookie } from "../../utils/cookieUtils";
 import { requestJSON } from "./api";
@@ -466,16 +467,16 @@ export default function KitchenDecisionJourney({
                 </strong>
               </div>
               <div>
+                <span>Additional forecast stock gap</span>
+                <strong>{qty(r.forecast_shortfall)} {r.unit}</strong>
+                <small>Estimated demand, separate from confirmed orders</small>
+              </div>
+              <div>
                 <span>Potential waste exposure</span>
                 <strong>{money(r.forecast_waste_cost_myr)}</strong>
               </div>
             </div>
-            <p>
-              Act before {r.urgent_by || plan.window.end_date}.{" "}
-              {r.confidence === "limited"
-                ? "Verification is needed before treating forecast exposure as an alert."
-                : "The forecast has a chronological evaluation; future performance can differ."}
-            </p>
+            <p>{riskTiming(r, plan.window.end_date)}</p>
           </>
         )}
         {step === 1 && (
@@ -712,8 +713,9 @@ export function MenuEvidence({ support, risk }) {
                 : `${qty(m.additional_forecast_portions)} additional to bookings`}
             </span>
             <small>
-              {m.history_days} recorded-history days · {m.confidence}
+              {m.history_days}-day history window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.confidence}
             </small>
+            {m.forecast_portions === null && <Link to="/admin/orders">Review completed sales history</Link>}
             <Link to="/admin/products?review=recipes">
               {m.recipe_complete ? "Review recipe" : "Recipe needs review"}
             </Link>
@@ -759,7 +761,7 @@ export function MenuEvidence({ support, risk }) {
                       : "Not evaluated"}
                   </td>
                   <td>
-                    {m.history_days} days · {m.confidence}
+                    {m.history_days}-day window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.confidence}
                     {!m.recipe_complete ? " · recipe missing" : ""}
                   </td>
                 </tr>

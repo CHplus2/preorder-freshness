@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {marketingWorksheet,workflowLinks,decisionSlip,kitchenReadiness} from './kitchenDecision.js';
+import {marketingWorksheet,workflowLinks,decisionSlip,kitchenReadiness,riskTiming} from './kitchenDecision.js';
 import {readReviews,saveReview,saveOutcomeNote} from './kitchenReviewStore.js';
 
 test('workflow links carry real ingredient context and preserve native units',()=>{
@@ -28,6 +28,13 @@ test('marketing scenario caps ingredient benefit and keeps unknown costs unknown
 });
 
 function storage(){let data=new Map();return {getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};}
+test('zero exposure has no invented deadline while forecast-only shortages require evidence review',()=>{
+  const zero={shortfall_quantity:0,forecast_shortfall:0,forecast_expiring_unused:0,signal:'watch',urgent_by:null};
+  assert.match(riskTiming(zero,'2026-10-23'),/No stock gap or projected unused/);
+  assert.doesNotMatch(riskTiming(zero,'2026-10-23'),/2026-10-23|Act before/);
+  assert.match(riskTiming({...zero,forecast_shortfall:10,signal:'review'},'2026-10-23'),/Review evidence by 2026-10-23/);
+  assert.match(riskTiming({...zero,shortfall_quantity:5,signal:'confirmed_shortage',urgent_by:'2026-10-18'},'2026-10-23'),/Review action by 2026-10-18/);
+});
 test('signed snapshots deduplicate retries and outcome notes never mutate signed baseline',()=>{
   const store=storage(),record={token:'signed',snapshot:{id:'one',baseline:{forecast_expiring_unused:20}}};
   saveReview(record,store);saveReview(record,store);

@@ -362,6 +362,7 @@ export default function AdminInventoryPage() {
       <div className="admin-header">
         <div>
           <h1>Inventory Management</h1>
+          {inventoryItems.some(item=>item.batch_code?.startsWith('DEMO-FC-INV-')) && <p role="status"><strong>Fictional inventory scenario.</strong> DEMO-FC-INV batches use assumed quantities and dates. They affect demo menu availability and stock planning; they are not verified goods received.</p>}
           <p>
             Manage raw materials, inventory batches and
             freshness.

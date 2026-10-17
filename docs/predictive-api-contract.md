@@ -210,7 +210,7 @@ Top-level fields:
 | `excluded_orders` | Entries: integer `order_id`, string `reason` |
 | `ingredient_risks` | Local material rows below, including inventory-only materials |
 | `batch_allocations` | Integer `order_id`, `batch_id`, `raw_material_id`; numeric `quantity`; `unit`; ISO `needed_by`, `use_by_date` |
-| `batches` | Integer `batch_id`, `raw_material_id`; `unit`; numeric `quantity`, `allocated_quantity`, `remaining_quantity`; ISO `received_date`, `expiry_date`; boolean `eligible`, `hypothetical` (false in baseline); string array `exclusion_reasons` |
+| `batches` | Integer `batch_id`, `raw_material_id`; `unit`; numeric `quantity`, `allocated_quantity`, `remaining_quantity`; ISO `received_date`, `expiry_date`; boolean `eligible`, `hypothetical` (false in baseline); string array `exclusion_reasons`; additive string `batch_code` (empty for a nonpersistent purchase scenario) |
 | `shortages` | Integer `order_id`, `raw_material_id`; numeric `quantity`; `unit`; ISO `needed_by` |
 | `recommendations` | Integer `priority` starting at 1, `raw_material_id`; `ingredient_id`, `risk_type`, nullable ISO `urgent_by`, `action`, `explanation` |
 | `warnings` | Array of strings, always display source/coverage caveats |

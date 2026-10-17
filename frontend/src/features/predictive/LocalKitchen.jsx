@@ -50,6 +50,7 @@ export default function LocalKitchen({ view }) {
       : { status: "loading" };
   const pair = comparison?.key === key ? comparison.data : null;
   const plan = pair?.baseline || current.data;
+  const demoBatchCount = plan?.batches.filter(b => b.batch_code?.startsWith('DEMO-FC-INV-')).length || 0;
   function choose(name, value) {
     const next = new URLSearchParams(params);
     next.set(name, value);
@@ -92,6 +93,7 @@ export default function LocalKitchen({ view }) {
           orders and accepted recipes. Database records may include fictional
           demo transactions.
         </p>
+        {demoBatchCount>0 && <p><strong>Fictional inventory scenario · {demoBatchCount} batches</strong>. Quantities and expiry dates are demo assumptions; costs use recorded estimates. Sales forecasts still use the existing kitchen history algorithm.</p>}
       </div>
       <div className="pd-controls">
         <label>
@@ -243,12 +245,15 @@ export default function LocalKitchen({ view }) {
 function OrderEvidence({ plan }) {
   return (
     <section className="pd-card">
+      <h2>Menu demand estimates</h2>
+      <p>Estimated portions come from paid, delivered sales history. Adding inventory enables stock projections, but does not create missing sales history.</p>
+      <MenuEvidence support={plan.decision_support} />
       <h2>Confirmed preorder requirements</h2>
       <p>
         Known bookings, not predictions of future customers. Names and recipes
         are accepted order snapshots.
       </p>
-      <MenuEvidence support={plan.decision_support} />
+      {!plan.included_orders.length && <p>No confirmed bookings qualify within this stock-planning window. Available menu forecasts above are separate from bookings.</p>}
       {plan.included_orders.map((o) => (
         <article key={o.order_id} className="local-order">
           <h3>

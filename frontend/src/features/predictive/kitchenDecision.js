@@ -37,3 +37,9 @@ export function kitchenReadiness(support) {
     missingRecipes: menus.filter((m) => !m.recipe_complete).length,
   };
 }
+
+export function riskTiming(risk, windowEnd) {
+  const exposure = risk.shortfall_quantity > 0 || risk.forecast_shortfall > 0 || risk.forecast_expiring_unused > 0;
+  if (!exposure) return 'No stock gap or projected unused quantity in the included evidence. Review data coverage before treating this as a risk.';
+  return `${risk.signal==='review' || risk.signal==='watch'?'Review evidence by':'Review action by'} ${risk.urgent_by || windowEnd}. Forecast quantities are estimates; verify stock and preparation before acting.`;
+}

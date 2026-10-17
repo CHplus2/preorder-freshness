@@ -119,6 +119,7 @@ def local_plan(horizon_days=7, hypothetical_purchase=None, snapshot=None):
             reasons.append('invalid_dates')
         eligible = not reasons
         row = {'batch_id': batch.pk, 'raw_material_id': batch.raw_material_id,
+               'batch_code': getattr(batch, 'batch_code', ''),
                'hypothetical': hypothetical,
                'unit': materials[batch.raw_material_id].unit, 'quantity': float(batch.quantity),
                'unit_cost': float(batch.unit_cost) if batch.unit_cost is not None else None,
@@ -210,6 +211,8 @@ def local_plan(horizon_days=7, hypothetical_purchase=None, snapshot=None):
         'No safety-stock policy or supplier lead times are assumed.']
     if exclusions:
         warnings.append('Some active orders are excluded; review excluded_orders before making purchasing decisions.')
+    if any(b['batch_code'].startswith('DEMO-FC-INV-') for b in batch_rows):
+        warnings.append('FICTIONAL INVENTORY: DEMO-FC-INV batches have assumed quantities and expiry dates for demonstration. Costs are estimates. They are not verified on-hand goods or model predictions.')
     if any(r['potential_waste_cost_myr'] is None for r in risks):
         warnings.append('Some expiring batch costs are missing; unknown waste exposure is null, not zero.')
     if hypothetical_purchase:
