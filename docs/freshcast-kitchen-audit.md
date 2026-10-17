@@ -5,6 +5,51 @@ purchase and marketing worksheets, planner hand-offs, saved reviews and outcome
 reporting. This is repository and isolated-test verification, not inspection of
 the deployed Supabase database or confirmation of a Vercel deployment.
 
+## Follow-up: manager-facing kitchen experience
+
+The primary decision screens now lead with a short stock story rather than the
+audit ledger. A case is described as an expiry surplus, forecast gap, confirmed
+gap, mixed timing problem or covered forecast, independently of its evidence
+quality. A visible demo-source banner remains; detailed review reasons are
+expandable rather than repeated as the main headline.
+
+Step 1 shows demand, available stock and the relevant surplus/gap. Step 2 shows
+expiring stock and later-expiring stock separately, followed by forecast need
+minus actual dated coverage from each stock group equals the additional forecast
+gap. This uses the existing backend allocation ledger, not a new FEFO simulation
+or forecast. Available stock is never assumed usable after expiry.
+
+For the supplied chicken scenario, the displayed ledger is:
+21,841.927 g demand − 1,800 g expiring-stock use − 3,960 g later-stock use =
+16,081.927 g uncovered, with zero projected unused stock at expiry. Labels use kg
+for larger gram quantities while the API, detailed ledger and purchase inputs
+retain native units. A regression fixture verifies those dated FEFO results.
+
+Detailed batch calculations, daily menu-to-recipe traces and model comparisons
+remain available under disclosures. All-zero waste sensitivity panels are hidden.
+Forecast gaps lead to purchase comparison; a surplus-rescue promotion is disabled
+when no expiry surplus is projected. Purchase comparisons lead with forecast gaps
+and projected expiry waste rather than mixing in confirmed-only leftovers.
+
+Demand analytics lets the manager select one menu and inspect its delivery-day
+forecast. Inventory shows at most six ingredients per fridge shelf, with ingredient
+selection and shelf navigation. Decision navigation collapses the room scene after
+the first step and scrolls to the current step heading.
+
+Browser checks use explicit fictional fixtures and the application stylesheet
+stack. They do not establish live database reconciliation or real forecast
+accuracy. The forecast algorithms, operational workflows and stored records are
+unchanged by these presentation changes.
+
+Follow-up validation: 36 relevant Django tests passed, including the supplied
+chicken FEFO scenario. Frontend utility, predictive, UX, planner and checkout
+suites and the Vite build passed. Isolated Chromium checks exercised step
+navigation, technical disclosures, the shortage purchase default, disabled
+surplus promotions, menu selection and fridge bounds with no JavaScript errors.
+All three kitchen views passed horizontal-overflow checks at 320, 390 and 1365
+pixels. These checks use fictional fixtures, not an authenticated production
+browser session. Existing main-bundle size warning remains.
+
 ## Findings and changes in this batch
 
 | Finding | Resolution |

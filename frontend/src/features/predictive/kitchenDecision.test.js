@@ -2,6 +2,37 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {marketingWorksheet,workflowLinks,workflowReturnLink,decisionSlip,kitchenReadiness,riskTiming} from './kitchenDecision.js';
 import {readReviews,saveReview,saveOutcomeNote} from './kitchenReviewStore.js';
+import {stockQuantity,stockStory,kitchenCase,caseQuantity} from './kitchenPresentation.js';
+
+test('chicken shortage story separates expiring supply, later supply and uncovered demand',()=>{
+  const risk={unit:'g',forecast_requirement:21841.927,forecast_shortfall:16081.927,shortfall_quantity:0,forecast_expiring_unused:0,
+    stock_flow:{after_confirmed:5760,forecast_consumed:5760,projected_carried_stock:0,
+      demand_by_day:[{date:'2026-10-18',forecast_requirement:3813.52,forecast_consumed:3813.52},{date:'2026-10-19',forecast_requirement:3799.218,forecast_consumed:1946.48}],
+      batches:[{expires_in_window:true,expiry_date:'2026-10-19',after_confirmed:1800,forecast_consumed:1800},
+        {expires_in_window:false,after_confirmed:3960,forecast_consumed:3960}]}};
+  const story=stockStory(risk);
+  assert.equal(story.nearAvailable,1800);assert.equal(story.nearUsed,1800);
+  assert.equal(story.laterAvailable,3960);assert.equal(story.laterUsed,3960);
+  assert.equal(story.afterNear,20041.927);
+  assert.equal(story.need-story.nearUsed-story.laterUsed,story.gap);
+  assert.equal(story.firstGap,'2026-10-19');
+  assert.equal(kitchenCase(risk).kind,'shortage');
+  assert.equal(caseQuantity(risk),'16.082 kg forecast gap');
+  assert.equal(kitchenCase({...risk,forecast_expiring_unused:100}).kind,'mixed');
+  assert.equal(kitchenCase({...risk,forecast_shortfall:0,forecast_expiring_unused:100}).kind,'waste');
+  assert.equal(stockQuantity(196.891,'g'),'196.891 g');
+  assert.equal(stockQuantity(null,'g'),'Unavailable');
+});
+
+test('available but expired-before-demand stock is not presented as forecast coverage',()=>{
+  const risk={forecast_requirement:1000,forecast_shortfall:800,forecast_expiring_unused:200,
+    stock_flow:{after_confirmed:400,forecast_consumed:200,projected_carried_stock:0,
+      batches:[{expires_in_window:true,expiry_date:'2026-10-18',after_confirmed:200,forecast_consumed:0},
+        {expires_in_window:false,after_confirmed:200,forecast_consumed:200}]}};
+  const story=stockStory(risk);
+  assert.equal(story.nearAvailable,200);assert.equal(story.nearUsed,0);
+  assert.equal(story.afterNear,1000);assert.equal(story.gap,800);
+});
 
 test('workflow links carry real ingredient context and preserve native units',()=>{
   const risk={raw_material_id:7,ingredient_name:'Oil & sauce',unit:'ml'};

@@ -7,7 +7,7 @@ import {createServer} from 'vite';
 const server=await createServer({server:{middlewareMode:true},appType:'custom'});
 try {
  const {default:StockFlowEvidence}=await server.ssrLoadModule('/src/features/predictive/StockFlowEvidence.jsx');
- const flow={opening_quantity:5400,confirmed_allocated:0,forecast_consumed:4870.986,
+ const flow={opening_quantity:5400,after_confirmed:5400,confirmed_allocated:0,forecast_consumed:4870.986,
   projected_total_remaining:529.014,projected_expiring_unused:196.891,projected_carried_stock:332.123,
   allocations:[{date:'2026-10-18',batch_id:1,quantity:1603.109},{date:'2026-10-21',batch_id:2,quantity:3267.877}],
   demand_by_day:[{date:'2026-10-18',forecast_requirement:1603.109,forecast_consumed:1603.109,
@@ -23,7 +23,7 @@ try {
  assert.match(html,/Projected waste within this window/);
  assert.match(html,/Carried beyond this window/);
  assert.match(html,/no stock deducted/);
- assert.match(html,/How Step 1’s expiry result is produced/);
+ assert.match(html,/Exact expiry calculation/);
  assert.match(html,/forecast use before expiry/);
  assert.match(html,/Mee Goreng Telur/);
  assert.match(html,/additional portions ×/);
@@ -53,15 +53,18 @@ try {
    decision_support:{menus:[menu],ingredient_risks:[selected],alert_count:0,review_count:1,assumptions:[]}};
  const journey=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:['/admin/ai/decisions?source=local&step=1']},
    createElement(KitchenDecisionJourney,{plan,comparison:null,onComparison:()=>{},onClear:()=>{}})));
- assert.ok(journey.indexOf('How Step 1’s expiry result is produced')<journey.indexOf('Confirmed-only stock is not the forecast result.'));
+ assert.ok(journey.indexOf('Where the forecast need comes from')<journey.indexOf('Confirmed-only stock is not the forecast result.'));
+ assert.match(journey,/Inspect batches &amp; exact calculations/);
+ assert.match(journey,/From expiring stock/);
+ assert.match(journey,/From later stock/);
  assert.match(journey,/Central forecast · Step 1 result/);
  assert.match(journey,/Lower demand → more unused/);
  assert.doesNotMatch(journey,/Projected waste sensitivity:/);
  const {default:KitchenPurchaseComparison}=await server.ssrLoadModule('/src/features/predictive/KitchenPurchaseComparison.jsx');
- const comparedRisk={...selected,potential_waste_cost_myr:2,expiring_unused_quantity:196.891};
+ const comparedRisk={...selected,forecast_waste_cost_myr:2,potential_waste_cost_myr:2,expiring_unused_quantity:196.891};
  const comparison={purchase:{raw_material_id:1},baseline:{ingredient_risks:[comparedRisk],decision_support:{ingredient_risks:[comparedRisk]}},
    scenario:{ingredient_risks:[comparedRisk],decision_support:{ingredient_risks:[comparedRisk]}}};
- const purchase=renderToStaticMarkup(createElement(KitchenPurchaseComparison,{plan,risk:{...selected,potential_waste_cost_myr:999},comparison,onComparison:()=>{},onClear:()=>{},onWorksheet:()=>{}}));
+ const purchase=renderToStaticMarkup(createElement(KitchenPurchaseComparison,{plan,risk:{...selected,forecast_waste_cost_myr:999,potential_waste_cost_myr:999},comparison,onComparison:()=>{},onClear:()=>{},onWorksheet:()=>{}}));
  assert.doesNotMatch(purchase,/999/);
  assert.match(purchase,/2\.00/);
  console.log('Stock flow: expiry waste, carried stock, total balance, unknown cost and zero-waste explanation passed.');

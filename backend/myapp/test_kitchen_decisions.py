@@ -15,6 +15,24 @@ from .services.local_planning import local_plan
 
 
 class BaselineEvaluationTests(SimpleTestCase):
+    def test_chicken_forecast_uses_expiring_stock_then_reports_the_remaining_gap(self):
+        def batch(pk,quantity,expiry):
+            return {'batch_id':pk,'raw_material_id':16,'unit':'g','quantity':quantity,
+                'allocated_quantity':0,'remaining_quantity':quantity,'eligible':True,
+                'received_date':'2026-10-17','expiry_date':expiry,'unit_cost':.02}
+        plan={'window':{'end_date':'2026-10-23'},'batches':[
+            batch(1,1800,'2026-10-19'),batch(2,360,'2026-10-24'),batch(3,3600,'2026-10-31')]}
+        daily={('2026-10-18',16):3813.52,('2026-10-19',16):3799.218,
+            ('2026-10-20',16):3940.444,('2026-10-21',16):3402.007,
+            ('2026-10-22',16):3468.337,('2026-10-23',16):3418.401}
+        trace={}
+        waste,short,_=project_batches(plan,daily,trace=trace)
+        self.assertEqual(waste[16],0)
+        self.assertAlmostEqual(short[16],16081.927)
+        self.assertEqual(trace['allocations'][0]['batch_id'],1)
+        self.assertEqual(trace['allocations'][0]['quantity'],1800)
+        self.assertAlmostEqual(sum(a['quantity'] for a in trace['allocations']),5760)
+
     def test_planning_horizon_replay_cannot_observe_sales_inside_its_window(self):
         values = [1]*56 + [10]*14
         replay = horizon_score(values, 56, 14, 'mean_7')

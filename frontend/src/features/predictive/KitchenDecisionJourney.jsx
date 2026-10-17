@@ -6,6 +6,8 @@ import VerificationChecklist from "./VerificationChecklist";
 import KitchenPurchaseComparison from "./KitchenPurchaseComparison";
 import KitchenForecastReplay from "./KitchenForecastReplay";
 import StockFlowEvidence from "./StockFlowEvidence";
+import KitchenStockStory, {EvidenceNotes} from "./KitchenStockStory";
+import {kitchenCase, stockQuantity, caseQuantity} from "./kitchenPresentation";
 import {
   decisionSlip,
   kitchenActions,
@@ -38,12 +40,6 @@ const steps = [
   "Compare tradeoffs",
   "Review recommendation",
 ];
-const signals = {
-  confirmed_shortage: "Confirmed stock gap",
-  forecast_waste: "Forecast waste exposure",
-  review: "Needs verification",
-  watch: "Monitor",
-};
 const positions = [
   [22, 34],
   [43, 24],
@@ -72,7 +68,7 @@ export default function KitchenDecisionJourney({
     lens === "waste"
       ? (b.forecast_waste_cost_myr ?? -1) - (a.forecast_waste_cost_myr ?? -1)
       : lens === "shortage"
-        ? Number(b.shortfall_quantity > 0) - Number(a.shortfall_quantity > 0)
+        ? Number(b.shortfall_quantity > 0 || b.forecast_shortfall > 0) - Number(a.shortfall_quantity > 0 || a.forecast_shortfall > 0)
         : 0,
   );
   const selected =
@@ -92,16 +88,15 @@ export default function KitchenDecisionJourney({
   const rawStep = Number(params.get("step") || 0),
     step =
       Number.isInteger(rawStep) && rawStep >= 0 && rawStep < 5 ? rawStep : 0;
+  const previousStep=useRef(step);
   const action =
-    kitchenActions.find((a) => a.id === params.get("action")) ||
+    kitchenActions.find((a) => a.id === params.get("action") && !(a.id==='marketing' && selected?.forecast_expiring_unused===0)) ||
     kitchenActions.find(
       (a) =>
         a.id ===
-        (["review", "watch"].includes(selected?.signal)
-          ? "wait"
-          : selected?.signal === "forecast_waste"
-            ? "menu"
-            : "purchasing"),
+        (selected?.shortfall_quantity > 0 || selected?.forecast_shortfall > 0
+          ? "purchasing"
+          : selected?.forecast_expiring_unused > 0 ? "menu" : "wait"),
     );
   function choose(name, value) {
     const next = new URLSearchParams(params);
@@ -129,6 +124,8 @@ export default function KitchenDecisionJourney({
   }
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
+    if(previousStep.current!==step)heading.current?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    previousStep.current=step;
   }, [step, selected?.ingredient_id]);
   if (!selected)
     return (
@@ -235,10 +232,7 @@ export default function KitchenDecisionJourney({
         </span>
         <h2>What needs your attention?</h2>
         <p>
-          {support.alert_count} evidence-backed planning signals ·{" "}
-          {support.review_count} cases need verification.{" "}
-          {plan.coverage.excluded_orders} active orders excluded from stock
-          allocation.
+          Choose an ingredient, see what may happen, then compare your next move.
         </p>
         <div
           className="fc-comparison-switch"
@@ -248,7 +242,7 @@ export default function KitchenDecisionJourney({
           {[
             ["priority", "Priority"],
             ["waste", "Waste cost first"],
-            ["shortage", "Confirmed shortages first"],
+            ["shortage", "Stock gaps first"],
           ].map(([id, label]) => (
             <button
               key={id}
@@ -259,11 +253,9 @@ export default function KitchenDecisionJourney({
             </button>
           ))}
         </div>
-        <p>
-          Mixed units are never ranked against one another. Unknown cost stays
-          unknown.
-        </p>
       </div>
+      <details className="local-scene-picker" open={step===0}>
+      <summary>Choose an ingredient · {r.ingredient_name}</summary>
       <section
         className="pantry-scene"
         aria-label="Interactive kitchen decisions"
@@ -291,7 +283,7 @@ export default function KitchenDecisionJourney({
                   {visible.map((risk, i) => (
                     <button
                       key={risk.ingredient_id}
-                      className={`fc-hotspot ${risk.shortfall_quantity > 0 ? "gap" : "waste"}`}
+                      className={`fc-hotspot ${kitchenCase(risk).kind==='shortage' || kitchenCase(risk).kind==='mixed' ? "gap" : "waste"}`}
                       style={{
                         left: `${positions[i][0]}%`,
                         top: `${positions[i][1]}%`,
@@ -305,7 +297,7 @@ export default function KitchenDecisionJourney({
                       </span>
                       <span className="fc-hotspot-label">
                         {risk.ingredient_name}
-                        <small>{signals[risk.signal]}</small>
+                        <small>{kitchenCase(risk).label}</small>
                       </span>
                     </button>
                   ))}
@@ -318,12 +310,11 @@ export default function KitchenDecisionJourney({
               <aside className="fc-room-inspector">
                 <IngredientDrawing name={r.ingredient_name} />
                 <h3>{r.ingredient_name}</h3>
-                <p>{r.alert_reason}</p>
+                <p>{kitchenCase(r).title}</p>
                 <strong>
-                  {qty(r.forecast_expiring_unused)} {r.unit} projected unused at
-                  expiry
+                  {caseQuantity(r)}
                 </strong>
-                <p>{money(r.forecast_waste_cost_myr)} estimated exposure</p>
+                <p>{r.forecast_expiring_unused>0 ? `${money(r.forecast_waste_cost_myr)} estimated expiry exposure` : 'Use expiring batches first, then review remaining demand.'}</p>
                 <button
                   className="pantry-review-case"
                   onClick={() => {
@@ -355,10 +346,9 @@ export default function KitchenDecisionJourney({
                   <IngredientDrawing name={risk.ingredient_name} />
                   <span className="pantry-crate-label">
                     <strong>{risk.ingredient_name}</strong>
-                    <span>{signals[risk.signal]}</span>
+                    <span>{kitchenCase(risk).label}</span>
                     <small>
-                      {qty(risk.forecast_expiring_unused)} {risk.unit} ·{" "}
-                      {money(risk.forecast_waste_cost_myr)}
+                      {caseQuantity(risk)}
                     </small>
                   </span>
                 </button>
@@ -386,6 +376,7 @@ export default function KitchenDecisionJourney({
           )}
         </div>
       </section>
+      </details>
       <details className="pd-card">
         <summary>Manager review queue · {pinned.length} pinned</summary>
         <button
@@ -406,7 +397,7 @@ export default function KitchenDecisionJourney({
                 <button
                   onClick={() => choose("ingredient", risk.ingredient_id)}
                 >
-                  {risk.ingredient_name} · {signals[risk.signal]}
+                  {risk.ingredient_name} · {kitchenCase(risk).label}
                 </button>
               </li>
             ))}
@@ -424,7 +415,7 @@ export default function KitchenDecisionJourney({
         >
           {ordered.map((risk) => (
             <option key={risk.ingredient_id} value={risk.ingredient_id}>
-              {risk.ingredient_name} · {signals[risk.signal]}
+              {risk.ingredient_name} · {kitchenCase(risk).label}
             </option>
           ))}
         </select>
@@ -444,46 +435,28 @@ export default function KitchenDecisionJourney({
       </ol>
       <section className="pd-card fc-problem" aria-live="polite">
         <span className="pd-eyebrow">
-          STEP {step + 1} OF 5 · LOCAL KITCHEN EVIDENCE
+          STEP {step + 1} OF 5 · {r.ingredient_name}
         </span>
         <h2 ref={heading} tabIndex={-1}>
           {step === 0
-            ? `${signals[r.signal]}: ${r.ingredient_name}`
+            ? kitchenCase(r).title
             : steps[step]}
         </h2>
         {step === 0 && (
           <>
-            <p className="fc-problem-summary">{r.alert_reason}</p>
-            <div className="fc-facts">
-              <div>
-                <span>Projected unused at expiry</span>
-                <strong>
-                  {qty(r.forecast_expiring_unused)} {r.unit}
-                </strong>
-              </div>
-              <div>
-                <span>Confirmed stock gap</span>
-                <strong>
-                  {qty(r.shortfall_quantity)} {r.unit}
-                </strong>
-              </div>
-              <div>
-                <span>Additional forecast stock gap</span>
-                <strong>{qty(r.forecast_shortfall)} {r.unit}</strong>
-                <small>Estimated demand, separate from confirmed orders</small>
-              </div>
-              <div>
-                <span>Potential waste exposure</span>
-                <strong>{money(r.forecast_waste_cost_myr)}</strong>
-              </div>
-            </div>
+            <p className="fc-problem-summary">{kitchenCase(r).action}.</p>
+            <KitchenStockStory risk={r} window={plan.window} compact/>
             <p>{riskTiming(r, plan.window.end_date)}</p>
+            <EvidenceNotes risk={r}/>
           </>
         )}
         {step === 1 && (
           <>
+            <KitchenStockStory risk={r} window={plan.window}/>
+            <details className="local-deep-evidence"><summary>Inspect batches & exact calculations</summary>
             <StockFlowEvidence risk={r} window={plan.window}/>
-            <details>
+            </details>
+            <details className="local-deep-evidence">
             <summary>Confirmed orders only · before additional forecast use</summary>
             <p className="fc-explanation">{r.explanation}</p>
             <div className="fc-facts">
@@ -494,12 +467,6 @@ export default function KitchenDecisionJourney({
                 </strong>
               </div>
               <div>
-                <span>Additional forecast requirement</span>
-                <strong>
-                  {qty(r.forecast_requirement)} {r.unit}
-                </strong>
-              </div>
-              <div>
                 <span>Eligible stock</span>
                 <strong>
                   {qty(r.eligible_stock)} {r.unit}
@@ -507,6 +474,7 @@ export default function KitchenDecisionJourney({
               </div>
             </div>
             </details>
+            {r.waste_sensitivity_high>0 && <details className="local-deep-evidence"><summary>Compare lower & higher demand assumptions</summary>
             <section aria-label="Demand what-if comparison">
               <h3>What if demand is lower or higher?</h3>
               <p>Same stock and confirmed orders, different assumptions about additional demand during {plan.window.start_date}–{plan.window.end_date}. This compares scenarios; it does not give a probability range.</p>
@@ -517,11 +485,9 @@ export default function KitchenDecisionJourney({
               </div>
               <details><summary>How these what-if assumptions are set</summary><p>Each menu’s daily demand is shifted down or up by its one-day test MAE; menus without a test use their largest daily forecast as the shift. Demand is then constrained by delivery days, lead time, capacity and recorded orders, before dated expiry allocation is repeated. This heuristic is not calibrated uncertainty or a guarantee. Existing bookings are not added twice.</p></details>
             </section>
-            <MenuEvidence support={support} risk={r} />
-            <p>
-              Stock is allocated by expiry after confirmed needs; speculative
-              demand uses current recipes and conservative delivery dates.
-            </p>
+            </details>
+            }
+            <details className="local-deep-evidence"><summary>Menus behind this forecast · {r.menus.length}</summary><MenuEvidence support={support} risk={r} compact/></details>
             <Link to={links.menus}>Review menu recipes</Link> ·{" "}
             <Link to={links.preparation}>Check preparation dates</Link>
           </>
@@ -540,11 +506,12 @@ export default function KitchenDecisionJourney({
                     name="kitchen-action"
                     value={a.id}
                     checked={a.id === action.id}
+                    disabled={a.id==='marketing' && r.forecast_expiring_unused===0}
                     onChange={() => choose("action", a.id)}
                   />
                   <span>
                     <strong>{a.title}</strong>
-                    <span>{a.detail}</span>
+                    <span>{a.id==='marketing' && r.forecast_expiring_unused===0 ? 'No expiry surplus is projected. A promotion is not an ingredient rescue for this case.' : a.detail}</span>
                   </span>
                 </label>
               ))}
@@ -582,6 +549,7 @@ export default function KitchenDecisionJourney({
         )}
         {step === 3 && (
           <>
+            <KitchenStockStory risk={r} window={plan.window} compact/>
             {action.id === "purchasing" ? (
               <KitchenPurchaseComparison
                 key={r.ingredient_id}
@@ -603,13 +571,10 @@ export default function KitchenDecisionJourney({
               <>
                 <h3>{action.title}</h3>
                 <p>
-                  Confirmed gap: {qty(r.shortfall_quantity)} {r.unit}. Projected
-                  expiry exposure: {qty(r.forecast_expiring_unused)} {r.unit}.
+                  {action.id==='wait'?'Check stock, excluded orders and forecast coverage before changing the plan.':'Review menus using this ingredient and confirm preparation capacity.'}
                 </p>
                 <p>
-                  A schedule change is not simulated here: use the planner to
-                  verify actual tasks, equipment, lead time and freshness before
-                  adopting it.
+                  {action.id==='wait'?'Monitoring leaves this forecast unchanged.':'The planner checks actual tasks, equipment and freshness; this option does not calculate a new schedule.'}
                 </p>
                 <Link to={links.preparation}>Review preparation options</Link> ·{" "}
                 <Link to={links.menus}>Review recipes</Link>
@@ -627,13 +592,10 @@ export default function KitchenDecisionJourney({
             <div className="fc-recommendation">
               <span className="pd-eyebrow">RECOMMENDATION TO REVIEW</span>
               <h3>
-                {r.shortfall_quantity > 0
-                  ? "Cover the confirmed gap before speculative demand"
-                  : ["review", "watch"].includes(r.signal)
-                    ? "Verify the evidence before buying or promoting"
-                    : "Review expiring surplus before placing the next purchase"}
+                {kitchenCase(r).action}
               </h3>
-              <p>{r.alert_reason}</p>
+              <p>{r.forecast_shortfall>0 ? `Forecast gap: ${stockQuantity(r.forecast_shortfall,r.unit)}. Verify demand and purchase timing before committing.` : `Expected unused at expiry: ${stockQuantity(r.forecast_expiring_unused,r.unit)}. Review batch dates before acting.`}</p>
+              <EvidenceNotes risk={r}/>
               <p>
                 Chosen alternative: {action.title}. Target review date:{" "}
                 {r.urgent_by || plan.window.end_date}.
@@ -698,42 +660,41 @@ export default function KitchenDecisionJourney({
   );
 }
 
-export function MenuEvidence({ support, risk }) {
+export function MenuEvidence({ support, risk, compact = false }) {
   const menus = support.menus.filter(
     (m) => !risk || risk.menus.some((r) => r.product_id === m.product_id),
   );
   return (
-    <div>
+    <div className={compact ? 'local-menu-evidence compact' : 'local-menu-evidence'}>
       <div
         className="local-menu-tickets"
         aria-label="Local menu forecast tickets"
       >
         {menus.map((m) => (
           <article key={m.product_id}>
-            <IngredientDrawing name={m.product_name} />
+            {!compact && <IngredientDrawing name={m.product_name} />}
             <h3>{m.product_name}</h3>
             <strong>
               {m.forecast_portions === null
                 ? "History needed"
-                : `${qty(m.forecast_portions)} estimated portions`}
+                : `${qty(m.forecast_portions)} expected portions`}
             </strong>
             <span>
               {m.additional_forecast_portions === null
                 ? "Additional demand unavailable"
-                : `${qty(m.additional_forecast_portions)} additional portions eligible for planning`}
+                : `${qty(m.additional_forecast_portions)} additional portions to plan`}
             </span>
-            <small>
+            {!compact && <small>
               {m.history_days}-day history window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.synthetic_history_items>0?'synthetic scenario evidence':m.confidence}
-            </small>
-            {m.sensitivity_error_portions_per_day != null && <small>Demand what-if shift: ±{qty(m.sensitivity_error_portions_per_day)} portions/day; scenario assumption.</small>}
-            {m.demand_adjustments && m.forecast_portions!==null && <details><summary>How the planning quantity is calculated</summary>
+            </small>}
+            {m.demand_adjustments && m.forecast_portions!==null && <details><summary>Why the planning count differs</summary>
               <p>{qty(m.forecast_portions)} forecast portions across the full window.</p>
               <ul><li>{qty(m.demand_adjustments.delivery_day_excluded)} outside permitted delivery days</li>
               <li>{qty(m.demand_adjustments.lead_time_excluded)} before the menu lead time</li>
               <li>{qty(m.demand_adjustments.capacity_excluded)} above daily capacity</li>
               <li>{qty(m.demand_adjustments.recorded_orders_offset)} already covered by recorded order portions</li></ul>
               <p>Remaining: {qty(m.additional_forecast_portions)} additional portions eligible for ingredient planning. The order offset may include unpaid requests to avoid counting them again; confirmed stock requirements are shown separately.</p>
-            </details>}
+            {m.sensitivity_error_portions_per_day != null && <p>Demand what-if shift: ±{qty(m.sensitivity_error_portions_per_day)} portions/day.</p>}</details>}
             {m.forecast_portions === null && <Link to="/admin/orders">Review completed sales history</Link>}
             <Link to="/admin/products?review=recipes">
               {m.recipe_complete ? "Review recipe" : "Recipe needs review"}

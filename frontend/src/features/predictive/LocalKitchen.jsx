@@ -10,6 +10,8 @@ import "./localKitchen.css";
 import PlanningFridge from "./PlanningFridge";
 import { IngredientDrawing } from "./PantryScene";
 import StockFlowEvidence from "./StockFlowEvidence";
+import KitchenStockStory, {EvidenceNotes} from "./KitchenStockStory";
+import {kitchenCase, caseQuantity, stockQuantity} from "./kitchenPresentation";
 
 const qty = (v) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 3 }).format(v);
@@ -87,15 +89,11 @@ export default function LocalKitchen({ view }) {
       </header>
       <div className="pd-source live" role="status">
         <strong>
-          MY KITCHEN · Local sales forecasts & confirmed-order planning
+          {demoBatchCount>0 || plan?.decision_support.synthetic_history_items>0 ? 'DEMO SCENARIO · Kitchen records' : 'MY KITCHEN · Database records'}
         </strong>
         <p>
-          Forecasts use kitchen sales history. Stock requirements use confirmed
-          orders and accepted recipes. Database records may include fictional
-          demo transactions.
+          {demoBatchCount>0 || plan?.decision_support.synthetic_history_items>0 ? 'Includes generated history or fictional stock. Forecasts and costs are estimates for this scenario.' : 'Forecast demand, use expiring stock first, then review what to prepare or buy.'}
         </p>
-        {demoBatchCount>0 && <p><strong>Fictional inventory scenario · {demoBatchCount} batches</strong>. Quantities and expiry dates are demo assumptions; costs use recorded estimates. Sales forecasts still use the existing kitchen history algorithm.</p>}
-        {plan?.decision_support.synthetic_history_items>0 && <p><strong>Synthetic sales history is included.</strong> Generated daily summaries exercise the workflow. Forecast replay and evaluation scores on these patterns do not measure real customer accuracy.</p>}
       </div>
       <div className="pd-controls">
         <label>
@@ -135,7 +133,7 @@ export default function LocalKitchen({ view }) {
         isLocal
       />
       {view === "forecast" ? (
-        <KitchenForecast revision={retry} />
+        <details className="pd-card"><summary>Whole-store weekly sales · separate from menu planning</summary><KitchenForecast revision={retry} /></details>
       ) : (
         view !== "inventory" && (
           <details className="pd-card">
@@ -158,7 +156,7 @@ export default function LocalKitchen({ view }) {
       )}
       {current.status === "ready" && (
         <>
-          {view === "decisions" && <KitchenReadiness plan={plan} />}
+          {view === "decisions" && <details className="pd-card"><summary>Kitchen data coverage · {plan.decision_support.menus.filter(m=>m.forecast_portions!==null).length} menu forecasts</summary><KitchenReadiness plan={plan} /></details>}
           <div className="pd-context">
             <span>
               Stock planning: {plan.window.start_date}–{plan.window.end_date} ·{" "}
@@ -245,11 +243,21 @@ export default function LocalKitchen({ view }) {
 }
 
 function OrderEvidence({ plan }) {
+  const [menuId,setMenuId]=useState('');
+  const menus=plan.decision_support.menus;
+  const selected=menus.find(menu=>String(menu.product_id)===menuId) || menus[0];
   return (
     <section className="pd-card">
-      <h2>Menu demand estimates</h2>
-      <p>Estimated portions come from paid, delivered sales history. Adding inventory enables stock projections, but does not create missing sales history.</p>
-      <MenuEvidence support={plan.decision_support} />
+      <h2>What might customers order?</h2>
+      <p>Choose a menu to explore its forecast for {plan.window.start_date}–{plan.window.end_date}.</p>
+      {menus.length>0 && <label className="local-menu-select">Menu<select value={String(selected.product_id)} onChange={event=>setMenuId(event.target.value)}>{menus.map(menu=><option key={menu.product_id} value={menu.product_id}>{menu.product_name}</option>)}</select></label>}
+      {selected?.daily_predictions?.length>0 && <figure className="local-demand-strip"><figcaption>Expected portions by delivery day · forecast estimates</figcaption><div>{selected.daily_predictions.map((value,index)=>{
+        const day=new Date(Date.parse(`${plan.window.start_date}T12:00:00Z`)+index*86400000);
+        const date=day.toISOString().slice(0,10);
+        return <div key={date} title={`${date}: ${qty(value)} estimated portions`}><strong>{qty(value)}</strong><span className="local-day-bar" style={{height:`${12+64*value/Math.max(1,...selected.daily_predictions)}px`}}/><time dateTime={date}>{day.toLocaleDateString('en-MY',{day:'numeric',month:'short',timeZone:'UTC'})}</time></div>;
+      })}</div></figure>}
+      {selected ? <MenuEvidence support={{...plan.decision_support,menus:[selected]}}/> : <p>No active menus are available. Review menu records first.</p>}
+      <details><summary>Confirmed bookings in this window · {plan.included_orders.length}</summary>
       <h2>Confirmed preorder requirements</h2>
       <p>
         Known bookings, not predictions of future customers. Names and recipes
@@ -277,6 +285,7 @@ function OrderEvidence({ plan }) {
       <details>
         <summary>Exact ingredient requirements</summary>
         <RiskTable plan={plan} />
+      </details>
       </details>
     </section>
   );
@@ -329,6 +338,9 @@ function RiskTable({ plan }) {
 
 function StockEvidence({ plan }) {
   const [inspected, setInspected] = useState("");
+  const [page,setPage]=useState(0);
+  const risks=plan.decision_support.ingredient_risks;
+  const pages=Math.max(1,Math.ceil(risks.length/6));
   const selected =
     plan.decision_support.ingredient_risks.find(
       (r) => r.ingredient_id === inspected,
@@ -341,16 +353,18 @@ function StockEvidence({ plan }) {
       <section className="pd-card">
         <h2>Your kitchen planning fridge</h2>
         <p>
-          Recorded stock, confirmed bookings and additional forecast demand
-          retain their distinct meanings and native units.
+          Open the fridge and choose an ingredient to compare forecast need with expiring stock.
         </p>
+        <label className="local-menu-select">Ingredient<select value={selected?.ingredient_id || ''} onChange={event=>{
+          setInspected(event.target.value);setPage(Math.floor(risks.findIndex(risk=>risk.ingredient_id===event.target.value)/6));
+        }}>{risks.map(risk=><option key={risk.ingredient_id} value={risk.ingredient_id}>{risk.ingredient_name} · {kitchenCase(risk).label}</option>)}</select></label>
         <div className="local-fridge-inspection">
           <PlanningFridge
             count={plan.decision_support.ingredient_risks.length}
             evidenceLabel="database ingredient records"
           >
             <div className="local-fridge-packages">
-              {plan.decision_support.ingredient_risks.map((r) => (
+              {risks.slice(Math.min(page,pages-1)*6,Math.min(page,pages-1)*6+6).map((r) => (
                 <button
                   key={r.ingredient_id}
                   aria-label={`Inspect kitchen ingredient ${r.ingredient_name}`}
@@ -360,7 +374,7 @@ function StockEvidence({ plan }) {
                   <IngredientDrawing name={r.ingredient_name} />
                   <strong>{r.ingredient_name}</strong>
                   <span>
-                    {qty(r.forecast_expiring_unused)} {r.unit} projected unused
+                    {caseQuantity(r)}
                   </span>
                 </button>
               ))}
@@ -370,30 +384,26 @@ function StockEvidence({ plan }) {
             {selected ? (
               <>
                 <h3>{selected.ingredient_name}</h3>
-                <p>{selected.alert_reason}</p>
+                <p>{kitchenCase(selected).title}</p>
+                <strong>{caseQuantity(selected)}</strong>
                 <dl>
                   {[
-                    ["Extra forecast need", selected.forecast_requirement],
+                    ["Forecast need", selected.forecast_requirement],
                     [
                       "Projected unused at expiry",
                       selected.forecast_expiring_unused,
                     ],
-                    ["Confirmed shortfall", selected.shortfall_quantity],
+                    ["Available after bookings", selected.stock_flow?.after_confirmed ?? selected.eligible_stock],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <dt>{label}</dt>
                       <dd>
-                        {qty(value)} {selected.unit}
+                        {stockQuantity(value, selected.unit)}
                       </dd>
                     </div>
                   ))}
                 </dl>
-                <p>
-                  {selected.signal.replaceAll("_", " ")} · demand what-if waste outcomes{" "}
-                  {qty(selected.waste_sensitivity_low)}–
-                  {qty(selected.waste_sensitivity_high)} {selected.unit}
-                </p>
-                <p>These are lower/higher-demand scenarios, not a prediction interval. The central expiry result is shown above.</p>
+                <EvidenceNotes risk={selected}/>
               </>
             ) : (
               <p>
@@ -403,8 +413,9 @@ function StockEvidence({ plan }) {
             )}
           </aside>
         </div>
+        {pages>1 && <div className="fc-journey-controls"><button disabled={page===0} onClick={()=>setPage(value=>value-1)}>Previous shelf</button><span>Shelf {page+1} of {pages}</span><button disabled={page>=pages-1} onClick={()=>setPage(value=>value+1)}>Next shelf</button></div>}
       </section>
-      {selected && <section className="pd-card"><StockFlowEvidence risk={selected} window={plan.window}/></section>}
+      {selected && <section className="pd-card"><KitchenStockStory risk={selected} window={plan.window}/><details className="local-deep-evidence"><summary>Inspect batches & exact calculations</summary><StockFlowEvidence risk={selected} window={plan.window}/></details></section>}
       <details className="pd-card">
         <summary>Exact forecast and ingredient risk evidence</summary>
         <section>

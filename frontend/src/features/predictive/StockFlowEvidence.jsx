@@ -6,7 +6,7 @@ export default function StockFlowEvidence({risk, window}) {
   if (!flow) return <p>Projected waste counts only unused stock expiring within the selected window. Stock dated later carries forward; demand after a batch expires cannot consume that batch.</p>;
   const expiring = flow.batches.filter(b => b.expires_in_window);
   return <section className="local-expiry-evidence" aria-label="Ingredient stock calculation">
-    <h3>How Step 1’s expiry result is produced</h3>
+    <h3>Exact expiry calculation</h3>
     <p><strong>{risk.ingredient_name}</strong> · {window.horizon_days || 'Selected'}-day window · {window.start_date}–{window.end_date} inclusive.</p>
     <ol className="local-evidence-chain" aria-label="Expiry calculation sequence">
       <li><strong>1 · Find expiring lots</strong><span>Only eligible batches expiring by {window.end_date} can contribute to this window’s waste.</span></li>

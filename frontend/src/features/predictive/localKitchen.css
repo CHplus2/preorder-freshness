@@ -190,3 +190,74 @@
 .pd .local-stock-bar .unused { background: #bd7835; }
 .pd .local-expiry-evidence details { margin: 16px 0; }
 .pd .local-expiry-evidence summary { cursor: pointer; }
+.pd .local-stock-pools,
+.pd .local-demand-equation {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.pd .local-demand-equation { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pd .local-demand-equation.compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pd .local-stock-pools article,
+.pd .local-demand-equation article {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #c9cfbd;
+  border-radius: 14px;
+  background: #fcfcf5;
+}
+.pd .local-stock-story strong { font-variant-numeric: tabular-nums; }
+.pd .local-stock-pools article strong,
+.pd .local-demand-equation article strong { font-size: clamp(1.25rem, 2.3vw, 1.9rem); color: #244b37; }
+.pd .local-stock-pools .near { border-top: 4px solid #b97532; background: #fff6e9; }
+.pd .local-stock-pools .later { border-top: 4px solid #63846b; }
+.pd .local-demand-equation .gap { background: #eaf1e7; }
+.pd .shortage .local-demand-equation .gap,
+.pd .mixed .local-demand-equation .gap { border-color: #b97b50; background: #fff0e4; }
+.pd .local-stock-story small { line-height: 1.5; color: #516456; }
+.pd .local-stock-explanation { padding: 16px; background: #eef2e9; border-left: 3px solid #63846b; line-height: 1.75; }
+.pd .local-stock-outcome { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; padding: 16px 0; }
+.pd .local-stock-outcome strong { font-size: 1.5rem; }
+.pd .local-deep-evidence,
+.pd .local-evidence-notes,
+.pd .local-scene-picker { margin: 14px 0; padding: 14px 16px; border: 1px solid #d5d5c7; border-radius: 12px; }
+.pd .local-deep-evidence > summary,
+.pd .local-evidence-notes > summary,
+.pd .local-scene-picker > summary { cursor: pointer; font-weight: 600; }
+.pd .local-deep-evidence[open] > summary,
+.pd .local-evidence-notes[open] > summary,
+.pd .local-scene-picker[open] > summary { margin-bottom: 16px; }
+.pd .local-evidence-notes li { margin: 10px 0; line-height: 1.6; }
+.pd .local-menu-evidence.compact .local-menu-tickets { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.pd .local-menu-evidence.compact .local-menu-tickets article { padding: 14px; gap: 8px; }
+.pd .local-menu-evidence.compact h3 { margin: 0; font-size: 1rem; }
+.pd .local-menu-select { display: grid; gap: 8px; max-width: 520px; margin: 20px 0; }
+.pd .local-menu-select select { width: 100%; }
+.pd .local-demand-strip { min-width: 0; max-width: 100%; margin: 24px 0; padding: 20px; background: #f0f4e9; border-radius: 16px; }
+.pd .local-demand-strip > div { display: flex; min-width: 0; max-width: 100%; gap: 16px; overflow-x: auto; padding-top: 20px; }
+.pd .pd-card { min-width: 0; }
+.pd .local-demand-strip > div > div { flex: 1 0 56px; display: flex; flex-direction: column; align-items: center; justify-content: end; gap: 10px; }
+.pd .local-day-bar { display: block; width: 30px; background: #64856b; border-radius: 8px 8px 2px 2px; }
+.pd .local-demand-strip time { font-size: .8rem; white-space: nowrap; }
+.pd .local-fridge-packages button { overflow-wrap: anywhere; }
+@media (max-width: 1050px) {
+  .pd .local-demand-equation { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .pd .local-stock-pools,
+  .pd .local-demand-equation,
+  .pd .local-demand-equation.compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pd .local-demand-equation.compact .gap { grid-column: 1 / -1; }
+  .pd .local-menu-evidence.compact .local-menu-tickets { grid-template-columns: 1fr; }
+  .pd .local-demand-equation article,
+  .pd .local-stock-pools article { gap: 6px; padding: 12px; }
+}
+@media (max-width: 350px) {
+  .pd .local-stock-pools,
+  .pd .local-demand-equation,
+  .pd .local-demand-equation.compact { grid-template-columns: 1fr; }
+}
