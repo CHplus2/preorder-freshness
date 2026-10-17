@@ -17,9 +17,9 @@ export default function KitchenStockStory({risk, window, compact = false}) {
       <article><span>Available after bookings</span><strong>{amount(risk.stock_flow.after_confirmed)}</strong><small>{amount(story.nearAvailable)} expires in this window</small></article>
       <article className="gap"><span>{risk.shortfall_quantity>0 ? 'Confirmed-order gap' : story.gap > 0 ? 'Forecast stock gap' : 'Expected unused at expiry'}</span><strong>{amount(risk.shortfall_quantity>0 ? risk.shortfall_quantity : story.gap > 0 ? story.gap : story.waste)}</strong><small>{risk.shortfall_quantity>0 ? 'Known bookings need more stock' : story.gap > 0 ? 'Estimated demand, not a confirmed purchase' : 'Unused remainder of expiring batches'}</small></article>
     </div>
-    {story.gap > 0 && <p>Expected unused at expiry: <strong>{amount(story.waste)}</strong>.{story.waste===0?' Expiring stock is projected to be used; the remaining issue is covering demand.':''}</p>}
+    {story.gap > 0 && <p>Expected unused at expiry: <strong>{amount(story.waste)}</strong>.</p>}
     <ZeroWasteNotice waste={story.waste} carried={story.carried} unit={risk.unit}/>
-    {risk.shortfall_quantity > 0 && <p>Confirmed-order gap: <strong>{amount(risk.shortfall_quantity)}</strong> · separate from the forecast above.</p>}
+    {risk.shortfall_quantity > 0 && story.gap>0 && <p>Additional forecast gap: <strong>{amount(story.gap)}</strong> · separate from the confirmed-order gap above.</p>}
   </section>;
   return <section className={`local-stock-story ${issue.kind}`} aria-label="Forecast and expiry stock summary">
     {!compact && <><h3>Where the forecast need comes from</h3><p>{window.start_date}–{window.end_date} · {window.horizon_days} days · stock reserved for included bookings is already removed below.</p></>}
@@ -37,7 +37,7 @@ export default function KitchenStockStory({risk, window, compact = false}) {
       ].map(([label, value, hint, name]) => <article key={name} className={name}><span>{label}</span><strong>{amount(value)}</strong>{!compact && <small>{hint}</small>}</article>)}
     </div>
     {!compact && <p className="local-stock-explanation">After using {amount(story.nearUsed)} of expiring stock, {amount(story.afterNear)} is still needed. Later stock covers {amount(story.laterUsed)}, leaving <strong>{amount(story.gap)} uncovered</strong>{story.firstGap ? ` from ${story.firstGap}` : ''}. Only stock usable on the demand date counts.</p>}
-    <div className="local-stock-outcome"><span>Expected unused at expiry</span><strong>{amount(story.waste)}</strong><span>{story.waste > 0 ? 'Review a safe use before expiry.' : 'No unused stock is projected to expire in this window.'}</span></div>
+    <div className="local-stock-outcome"><span>Expected unused at expiry</span><strong>{amount(story.waste)}</strong>{story.waste>0 && <span>Review a safe use before expiry.</span>}</div>
     <ZeroWasteNotice waste={story.waste} carried={story.carried} unit={risk.unit}/>
     {risk.shortfall_quantity > 0 && <p><strong>Confirmed-order gap: {amount(risk.shortfall_quantity)}.</strong> This is separate from the additional forecast gap above.</p>}
   </section>;

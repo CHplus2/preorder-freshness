@@ -126,7 +126,7 @@ export default function RestaurantStations({
       name: "Kitchen",
       label: "Decision assistant",
       detail: available
-        ? isLocal && baseline.decision_support ? `${baseline.decision_support.alert_count} planning signals · ${baseline.decision_support.review_count} cases to verify` : `${baseline.ingredient_risks.filter((r) => r.risk_type !== "none").length} planning issues to review`
+        ? isLocal && baseline.decision_support ? `${baseline.decision_support.alert_count} planning ${baseline.decision_support.alert_count===1?'signal':'signals'} · ${baseline.decision_support.review_count} ${baseline.decision_support.review_count===1?'case':'cases'} to verify` : `${baseline.ingredient_risks.filter((r) => r.risk_type !== "none").length} planning issues to review`
         : unavailable,
     },
     {

@@ -102,3 +102,36 @@ Browser checks also verified menu switching, folded batch/build diagnostics,
 switching to purchasing, action-link styling and target size, and responsive
 comparison cards at 320, 390 and 1365px. Both sources' three main views passed
 horizontal-overflow smoke checks; no uncaught page errors were observed.
+
+## Kitchen screen polish and evidence organization
+
+The decision assistant, inventory evidence and demand analytics now share one
+`Evidence & data checks` disclosure. It holds grouped order exclusions, individual
+order references, method/coverage explanations and the complete deduplicated
+API assumptions and warnings. Source provenance remains visible at the top of
+the page; consolidating the disclosures does not change eligibility or suppress
+missing-data conditions.
+
+A keyboard-accessible coverage control opens and focuses this evidence panel.
+The repeated readiness and no-booking cards were replaced with a concise context
+line and booking note. Whole-store weekly evidence is loaded only when its
+optional section is opened, and remains explicitly separate from per-menu daily
+ingredient planning.
+
+Saved decisions and follow-up are shown at the final review step. Restoring a
+file is optional and explicitly accepts a previously saved signed JSON decision
+slip, not training data or sales/inventory imports. Storage and outcome details
+remain expandable; they are not repeated as primary task instructions.
+
+The kitchen daily engine is unchanged: `mean_28`, `mean_7` and `same_weekday`
+are compared on chronological validation when at least 42 observations are
+available; the last 14 days remain test evidence. The separate aggregate weekly
+sales endpoint compares four-week moving average, last week and ridge
+autoregression. Neither UI cleanup trains or introduces a new model.
+
+Validation includes all frontend suites, production build, targeted new-component
+lint, and browser checks of the three kitchen views at 320/390/1365px. The browser
+checks cover all five journey steps, evidence-panel focus, grouped exclusions,
+final-step-only saved tools and rejection of an unsigned restore file. Browser
+fixtures are isolated test data; this does not verify a live deployment or real
+customer forecast accuracy. Genpact/fixture UX review remains a separate batch.

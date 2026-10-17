@@ -610,15 +610,7 @@ export default function KitchenDecisionJourney({
           )}
         </div>
       </section>
-      <details className="pd-card">
-        <summary>Forecast assumptions & alert rules</summary>
-        <ul>
-          {support.assumptions.map((a) => (
-            <li key={a}>{a}</li>
-          ))}
-        </ul>
-      </details>
-      <DecisionReviewBoard revision={save.revision} />
+      {step===4 && <DecisionReviewBoard revision={save.revision} />}
     </section>
   );
 }
@@ -873,7 +865,7 @@ function MarketingComparison({ plan, risk, onWorksheet }) {
   );
 }
 
-function DecisionReviewBoard({ revision }) {
+export function DecisionReviewBoard({ revision }) {
   const [state, setState] = useState({}),
     [retry, setRetry] = useState(0),
     [notes, setNotes] = useState({}),
@@ -946,17 +938,15 @@ function DecisionReviewBoard({ revision }) {
   }
   return (
     <details className="pd-card">
-      <summary>Decision follow-up & recorded outcomes</summary>
-      <p>
-        Up to 20 signed snapshots are saved in this browser. Clearing browser
-        storage removes them. Download copies for your showcase. Outcome notes
-        are browser-held notes; signed baseline evidence is verified on the
-        server.
-      </p>
+      <summary>Saved decisions &amp; follow-up</summary>
+      <p>Revisit a saved decision and compare it with recorded outcomes. Save a decision above to start; no stock, purchase or schedule is changed.</p>
+      <details><summary>Restore a saved decision file</summary>
+      <p>Choose a JSON decision slip previously downloaded from FreshCast after saving it. This restores its signed evidence in this browser; it does not import sales, change inventory or train the model.</p>
       <label>
-        Restore a downloaded decision slip
+        Decision slip (.json)
         <input type="file" accept="application/json,.json" onChange={restore} />
       </label>
+      </details>
       {importMessage && <p role="status">{importMessage}</p>}
       {state.error && <p role="alert">{state.error}</p>}
       {state.rows?.map((row) => (
@@ -1008,14 +998,13 @@ function DecisionReviewBoard({ revision }) {
       {state.rows && !state.rows.length && (
         <p>No saved decisions in this browser yet.</p>
       )}
-      <p>
-        Recorded outcomes apply only to the snapshot batches and mapped menus.
-        No waste records does not prove no waste. Calendar-day sales and
-        recorded costs do not establish causal savings or marketing uplift.
-      </p>
-      <Link to="/admin/reports#costs">
+      <details><summary>Storage &amp; outcome limitations</summary>
+        <p>Up to 20 signed decisions and their follow-up notes are kept in this browser. Clearing browser storage removes them; download a copy to keep a backup. Signed baseline evidence is checked on the server, but this is not a shared decision log.</p>
+        <p>Outcomes apply only to the saved batches and menus. No waste records does not prove no waste. Recorded sales and costs do not establish savings caused by the decision or a promotion.</p>
+      </details>
+      <div className="fc-workflow-links"><Link to="/admin/reports#costs">
         Record actual waste & costs in Sales
-      </Link>
+      </Link></div>
     </details>
   );
 }

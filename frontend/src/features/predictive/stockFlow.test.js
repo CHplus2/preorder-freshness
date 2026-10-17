@@ -55,13 +55,30 @@ try {
  assert.match(replay,/not an accuracy percentage/);
  const unvalidated={...menu,evaluation:{...menu.evaluation,planning_horizon_test:{horizon_days:28,test:{...menu.evaluation.planning_horizon_test.test,mean_28:{windows:0,mae:null,wape_percent:null,window_total_mae:null}}}}};
  assert.match(renderToStaticMarkup(createElement(KitchenForecastReplay,{menus:[unvalidated]})),/This horizon is unvalidated/);
- const {default:KitchenDecisionJourney,KitchenWorkflowReview,MenuEvidence}=await server.ssrLoadModule('/src/features/predictive/KitchenDecisionJourney.jsx');
+ const {default:KitchenDecisionJourney,KitchenWorkflowReview,MenuEvidence,DecisionReviewBoard}=await server.ssrLoadModule('/src/features/predictive/KitchenDecisionJourney.jsx');
  const selected={...risk,ingredient_id:'raw-material-1',raw_material_id:1,ingredient_name:'Fresh yellow noodles',
    signal:'review',shortfall_quantity:0,confirmed_requirement:0,eligible_stock:5400,forecast_waste_cost_myr:1.18,
    waste_sensitivity_low:0,waste_sensitivity_high:1078.495,alert_reason:'Generated history needs verification',
    explanation:'Confirmed-only stock is not the forecast result.',menus:[{product_id:1,product_name:menu.product_name,quantity_per_portion:100}]};
  const plan={as_of:'2026-10-17',window:{start_date:'2026-10-17',end_date:'2026-10-23',horizon_days:7},coverage:{excluded_orders:0},
    decision_support:{menus:[menu],ingredient_risks:[selected],alert_count:0,review_count:1,assumptions:[]}};
+ const {default:KitchenEvidencePanel}=await server.ssrLoadModule('/src/features/predictive/KitchenEvidencePanel.jsx');
+ const panelPlan={...plan,coverage:{included_orders:0,excluded_orders:3},excluded_orders:[{order_id:1,reason:'outside_horizon'},{order_id:2,reason:'not_paid'},{order_id:3,reason:'not_paid'}],warnings:['Same source note','Additional source note'],decision_support:{...plan.decision_support,assumptions:['Same source note'],synthetic_history_items:10}};
+ const evidence=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(KitchenEvidencePanel,{plan:panelPlan,onToggle:()=>{}})));
+ assert.match(evidence,/Evidence &amp; data checks · 3 excluded orders/);
+ assert.match(evidence,/<strong>2<\/strong> Payment not confirmed/);
+ assert.match(evidence,/Outside this planning window/);
+ assert.match(evidence,/Individual excluded order references/);
+ assert.match(evidence,/Order #3/);
+ assert.equal((evidence.match(/Same source note/g)||[]).length,1);
+ assert.match(evidence,/28-day moving average/);
+ assert.match(evidence,/not probability ranges/);
+ assert.match(evidence,/Generated history is included/);
+ const board=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(DecisionReviewBoard)));
+ assert.match(board,/<details><summary>Restore a saved decision file<\/summary>/);
+ assert.match(board,/does not import sales, change inventory or train the model/);
+ assert.match(board,/type="file" accept="application\/json,.json"/);
+ assert.match(board,/not a shared decision log/);
  const journey=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:['/admin/ai/decisions?source=local&step=1']},
    createElement(KitchenDecisionJourney,{plan,comparison:null,onComparison:()=>{},onClear:()=>{}})));
  assert.ok(journey.indexOf('Where the forecast need comes from')<journey.indexOf('Confirmed-only stock is not the forecast result.'));
@@ -71,6 +88,9 @@ try {
  assert.match(journey,/Central forecast · Step 1 result/);
  assert.match(journey,/Lower demand → more unused/);
  assert.doesNotMatch(journey,/Projected waste sensitivity:/);
+ assert.doesNotMatch(journey,/Saved decisions &amp; follow-up/);
+ const finalReview=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:['/admin/ai/decisions?source=local&step=4']},createElement(KitchenDecisionJourney,{plan,comparison:null,onComparison:()=>{},onClear:()=>{}})));
+ assert.match(finalReview,/Saved decisions &amp; follow-up/);
  const reviewedRisk={...selected,forecast_shortfall:1234};
  const links={preparation:'/admin/planner',menus:'/admin/products',inventory:'/admin/inventory'};
  const renderReview=action=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(KitchenWorkflowReview,{action,risk:reviewedRisk,links})));

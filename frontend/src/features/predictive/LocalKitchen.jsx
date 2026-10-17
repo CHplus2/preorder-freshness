@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import { loadLocalDecisionPlan } from "./localApi";
 import KitchenDecisionJourney, { MenuEvidence } from "./KitchenDecisionJourney";
 import RestaurantStations from "./RestaurantStations";
 import KitchenForecast from "./KitchenForecast";
-import KitchenReadiness from "./KitchenReadiness";
+import KitchenEvidencePanel from "./KitchenEvidencePanel";
 import "./localKitchen.css";
 import PlanningFridge from "./PlanningFridge";
 import { IngredientDrawing } from "./PantryScene";
@@ -17,6 +17,7 @@ import {stockViewSelection} from './decisionNavigation';
 
 const qty = (v) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 3 }).format(v);
+const portionQty = value => new Intl.NumberFormat('en-MY',{maximumFractionDigits:2}).format(value);
 const issues = {
   expiry_surplus: "Potential ingredient waste",
   shortage: "Confirmed-order shortage",
@@ -30,6 +31,15 @@ export default function LocalKitchen({ view }) {
   const [retry, setRetry] = useState(0);
   const [state, setState] = useState({});
   const [comparison, setComparison] = useState(null);
+  const [evidenceOpen,setEvidenceOpen]=useState(false);
+  const evidenceRef=useRef(null);
+  function reviewEvidence() {
+    setEvidenceOpen(true);
+    requestAnimationFrame(()=>{
+      evidenceRef.current?.querySelector('summary')?.focus({preventScroll:true});
+      evidenceRef.current?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    });
+  }
   const key = JSON.stringify([horizon, view, retry]);
   const validHorizon = /^(?:[1-9]|1[0-9]|2[0-8])$/.test(horizon);
   useEffect(() => {
@@ -116,16 +126,6 @@ export default function LocalKitchen({ view }) {
         status={current.status}
         isLocal
       />
-      {view === "forecast" ? (
-        <details className="pd-card"><summary>Whole-store weekly sales · separate from menu planning</summary><KitchenForecast revision={retry} /></details>
-      ) : (
-        view !== "inventory" && (
-          <details className="pd-card">
-            <summary>Local sales history & baseline evidence</summary>
-            <KitchenForecast revision={retry} />
-          </details>
-        )
-      )}
       {current.status === "loading" && (
         <p className="pd-state" role="status">
           Loading current orders, recipes and stock…
@@ -140,47 +140,14 @@ export default function LocalKitchen({ view }) {
       )}
       {current.status === "ready" && (
         <>
-          {view === "decisions" && <details className="pd-card"><summary>Kitchen data coverage · {plan.decision_support.menus.filter(m=>m.forecast_portions!==null).length} menu forecasts</summary><KitchenReadiness plan={plan} /></details>}
           <div className="pd-context">
             <span>
               Stock planning: {plan.window.start_date}–{plan.window.end_date} ·{" "}
               {plan.timezone}
             </span>
-            <strong>
-              {plan.coverage.included_orders} orders ready for stock planning ·{" "}
-              {plan.coverage.excluded_orders} need review or fall outside this
-              window
-            </strong>
+            <span>{plan.coverage.included_orders} confirmed orders included · {plan.coverage.excluded_orders} excluded. <button className="local-evidence-trigger" onClick={reviewEvidence} aria-controls="kitchen-data-checks" aria-expanded={evidenceOpen}>Review data checks</button></span>
           </div>
-          {!plan.coverage.included_orders && (
-            <details className="pd-card">
-              <summary>
-                No confirmed orders ready for stock allocation · review coverage
-              </summary>
-              <p>
-                Your order history and local baseline are independent of this
-                stock-planning filter. Review the reasons below before changing
-                orders.
-              </p>
-              <ul>
-                {Object.entries(
-                  plan.excluded_orders.reduce(
-                    (counts, order) => ({
-                      ...counts,
-                      [order.reason]: (counts[order.reason] || 0) + 1,
-                    }),
-                    {},
-                  ),
-                ).map(([reason, count]) => (
-                  <li key={reason}>
-                    {count} orders: {reason.replaceAll("_", " ")}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/admin/orders">Review orders</Link> ·{" "}
-              <Link to="/admin/planner">Review schedules</Link>
-            </details>
-          )}
+          {!plan.coverage.included_orders && <p className="local-booking-note">No confirmed bookings qualify in this window. Menu forecasts can still estimate additional demand.</p>}
           {view === "forecast" ? (
             <OrderEvidence plan={plan} />
           ) : view === "inventory" ? (
@@ -194,37 +161,19 @@ export default function LocalKitchen({ view }) {
               onClear={() => setComparison(null)}
             />
           )}
-          <details className="pd-card">
-            <summary>
-              Order coverage & exclusions ({plan.excluded_orders.length})
-            </summary>
-            <p>
-              Only paid, pending/processing orders with reviewed dates, complete
-              accepted recipes and undeducted stock are included.
-            </p>
-            <ul>
-              {plan.excluded_orders.map((o) => (
-                <li key={o.order_id}>
-                  Order #{o.order_id}: {o.reason.replaceAll("_", " ")}
-                </li>
-              ))}
-            </ul>
-            <Link to="/admin/orders">Review orders</Link> ·{" "}
-            <Link to="/admin/planner">Review preparation plans</Link>
-          </details>
-          <details className="pd-assumptions">
-            <summary>Data sources & limitations</summary>
-            <ul>
-              {plan.warnings.map((w) => (
-                <li key={w}>{w}</li>
-              ))}
-            </ul>
-          </details>
+          <KitchenEvidencePanel plan={plan} open={evidenceOpen} onToggle={setEvidenceOpen} panelRef={evidenceRef}>
+            {view!=='inventory' && <WeeklySalesEvidence revision={retry}/>}
+          </KitchenEvidencePanel>
         </>
       )}
       <BuildIdentity/>
     </main>
   );
+}
+
+function WeeklySalesEvidence({revision}) {
+  const [expanded,setExpanded]=useState(false);
+  return <details onToggle={event=>{if(event.target===event.currentTarget)setExpanded(event.currentTarget.open);}}><summary>Whole-store weekly sales · separate from menu planning</summary>{expanded && <KitchenForecast revision={revision}/>}</details>;
 }
 
 function OrderEvidence({ plan }) {
@@ -240,7 +189,7 @@ function OrderEvidence({ plan }) {
       {selected?.daily_predictions?.length>0 && <figure className="local-demand-strip"><figcaption>Expected portions by delivery day · forecast estimates</figcaption><div>{selected.daily_predictions.map((value,index)=>{
         const day=new Date(Date.parse(`${plan.window.start_date}T12:00:00Z`)+index*86400000);
         const date=day.toISOString().slice(0,10);
-        return <div key={date} title={`${date}: ${qty(value)} estimated portions`}><strong>{qty(value)}</strong><span className="local-day-bar" style={{height:`${12+64*value/Math.max(1,...selected.daily_predictions)}px`}}/><time dateTime={date}>{day.toLocaleDateString('en-MY',{day:'numeric',month:'short',timeZone:'UTC'})}</time></div>;
+        return <div key={date} title={`${date}: ${portionQty(value)} estimated portions`}><strong>{portionQty(value)}</strong><span className="local-day-bar" style={{height:`${12+64*value/Math.max(1,...selected.daily_predictions)}px`}}/><time dateTime={date}>{day.toLocaleDateString('en-MY',{day:'numeric',month:'short',timeZone:'UTC'})}</time></div>;
       })}</div></figure>}
       {selected ? <MenuEvidence support={{...plan.decision_support,menus:[selected]}}/> : <p>No active menus are available. Review menu records first.</p>}
       <details><summary>Confirmed bookings in this window · {plan.included_orders.length}</summary>
