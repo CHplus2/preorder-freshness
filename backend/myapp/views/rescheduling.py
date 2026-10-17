@@ -23,13 +23,17 @@ class ChangeInput(serializers.Serializer):
     reason = serializers.CharField(max_length=300, trim_whitespace=True)
 
 
-def eligibility(order, now):
+def eligibility(order, now, allow_initial=False):
     anchor = order.delivery_at if order.preparation_plan.get('needs_review') else order.preparation_at
     cutoff = anchor - timedelta(hours=CUTOFF_HOURS) if anchor else None
     if order.status != 'pending' or order.inventory_deducted:
         return cutoff, 'Only orders awaiting preparation can be rescheduled.'
     if order.payment_status == 'refunded':
         return cutoff, 'A refunded order cannot be rescheduled. Contact the kitchen.'
+    if allow_initial and order.delivery_at is None:
+        if order.preparation_at or order.preparation_end_at or order.preparation_plan.get('tasks'):
+            return cutoff, 'Existing preparation reservations need owner review before a delivery date can be assigned.'
+        return None, ''
     if not cutoff or not order.delivery_at:
         return cutoff, 'This order needs its delivery and preparation times resolved by the kitchen.'
     if now >= cutoff:
@@ -49,10 +53,18 @@ def reschedule_order(request, pk):
         orders = orders.filter(user=request.user)
     order = get_object_or_404(orders, pk=pk)
     now = timezone.now()
-    cutoff, blocked = eligibility(order, now)
+    initial_delivery = bool(request.user.is_staff and order.delivery_at is None)
+    cutoff, blocked = eligibility(order, now, allow_initial=initial_delivery)
+    items = list(order.items.select_related('product'))
+    if initial_delivery and not blocked:
+        if not items or any(item.product_id is None for item in items):
+            blocked = 'Menu links are missing. Review this request or close it if obsolete; a delivery date cannot restore removed menu references.'
+        elif any(item.product.selling_status == 'archived' for item in items):
+            blocked = 'This request contains archived menus. Review the items or close an obsolete request before assigning a new delivery date.'
     changes = order.amendments.filter(after__kind='delivery_change').order_by('-created_at', '-pk')
     if request.method == 'GET':
         return Response({'eligible': not bool(blocked), 'reason': blocked, 'cutoff': cutoff,
+            'initial_delivery': initial_delivery,
             'cutoff_hours': CUTOFF_HOURS,
             'history': [{'id': a.pk, 'at': a.created_at, 'by': a.after['actor_role'],
                 'previous_delivery': a.before['delivery_at'], 'delivery_at': a.after['delivery_at'],
@@ -80,14 +92,25 @@ def reschedule_order(request, pk):
         raise serializers.ValidationError('Choose a different delivery time.')
     if previous and previous['version'] != order.updated_at.isoformat():
         return Response({'detail': 'This order changed. Reload it and preview again.'}, status=409)
-    items = list(order.items.select_related('product'))
     if any(i.product_id is None for i in items):
         raise serializers.ValidationError('An ordered menu was removed. Contact the kitchen to arrange this change.')
     list(Product.objects.select_for_update().filter(pk__in=[i.product_id for i in items]).order_by('pk'))
     items = list(order.items.select_related('product'))
+    if initial_delivery and any(item.product.selling_status == 'archived' for item in items):
+        raise serializers.ValidationError('A menu was archived. Reload this request before assigning a delivery date.')
     # A changed date needs fresh notice; no reuse of the original order's lead-time window.
-    plan = schedule_order([scheduled_item(i) for i in items], target, store,
-                          now=now, exclude_order_id=order.pk, allow_manual_review=bool(order.preparation_plan.get('needs_review')))
+    # A first date is an owner-recorded request, never retroactive fulfilment or recipe acceptance.
+    # Missing accepted settings use current policies for request validation only; none are saved.
+    planning_items = [scheduled_item(i) if i.preparation_snapshot else i for i in items] if initial_delivery else [scheduled_item(i) for i in items]
+    plan = schedule_order(planning_items, target, store,
+                          now=now, exclude_order_id=order.pk,
+                          allow_manual_review=initial_delivery or bool(order.preparation_plan.get('needs_review')))
+    if initial_delivery:
+        notes = 'First delivery date recorded by the owner. Review accepted recipes and confirm a preparation plan before starting work.'
+        if plan.get('needs_review'):
+            notes += ' ' + plan['review_reason']
+        plan = dict(start=None, end=None, tasks=[], needs_review=True, review_reason=notes,
+                    delivery_buffer_minutes=store.delivery_buffer_minutes)
     change_anchor = plan['start'] or target
     if change_anchor <= now + timedelta(hours=CUTOFF_HOURS):
         raise serializers.ValidationError('The new preparation time must also be more than 24 hours away.')
@@ -100,7 +123,7 @@ def reschedule_order(request, pk):
     if previous:
         if snapshot != previous:
             return Response({'detail': 'Kitchen availability changed. Preview the new time again.'}, status=409)
-        before = {'delivery_at': order.delivery_at.isoformat(),
+        before = {'delivery_at': order.delivery_at.isoformat() if order.delivery_at else None,
             'preparation_at': order.preparation_at.isoformat() if order.preparation_at else None, 'plan': order.preparation_plan}
         order.delivery_at = target
         order.preparation_at = plan['start']

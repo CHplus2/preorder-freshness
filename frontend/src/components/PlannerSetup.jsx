@@ -1,25 +1,29 @@
 import {Link} from 'react-router-dom';
 import {planningReadiness} from '../utils/planner';
-import {archivedOnlyOrder} from '../utils/orderQueue';
+import {orderMenuState} from '../utils/orderQueue';
 import useOrderCatalogue from '../hooks/useOrderCatalogue';
 
 export default function PlannerSetup({menus,orders,onReview,now}) {
  const groups=planningReadiness(orders,now);
  const {catalogue,error,retry}=useOrderCatalogue();
- const archivedMissing=groups.missingDelivery.filter(order=>archivedOnlyOrder(order,catalogue)).length;
+ const classifications={current:0,mixed:0,archived:0,unlinked:0};
+ for(const order of groups.missingDelivery)classifications[orderMenuState(order,catalogue)]++;
+ const labels={current:'current menus',mixed:'current and archived menus',archived:'archived menus only',unlinked:'menu links need review'};
  return <section className="planner-setup" aria-label="Planning readiness">
-  <div className="planner-setup-row"><div>
-   <h2>{menus.length?`${menus.length} active ${menus.length===1?'menu needs':'menus need'} preparation steps`:'Active menu preparation is set up'}</h2>
-   <p>{menus.length?'Add cooking steps and timings for these active menus.':'All active menus have cooking steps. Order scheduling is checked separately below.'}</p>
+  <div className={`planner-setup-row ${menus.length?'':'planner-setup-ready'}`}><div>
+   <h2>{menus.length?`${menus.length} active ${menus.length===1?'menu needs':'menus need'} preparation steps`:'Cooking steps ready'}</h2>
+   <p>{menus.length?'Add cooking steps and timings for these active menus.':'All active menus have preparation steps.'}</p>
   </div><Link className="text-link" to="/admin/products?review=preparation">{menus.length?'Add missing steps':'Review preparation steps'}</Link></div>
   {groups.needsPlan.length>0 && <div className="planner-setup-row"><div>
    <h2>{groups.needsPlan.length} upcoming {groups.needsPlan.length===1?'order needs':'orders need'} preparation review</h2>
    <p>These pending orders have future delivery dates. Review and confirm their task plans before starting work.</p>
   </div><button type="button" onClick={()=>onReview(groups.needsPlan[0].id)}>Plan upcoming orders</button></div>}
   {groups.missingDelivery.length>0 && <div className="planner-setup-row"><div>
-   <h2>{groups.missingDelivery.length} {groups.missingDelivery.length===1?'order has':'orders have'} no valid delivery date</h2>
-   <p>These are open orders, not completed sales. Confirm a real delivery arrangement, or cancel an obsolete test request. Do not invent dates for historical records.</p>
-   {catalogue ? <p>{archivedMissing} contain only archived menus; {groups.missingDelivery.length-archivedMissing} contain current or unverified menu references. Archiving a menu does not close its orders.</p> : error ? <p role="alert">Menu archive status could not be checked. <button type="button" onClick={retry}>Retry menu check</button></p> : <p role="status">Checking which orders belong to archived menus…</p>}
+   <h2>{groups.missingDelivery.length} {groups.missingDelivery.length===1?'delivery date needs':'delivery dates need'} review</h2>
+   <p>Set an agreed future date for an open request, or close it if obsolete. These records are not completed sales.</p>
+   {catalogue ? <div className="planner-readiness-tags" aria-label="Menus in orders missing dates">{Object.entries(classifications).filter(([,count])=>count>0).map(([kind,count])=><span key={kind}>{count} · {labels[kind]}</span>)}</div> : error ? <p role="alert">Menu status could not be checked. <button type="button" onClick={retry}>Retry menu check</button></p> : <p role="status">Checking menu references…</p>}
+   <ul className="planner-record-preview">{groups.missingDelivery.slice(0,3).map(order=><li key={order.id}>Order #{order.id} · {(order.items || []).map(item=>item.product_name).filter(Boolean).join(', ') || 'No menu recorded'}</li>)}</ul>
+   {groups.missingDelivery.length>3 && <p className="planner-record-more">Plus {groups.missingDelivery.length-3} more in delivery record review.</p>}
   </div><Link className="text-link" to="/admin/orders?review=missing-delivery">Review delivery records</Link></div>}
   {groups.overdue.length>0 && <div className="planner-setup-row"><div>
    <h2>{groups.overdue.length} past-due {groups.overdue.length===1?'order needs':'orders need'} follow-up</h2>
@@ -29,8 +33,6 @@ export default function PlannerSetup({menus,orders,onReview,now}) {
    <h2>{groups.started.length} started {groups.started.length===1?'order needs':'orders need'} record review</h2>
    <p>Preparation has started or stock was deducted. Review its existing records before changing the plan.</p>
   </div><Link className="text-link" to="/admin/orders">Review started orders</Link></div>}
-  <div className="planner-setup-row"><div><h2>Sales forecasts use delivery history</h2>
-   <p>Paid, delivered orders inform menu forecasts, then recipes translate portions into ingredient needs. Task plans are separate. Generated history remains labelled as demo evidence.</p>
-  </div><Link className="text-link" to="/admin/ai/decisions?source=local">Open kitchen decision assistant</Link></div>
+  <p className="planner-forecast-note">Forecasts use paid, delivered history; missing task plans do not block that history. <Link className="text-link" to="/admin/ai/decisions?source=local">Open FreshCast</Link></p>
  </section>;
 }

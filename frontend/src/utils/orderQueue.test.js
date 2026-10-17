@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {filterOrders,overdueOrder} from './orderQueue.js';
+import {filterOrders,overdueOrder,orderMenuState} from './orderQueue.js';
 const filters={search:'',status:'',payment:'',date:'',overdue:false,sort:'newest'};
 const now=Date.parse('2026-09-30T12:00:00+08:00');
 const order={id:21,status:'pending',payment_status:'unpaid',delivery_at:'2026-09-29T20:00:00Z',user:{username:'Buyer'},items:[{product_name:'Rice bowl'}]};
@@ -23,6 +23,13 @@ test('delivery ordering puts unscheduled orders last without mutating input',()=
 
 const catalogue=[{id:1,selling_status:'archived'},{id:20,selling_status:'active'},{id:21,selling_status:'paused'}];
 const oldItems=[{product:1,product_name:'Jasmine Rice'}];
+test('menu classification distinguishes current, mixed, archived and missing references',()=>{
+ assert.equal(orderMenuState({items:oldItems},catalogue),'archived');
+ assert.equal(orderMenuState({items:[{product:20},{product:21}]},catalogue),'current');
+ assert.equal(orderMenuState({items:[...oldItems,{product:20}]},catalogue),'mixed');
+ for(const items of [[],[{product:null}],[{product:99}],[...oldItems,{product:null}]])assert.equal(orderMenuState({items},catalogue),'unlinked');
+ assert.equal(orderMenuState({items:oldItems},null),'unlinked');
+});
 test('only closed, fully archived history is hidden; open, mixed and unknown records remain',()=>{
  const rows=[{...order,id:1,status:'delivered',items:oldItems},
   {...order,id:2,status:'cancelled',items:oldItems},{...order,id:3,items:oldItems},

@@ -2,10 +2,16 @@ import {malaysiaDate,planningReadiness} from './planner.js';
 export const overdueOrder = (order, now) => !['delivered','cancelled'].includes(order.status) &&
   !!order.delivery_at && Date.parse(order.delivery_at) < now;
 
-export function archivedOnlyOrder(order,catalogue) {
-  if(!catalogue || !order.items?.length)return false;
+export function orderMenuState(order,catalogue) {
+  if(!catalogue || !order.items?.length)return 'unlinked';
   const statuses=new Map(catalogue.map(menu=>[menu.id,menu.selling_status]));
-  return order.items.every(item=>statuses.get(item.product)==='archived');
+  const states=order.items.map(item=>statuses.get(item.product));
+  if(states.some(state=>!state))return 'unlinked';
+  if(states.every(state=>state==='archived'))return 'archived';
+  return states.some(state=>state==='archived')?'mixed':'current';
+}
+export function archivedOnlyOrder(order,catalogue) {
+  return orderMenuState(order,catalogue)==='archived';
 }
 export function hiddenArchivedHistory(order,catalogue) {
   return ['delivered','cancelled'].includes(order.status) && archivedOnlyOrder(order,catalogue);

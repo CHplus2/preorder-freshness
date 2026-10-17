@@ -107,3 +107,11 @@
   .admin-shell .summary-card { min-width: 0; overflow-wrap: anywhere; }
   .admin-shell .dk-sales-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
 }
+
+.admin-shell .planner-setup-ready{padding:14px 0}
+.admin-shell .planner-setup-ready h2{color:#285a3e}
+.planner-readiness-tags{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.planner-readiness-tags>span{padding:4px 9px;border-radius:6px;background:#f4eddd;color:#665534;font-size:13px;line-height:1.6}
+.admin-shell .planner-record-preview{padding-left:20px;margin:12px 0 6px;font-size:14px;line-height:1.7;color:#53655a;overflow-wrap:anywhere}
+.admin-shell .planner-record-more{font-size:13px}
+.admin-shell .planner-forecast-note{font-size:13px;line-height:1.7;color:#53655a;border-top:1px solid #e2e7e3;padding:14px 0;margin:0}

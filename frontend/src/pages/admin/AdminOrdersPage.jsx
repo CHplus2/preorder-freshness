@@ -8,7 +8,7 @@ import ModalDialog from '../../components/ModalDialog';
 import { useEffect, useRef, useState } from "react";
 import { useUI } from "../../contexts/UIContext";
 import { useOrder } from "../../contexts/OrderContext";
-import {filterOrders,overdueOrder,archivedOnlyOrder,hiddenArchivedHistory} from '../../utils/orderQueue';
+import {filterOrders,overdueOrder,archivedOnlyOrder,hiddenArchivedHistory,orderMenuState} from '../../utils/orderQueue';
 import useOrderCatalogue from '../../hooks/useOrderCatalogue';
 
 
@@ -35,9 +35,9 @@ export default function AdminOrdersPage() {
     fetchAdminOrders();
   }, [fetchAdminOrders]);
 
-  const startEdit = (order) => {
+  const startEdit = (order,preferredStatus) => {
     setEditingOrder(order);
-    setNewStatus(order.status || "pending");
+    setNewStatus(preferredStatus || order.status || "pending");
   };
 
   const saveEdit = async () => {
@@ -58,7 +58,7 @@ export default function AdminOrdersPage() {
   return (
     <div className="orders-container">
       <h1 className="orders-title">{review==='missing-delivery'?'Review missing delivery dates':review==='archived-menus'?'Orders containing only archived menus':'Orders'}</h1>
-      {review==='missing-delivery' && <p className="order-review-explanation">Only open orders without a valid delivery date appear here. Check the menu names below. Cancel obsolete fictional requests through Edit order; keep genuine bookings for owner review. Missing dates are not evidence of a completed sale.</p>}
+      {review==='missing-delivery' && <p className="order-review-explanation">Set an agreed future date to keep a request open, or review closing an obsolete request. Setting a date does not mark an order paid or delivered.</p>}
       {review==='archived-menus' && <p className="order-review-explanation">Every item in these orders refers to an archived menu. Open orders still need a decision; archiving a menu does not cancel a booking.</p>}
       <div className="fyp-form inline" aria-label="Filter orders">
         <label>Review records<select value={review} onChange={e=>changeReview(e.target.value)}><option value="">Order queue</option><option value="missing-delivery">Open orders missing delivery dates</option><option value="archived-menus" disabled={!catalogue}>Archived menus only</option></select></label>
@@ -108,6 +108,7 @@ export default function AdminOrdersPage() {
               <p>Prepare: {order.payment_instructions?.freshcast_synthetic_history?.version==='1' ? 'Synthetic historical summary — no cooking reservation' : order.preparation_at ? new Date(order.preparation_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Owner planning required — unscheduled'}</p>
               {order.payment_instructions?.freshcast_synthetic_history?.version==='1' && <p className="owner-order-note"><strong>Synthetic daily sales summary.</strong> Generated demo history; no real customer payment, preparation or delivery occurred.</p>}
               <p>Deliver: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Unscheduled'} · {order.delivery_method}</p>
+              {review==='missing-delivery' && catalogue && <p className="owner-order-note">{orderMenuState(order,catalogue)==='unlinked'?'Some menu references are missing from the catalogue. An old name in an order is a historical snapshot; it does not prove the menu is still available.':orderMenuState(order,catalogue)==='archived'?'This request contains only archived menus. Review whether it is still needed.':orderMenuState(order,catalogue)==='mixed'?'This request mixes current and archived menus. Review the items before arranging a new date.':'Menu references are available. Use Set delivery date to review a future request.'}</p>}
               {overdueOrder(order,now) && <p className="admin-follow-up"><strong>Delivery follow-up</strong><span>The requested time has passed. Confirm delivery with the customer, then update the order status.</span></p>}
               {order.status==='pending' && order.preparation_plan?.needs_review && <div className="owner-order-note"><strong>Delivery time awaiting your confirmation</strong><p>Review the recipe, kitchen workload and handling limits. Contact the customer if another time is needed. Set and confirm preparation times in Planner before moving this order to Processing.</p><details><summary>Automatic planning notes</summary><p>{order.preparation_plan.review_reason}</p></details></div>}
               {/* BODY */}
@@ -125,6 +126,7 @@ export default function AdminOrdersPage() {
                 <button className="edit-btn" onClick={() => startEdit(order)}>
                   Edit order
                 </button>
+                {review==='missing-delivery' && order.status==='pending' && !order.inventory_deducted && <button onClick={()=>startEdit(order,'cancelled')}>Review closing request</button>}
                 <button onClick={()=>setPaymentOrder(paymentOrder?.id===order.id?null:order)}>Payment records</button>
 
                 </div><div className="order-total">
@@ -144,7 +146,8 @@ export default function AdminOrdersPage() {
               <div className="modal-overlay" onClick={() => setEditingOrder(null)}></div>
 
               <div className="edit-modal">
-                <h2>Order #{editingOrder.id}</h2>
+                <h2>{newStatus==='cancelled' && editingOrder.status!=='cancelled'?'Review closing order':'Order'} #{editingOrder.id}</h2>
+                {newStatus==='cancelled' && editingOrder.status!=='cancelled' && <p>This closes the open request and removes it from upcoming preparation. It keeps its order reference and history. Payments and refunds are handled separately.</p>}
           <DialogFeedback/>
 
                 {/* Address Section */}
@@ -193,7 +196,7 @@ export default function AdminOrdersPage() {
                 <p>Payment: {editingOrder.payment_status}. Close this dialog and open Payment records to record verified receipts or refunds. Cancelling an order does not refund it automatically.</p>
 
                 <div className="modal-actions">
-                  <button className="modal-save" disabled={saving} onClick={saveEdit}>{saving ? 'Saving...' : 'Save'}</button>
+                  <button className="modal-save" disabled={saving} onClick={saveEdit}>{saving ? 'Saving...' : newStatus==='cancelled' && editingOrder.status!=='cancelled'?'Confirm close request':'Save'}</button>
                   <button className="modal-cancel" onClick={() => setEditingOrder(null)}>Close</button>
                 </div>
               </div>

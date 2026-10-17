@@ -51,3 +51,13 @@ The two outcome counts are now separate: **11 of 20 portions sold**, followed by
 ## Validation
 
 Frontend unit, predictive, planner, UX and checkout suites and the production build passed. Eighteen isolated Django maintenance tests passed, including the existing preparation/rescheduling commands. Chromium checks used fictional fixtures to exercise the targeted planner link, archive/mixed/open-order filters, sequential list positions, catalogue failure/retry and tutorial outcomes at 390px and 1365px. No live Supabase writes or Vercel deployment verification were performed.
+
+## Follow-up: resolve dates in the owner UI
+
+The earlier planner phrase **current or unverified menu references** combined two different cases. It now separates **current menus**, **archived menus only**, **mixed current/archived menus**, and **menu links need review**. Zero-count categories are omitted. A missing link is not proof an archived product still exists, and no name matching is used to invent that link.
+
+Planner now shows a compact cooking-step readiness row, a focused missing-date issue with up to three order/menu previews, and a short FreshCast link. **Review delivery records** opens the same missing-date list.
+
+In owner Orders, **Set delivery date** previews and confirms a specific future request. It leaves payment and fulfilment unchanged and still requires preparation review. Missing/archived menu references display a specific blocker. **Review closing request** opens the existing order dialog with cancellation selected; **Confirm close request** is the explicit save. Closing obsolete requests removes them from the open missing-date list while retaining references/history. No batch of live records was automatically modified from the cloud environment.
+
+The tutorial header now explicitly says that its **20 chicken portions are preset fictional stock**, separate from kitchen inventory and model predictions.

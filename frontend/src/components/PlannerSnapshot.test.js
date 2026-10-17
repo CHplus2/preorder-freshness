@@ -23,13 +23,13 @@ try {
   const {default:PlannerSetup}=await server.ssrLoadModule('/src/components/PlannerSetup.jsx');
   const setup=(orders,menus=[])=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(PlannerSetup,{orders,menus,now:Date.parse('2026-10-17T12:00:00+08:00'),onReview:()=>{}})));
   const oldRecords=setup([{id:1,status:'pending',delivery_at:null,preparation_plan:{}},{id:2,status:'pending',delivery_at:'2026-10-10T12:00:00+08:00',preparation_plan:{}}]);
-  assert.match(oldRecords,/Active menu preparation is set up/);
-  assert.match(oldRecords,/1 order has no valid delivery date/);
+  assert.match(oldRecords,/Cooking steps ready/);
+  assert.match(oldRecords,/1 delivery date needs review/);
   assert.match(oldRecords,/1 past-due order needs follow-up/);
   assert.doesNotMatch(oldRecords,/upcoming order needs|Plan upcoming orders/);
   assert.match(oldRecords,/source=local/);
   assert.ok(oldRecords.includes('href="/admin/orders?review=missing-delivery"'));
-  assert.match(oldRecords,/These are open orders, not completed sales/);
+  assert.match(oldRecords,/These records are not completed sales/);
   const upcoming=setup([{id:28,status:'pending',delivery_at:'2026-10-24T18:00:00+08:00',preparation_plan:{needs_review:true}}],[{id:20,name:'Active rice'}]);
   assert.match(upcoming,/1 active menu needs preparation steps/);
   assert.match(upcoming,/1 upcoming order needs preparation review/);

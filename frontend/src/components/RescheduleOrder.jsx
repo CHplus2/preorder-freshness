@@ -4,11 +4,14 @@ import {apiError} from '../utils/apiError';
 import {getCookie} from '../utils/cookieUtils';
 import {deliveryPolicy, deliveryPreview, deliveryConfirmation} from '../utils/deliveryResponse';
 import {useUI} from '../contexts/UIContext';
+import {useAuth} from '../contexts/AuthContext';
 
-const when = value => new Date(value).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'});
+const when = value => value ? new Date(value).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Not recorded';
 
 export default function RescheduleOrder({order, onSaved}) {
   const {setAlert} = useUI();
+  const {isAdmin} = useAuth() || {};
+  const firstDate = Boolean(isAdmin && !order.delivery_at);
   const [open, setOpen] = useState(null);
   const panelId = useId();
   const [policy, setPolicy] = useState(null);
@@ -67,25 +70,25 @@ export default function RescheduleOrder({order, onSaved}) {
   };
   return <section className="delivery-change">
     <div className="delivery-change-actions">
-      {order.status === 'pending' && order.payment_status !== 'refunded' && <button type="button" aria-expanded={open === 'change'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('change')}>Change delivery time</button>}
+      {order.status === 'pending' && order.payment_status !== 'refunded' && <button type="button" aria-expanded={open === 'change'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('change')}>{firstDate?'Set delivery date':'Change delivery time'}</button>}
       <button type="button" className="delivery-history-toggle" aria-expanded={open === 'history'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('history')}>Delivery history</button>
     </div>
     {open && <div id={panelId} className="delivery-change-panel">
-      <div className="delivery-change-heading"><h3>{open === 'change' ? 'Choose a new delivery time' : 'Delivery history'}</h3><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Close</button></div>
+      <div className="delivery-change-heading"><h3>{open === 'change' ? firstDate?'Set the first delivery date':'Choose a new delivery time' : 'Delivery history'}</h3><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Close</button></div>
       {busy && <p role="status">Checking…</p>}
       {error && <p role="alert">{error} {!policy && <button type="button" disabled={busy} onClick={load}>Try again</button>}</p>}
       {message && <p className="delivery-change-success" role="status">{message}</p>}
       {open === 'change' && policy && !policy.eligible && <p>{policy.reason}</p>}
       {open === 'change' && policy?.eligible && <form className="fyp-form" noValidate onSubmit={submit}>
-        <p className="delivery-change-hint">Change by <strong>{when(policy.cutoff)}</strong>. All times are Malaysia time.</p>
+        <p className="delivery-change-hint">{policy.initial_delivery ? 'Record an agreed future delivery request. This does not mark the order paid or delivered, or reserve preparation time.' : <>Change by <strong>{when(policy.cutoff)}</strong>.</>} All times are Malaysia time.</p>
         {!preview ? <>
           <label>New date and time
             <input type="datetime-local" required value={delivery} disabled={busy} onChange={e=>{setDelivery(e.target.value);setMessage('');}}/>
           </label>
-          <label>Reason for the change
+          <label>{policy.initial_delivery?'Delivery arrangement / reason':'Reason for the change'}
             <textarea rows={2} required maxLength={300} value={reason} disabled={busy} onChange={e=>{setReason(e.target.value);setMessage('');}}/>
           </label>
-          <details className="delivery-change-rules"><summary>How delivery changes work</summary><p>Changes close 24 hours before preparation starts, or before requested delivery while awaiting kitchen confirmation. The new time must meet this cutoff and kitchen availability. Your items, address and price stay the same.</p></details>
+          <details className="delivery-change-rules"><summary>How delivery changes work</summary><p>{policy.initial_delivery?'Choose an agreed date within 90 days, more than 24 hours away and after the menu lead time. Delivery restrictions and menu capacity are checked. Preparation still needs owner confirmation.':'Changes close 24 hours before preparation starts, or before requested delivery while awaiting kitchen confirmation. The new time must meet this cutoff and kitchen availability.'} Your items, address and price stay the same.</p></details>
           <div className="delivery-change-actions"><button disabled={busy}>Check new time</button><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Cancel</button></div>
         </> : <div className="delivery-change-review">
           <h4>Confirm your new time</h4>

@@ -95,8 +95,9 @@ export default function RescueDemo() {
         </span>
         <h2>Can you rescue tomorrow’s chicken?</h2>
         <p>
-          A fictional restaurant shift. Open the fridge, choose a plan and watch
-          its assumed outcome.
+          Start with 20 fictional chicken portions that expire tomorrow. This is
+          preset tutorial stock, not your inventory or a model prediction. Open
+          the fridge, choose a plan and watch its assumed outcome.
         </p>
         <button
           onClick={() => {
