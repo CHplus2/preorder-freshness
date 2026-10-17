@@ -455,7 +455,39 @@ the forecasting or FEFO rules:
   shortfall. Rounded API totals can differ by a small rounding amount.
 - `review_reasons` is a string list of applicable history, provenance, coverage
   and dated-stock concerns; review cards no longer imply every possible concern
-  applies to every ingredient. Existing signal thresholds are unchanged.
+  applies to every ingredient.
+
+Kitchen audit additions (2026-10-17, backward-compatible metadata):
+
+- `menus[].evaluation.planning_horizon_test` has `horizon_days`, explanatory
+  `strategy`, and `test` scores keyed by the existing three method names.
+  Each score has integer `windows`, nullable `mae` (portions/day),
+  `wape_percent`, and `window_total_mae` (portions/window). Origins run from the
+  start of the final 14 test days through the last complete horizon. At each
+  origin, predictions feed forward without observing outcomes inside the window.
+  Windows overlap; these are descriptive, dependent replays. They do not select
+  methods. The existing validation MAE still selects among three baselines only.
+  Horizons longer than the test period return zero windows and null scores.
+- Menu `confidence: evaluated` additionally requires a complete horizon test
+  with defined WAPE at or below the existing 75% heuristic and at least seven
+  selling days. This heuristic is not an accuracy guarantee or production
+  acceptance threshold. Synthetic history remains explicitly labeled; it cannot
+  produce a verified forecast-waste signal. Fictional `DEMO-FC-INV-` batches also
+  suppress that signal. Confirmed stock gaps retain their operational meaning.
+- `menus[].sensitivity_error_portions_per_day` is the numeric shift used in the
+  lower/higher-demand what-ifs: selected one-day test MAE, or the largest daily
+  forecast when unevaluated. These cases rerun constrained demand and FEFO;
+  they are not calibrated probability bounds. Forecast values are unchanged.
+- `stock_flow.expiry_focus` contains `opening_quantity`, `confirmed_allocated`,
+  `forecast_consumed`, `projected_remaining` for eligible lots expiring within
+  the window only, plus boolean `cost_known`. The first three quantities explain
+  `forecast_expiring_unused` directly by subtraction.
+- `stock_flow.demand_by_day[]` contains `date`, `forecast_requirement`,
+  `forecast_consumed`, and `menus[]` with `product_id`, `product_name`,
+  `additional_portions`, `quantity_per_portion`, `requirement`. Unrounded values
+  show the exact menu → ingredient multiplication on each demand date. Summing
+  requirements or forecast consumption matches the corresponding ingredient
+  totals within display rounding. Confirmed recipe needs remain separate.
 
 All of this is a read-only projected ledger: no stock movement or purchase is
 recorded. Zero projected expiry waste can coexist with uncovered forecast demand.

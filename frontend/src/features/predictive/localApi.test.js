@@ -230,6 +230,20 @@ test("decision contract joins native-unit stock evidence with local menu forecas
   assert.deepEqual(requests, [
     "/api/admin/predictive/local-decisions/?horizon_days=7",
   ]);
+  const methods=['mean_28','mean_7','same_weekday'];
+  const horizonTest={horizon_days:7,strategy:'Recursive held-out windows',test:Object.fromEntries(methods.map(k=>[k,{windows:8,mae:1,wape_percent:46.22,window_total_mae:3}]))};
+  p.decision_support.menus=[{product_id:1,product_name:'Kitchen menu',method:'mean_28',history_days:70,
+    forecast_portions:14,additional_forecast_portions:12,variable_cost_myr:null,price_myr:10,
+    recipe_complete:true,confidence:'limited',history:[],sensitivity_error_portions_per_day:1,
+    evaluation:{train_days:42,validation_days:14,test_days:14,
+      test:Object.fromEntries(methods.map(k=>[k,{mae:1,wape_percent:46.22}])),planning_horizon_test:horizonTest}}];
+  assert.equal(validateDecisionPlan(p),p);
+  assert.throws(()=>validateDecisionPlan({...p,decision_support:{...p.decision_support,menus:[{
+    ...p.decision_support.menus[0],evaluation:{...p.decision_support.menus[0].evaluation,
+      planning_horizon_test:{...horizonTest,horizon_days:14}}}]}}));
+  assert.throws(()=>validateDecisionPlan({...p,decision_support:{...p.decision_support,menus:[{
+    ...p.decision_support.menus[0],evaluation:{...p.decision_support.menus[0].evaluation,
+      planning_horizon_test:{...horizonTest,test:{...horizonTest.test,mean_28:{windows:8,mae:null,wape_percent:46.22,window_total_mae:3}}}}}]}}));
   assert.throws(() =>
     validateDecisionPlan({
       ...p,

@@ -482,6 +482,9 @@ export default function KitchenDecisionJourney({
         )}
         {step === 1 && (
           <>
+            <StockFlowEvidence risk={r} window={plan.window}/>
+            <details>
+            <summary>Confirmed orders only · before additional forecast use</summary>
             <p className="fc-explanation">{r.explanation}</p>
             <div className="fc-facts">
               <div>
@@ -503,12 +506,17 @@ export default function KitchenDecisionJourney({
                 </strong>
               </div>
             </div>
-            <p>
-              Projected waste sensitivity: {qty(r.waste_sensitivity_low)}–
-              {qty(r.waste_sensitivity_high)} {r.unit}. This is not a calibrated
-              prediction interval. Existing bookings are not added twice.
-            </p>
-            <StockFlowEvidence risk={r} window={plan.window}/>
+            </details>
+            <section aria-label="Demand what-if comparison">
+              <h3>What if demand is lower or higher?</h3>
+              <p>Same stock and confirmed orders, different assumptions about additional demand during {plan.window.start_date}–{plan.window.end_date}. This compares scenarios; it does not give a probability range.</p>
+              <div className="fc-facts">
+                <div><span>Lower demand → more unused</span><strong>{qty(r.waste_sensitivity_high)} {r.unit}</strong><small>Projected unused at expiry</small></div>
+                <div><span>Central forecast · Step 1 result</span><strong>{qty(r.forecast_expiring_unused)} {r.unit}</strong><small>Projected unused at expiry</small></div>
+                <div><span>Higher demand → less unused</span><strong>{qty(r.waste_sensitivity_low)} {r.unit}</strong><small>Projected unused at expiry</small></div>
+              </div>
+              <details><summary>How these what-if assumptions are set</summary><p>Each menu’s daily demand is shifted down or up by its one-day test MAE; menus without a test use their largest daily forecast as the shift. Demand is then constrained by delivery days, lead time, capacity and recorded orders, before dated expiry allocation is repeated. This heuristic is not calibrated uncertainty or a guarantee. Existing bookings are not added twice.</p></details>
+            </section>
             <MenuEvidence support={support} risk={r} />
             <p>
               Stock is allocated by expiry after confirmed needs; speculative
@@ -717,6 +725,7 @@ export function MenuEvidence({ support, risk }) {
             <small>
               {m.history_days}-day history window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.synthetic_history_items>0?'synthetic scenario evidence':m.confidence}
             </small>
+            {m.sensitivity_error_portions_per_day != null && <small>Demand what-if shift: ±{qty(m.sensitivity_error_portions_per_day)} portions/day; scenario assumption.</small>}
             {m.demand_adjustments && m.forecast_portions!==null && <details><summary>How the planning quantity is calculated</summary>
               <p>{qty(m.forecast_portions)} forecast portions across the full window.</p>
               <ul><li>{qty(m.demand_adjustments.delivery_day_excluded)} outside permitted delivery days</li>

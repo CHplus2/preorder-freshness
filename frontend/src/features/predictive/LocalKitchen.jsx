@@ -9,6 +9,7 @@ import KitchenReadiness from "./KitchenReadiness";
 import "./localKitchen.css";
 import PlanningFridge from "./PlanningFridge";
 import { IngredientDrawing } from "./PantryScene";
+import StockFlowEvidence from "./StockFlowEvidence";
 
 const qty = (v) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 3 }).format(v);
@@ -286,8 +287,7 @@ function RiskTable({ plan }) {
     <div className="pd-table-wrap">
       <table>
         <caption>
-          Ingredient requirements · native material units · backend priority
-          order
+          Confirmed orders only · before additional forecast use · native material units
         </caption>
         <thead>
           <tr>
@@ -389,10 +389,11 @@ function StockEvidence({ plan }) {
                   ))}
                 </dl>
                 <p>
-                  {selected.signal.replaceAll("_", " ")} · sensitivity{" "}
+                  {selected.signal.replaceAll("_", " ")} · demand what-if waste outcomes{" "}
                   {qty(selected.waste_sensitivity_low)}–
                   {qty(selected.waste_sensitivity_high)} {selected.unit}
                 </p>
+                <p>These are lower/higher-demand scenarios, not a prediction interval. The central expiry result is shown above.</p>
               </>
             ) : (
               <p>
@@ -403,6 +404,7 @@ function StockEvidence({ plan }) {
           </aside>
         </div>
       </section>
+      {selected && <section className="pd-card"><StockFlowEvidence risk={selected} window={plan.window}/></section>}
       <details className="pd-card">
         <summary>Exact forecast and ingredient risk evidence</summary>
         <section>
@@ -422,7 +424,7 @@ function StockEvidence({ plan }) {
                   <th>Ingredient</th>
                   <th>Extra forecast need</th>
                   <th>Projected unused at expiry</th>
-                  <th>Sensitivity range</th>
+                  <th>What-if waste outcomes (not an interval)</th>
                   <th>Signal</th>
                 </tr>
               </thead>

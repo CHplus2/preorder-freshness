@@ -149,3 +149,44 @@
 .pd .local-readiness {
   border-left: 5px solid #6c8b60;
 }
+.pd .local-evidence-chain {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  padding: 0;
+  list-style: none;
+}
+.pd .local-evidence-chain li,
+.pd .local-expiry-lots article {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #c8b99e;
+  border-radius: 14px;
+  background: #fffdf7;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.pd .local-expiry-lots {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0;
+}
+.pd .local-expiry-lots header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+}
+.pd .local-stock-bar {
+  display: flex;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #e4dfd1;
+}
+.pd .local-stock-bar .confirmed { background: #285a3e; }
+.pd .local-stock-bar .forecast { background: #7a9868; }
+.pd .local-stock-bar .unused { background: #bd7835; }
+.pd .local-expiry-evidence details { margin: 16px 0; }
+.pd .local-expiry-evidence summary { cursor: pointer; }

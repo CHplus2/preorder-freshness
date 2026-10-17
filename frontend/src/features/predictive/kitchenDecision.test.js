@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {marketingWorksheet,workflowLinks,decisionSlip,kitchenReadiness,riskTiming} from './kitchenDecision.js';
+import {marketingWorksheet,workflowLinks,workflowReturnLink,decisionSlip,kitchenReadiness,riskTiming} from './kitchenDecision.js';
 import {readReviews,saveReview,saveOutcomeNote} from './kitchenReviewStore.js';
 
 test('workflow links carry real ingredient context and preserve native units',()=>{
@@ -10,6 +10,17 @@ test('workflow links carry real ingredient context and preserve native units',()
   assert.equal(new URL('https://test'+links.planner).searchParams.get('ingredient'),'Oil & sauce');
   assert.equal(new URL('https://test'+links.planner).searchParams.get('view'),'shopping');
   assert.equal(links.marketing,'/admin/settings#promotions');
+});
+test('inventory and planner round-trip the selected horizon and use the review deadline',()=>{
+  const links=workflowLinks({raw_material_id:7,ingredient_name:'Oil',urgent_by:'2026-10-19'}, {window:{end_date:'2026-10-30',horizon_days:14}});
+  const planner=new URL('https://test'+links.planner);
+  assert.equal(planner.searchParams.get('date'),'2026-10-19');
+  const back=new URL('https://test'+workflowReturnLink(planner.searchParams));
+  assert.equal(back.searchParams.get('horizon'),'14');
+  assert.equal(back.searchParams.get('ingredient'),'raw-material-7');
+  assert.equal(back.searchParams.get('step'),'4');
+  planner.searchParams.set('horizon','999');
+  assert.equal(new URL('https://test'+workflowReturnLink(planner.searchParams)).searchParams.has('horizon'),false);
 });
 
 test('marketing scenario caps ingredient benefit and keeps unknown costs unknown',()=>{

@@ -12,6 +12,15 @@ export default function KitchenForecastReplay({menus}){
     {menus.some(m=>m.synthetic_history_items>0) && <p><strong>Synthetic-data evaluation.</strong> This replay includes generated history. Numerical test scores do not establish future accuracy on real customers.</p>}
     {!menu?<p>At least 42 completed daily observations are needed for separate training, validation and test periods. Until then the baseline is labelled limited, without an accuracy claim.</p>:<>
       <label>Menu to replay<select value={String(menu.product_id)} onChange={e=>setSelected(e.target.value)}>{candidates.map(m=><option key={m.product_id} value={m.product_id}>{m.product_name}</option>)}</select></label>
+      <p>The selected method has the lowest one-day validation MAE among three simple baselines. It is not proven to be the best possible model. Lower error is better; WAPE is an error measure, not an accuracy percentage.</p>
+      {menu.evaluation.planning_horizon_test && <section aria-label="Planning-window forecast evaluation">
+        <h4>Does the forecast work across this {menu.evaluation.planning_horizon_test.horizon_days}-day window?</h4>
+        {menu.evaluation.planning_horizon_test.test[menu.method].windows > 0 ? <>
+          <p>Full-window replay: predictions feed forward without seeing sales inside each forecast window. Overlapping windows share observations and are not independent trials. These test scores are not used to select the method.</p>
+          <div className="pd-table-wrap"><table><caption>Selected planning horizon · held-out dates · same three baselines</caption><thead><tr><th>Method</th><th>MAE (portions/day)</th><th>WAPE</th><th>Window-total MAE (portions)</th></tr></thead><tbody>{Object.entries(menu.evaluation.planning_horizon_test.test).map(([id, s]) => <tr key={id}><th>{labels[id]}{id === menu.method ? ' · selected on validation' : ''}</th><td>{s.mae}</td><td>{s.wape_percent == null ? 'Undefined: zero recorded sales' : `${s.wape_percent}%`}</td><td>{s.window_total_mae}</td></tr>)}</tbody></table></div>
+        </> : <p>No complete {menu.evaluation.planning_horizon_test.horizon_days}-day window fits the 14-day test period. This horizon is unvalidated; shorter-horizon scores do not establish its accuracy.</p>}
+      </section>}
+      <h4>One-day-ahead historical replay</h4>
       <div className="fc-comparison-switch" role="group" aria-label="Replay baseline">{[['selected','Selected method'],...Object.entries(labels)].map(([id,label])=><button key={id} aria-pressed={method===id} onClick={()=>setMethod(id)}>{label}</button>)}</div>
       <p>{labels[chosen]} · test {menu.evaluation.test_start}–{menu.evaluation.test_end}. MAE {score.mae} portions/day; WAPE {score.wape_percent===null?'undefined because actual volume is zero':`${score.wape_percent}%`}.</p>
       {actual.length>0&&<figure><svg viewBox="0 0 480 175" role="img" aria-label="Held-out actual portions in green and one-day-ahead predictions in orange" style={{width:'100%',maxWidth:720}}>
@@ -19,7 +28,8 @@ export default function KitchenForecastReplay({menus}){
         <polyline points={points(actual)} fill="none" stroke="#285a3e" strokeWidth="3"/><polyline points={points(predictions)} fill="none" stroke="#b66a28" strokeWidth="3" strokeDasharray="5 3"/>
         <text x="36" y="164" fontSize="11">First test day</text><text x="388" y="164" fontSize="11">Last test day</text>
       </svg><figcaption>Green: recorded paid delivered portions. Dashed orange: forecast using earlier days only. Historical replay is not proof of future accuracy.</figcaption></figure>}
-      <div className="pd-table-wrap"><table><caption>All candidate baselines on the same untouched test days</caption><thead><tr><th>Method</th><th>Test MAE/day</th><th>Test WAPE</th></tr></thead><tbody>{Object.entries(menu.evaluation.test).map(([id,s])=><tr key={id}><th>{labels[id]}</th><td>{s.mae}</td><td>{s.wape_percent===null?'Undefined':`${s.wape_percent}%`}</td></tr>)}</tbody></table></div>
+      <div className="pd-table-wrap"><table><caption>One-day forecasts · actual earlier days observed before each prediction</caption><thead><tr><th>Method</th><th>Test MAE/day</th><th>Test WAPE</th></tr></thead><tbody>{Object.entries(menu.evaluation.test).map(([id,s])=><tr key={id}><th>{labels[id]}</th><td>{s.mae}</td><td>{s.wape_percent===null?'Undefined':`${s.wape_percent}%`}</td></tr>)}</tbody></table></div>
+      <p>MAE is the average absolute error in portions. WAPE is total absolute error divided by recorded portions; 46% WAPE does not mean 54% accuracy. Test results on synthetic records cannot establish real customer performance.</p>
       <p>{menu.evaluation.train_days} training days · {menu.evaluation.validation_days} validation days · {menu.evaluation.test_days} test days. Method selection uses validation only. Rolling test predictions use actual earlier observations; future multi-day projections use previous predictions.</p>
     </>}
   </details>;

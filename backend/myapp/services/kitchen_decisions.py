@@ -32,6 +32,29 @@ def score(values, start, end, method):
             'daily_actual': actual, 'daily_predictions': [round(v, 3) for v in predicted]}
 
 
+def horizon_score(values, start, horizon, method):
+    """Replay complete forecast windows without observing outcomes inside a window.
+
+    Origins overlap; these are descriptive test scores, not independent trials.
+    This diagnostic never participates in method selection.
+    """
+    errors, actuals, total_errors = [], [], []
+    for origin in range(start, len(values)-horizon+1):
+        history = list(values[:origin])
+        predictions = []
+        for _ in range(horizon):
+            prediction = daily_prediction(history, method)
+            predictions.append(prediction)
+            history.append(prediction)
+        actual = values[origin:origin+horizon]
+        errors.extend(abs(a-p) for a, p in zip(actual, predictions))
+        actuals.extend(actual)
+        total_errors.append(abs(sum(actual)-sum(predictions)))
+    return {'windows': len(total_errors), 'mae': round(mean(errors), 4) if errors else None,
+        'wape_percent': round(sum(errors)/sum(actuals)*100, 2) if sum(actuals) else None,
+        'window_total_mae': round(mean(total_errors), 4) if total_errors else None}
+
+
 def menu_forecast(values, dates, horizon):
     """Select on validation only; keep the final test separate. Refit moving baselines."""
     method, evaluation = 'mean_28', None
@@ -42,16 +65,19 @@ def menu_forecast(values, dates, horizon):
         evaluation = {'train_days': end_train, 'validation_days': 14, 'test_days': 14,
             'validation_start': str(dates[end_train]), 'test_start': str(dates[-14]),
             'test_end': str(dates[-1]), 'validation': validation,
-            'test': {m: score(values, len(values)-14, len(values), m) for m in METHODS}}
+            'test': {m: score(values, len(values)-14, len(values), m) for m in METHODS},
+            'planning_horizon_test': {'horizon_days': horizon,
+                'strategy': 'Overlapping full-window forecasts within the held-out test period; predictions feed forward without observing outcomes inside each window. Not used for method selection.',
+                'test': {m: horizon_score(values, len(values)-14, horizon, m) for m in METHODS}}}
     history, predictions = list(values), []
     for _ in range(horizon):
         value = daily_prediction(history, method)
         predictions.append(value)
         history.append(value)
     error = evaluation['test'][method]['mae'] if evaluation else None
-    reliable = bool(evaluation and sum(v > 0 for v in values) >= 7 and
-        evaluation['test'][method]['wape_percent'] is not None and
-        evaluation['test'][method]['wape_percent'] <= 75)
+    horizon_test = evaluation['planning_horizon_test']['test'][method] if evaluation else None
+    reliable = bool(horizon_test and sum(v > 0 for v in values) >= 7 and
+        horizon_test['wape_percent'] is not None and horizon_test['wape_percent'] <= 75)
     return {'method': method, 'history_days': len(values), 'selling_days': sum(v > 0 for v in values),
             'daily_predictions': predictions, 'forecast_portions': round(sum(predictions), 2) if values else None,
             'evaluation': evaluation, 'daily_error': error,
@@ -145,6 +171,7 @@ def decision_support(plan, *, today=None, snapshot=None):
             estimated += order.delivery_at is None
             estimated_by_menu[item.product_id] += order.delivery_at is None
     menus, recipes, recipe_materials = [], defaultdict(list), {}
+    contributions = defaultdict(list)
     need = {level: Counter() for level in ('low', 'central', 'high')}
     for product in products:
         if product.selling_status != 'active':
@@ -174,6 +201,7 @@ def decision_support(plan, *, today=None, snapshot=None):
         # Residual error is a sensitivity range, not a calibrated confidence interval.
         error = result['daily_error']
         error = error if error is not None else max(result['daily_predictions'], default=0.)
+        result['sensitivity_error_portions_per_day'] = round(error, 4)
         additional_total = 0.
         adjustments = Counter()
         for offset, prediction in enumerate(result['daily_predictions']):
@@ -194,7 +222,13 @@ def decision_support(plan, *, today=None, snapshot=None):
                 residual = max(0., min(product.daily_capacity, total)-committed)
                 if valid_recipe:
                     for ingredient in recipe:
-                        need[level][(str(day), ingredient.raw_material_id)] += residual*float(ingredient.quantity_required)
+                        quantity = residual*float(ingredient.quantity_required)
+                        need[level][(str(day), ingredient.raw_material_id)] += quantity
+                        if level == 'central' and quantity > 1e-9:
+                            contributions[(str(day), ingredient.raw_material_id)].append({
+                                'product_id': product.pk, 'product_name': product.name,
+                                'additional_portions': residual, 'quantity_per_portion': float(ingredient.quantity_required),
+                                'requirement': quantity})
         result['additional_forecast_portions'] = round(additional_total, 2) if values else None
         result['demand_adjustments'] = {key: round(adjustments[key], 2) for key in (
             'delivery_day_excluded', 'lead_time_excluded', 'capacity_excluded', 'recorded_orders_offset')}
@@ -238,7 +272,18 @@ def decision_support(plan, *, today=None, snapshot=None):
             'projected_carried_stock': round(sum(b['projected_remaining'] for b in batch_flow if not b['expires_in_window']), 3),
             'batches': batch_flow,
             'allocations': [a for a in trace['allocations'] if a['raw_material_id']==key]}
-        confident = bool(mapped) and all(m['confidence'] == 'evaluated' for m in mapped) and not plan['excluded_orders'] and not exclusions
+        expiring = [b for b in batch_flow if b['expires_in_window']]
+        flow['expiry_focus'] = {field: round(sum(b[field] for b in expiring), 3) for field in (
+            'opening_quantity', 'confirmed_allocated', 'forecast_consumed', 'projected_remaining')}
+        flow['expiry_focus']['cost_known'] = costs.get(key, 0.) is not None
+        flow['demand_by_day'] = [{'date': day, 'forecast_requirement': quantity,
+            'forecast_consumed': sum(a['quantity'] for a in flow['allocations'] if a['date']==day),
+            'menus': contributions[(day, key)]}
+            for (day, material), quantity in sorted(need['central'].items()) if material==key and quantity>1e-9]
+        fictional_stock = any(b.get('batch_code', '').startswith('DEMO-FC-INV-') for b in batch_flow)
+        confident = (bool(mapped) and all(m['confidence'] == 'evaluated' for m in mapped) and not fictional_stock and
+            not any(synthetic_by_menu[m['product_id']] for m in mapped) and
+            not plan['excluded_orders'] and not exclusions)
         status = ('confirmed_shortage' if risk['shortfall_quantity'] > 0 else
             'forecast_waste' if waste_low > 1e-6 and confident else
             'review' if risk['expiring_unused_quantity'] > 0 or central_short[key] > 0 else 'watch')
@@ -249,6 +294,8 @@ def decision_support(plan, *, today=None, snapshot=None):
             review_reasons.append('Some mapped menus have limited or unavailable sales history.')
         if any(synthetic_by_menu[m['product_id']] for m in mapped):
             review_reasons.append('Mapped menu history includes generated demo records; evaluation does not establish real customer accuracy.')
+        if fictional_stock:
+            review_reasons.append('Stock includes fictional demo batches; quantities, dates and costs are scenario inputs.')
         if plan['excluded_orders']:
             review_reasons.append(f'{len(plan["excluded_orders"])} active order records are excluded from stock planning; review coverage.')
         if exclusions:

@@ -10,11 +10,27 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 from . import test_local_planning as fixtures
 from .models import Order, OrderItem, WasteRecord, InventoryItem
-from .services.kitchen_decisions import menu_forecast, decision_support, project_batches
+from .services.kitchen_decisions import menu_forecast, decision_support, project_batches, horizon_score, score
 from .services.local_planning import local_plan
 
 
 class BaselineEvaluationTests(SimpleTestCase):
+    def test_planning_horizon_replay_cannot_observe_sales_inside_its_window(self):
+        values = [1]*56 + [10]*14
+        replay = horizon_score(values, 56, 14, 'mean_7')
+        self.assertEqual(replay['windows'], 1)
+        self.assertEqual(replay['mae'], 9)
+        self.assertEqual(replay['window_total_mae'], 126)
+        self.assertEqual(replay['wape_percent'], 90)
+        self.assertLess(score(values, 56, 70, 'mean_7')['mae'], replay['mae'])
+
+    def test_long_horizon_is_not_validated_by_short_one_day_scores(self):
+        result = menu_forecast([2]*70, list(range(70)), 28)
+        self.assertEqual(result['evaluation']['test']['mean_28']['mae'], 0)
+        self.assertEqual(result['evaluation']['planning_horizon_test']['test']['mean_28']['windows'], 0)
+        self.assertIsNone(result['evaluation']['planning_horizon_test']['test']['mean_28']['mae'])
+        self.assertEqual(result['confidence'], 'limited')
+
     def test_expiring_waste_is_separate_from_later_dated_remaining_stock(self):
         def batch(pk,quantity,expiry):
             return {'batch_id':pk,'raw_material_id':1,'unit':'g','quantity':quantity,
@@ -149,6 +165,32 @@ class KitchenDecisionTests(TestCase):
         self.assertAlmostEqual(flow['opening_quantity']-flow['confirmed_allocated']-flow['forecast_consumed'],flow['projected_total_remaining'],places=2)
         self.assertAlmostEqual(flow['projected_expiring_unused']+flow['projected_carried_stock'],flow['projected_total_remaining'],places=2)
         self.assertAlmostEqual(flow['forecast_consumed']+risk['forecast_shortfall'],risk['forecast_requirement'],places=2)
+        expiry = flow['expiry_focus']
+        self.assertAlmostEqual(expiry['opening_quantity']-expiry['confirmed_allocated']-expiry['forecast_consumed'],risk['forecast_expiring_unused'],places=2)
+        self.assertAlmostEqual(sum(d['forecast_requirement'] for d in flow['demand_by_day']),risk['forecast_requirement'],places=2)
+        for day in flow['demand_by_day']:
+            self.assertAlmostEqual(sum(m['additional_portions']*m['quantity_per_portion'] for m in day['menus']),day['forecast_requirement'])
+        self.assertAlmostEqual(sum(d['forecast_consumed'] for d in flow['demand_by_day']),flow['forecast_consumed'],places=2)
+
+    def test_generated_history_never_creates_a_verified_forecast_waste_signal(self):
+        self.history()
+        Order.objects.filter(status='delivered').update(payment_instructions={'freshcast_synthetic_history': {'version': '1'}})
+        self.batch(100000)
+        support = decision_support(local_plan())
+        risk = support['ingredient_risks'][0]
+        self.assertGreater(risk['waste_sensitivity_low'], 0)
+        self.assertEqual(risk['signal'], 'review')
+        self.assertEqual(risk['confidence'], 'limited')
+        self.assertEqual(support['alert_count'], 0)
+
+    def test_fictional_stock_is_a_scenario_even_with_evaluated_history(self):
+        self.history()
+        batch = self.batch(100000)
+        batch.batch_code = f'DEMO-FC-INV-{self.material.pk}-NEAR'
+        batch.save()
+        support = decision_support(local_plan())
+        self.assertEqual(support['ingredient_risks'][0]['signal'], 'review')
+        self.assertTrue(any('fictional demo batches' in r for r in support['ingredient_risks'][0]['review_reasons']))
 
     def test_future_recipe_need_is_visible_even_without_any_batch_or_confirmed_order(self):
         self.history()

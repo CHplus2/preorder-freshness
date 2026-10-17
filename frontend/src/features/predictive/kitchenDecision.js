@@ -6,9 +6,16 @@ export const kitchenActions = [
 ];
 export function workflowLinks(risk, plan) {
   const query = new URLSearchParams({from:'freshcast',material:String(risk.raw_material_id),ingredient:risk.ingredient_name});
-  return {inventory:`/admin/inventory?${query}`, planner:`/admin/planner?${query}&view=shopping&date=${plan.window.end_date}`,
+  if(plan.window.horizon_days)query.set('horizon',String(plan.window.horizon_days));
+  return {inventory:`/admin/inventory?${query}`, planner:`/admin/planner?${query}&view=shopping&date=${risk.urgent_by || plan.window.end_date}`,
     preparation:`/admin/planner?${query}&view=orders`, menus:`/admin/products?review=recipes`, marketing:'/admin/settings#promotions',
     outcomes:'/admin/reports#costs'};
+}
+export function workflowReturnLink(params) {
+  const query=new URLSearchParams({source:'local',ingredient:`raw-material-${params.get('material')}`,step:'4'});
+  const horizon=params.get('horizon');
+  if(/^(?:[1-9]|1[0-9]|2[0-8])$/.test(horizon || ''))query.set('horizon',horizon);
+  return `/admin/ai/decisions?${query}`;
 }
 export function marketingWorksheet({portions,discount,cost,menu,recipe,risk}) {
   if ([portions,discount,cost].some(v=>v==='') || !menu || !recipe) return null;

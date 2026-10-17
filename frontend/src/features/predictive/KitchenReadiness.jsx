@@ -26,7 +26,7 @@ export default function KitchenReadiness({ plan }) {
           <strong>{counts.forecasted}</strong>
         </div>
         <div>
-          <span>Menus with evaluated confidence</span>
+          <span>Menus with backtested, non-synthetic estimates</span>
           <strong>{counts.evaluated}</strong>
         </div>
       </div>

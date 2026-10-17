@@ -16,6 +16,7 @@ export default function KitchenPurchaseComparison({ plan, risk, comparison, onCo
   const controller = useRef(null);
   useEffect(() => () => controller.current?.abort(), []);
   const scenarioRisk = comparison?.purchase.raw_material_id === risk.raw_material_id ? comparison.scenario.ingredient_risks.find((r) => r.raw_material_id === risk.raw_material_id) : null;
+  const baselineRisk = scenarioRisk ? comparison.baseline.ingredient_risks.find((r) => r.raw_material_id === risk.raw_material_id) : null;
   const estimate = estimateTradeoff(risk.forecast_waste_cost_myr, cost, percent);
   function edit(setter, value) { controller.current?.abort(); setStatus(""); setError(""); onClear(); onWorksheet(null); setter(value); }
   async function calculate(event) {
@@ -35,7 +36,7 @@ export default function KitchenPurchaseComparison({ plan, risk, comparison, onCo
     {error && <p role="alert">{error}</p>}
     {scenarioRisk && <div className="pd-table-wrap"><table><caption>Same confirmed orders · hypothetical purchase · no stock changes</caption><thead><tr><th>Measure</th><th>Current database</th><th>With assumed purchase</th></tr></thead><tbody>
       {[['Shortfall', 'shortfall_quantity'], ['Expiring unused', 'expiring_unused_quantity']].map(([label, field]) => <tr key={field}><td>{label}</td><td>{qty(comparison.baseline.ingredient_risks.find((r) => r.raw_material_id === risk.raw_material_id)[field])} {risk.unit}</td><td>{qty(scenarioRisk[field])} {risk.unit}</td></tr>)}
-      <tr><td>Confirmed-only waste exposure</td><td>{money(risk.potential_waste_cost_myr)}</td><td>{money(scenarioRisk.potential_waste_cost_myr)}</td></tr>
+      <tr><td>Confirmed-only waste exposure</td><td>{money(baselineRisk.potential_waste_cost_myr)}</td><td>{money(scenarioRisk.potential_waste_cost_myr)}</td></tr>
       {['forecast_shortfall','forecast_expiring_unused','forecast_waste_cost_myr'].map(field=>{
         const before=comparison.baseline.decision_support.ingredient_risks.find(r=>r.raw_material_id===risk.raw_material_id);
         const after=comparison.scenario.decision_support.ingredient_risks.find(r=>r.raw_material_id===risk.raw_material_id);

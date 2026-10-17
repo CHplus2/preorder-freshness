@@ -168,6 +168,16 @@ export function validateDecisionPlan(data, options = {}) {
   if (d?.synthetic_history_items !== undefined) requireValid(count(d.synthetic_history_items));
   if (Array.isArray(d?.menus)) d.menus.forEach(m=>{
     if(m?.synthetic_history_items !== undefined) requireValid(count(m.synthetic_history_items));
+    if(m?.sensitivity_error_portions_per_day !== undefined) requireValid(number(m.sensitivity_error_portions_per_day));
+    if(m?.evaluation?.planning_horizon_test !== undefined) {
+      const h=m.evaluation.planning_horizon_test;
+      requireValid(integer(h?.horizon_days) && h.horizon_days===data.window.horizon_days && text(h.strategy) &&
+        ['mean_28','mean_7','same_weekday'].every(key=>{
+          const s=h.test?.[key];
+          return count(s?.windows) && nullable(s.mae) && nullable(s.wape_percent) && nullable(s.window_total_mae) &&
+            (s.windows>0 ? number(s.mae) && number(s.window_total_mae) : s.mae===null && s.wape_percent===null && s.window_total_mae===null);
+        }));
+    }
     if(m?.demand_adjustments !== undefined) requireValid(['delivery_day_excluded','lead_time_excluded','capacity_excluded','recorded_orders_offset'].every(k=>number(m.demand_adjustments?.[k])));
   });
   if(Array.isArray(d?.ingredient_risks)) d.ingredient_risks.forEach(r=>{
@@ -177,6 +187,8 @@ export function validateDecisionPlan(data, options = {}) {
       Array.isArray(f.batches) && f.batches.every(b=>Number.isInteger(b.batch_id) && b.batch_id!==0 && integer(b.raw_material_id) && b.unit===r.unit && date(b.expiry_date) &&
         ['opening_quantity','confirmed_allocated','after_confirmed','forecast_consumed','projected_remaining'].every(k=>number(b[k])) && typeof b.expires_in_window==='boolean' && nullable(b.unit_cost)) &&
       Array.isArray(f.allocations) && f.allocations.every(a=>date(a.date) && Number.isInteger(a.batch_id) && integer(a.raw_material_id) && number(a.quantity)));
+    if(f.expiry_focus!==undefined)requireValid(f.expiry_focus && ['opening_quantity','confirmed_allocated','forecast_consumed','projected_remaining'].every(k=>number(f.expiry_focus[k])) && typeof f.expiry_focus.cost_known==='boolean');
+    if(f.demand_by_day!==undefined)requireValid(Array.isArray(f.demand_by_day) && f.demand_by_day.every(day=>date(day.date) && number(day.forecast_requirement) && number(day.forecast_consumed) && Array.isArray(day.menus) && day.menus.every(m=>integer(m.product_id) && text(m.product_name) && ['additional_portions','quantity_per_portion','requirement'].every(k=>number(m[k])))));
   });
   requireValid(
     d?.source === "LOCAL_KITCHEN" &&
