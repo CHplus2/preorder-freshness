@@ -22,6 +22,8 @@ export function marketingWorksheet({portions,discount,cost,menu,recipe,risk}) {
 }
 export function decisionSlip({plan,risk,action,reviewed,note,worksheet,signedReview=null}) {
   return JSON.stringify({source:'LOCAL_KITCHEN',as_of:plan.as_of,window:plan.window,
+    history_provenance:{synthetic_history_items:plan.decision_support.synthetic_history_items || 0,
+      notice:plan.decision_support.synthetic_history_items>0?'Includes generated history; accuracy on synthetic patterns is not real-world validation.':'Database provenance is not independently verified.'},
     action,ingredient:risk.ingredient_name,unit:risk.unit,baseline:risk,
     methods:plan.decision_support.menus.filter(m=>risk.menus.some(r=>r.product_id===m.product_id)).map(m=>({menu:m.product_name,method:m.method,evaluation:m.evaluation})),
     worksheet,reviewed,note,signed_review:signedReview,assumptions:plan.decision_support.assumptions,
@@ -33,7 +35,7 @@ export function kitchenReadiness(support) {
   return {
     menus: menus.length,
     forecasted: menus.filter((m) => m.forecast_portions !== null).length,
-    evaluated: menus.filter((m) => m.confidence === "evaluated").length,
+    evaluated: menus.filter((m) => m.confidence === "evaluated" && !m.synthetic_history_items).length,
     missingRecipes: menus.filter((m) => !m.recipe_complete).length,
   };
 }

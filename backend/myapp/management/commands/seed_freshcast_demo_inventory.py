@@ -31,6 +31,7 @@ def projection():
         'menus_with_forecast': sum(m['forecast_portions'] is not None for m in support['menus']),
         'menus_without_history': [m['product_name'] for m in support['menus'] if m['forecast_portions'] is None],
         'menu_forecasts': [{'menu': m['product_name'], 'method': m['method'],
+                           'synthetic_history_items': m.get('synthetic_history_items', 0),
                            'forecast_portions': m['forecast_portions'], 'confidence': m['confidence']}
                           for m in support['menus']],
         'ingredient_projections': [{'ingredient': r['ingredient_name'], 'unit': r['unit'],

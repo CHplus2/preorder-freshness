@@ -165,6 +165,10 @@ export async function loadLocalPlan(horizon = 7, options = {}) {
 export function validateDecisionPlan(data, options = {}) {
   validateLocalPlan(data, options);
   const d = data.decision_support;
+  if (d?.synthetic_history_items !== undefined) requireValid(count(d.synthetic_history_items));
+  if (Array.isArray(d?.menus)) d.menus.forEach(m=>{
+    if(m?.synthetic_history_items !== undefined) requireValid(count(m.synthetic_history_items));
+  });
   requireValid(
     d?.source === "LOCAL_KITCHEN" &&
       strings(d.assumptions) &&
@@ -267,6 +271,7 @@ export async function loadLocalDecisionScenario(purchase, options = {}) {
 }
 
 export function validateLocalForecast(data) {
+  if (data?.synthetic_history_orders !== undefined) requireValid(count(data.synthetic_history_orders));
   requireValid(
     data?.api_version === "1" &&
       data.source === "LOCAL_KITCHEN" &&

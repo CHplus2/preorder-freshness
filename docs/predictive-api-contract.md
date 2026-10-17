@@ -416,6 +416,21 @@ Response fields include `source: LOCAL_KITCHEN`, `status`, `eligible_orders`,
 `evaluation`, and `warnings`. Empty eligible history returns
 `status: insufficient_history` and a null forecast, not zero demand.
 
+Generated-history provenance is additive: `local-forecast/` returns integer
+`synthetic_history_orders` for eligible generated daily summaries, and
+`recent_orders[].synthetic_history` is boolean. `local-decisions/` exposes
+`decision_support.synthetic_history_items` and each menu's
+`synthetic_history_items` as nonnegative item counts. These flags do not mean
+real customers transacted. Warnings, replay UI and exported training records
+identify generated history. A numerical evaluation can still run on synthetic
+inputs; its result establishes no real-world accuracy. The UI excludes menus
+with generated history from its evaluated-confidence count.
+
+`/api/admin/analytics/` additionally returns
+`analytics.synthetic_history_orders`, an all-time count of generated paid,
+delivered daily summaries so sales totals/average order values can be labeled
+as including artificial data. A daily summary is not a distinct customer order.
+
 Short histories use `moving_average_4_weeks` and `status: baseline_only`.
 At 14 or more completed weeks, reserve the latest ceil(20%) for testing and the
 preceding ceil(20%) for validation; at least eight earlier training weeks are

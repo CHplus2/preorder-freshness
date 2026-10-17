@@ -8,6 +8,7 @@ from statistics import mean
 
 from django.utils import timezone
 from ..models import Order, Product
+from .demo_provenance import synthetic_history
 
 
 METHODS = ('mean_28', 'mean_7', 'same_weekday')
@@ -100,6 +101,7 @@ def decision_support(plan, *, today=None, snapshot=None):
     products, orders, earliest = snapshot or demand_snapshot()
     product_map = {p.pk: p for p in products}
     history = defaultdict(Counter)
+    synthetic_by_menu = Counter()
     commitments = Counter()
     exclusions, estimated_by_menu, estimated = Counter(), Counter(), 0
     for order in orders:
@@ -128,6 +130,7 @@ def decision_support(plan, *, today=None, snapshot=None):
                 exclusions['historical_menu_identity_changed'] += 1
                 continue
             history[item.product_id][day] += item.quantity
+            synthetic_by_menu[item.product_id] += int(synthetic_history(order))
             estimated += order.delivery_at is None
             estimated_by_menu[item.product_id] += order.delivery_at is None
     menus, recipes, recipe_materials = [], defaultdict(list), {}
@@ -145,6 +148,7 @@ def decision_support(plan, *, today=None, snapshot=None):
         values = [sales[d] for d in dates]
         result = menu_forecast(values, dates, horizon)
         result['estimated_date_items'] = estimated_by_menu[product.pk]
+        result['synthetic_history_items'] = synthetic_by_menu[product.pk]
         if result['confidence'] == 'evaluated' and estimated_by_menu[product.pk]:
             result['confidence'] = 'limited'
         recipe = list(product.ingredients.all())
@@ -220,6 +224,7 @@ def decision_support(plan, *, today=None, snapshot=None):
         risks.append(risk)
     risks.sort(key=lambda r: ({'confirmed_shortage':0, 'forecast_waste':1, 'review':2, 'watch':3}[r['signal']], r['urgent_by'] or '9999'))
     return {'source': 'LOCAL_KITCHEN', 'target': 'Paid delivered portions per current menu per local delivery day',
+        'synthetic_history_items': sum(synthetic_by_menu.values()),
         'forecast_status': 'evaluated_baselines' if any(m['confidence'] == 'evaluated' for m in menus) else
             'limited_baselines' if any(m['forecast_portions'] is not None for m in menus) else 'insufficient_history',
         'menus': menus, 'ingredient_risks': risks, 'estimated_date_items': estimated,
@@ -231,4 +236,5 @@ def decision_support(plan, *, today=None, snapshot=None):
             'Forecast allocation uses delivery dates conservatively; the planner must verify earlier preparation, capacity and freshness.',
             'Lead times, delivery weekdays and daily portion limits constrain additional forecast use.',
             'Low/high cases vary daily demand by held-out MAE, or the forecast itself for sparse history; they are sensitivity cases, not confidence intervals.',
-            'Forecast signals are suppressed when history, recipes or order coverage are incomplete. No sales uplift, savings or safety are guaranteed.']}
+            'Forecast signals are suppressed when history, recipes or order coverage are incomplete. No sales uplift, savings or safety are guaranteed.'] +
+            (['SYNTHETIC HISTORY INCLUDED: evaluation and projections exercise generated patterns; they do not establish real customer accuracy.'] if sum(synthetic_by_menu.values()) else [])}

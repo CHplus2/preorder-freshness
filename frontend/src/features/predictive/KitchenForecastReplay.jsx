@@ -9,6 +9,7 @@ export default function KitchenForecastReplay({menus}){
   const actual=score?.daily_actual||[],predictions=score?.daily_predictions||[];
   const max=Math.max(1,...actual,...predictions),points=values=>values.map((value,i)=>`${36+i*424/Math.max(1,values.length-1)},${142-value/max*116}`).join(' ');
   return <details className="pd-card"><summary>Baseline comparison & held-out forecast replay</summary>
+    {menus.some(m=>m.synthetic_history_items>0) && <p><strong>Synthetic-data evaluation.</strong> This replay includes generated history. Numerical test scores do not establish future accuracy on real customers.</p>}
     {!menu?<p>At least 42 completed daily observations are needed for separate training, validation and test periods. Until then the baseline is labelled limited, without an accuracy claim.</p>:<>
       <label>Menu to replay<select value={String(menu.product_id)} onChange={e=>setSelected(e.target.value)}>{candidates.map(m=><option key={m.product_id} value={m.product_id}>{m.product_name}</option>)}</select></label>
       <div className="fc-comparison-switch" role="group" aria-label="Replay baseline">{[['selected','Selected method'],...Object.entries(labels)].map(([id,label])=><button key={id} aria-pressed={method===id} onClick={()=>setMethod(id)}>{label}</button>)}</div>

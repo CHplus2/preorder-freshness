@@ -36,7 +36,7 @@ Historical cooking task plans are **not** training features or sales-eligibility
 
 The forecast page now displays that API's selected forecast and method directly. Its full-week forecast already includes expected confirmed demand; do not add bookings again. Use the per-active-menu decision assistant for kitchen recipe and expiry decisions, rather than interpreting an aggregate website forecast as a particular dish or ingredient quantity.
 
-The optional existing `train_kitchen_forecast --output PATH` command exports this aggregate evaluation/model report; it does not fix orders or train on Genpact. No new model, fabricated sales expansion or production training run was introduced in this batch. Owner-confirmed fictional database records remain demonstration evidence, and cannot establish accuracy on real customer demand.
+The optional existing `train_kitchen_forecast --output PATH` command exports this aggregate evaluation/model report; it does not fix orders or train on Genpact. The readiness change introduced no new model or production training run. For the separately owner-requested generated history scenario, see [Explicit synthetic history](freshcast-demo-history.md). Synthetic markers are retained in forecast reports and exports; numerical scores on those patterns cannot establish accuracy on real customer demand.
 
 ## Deployment and validation
 

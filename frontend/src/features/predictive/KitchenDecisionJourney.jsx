@@ -713,7 +713,7 @@ export function MenuEvidence({ support, risk }) {
                 : `${qty(m.additional_forecast_portions)} additional to bookings`}
             </span>
             <small>
-              {m.history_days}-day history window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.confidence}
+              {m.history_days}-day history window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.synthetic_history_items>0?'synthetic scenario evidence':m.confidence}
             </small>
             {m.forecast_portions === null && <Link to="/admin/orders">Review completed sales history</Link>}
             <Link to="/admin/products?review=recipes">
@@ -761,7 +761,7 @@ export function MenuEvidence({ support, risk }) {
                       : "Not evaluated"}
                   </td>
                   <td>
-                    {m.history_days}-day window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.confidence}
+                    {m.history_days}-day window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.synthetic_history_items>0?'includes synthetic scenario history':m.confidence}
                     {!m.recipe_complete ? " · recipe missing" : ""}
                   </td>
                 </tr>

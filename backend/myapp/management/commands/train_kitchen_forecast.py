@@ -4,6 +4,7 @@ from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from myapp.services.kitchen_forecast import kitchen_forecast, dated_orders, monday
+from myapp.services.demo_provenance import synthetic_history
 
 
 class Command(BaseCommand):
@@ -20,6 +21,7 @@ class Command(BaseCommand):
         report['prepared_orders'] = [
             {'order_id': o.pk, 'preorder_date': str(timezone.localtime(o.created_at).date()),
              'sales_date': str(day), 'sales_date_basis': basis,
+             'synthetic_history': synthetic_history(o),
              'portions': sum(i.quantity for i in o.items.all())}
             for o, day, basis in dated_orders()
             if o.status == 'delivered' and o.payment_status == 'paid' and day < cutoff
@@ -32,3 +34,5 @@ class Command(BaseCommand):
             stream.write(json.dumps(report, indent=2) + '\n')
         path.chmod(0o600)
         self.stdout.write(f"{report['status']}: {report['eligible_orders']} orders, {report['history_weeks']} weeks; {path}")
+        if report.get('synthetic_history_orders'):
+            self.stdout.write('SYNTHETIC history included: evaluation describes generated patterns, not real customer accuracy.')

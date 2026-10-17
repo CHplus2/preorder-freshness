@@ -90,7 +90,8 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              <p>Prepare: {order.preparation_at ? new Date(order.preparation_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Owner planning required — unscheduled'}</p>
+              <p>Prepare: {order.payment_instructions?.freshcast_synthetic_history?.version==='1' ? 'Synthetic historical summary — no cooking reservation' : order.preparation_at ? new Date(order.preparation_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Owner planning required — unscheduled'}</p>
+              {order.payment_instructions?.freshcast_synthetic_history?.version==='1' && <p className="owner-order-note"><strong>Synthetic daily sales summary.</strong> Generated demo history; no real customer payment, preparation or delivery occurred.</p>}
               <p>Deliver: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Unscheduled'} · {order.delivery_method}</p>
               {overdueOrder(order,now) && <p className="admin-follow-up"><strong>Delivery follow-up</strong><span>The requested time has passed. Confirm delivery with the customer, then update the order status.</span></p>}
               {order.status==='pending' && order.preparation_plan?.needs_review && <div className="owner-order-note"><strong>Delivery time awaiting your confirmation</strong><p>Review the recipe, kitchen workload and handling limits. Contact the customer if another time is needed. Set and confirm preparation times in Planner before moving this order to Processing.</p><details><summary>Automatic planning notes</summary><p>{order.preparation_plan.review_reason}</p></details></div>}

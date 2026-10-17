@@ -43,6 +43,7 @@ export default function KitchenReadiness({ plan }) {
           ? ` ${counts.missingRecipes} menus need recipe review before their forecasts can drive ingredient planning.`
           : ""}
       </p>
+      {plan.decision_support.synthetic_history_items>0 && <p>Synthetic history is included; generated-menu evaluations are excluded from the evaluated-confidence count.</p>}
       <Link to={{ pathname: "/admin/ai/forecast", search: `?${params}` }}>
         Inspect kitchen forecast evidence
       </Link>{" "}

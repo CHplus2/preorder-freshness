@@ -5,6 +5,7 @@ from math import ceil
 
 from django.utils import timezone
 from ..models import Order
+from .demo_provenance import synthetic_history
 
 
 def dated_orders():
@@ -99,13 +100,13 @@ def kitchen_forecast(*, today=None):
     totals, orders_per_week, excluded = Counter(), Counter(), Counter()
     recorded, recorded_counts, statuses = Counter(), Counter(), Counter()
     recent_orders = []
-    fallback = eligible = 0
+    fallback = eligible = synthetic = 0
     for order, day, basis in dated_orders():
         portions = sum(i.quantity for i in order.items.all())
         statuses[order.status] += 1
         recent_orders.append({'order_id': order.pk, 'sales_date': str(day),
             'date_basis': basis, 'status': order.status, 'payment_status': order.payment_status,
-            'portions': portions})
+            'portions': portions, 'synthetic_history': synthetic_history(order)})
         if (order.status != 'cancelled' and order.payment_status != 'refunded' and portions > 0
                 and timezone.localtime(order.created_at).date() <= day < cutoff):
             recorded[monday(day)] += portions
@@ -123,6 +124,7 @@ def kitchen_forecast(*, today=None):
         totals[week] += portions
         orders_per_week[week] += 1
         eligible += 1
+        synthetic += int(synthetic_history(order))
         fallback += basis == 'preorder_date_fallback'
     weeks = []
     if totals:
@@ -147,6 +149,7 @@ def kitchen_forecast(*, today=None):
             'target': 'Paid delivered portions per completed Monday–Sunday delivery week',
             'date_basis': 'delivery_at; missing dates use preorder (created_at) date, explicitly estimated',
             'eligible_orders': eligible, 'estimated_date_orders': fallback,
+            'synthetic_history_orders': synthetic,
             'baseline': {'method': 'moving_average_4_weeks', 'next_week_portions': baseline},
             'recorded_preorders': {'target': 'Recorded non-cancelled preorder portions, including unpaid and unfinished orders; not realised sales',
                 'eligible_orders': sum(recorded_counts.values()), 'history_weeks': len(recorded_weeks),
@@ -161,4 +164,5 @@ def kitchen_forecast(*, today=None):
                          'Database records may be fictional demo data; accuracy is not evidence of real customer demand.',
                          'Estimated dates are reporting fallbacks, not reconstructed delivery commitments.',
                          'Forecast covers the full current delivery week from completed weeks; confirmed bookings remain separate and must not be added twice.',
-                         'The test set is untouched during method selection. Production coefficients are refitted on all completed history.']}
+                         'The test set is untouched during method selection. Production coefficients are refitted on all completed history.'] +
+                         (['SYNTHETIC HISTORY INCLUDED: test metrics describe generated patterns, not real-world demand accuracy.'] if synthetic else [])}

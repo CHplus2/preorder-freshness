@@ -19,6 +19,7 @@ export default function KitchenForecast({ revision }) {
     {current.loading && <p role="status">Evaluating kitchen history…</p>}
     {current.error && <p role="alert">{current.error}</p>}
     {data && <>
+      {data.synthetic_history_orders>0 && <p role="status"><strong>Synthetic history scenario · {data.synthetic_history_orders} generated daily summaries.</strong> Dates, quantities and receipts are artificial. Evaluation results describe generated patterns, not real-world accuracy.</p>}
       <p><strong>{data.database_coverage?.total_orders ?? data.eligible_orders} orders loaded from your website</strong> · {data.eligible_orders} paid, delivered historical orders · {data.estimated_date_orders} estimated sales dates</p>
       {data.next_week_portions != null ? <>
         <p><strong>{data.next_week_portions} portions</strong> · forecast for the full delivery week starting {data.forecast_week_start}.</p>

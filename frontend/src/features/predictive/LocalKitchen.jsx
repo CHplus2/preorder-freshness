@@ -94,6 +94,7 @@ export default function LocalKitchen({ view }) {
           demo transactions.
         </p>
         {demoBatchCount>0 && <p><strong>Fictional inventory scenario · {demoBatchCount} batches</strong>. Quantities and expiry dates are demo assumptions; costs use recorded estimates. Sales forecasts still use the existing kitchen history algorithm.</p>}
+        {plan?.decision_support.synthetic_history_items>0 && <p><strong>Synthetic sales history is included.</strong> Generated daily summaries exercise the workflow. Forecast replay and evaluation scores on these patterns do not measure real customer accuracy.</p>}
       </div>
       <div className="pd-controls">
         <label>

@@ -55,6 +55,7 @@ test('decision export preserves provenance, selected action and signed evidence'
 });
 
 test("forecast readiness keeps zero estimates distinct from absent history and does not use upcoming booking count", () => {
+  assert.equal(kitchenReadiness({menus:[{forecast_portions:12,confidence:'evaluated',recipe_complete:true,synthetic_history_items:70}]}).evaluated,0);
   const support = {
     menus: [
       { forecast_portions: 0, confidence: "limited", recipe_complete: true },

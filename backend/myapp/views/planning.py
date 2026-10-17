@@ -73,10 +73,14 @@ def sales_summary():
     since = today - timedelta(days=27)
     history = sales_items.filter(sales_at__date__range=(since, today))
     units = history.aggregate(n=Sum('quantity'))['n'] or 0
-    paid = Order.objects.filter(payment_status='paid', status='delivered').annotate(
-        sales_at=Coalesce('delivery_at', 'created_at')).filter(sales_at__date__range=(since, today))
+    all_paid = Order.objects.filter(payment_status='paid', status='delivered').annotate(
+        sales_at=Coalesce('delivery_at', 'created_at'))
+    paid = all_paid.filter(sales_at__date__range=(since, today))
     net = paid.aggregate(n=Sum('total_amount'))['n'] or Decimal('0')
-    counts = paid.aggregate(total=Count('pk'), estimated=Count('pk', filter=Q(delivery_at__isnull=True)))
+    window = Q(sales_at__date__range=(since, today))
+    counts = all_paid.aggregate(total=Count('pk', filter=window),
+        estimated=Count('pk', filter=window & Q(delivery_at__isnull=True)),
+        synthetic=Count('pk', filter=Q(payment_instructions__freshcast_synthetic_history__version='1')))
     count = counts['total']
     by_day = {str(r["day"]): r["n"] for r in paid.annotate(day=TruncDate("sales_at")).values("day").annotate(n=Sum("total_amount"))}
     trend = []
@@ -85,6 +89,7 @@ def sales_summary():
         value = by_day.get(str(day), Decimal('0'))
         trend.append({'date': str(day), 'sales': str(value)})
     return {'analytics': {'net_food_sales': str(net), 'paid_orders': count,
+        'synthetic_history_orders': counts['synthetic'],
         'date_basis': 'Delivery date; missing delivery dates use preorder date as an estimate.',
         'estimated_date_orders': counts['estimated'],
         'average_order_value': str(round(net/count,2) if count else 0), 'trend': trend},
