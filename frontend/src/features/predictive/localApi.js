@@ -168,6 +168,15 @@ export function validateDecisionPlan(data, options = {}) {
   if (d?.synthetic_history_items !== undefined) requireValid(count(d.synthetic_history_items));
   if (Array.isArray(d?.menus)) d.menus.forEach(m=>{
     if(m?.synthetic_history_items !== undefined) requireValid(count(m.synthetic_history_items));
+    if(m?.demand_adjustments !== undefined) requireValid(['delivery_day_excluded','lead_time_excluded','capacity_excluded','recorded_orders_offset'].every(k=>number(m.demand_adjustments?.[k])));
+  });
+  if(Array.isArray(d?.ingredient_risks)) d.ingredient_risks.forEach(r=>{
+    if(r?.stock_flow===undefined)return;
+    const f=r.stock_flow;
+    requireValid(f && ['opening_quantity','confirmed_allocated','after_confirmed','forecast_consumed','projected_total_remaining','projected_expiring_unused','projected_carried_stock'].every(k=>number(f[k])) &&
+      Array.isArray(f.batches) && f.batches.every(b=>Number.isInteger(b.batch_id) && b.batch_id!==0 && integer(b.raw_material_id) && b.unit===r.unit && date(b.expiry_date) &&
+        ['opening_quantity','confirmed_allocated','after_confirmed','forecast_consumed','projected_remaining'].every(k=>number(b[k])) && typeof b.expires_in_window==='boolean' && nullable(b.unit_cost)) &&
+      Array.isArray(f.allocations) && f.allocations.every(a=>date(a.date) && Number.isInteger(a.batch_id) && integer(a.raw_material_id) && number(a.quantity)));
   });
   requireValid(
     d?.source === "LOCAL_KITCHEN" &&

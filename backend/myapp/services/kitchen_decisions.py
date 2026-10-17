@@ -58,10 +58,11 @@ def menu_forecast(values, dates, horizon):
             'confidence': 'evaluated' if reliable else 'limited' if values else 'unavailable'}
 
 
-def project_batches(plan, daily_need):
+def project_batches(plan, daily_need, *, trace=None):
     """Allocate only remaining stock, once, with receipt/expiry eligibility per day."""
     stock = {b['batch_id']: float(b['remaining_quantity']) for b in plan['batches'] if b['eligible']}
     shortage = Counter()
+    allocations = []
     for (day, material), quantity in sorted(daily_need.items()):
         left = quantity
         for batch in sorted(plan['batches'], key=lambda b: (b['expiry_date'], b['batch_id'])):
@@ -71,6 +72,8 @@ def project_batches(plan, daily_need):
             take = min(left, stock[batch['batch_id']])
             stock[batch['batch_id']] -= take
             left -= take
+            if trace is not None and take > 1e-9:
+                allocations.append({'date': day, 'batch_id': batch['batch_id'], 'raw_material_id': material, 'quantity': take})
             if left <= 1e-9:
                 break
         shortage[material] += max(0., left)
@@ -86,6 +89,14 @@ def project_batches(plan, daily_need):
                 unknown.add(material)
             else:
                 cost[material] += remaining*costs[b['batch_id']]
+    if trace is not None:
+        trace['allocations'] = allocations
+        trace['batches'] = [dict(batch_id=b['batch_id'], batch_code=b.get('batch_code', ''),
+            raw_material_id=b['raw_material_id'], unit=b['unit'], expiry_date=b['expiry_date'],
+            opening_quantity=b['quantity'], confirmed_allocated=b['allocated_quantity'],
+            after_confirmed=b['remaining_quantity'], forecast_consumed=b['remaining_quantity']-stock[b['batch_id']],
+            projected_remaining=stock[b['batch_id']], expires_in_window=b['expiry_date']<=plan['window']['end_date'],
+            unit_cost=b.get('unit_cost')) for b in plan['batches'] if b['batch_id'] in stock]
     return waste, shortage, {m: None if m in unknown else cost[m] for m in waste}
 
 
@@ -164,13 +175,20 @@ def decision_support(plan, *, today=None, snapshot=None):
         error = result['daily_error']
         error = error if error is not None else max(result['daily_predictions'], default=0.)
         additional_total = 0.
+        adjustments = Counter()
         for offset, prediction in enumerate(result['daily_predictions']):
             day = today+timedelta(days=offset)
             allowed = (not product.delivery_weekdays or day.weekday() in product.delivery_weekdays)
-            if not allowed or day < (earliest+timedelta(hours=product.lead_hours)).date():
+            if not allowed:
+                adjustments['delivery_day_excluded'] += prediction
+                continue
+            if day < (earliest+timedelta(hours=product.lead_hours)).date():
+                adjustments['lead_time_excluded'] += prediction
                 continue
             committed = commitments[(product.pk, str(day))]
             additional = max(0., min(product.daily_capacity, prediction)-committed)
+            adjustments['capacity_excluded'] += max(0., prediction-product.daily_capacity)
+            adjustments['recorded_orders_offset'] += min(product.daily_capacity, prediction, committed)
             additional_total += additional
             for level, total in [('low', max(0., prediction-error)), ('central', prediction), ('high', prediction+error)]:
                 residual = max(0., min(product.daily_capacity, total)-committed)
@@ -178,6 +196,8 @@ def decision_support(plan, *, today=None, snapshot=None):
                     for ingredient in recipe:
                         need[level][(str(day), ingredient.raw_material_id)] += residual*float(ingredient.quantity_required)
         result['additional_forecast_portions'] = round(additional_total, 2) if values else None
+        result['demand_adjustments'] = {key: round(adjustments[key], 2) for key in (
+            'delivery_day_excluded', 'lead_time_excluded', 'capacity_excluded', 'recorded_orders_offset')}
         # Round only API display values, never FEFO inputs.
         result['daily_predictions'] = [round(v, 3) for v in result['daily_predictions']]
         menus.append(result)
@@ -186,7 +206,8 @@ def decision_support(plan, *, today=None, snapshot=None):
                 recipe_materials[ingredient.raw_material_id] = ingredient.raw_material
                 recipes[ingredient.raw_material_id].append({'product_id': product.pk, 'product_name': product.name,
                     'quantity_per_portion': float(ingredient.quantity_required), 'confidence': result['confidence']})
-    projections = {level: project_batches(plan, needs) for level, needs in need.items()}
+    trace = {}
+    projections = {level: project_batches(plan, needs, trace=trace if level=='central' else None) for level, needs in need.items()}
     # A material with no existing batch can still have a future recipe need.
     # Extend only this enriched in-memory plan; the original local-plan API stays unchanged.
     existing = {r['raw_material_id'] for r in plan['ingredient_risks']}
@@ -208,18 +229,42 @@ def decision_support(plan, *, today=None, snapshot=None):
         waste_low = projections['high'][0][key]
         waste_high = projections['low'][0][key]
         mapped = recipes[key]
+        batch_flow = [b for b in trace['batches'] if b['raw_material_id']==key]
+        total = lambda field: round(sum(b[field] for b in batch_flow), 3)
+        flow = {'opening_quantity': total('opening_quantity'), 'confirmed_allocated': total('confirmed_allocated'),
+            'after_confirmed': total('after_confirmed'), 'forecast_consumed': total('forecast_consumed'),
+            'projected_total_remaining': total('projected_remaining'),
+            'projected_expiring_unused': round(central_waste[key], 3),
+            'projected_carried_stock': round(sum(b['projected_remaining'] for b in batch_flow if not b['expires_in_window']), 3),
+            'batches': batch_flow,
+            'allocations': [a for a in trace['allocations'] if a['raw_material_id']==key]}
         confident = bool(mapped) and all(m['confidence'] == 'evaluated' for m in mapped) and not plan['excluded_orders'] and not exclusions
         status = ('confirmed_shortage' if risk['shortfall_quantity'] > 0 else
             'forecast_waste' if waste_low > 1e-6 and confident else
             'review' if risk['expiring_unused_quantity'] > 0 or central_short[key] > 0 else 'watch')
-        risk.update(forecast_requirement=round(sum(q for (_, material), q in need['central'].items() if material == key), 3),
+        review_reasons = []
+        if not mapped:
+            review_reasons.append('No active recipe maps to this ingredient.')
+        elif any(m['confidence'] != 'evaluated' for m in mapped):
+            review_reasons.append('Some mapped menus have limited or unavailable sales history.')
+        if any(synthetic_by_menu[m['product_id']] for m in mapped):
+            review_reasons.append('Mapped menu history includes generated demo records; evaluation does not establish real customer accuracy.')
+        if plan['excluded_orders']:
+            review_reasons.append(f'{len(plan["excluded_orders"])} active order records are excluded from stock planning; review coverage.')
+        if exclusions:
+            review_reasons.append('Some history records fail identity or date checks.')
+        if central_short[key] > 1e-6:
+            review_reasons.append('Additional forecast demand exceeds stock usable on its required dates.')
+        if not review_reasons:
+            review_reasons.append('Review demand sensitivity and dated stock before acting on estimated surplus.')
+        risk.update(stock_flow=flow, review_reasons=review_reasons, forecast_requirement=round(sum(q for (_, material), q in need['central'].items() if material == key), 3),
             forecast_shortfall=round(central_short[key], 3), forecast_expiring_unused=round(central_waste[key], 3),
             waste_sensitivity_low=round(waste_low, 3), waste_sensitivity_high=round(waste_high, 3),
             forecast_waste_cost_myr=round(costs.get(key, 0.), 2) if costs.get(key, 0.) is not None else None,
             confidence='evaluated' if confident else 'limited', signal=status, menus=mapped,
             alert_reason=('A dated confirmed order has uncovered ingredients.' if status == 'confirmed_shortage' else
                 'Surplus persists even in the higher-demand sensitivity case.' if status == 'forecast_waste' else
-                'Review before acting: limited history, unmapped recipes, uncertain demand or excluded commitments.' if status == 'review' else
+                ' '.join(review_reasons) if status == 'review' else
                 'No actionable gap found in the included evidence; keep monitoring.'))
         risks.append(risk)
     risks.sort(key=lambda r: ({'confirmed_shortage':0, 'forecast_waste':1, 'review':2, 'watch':3}[r['signal']], r['urgent_by'] or '9999'))

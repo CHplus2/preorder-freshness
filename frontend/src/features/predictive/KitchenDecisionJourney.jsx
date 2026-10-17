@@ -5,6 +5,7 @@ import { KitchenRoom } from "./KitchenWalkthrough";
 import VerificationChecklist from "./VerificationChecklist";
 import KitchenPurchaseComparison from "./KitchenPurchaseComparison";
 import KitchenForecastReplay from "./KitchenForecastReplay";
+import StockFlowEvidence from "./StockFlowEvidence";
 import {
   decisionSlip,
   kitchenActions,
@@ -507,6 +508,7 @@ export default function KitchenDecisionJourney({
               {qty(r.waste_sensitivity_high)} {r.unit}. This is not a calibrated
               prediction interval. Existing bookings are not added twice.
             </p>
+            <StockFlowEvidence risk={r} window={plan.window}/>
             <MenuEvidence support={support} risk={r} />
             <p>
               Stock is allocated by expiry after confirmed needs; speculative
@@ -710,11 +712,19 @@ export function MenuEvidence({ support, risk }) {
             <span>
               {m.additional_forecast_portions === null
                 ? "Additional demand unavailable"
-                : `${qty(m.additional_forecast_portions)} additional to bookings`}
+                : `${qty(m.additional_forecast_portions)} additional portions eligible for planning`}
             </span>
             <small>
               {m.history_days}-day history window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.synthetic_history_items>0?'synthetic scenario evidence':m.confidence}
             </small>
+            {m.demand_adjustments && m.forecast_portions!==null && <details><summary>How the planning quantity is calculated</summary>
+              <p>{qty(m.forecast_portions)} forecast portions across the full window.</p>
+              <ul><li>{qty(m.demand_adjustments.delivery_day_excluded)} outside permitted delivery days</li>
+              <li>{qty(m.demand_adjustments.lead_time_excluded)} before the menu lead time</li>
+              <li>{qty(m.demand_adjustments.capacity_excluded)} above daily capacity</li>
+              <li>{qty(m.demand_adjustments.recorded_orders_offset)} already covered by recorded order portions</li></ul>
+              <p>Remaining: {qty(m.additional_forecast_portions)} additional portions eligible for ingredient planning. The order offset may include unpaid requests to avoid counting them again; confirmed stock requirements are shown separately.</p>
+            </details>}
             {m.forecast_portions === null && <Link to="/admin/orders">Review completed sales history</Link>}
             <Link to="/admin/products?review=recipes">
               {m.recipe_complete ? "Review recipe" : "Recipe needs review"}
@@ -734,7 +744,7 @@ export function MenuEvidence({ support, risk }) {
               <tr>
                 <th>Menu</th>
                 <th>Expected portions</th>
-                <th>Additional to bookings</th>
+                <th>Additional eligible for planning</th>
                 <th>Method</th>
                 <th>Test MAE/day</th>
                 <th>Evidence</th>

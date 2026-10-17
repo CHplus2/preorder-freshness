@@ -15,6 +15,31 @@ from .services.local_planning import local_plan
 
 
 class BaselineEvaluationTests(SimpleTestCase):
+    def test_expiring_waste_is_separate_from_later_dated_remaining_stock(self):
+        def batch(pk,quantity,expiry):
+            return {'batch_id':pk,'raw_material_id':1,'unit':'g','quantity':quantity,
+                'allocated_quantity':0,'remaining_quantity':quantity,'eligible':True,
+                'received_date':'2026-10-17','expiry_date':expiry,'unit_cost':.006}
+        plan={'window':{'end_date':'2026-10-23'},'batches':[batch(1,1800,'2026-10-19'),batch(2,3600,'2026-10-31')]}
+        trace={}
+        waste,short,cost=project_batches(plan,{('2026-10-18',1):1603.109,('2026-10-21',1):3267.877},trace=trace)
+        self.assertAlmostEqual(waste[1],196.891)
+        self.assertEqual(short[1],0)
+        self.assertAlmostEqual(cost[1],196.891*.006)
+        self.assertAlmostEqual(trace['batches'][1]['projected_remaining'],332.123)
+        self.assertAlmostEqual(sum(b['projected_remaining'] for b in trace['batches']),529.014)
+        self.assertAlmostEqual(sum(a['quantity'] for a in trace['allocations']),4870.986)
+        self.assertEqual(plan['batches'][0]['remaining_quantity'],1800)
+
+    def test_weekly_stock_can_exceed_demand_but_expire_before_it_is_needed(self):
+        plan={'window':{'end_date':'2026-10-23'},'batches':[{'batch_id':1,'raw_material_id':1,
+            'unit':'g','quantity':100,'allocated_quantity':0,'remaining_quantity':100,'eligible':True,
+            'received_date':'2026-10-17','expiry_date':'2026-10-18','unit_cost':1}]}
+        trace={}
+        waste,short,_=project_batches(plan,{('2026-10-20',1):50},trace=trace)
+        self.assertEqual(waste[1],100);self.assertEqual(short[1],50)
+        self.assertEqual(trace['batches'][0]['forecast_consumed'],0)
+
     def test_test_period_cannot_change_selected_method(self):
         today=timezone.localdate()
         dates=[today-timedelta(days=70-i) for i in range(70)]
@@ -103,6 +128,28 @@ class KitchenDecisionTests(TestCase):
         self.assertLess(m['additional_forecast_portions'],m['forecast_portions'])
         self.assertEqual(d['ingredient_risks'][0]['forecast_requirement'],m['additional_forecast_portions']*100)
 
+    def test_menu_adjustments_explain_lead_time_without_inventing_bookings(self):
+        self.history()
+        support=decision_support(local_plan())
+        menu=support['menus'][0]
+        self.assertEqual(menu['forecast_portions'],14)
+        self.assertEqual(menu['additional_forecast_portions'],12)
+        self.assertEqual(menu['demand_adjustments']['lead_time_excluded'],2)
+        self.assertEqual(menu['demand_adjustments']['recorded_orders_offset'],0)
+        self.assertEqual(menu['future_committed_portions'],0)
+
+    def test_stock_and_menu_ledgers_balance_with_capacity_and_recorded_orders(self):
+        self.history();self.order(portions=2);self.batch(1500,expiry_days=2);self.batch(1000,expiry_days=14)
+        self.menu.daily_capacity=1;self.menu.save()
+        support=decision_support(local_plan())
+        menu=support['menus'][0];risk=support['ingredient_risks'][0];flow=risk['stock_flow']
+        self.assertAlmostEqual(menu['forecast_portions'],menu['additional_forecast_portions']+sum(menu['demand_adjustments'].values()),places=2)
+        self.assertGreater(menu['demand_adjustments']['capacity_excluded'],0)
+        self.assertGreater(menu['demand_adjustments']['recorded_orders_offset'],0)
+        self.assertAlmostEqual(flow['opening_quantity']-flow['confirmed_allocated']-flow['forecast_consumed'],flow['projected_total_remaining'],places=2)
+        self.assertAlmostEqual(flow['projected_expiring_unused']+flow['projected_carried_stock'],flow['projected_total_remaining'],places=2)
+        self.assertAlmostEqual(flow['forecast_consumed']+risk['forecast_shortfall'],risk['forecast_requirement'],places=2)
+
     def test_future_recipe_need_is_visible_even_without_any_batch_or_confirmed_order(self):
         self.history()
         response=self.client.get('/api/admin/predictive/local-decisions/')
@@ -122,6 +169,9 @@ class KitchenDecisionTests(TestCase):
         self.assertEqual(d['alert_count'],0)
         self.assertEqual(d['ingredient_risks'][0]['signal'],'review')
         self.assertEqual(d['menus'][0]['confidence'],'unavailable')
+        self.assertTrue(any('limited or unavailable' in reason for reason in d['ingredient_risks'][0]['review_reasons']))
+        self.assertTrue(any('excluded from stock planning' in reason for reason in d['ingredient_risks'][0]['review_reasons']))
+        self.assertNotIn('No active recipe maps', d['ingredient_risks'][0]['alert_reason'])
 
     def test_renamed_menus_and_missing_recipes_do_not_invent_mappings(self):
         self.history(days=7)

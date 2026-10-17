@@ -431,6 +431,35 @@ with generated history from its evaluated-confidence count.
 delivered daily summaries so sales totals/average order values can be labeled
 as including artificial data. A daily summary is not a distinct customer order.
 
+The local decision response also carries calculation evidence without changing
+the forecasting or FEFO rules:
+
+- Each menu's `demand_adjustments` contains numeric `delivery_day_excluded`,
+  `lead_time_excluded`, `capacity_excluded`, and `recorded_orders_offset` portions.
+  These are distinct, non-overlapping deductions from the full-window forecast.
+  `additional_forecast_portions` is the remaining plan-eligible additional demand,
+  not simply total forecast minus confirmed bookings. Recorded offsets can include
+  unpaid requests to avoid counting their portions again.
+- Each ingredient risk's `stock_flow` includes numeric `opening_quantity`,
+  `confirmed_allocated`, `after_confirmed`, `forecast_consumed`,
+  `projected_total_remaining`, `projected_expiring_unused`, and
+  `projected_carried_stock`, all in its native unit. `batches` provide per-lot
+  `batch_id`, `batch_code`, `raw_material_id`, `unit`, `expiry_date`,
+  `opening_quantity`, `confirmed_allocated`, `after_confirmed`,
+  `forecast_consumed`, `projected_remaining`, boolean `expires_in_window`, and
+  nullable numeric `unit_cost`. `allocations` list forecast-use `date`,
+  `batch_id`, `raw_material_id`, and numeric `quantity`.
+- `opening_quantity - confirmed_allocated - forecast_consumed` equals total
+  remaining stock; this separates into expiring unused stock and stock dated
+  after the window. Forecast requirement equals forecast consumed plus forecast
+  shortfall. Rounded API totals can differ by a small rounding amount.
+- `review_reasons` is a string list of applicable history, provenance, coverage
+  and dated-stock concerns; review cards no longer imply every possible concern
+  applies to every ingredient. Existing signal thresholds are unchanged.
+
+All of this is a read-only projected ledger: no stock movement or purchase is
+recorded. Zero projected expiry waste can coexist with uncovered forecast demand.
+
 Short histories use `moving_average_4_weeks` and `status: baseline_only`.
 At 14 or more completed weeks, reserve the latest ceil(20%) for testing and the
 preceding ceil(20%) for validation; at least eight earlier training weeks are
