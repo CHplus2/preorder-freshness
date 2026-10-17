@@ -33,7 +33,7 @@ try {
  assert.match(render({...risk,forecast_expiring_unused:0}),/zero projected waste can coexist with a shortage/);
  assert.match(render({...risk,stock_flow:undefined}),/Stock dated later carries forward/);
  const {default:KitchenForecastReplay}=await server.ssrLoadModule('/src/features/predictive/KitchenForecastReplay.jsx');
- const {ZeroWasteNotice,DecisionSteps,SourceNotice,BuildIdentity}=await server.ssrLoadModule('/src/features/predictive/FreshCastChrome.jsx');
+ const {ZeroWasteNotice,DecisionSteps,SourceNotice,BuildIdentity,SourceSelector}=await server.ssrLoadModule('/src/features/predictive/FreshCastChrome.jsx');
  const zero=renderToStaticMarkup(createElement(ZeroWasteNotice,{waste:0,carried:332.123,unit:'g'}));
  assert.match(zero,/332.123 g/);assert.match(zero,/later-expiring stock/);assert.match(zero,/does not guarantee/);
  assert.equal(renderToStaticMarkup(createElement(ZeroWasteNotice,{waste:null,unit:'g'})),'');
@@ -42,7 +42,13 @@ try {
  assert.equal((nav.match(/<button/g)||[]).length,5);assert.equal((nav.match(/aria-current="step"/g)||[]).length,1);
  assert.match(renderToStaticMarkup(createElement(SourceNotice,{source:'live'})),/simulated stock/);
  assert.match(renderToStaticMarkup(createElement(SourceNotice,{source:'local',synthetic:true})),/generated history/);
- assert.match(renderToStaticMarkup(createElement(BuildIdentity)),/<details><summary>Technical details<\/summary>/);
+ assert.match(renderToStaticMarkup(createElement(BuildIdentity)),/<details><summary>Demo &amp; technical tools<\/summary>/);
+ for(const source of ['local','live'])assert.doesNotMatch(renderToStaticMarkup(createElement(SourceSelector,{value:source})),/value="demo"/);
+ assert.match(renderToStaticMarkup(createElement(SourceSelector,{value:'demo'})),/Sample data · no model run/);
+ const {default:EvidenceTabs}=await server.ssrLoadModule('/src/features/predictive/EvidenceTabs.jsx');
+ const tabs=renderToStaticMarkup(createElement(EvidenceTabs,{sections:[{id:'one',title:'One',content:'First evidence'},{id:'two',title:'Two',content:'Lazy evidence'}]}));
+ assert.match(tabs,/role="tablist"/);assert.equal((tabs.match(/aria-selected="true"/g)||[]).length,1);
+ assert.match(tabs,/First evidence/);assert.doesNotMatch(tabs,/Lazy evidence/);
  const scores=Object.fromEntries(['mean_28','mean_7','same_weekday'].map(key=>[key,{mae:1.12,wape_percent:46.22,daily_actual:[2],daily_predictions:[1]}]));
  const menu={product_id:1,product_name:'Mee Goreng Telur',method:'mean_28',synthetic_history_items:70,
    forecast_portions:16.21,additional_forecast_portions:13.89,history_days:112,price_myr:10,confidence:'evaluated',recipe_complete:true,
@@ -70,8 +76,8 @@ try {
  assert.match(evidence,/Outside this planning window/);
  assert.match(evidence,/Individual excluded order references/);
  assert.match(evidence,/Order #3/);
- assert.equal((evidence.match(/Same source note/g)||[]).length,1);
- assert.match(evidence,/28-day moving average/);
+ assert.doesNotMatch(evidence,/Same source note/);
+ assert.match(evidence,/Forecast methods/);
  assert.match(evidence,/not probability ranges/);
  assert.match(evidence,/Generated history is included/);
  const board=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(DecisionReviewBoard)));
@@ -81,12 +87,12 @@ try {
  assert.match(board,/not a shared decision log/);
  const journey=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:['/admin/ai/decisions?source=local&step=1']},
    createElement(KitchenDecisionJourney,{plan,comparison:null,onComparison:()=>{},onClear:()=>{}})));
- assert.ok(journey.indexOf('Where the forecast need comes from')<journey.indexOf('Confirmed-only stock is not the forecast result.'));
- assert.match(journey,/Inspect batches &amp; exact calculations/);
+ assert.ok(journey.indexOf('Where the forecast need comes from')<journey.indexOf('Exact expiry calculation'));
+ assert.match(journey,/Supporting evidence/);
  assert.match(journey,/From expiring stock/);
  assert.match(journey,/From later stock/);
- assert.match(journey,/Central forecast · Step 1 result/);
- assert.match(journey,/Lower demand → more unused/);
+ assert.match(journey,/Demand assumptions/);
+ assert.doesNotMatch(journey,/Central forecast · Step 1 result/);
  assert.doesNotMatch(journey,/Projected waste sensitivity:/);
  assert.doesNotMatch(journey,/Saved decisions &amp; follow-up/);
  const finalReview=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:['/admin/ai/decisions?source=local&step=4']},createElement(KitchenDecisionJourney,{plan,comparison:null,onComparison:()=>{},onClear:()=>{}})));
@@ -130,6 +136,14 @@ try {
   const screen=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:[`/admin/ai/decisions?source=demo&step=${step}`]},
     createElement(DecisionAssistant,{baseline:external,scenario:null,isFixture:true,onPromotion:()=>{}})));
   assert.match(screen,/Decision journey/);assert.match(screen,new RegExp(`STEP ${step+1} OF 5`));
+  if(step===3){assert.match(screen,/OUTCOME NOT SIMULATED/);assert.doesNotMatch(screen,/Action comparison workspace/);}
  }
+ const promoted=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:['/admin/ai/decisions?source=demo&step=3&action=promotion']},createElement(DecisionAssistant,{baseline:external,scenario:null,isFixture:true,onPromotion:()=>{}})));
+ assert.match(promoted,/Action comparison workspace/);
+ assert.match(promoted,/Calculate promotion what-if/);
+ const covered={...external,ingredient_risks:external.ingredient_risks.map(risk=>risk.ingredient_id==='chicken'?{...risk,risk_type:'none',expiring_unused_kg:0,shortfall_kg:0}:risk)};
+ const coveredScreen=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:['/admin/ai/decisions?source=demo&ingredient=chicken']},createElement(DecisionAssistant,{baseline:covered,scenario:external,isFixture:true,onPromotion:()=>{}})));
+ assert.match(coveredScreen,/No baseline risk reported: chicken/);
+ assert.doesNotMatch(coveredScreen,/undefined/);
  console.log('Stock flow: expiry waste, carried stock, total balance, unknown cost and zero-waste explanation passed.');
 } finally {await server.close();}

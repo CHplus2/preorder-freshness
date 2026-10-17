@@ -4,7 +4,6 @@ import PantryScene from "./PantryScene";
 import DecisionRehearsal from "./DecisionRehearsal";
 import ActionComparison from "./ActionComparison";
 import ReviewQueue from "./ReviewQueue";
-import RiskLens from "./RiskLens";
 import { riskLens } from "./riskLens";
 import VerificationChecklist from "./VerificationChecklist";
 import { decisionBrief } from "./decisionBrief";
@@ -27,6 +26,7 @@ const issues = {
   expiry_surplus: "Potential ingredient waste",
   shortage: "Potential ingredient shortage",
   expiry_surplus_and_shortage: "Waste and shortage exposure",
+  none: 'No baseline risk reported',
 };
 export default function DecisionAssistant({
   baseline,
@@ -34,10 +34,10 @@ export default function DecisionAssistant({
   onPromotion,
   isFixture,
 }) {
-  const priorityRisks = rankRisks(baseline.ingredient_risks).filter(
-    (r) => r.risk_type !== "none",
-  );
   const [params, setParams] = useSearchParams();
+  const priorityRisks = rankRisks(baseline.ingredient_risks).filter(
+    (r) => r.risk_type !== "none" || r.ingredient_id===params.get('ingredient'),
+  );
   const lens = ["waste", "shortage"].includes(params.get("lens"))
     ? params.get("lens")
     : "priority";
@@ -61,6 +61,7 @@ export default function DecisionAssistant({
     setParams(next, { replace: true });
   }
   const risk = risks.find((r) => r.ingredient_id === ingredient) || risks[0];
+  const currentStep=selectedDecisionStep(params.get('step'));
   if (!risk)
     return (
       <>
@@ -84,17 +85,8 @@ export default function DecisionAssistant({
     );
   return (
     <section className="fc-assistant">
-      <details className="fc-kitchen-tools">
-        <summary>
-          Kitchen focus ·{" "}
-          {lens === "priority"
-            ? "backend priority"
-            : lens === "waste"
-              ? "waste first"
-              : "shortages first"}
-        </summary>
-        <RiskLens risks={priorityRisks} lens={lens} onChange={changeLens} />
-      </details>
+      <section className="pd-card"><h2>What needs your attention?</h2><p>Choose an ingredient, see what may happen, then compare your next move.</p><div className="fc-comparison-switch" role="group" aria-label="Kitchen focus">{[['priority','Priority'],['waste','Waste first'],['shortage','Stock gaps first']].map(([value,label])=><button key={value} aria-pressed={lens===value} onClick={()=>changeLens(value)}>{label}</button>)}</div></section>
+      <details className="local-scene-picker" open={currentStep===0}><summary>Choose an ingredient · {risk.ingredient_id}</summary>
       <PantryScene
         key={`${lens}:${risk.ingredient_id}`}
         risks={risks}
@@ -113,8 +105,9 @@ export default function DecisionAssistant({
         center={baseline.center_id}
         week={baseline.week}
       />
-      <details className="fc-kitchen-tools">
-        <summary>Open manager review queue</summary>
+      </details>
+      {currentStep===4 && <details className="fc-kitchen-tools">
+        <summary>Manager review queue</summary>
         <ReviewQueue
           key={`${isFixture}:${JSON.stringify(baseline)}`}
           risks={risks}
@@ -122,12 +115,10 @@ export default function DecisionAssistant({
           onSelect={setIngredient}
           isFixture={isFixture}
         />
-      </details>
-      <details className="pantry-list-view">
-        <summary>List view & priority rules</summary>
+      </details>}
         <div className="fc-issue-picker">
           <label>
-            Choose a problem to work through
+            Ingredient problem
             <select
               aria-label="Ingredient problem"
               value={risk.ingredient_id}
@@ -140,17 +131,7 @@ export default function DecisionAssistant({
               ))}
             </select>
           </label>
-          <p>
-            {risks.length} issues ·{" "}
-            {lens === "priority"
-              ? "backend waste-cost, expiry and shortage order"
-              : lens === "waste"
-                ? "largest expiring-unused quantity first"
-                : "largest shortfall quantity first"}
-            . Unknown cost does not mean no risk.
-          </p>
         </div>
-      </details>
       <div
         ref={decisionRef}
         tabIndex={-1}
@@ -278,7 +259,7 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
             <h2 ref={headingRef} tabIndex={-1}>
               {issues[risk.risk_type]}: {risk.ingredient_id}
             </h2>
-            <p className="fc-problem-summary">{problemSummary(risk)}</p>
+            <p className="fc-problem-summary">{risk.risk_type==='none'?'No unused stock or shortage is reported in the baseline. A promotion comparison can change that outcome.':problemSummary(risk)}</p>
             <p>
               Choose Continue to see why, explore your options, and review a
               recommended action.
@@ -368,9 +349,9 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
         {step === 3 && (
           <>
             <h2 ref={headingRef} tabIndex={-1}>
-              Compare costs, benefits and risks
+              Compare tradeoffs
             </h2>
-            <ActionComparison
+            {action==='promotion' ? <><ActionComparison
               key={risk.ingredient_id}
               risk={risk}
               scenarioRisk={scenarioRisk}
@@ -429,17 +410,15 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
                 </tbody>
               </table>
             </div>
-            {!scenario && (
-              <button onClick={onPromotion}>Calculate promotion what-if</button>
-            )}
+            {!scenario && <button onClick={onPromotion}>Calculate promotion what-if</button>}</> : <section className="local-action-review"><span className="pd-eyebrow">WORKFLOW REVIEW · OUTCOME NOT SIMULATED</span><h3>{action==='purchasing'?'Review purchasing guidance':'Check menu and preparation feasibility'}</h3><p>{actions.find(a=>a.id===action).limit}</p><div className="fc-facts"><div><span>Current forecast shortfall</span><strong>{qty(risk.shortfall_kg)} kg</strong></div><div><span>Current unused at expiry</span><strong>{qty(risk.expiring_unused_kg)} kg</strong></div><div><span>After this action</span><strong>Not simulated</strong></div></div><p>These are baseline quantities. No revised purchase, kitchen schedule, cost or sales benefit is calculated for this option. Genpact meal IDs are not mapped to your kitchen menus.</p><button onClick={()=>{setAction('promotion');setCost('');setPercent('');}}>Explore a promotion comparison instead</button></section>}
             <p>{actions.find((a) => a.id === action).limit}</p>
             <p className="pd-note">
               Purchasing and preparation action outcomes are not supplied by API
               v1. Promotion differences do not prove causal benefits. Both waste
               and shortage may persist.
             </p>
-            <div className="fc-worksheet">
-              <h3>Optional financial worksheet · hypothetical assumptions</h3>
+            <details className="fc-worksheet">
+              <summary>Optional financial worksheet · hypothetical assumptions</summary>
               <p>
                 For “{actions.find((a) => a.id === action).title}”, enter your
                 own action cost and assumed avoided waste percentage. These
@@ -489,13 +468,13 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
                     : "Enter a nonnegative action cost and a percentage from 0 to 100 to compare. No assumptions are prefilled."}
                 </p>
               )}
-            </div>
+            </details>
           </>
         )}
         {step === 4 && (
           <>
             <h2 ref={headingRef} tabIndex={-1}>
-              Recommended action to review
+              Review recommendation
             </h2>
             <div className="fc-recommendation">
               <span className="pd-eyebrow">

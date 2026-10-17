@@ -22,6 +22,7 @@ const labels = {
   expiry_surplus: "Waste exposure",
   shortage: "Stock gap",
   expiry_surplus_and_shortage: "Waste + stock gap",
+  none: 'No baseline risk',
 };
 // Decorative packaging only. This does not infer a recipe, unit or product mapping.
 export function IngredientDrawing({ name }) {

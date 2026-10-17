@@ -134,7 +134,7 @@ export default function RestaurantStations({
       name: "Fridge & stock room",
       label: "Inventory evidence",
       detail: available
-        ? `${baseline.ingredient_risks.length} ingredient records · ${isLocal ? "database stock" : "simulated"}`
+        ? `${baseline.ingredient_risks.length} ingredient records · ${isLocal ? "recorded stock" : "simulated"}`
         : unavailable,
     },
     {
@@ -178,7 +178,7 @@ export default function RestaurantStations({
       <p className="fc-stations-caption">
         Illustrated navigation ·{" "}
         {isLocal ? "local sales forecasts and confirmed-order stock evidence" : isFixture
-          ? "frontend fixtures, no model run"
+          ? "sample data, no model run"
           : "API demand with simulated stock and costs"}
         . No live restaurant activity is shown.
       </p>

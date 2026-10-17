@@ -69,7 +69,7 @@ export default function ForecastReplay({ data, risk, isFixture }) {
             {risk.ingredient_id} · week {data.week} ·{" "}
             {data.promotion_scenario ? "promotion what-if" : "baseline"} ·{" "}
             {isFixture
-              ? "frontend fixtures, no model run"
+              ? "sample data, no model run"
               : "API demand with simulated operations"}
           </p>
         </div>

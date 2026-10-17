@@ -10,6 +10,7 @@ import KitchenStockStory, {EvidenceNotes} from "./KitchenStockStory";
 import {kitchenCase, stockQuantity, caseQuantity} from "./kitchenPresentation";
 import {DecisionSteps} from './FreshCastChrome';
 import {decisionSteps as steps, selectedDecisionStep} from './decisionNavigation';
+import EvidenceTabs from './EvidenceTabs';
 import {
   decisionSlip,
   kitchenActions,
@@ -225,7 +226,7 @@ export default function KitchenDecisionJourney({
         >
           {[
             ["priority", "Priority"],
-            ["waste", "Waste cost first"],
+            ["waste", "Waste first"],
             ["shortage", "Stock gaps first"],
           ].map(([id, label]) => (
             <button
@@ -361,7 +362,7 @@ export default function KitchenDecisionJourney({
         </div>
       </section>
       </details>
-      <details className="pd-card">
+      {step===4 && <details className="pd-card">
         <summary>Manager review queue · {pinned.length} pinned</summary>
         <button
           onClick={() =>
@@ -390,7 +391,7 @@ export default function KitchenDecisionJourney({
           Pins stay in this page session. Save the final review to retain
           evidence.
         </p>
-      </details>
+      </details>}
       <label>
         Ingredient problem
         <select
@@ -426,41 +427,7 @@ export default function KitchenDecisionJourney({
         {step === 1 && (
           <>
             <KitchenStockStory risk={r} window={plan.window}/>
-            <details className="local-deep-evidence"><summary>Inspect batches & exact calculations</summary>
-            <StockFlowEvidence risk={r} window={plan.window}/>
-            </details>
-            <details className="local-deep-evidence">
-            <summary>Confirmed orders only · before additional forecast use</summary>
-            <p className="fc-explanation">{r.explanation}</p>
-            <div className="fc-facts">
-              <div>
-                <span>Confirmed recipe requirement</span>
-                <strong>
-                  {qty(r.confirmed_requirement)} {r.unit}
-                </strong>
-              </div>
-              <div>
-                <span>Eligible stock</span>
-                <strong>
-                  {qty(r.eligible_stock)} {r.unit}
-                </strong>
-              </div>
-            </div>
-            </details>
-            {r.waste_sensitivity_high>0 && <details className="local-deep-evidence"><summary>Compare lower & higher demand assumptions</summary>
-            <section aria-label="Demand what-if comparison">
-              <h3>What if demand is lower or higher?</h3>
-              <p>Same stock and confirmed orders, different assumptions about additional demand during {plan.window.start_date}–{plan.window.end_date}. This compares scenarios; it does not give a probability range.</p>
-              <div className="fc-facts">
-                <div><span>Lower demand → more unused</span><strong>{qty(r.waste_sensitivity_high)} {r.unit}</strong><small>Projected unused at expiry</small></div>
-                <div><span>Central forecast · Step 1 result</span><strong>{qty(r.forecast_expiring_unused)} {r.unit}</strong><small>Projected unused at expiry</small></div>
-                <div><span>Higher demand → less unused</span><strong>{qty(r.waste_sensitivity_low)} {r.unit}</strong><small>Projected unused at expiry</small></div>
-              </div>
-              <details><summary>How these what-if assumptions are set</summary><p>Each menu’s daily demand is shifted down or up by its one-day test MAE; menus without a test use their largest daily forecast as the shift. Demand is then constrained by delivery days, lead time, capacity and recorded orders, before dated expiry allocation is repeated. This heuristic is not calibrated uncertainty or a guarantee. Existing bookings are not added twice.</p></details>
-            </section>
-            </details>
-            }
-            <details className="local-deep-evidence"><summary>Menus behind this forecast · {r.menus.length}</summary><MenuEvidence support={support} risk={r} compact/></details>
+            <KitchenSupportingEvidence risk={r} plan={plan}/>
             <div className="fc-workflow-links"><Link to={links.menus}>Review menu recipes</Link>
             <Link to={links.preparation}>Check preparation dates</Link></div>
           </>
@@ -615,6 +582,15 @@ export default function KitchenDecisionJourney({
   );
 }
 
+export function KitchenSupportingEvidence({risk:r,plan}) {
+  return <details className="local-deep-evidence"><summary>Supporting evidence</summary><EvidenceTabs label="Ingredient evidence categories" sections={[
+    {id:'stock',title:'Stock allocation',content:<StockFlowEvidence risk={r} window={plan.window}/>},
+    {id:'menus',title:`Mapped menus · ${r.menus.length}`,content:<MenuEvidence support={plan.decision_support} risk={r} compact/>},
+    {id:'confirmed',title:'Confirmed bookings',content:<><h3>Confirmed orders only · before additional forecast use</h3><p>{r.explanation}</p><div className="fc-facts"><div><span>Confirmed recipe requirement</span><strong>{stockQuantity(r.confirmed_requirement,r.unit)}</strong></div><div><span>Eligible stock</span><strong>{stockQuantity(r.eligible_stock,r.unit)}</strong></div></div></>},
+    ...(r.waste_sensitivity_high>0 ? [{id:'sensitivity',title:'Demand assumptions',content:<section aria-label="Demand what-if comparison"><h3>What if demand is lower or higher?</h3><p>Same stock and confirmed orders during {plan.window.start_date}–{plan.window.end_date}. These scenarios do not give a probability range.</p><div className="fc-facts"><div><span>Lower demand → more unused</span><strong>{stockQuantity(r.waste_sensitivity_high,r.unit)}</strong></div><div><span>Central forecast · Step 1 result</span><strong>{stockQuantity(r.forecast_expiring_unused,r.unit)}</strong></div><div><span>Higher demand → less unused</span><strong>{stockQuantity(r.waste_sensitivity_low,r.unit)}</strong></div></div><p>Each menu’s daily demand is shifted by its one-day test MAE; sparse history uses its largest daily forecast. Delivery days, lead time, capacity and recorded orders constrain demand before expiry allocation is repeated. This is a heuristic, not calibrated uncertainty. Existing bookings are not added twice.</p></section>}] : []),
+  ]}/></details>;
+}
+
 export function KitchenWorkflowReview({action, risk, links}) {
   const monitoring=action==='wait';
   return <section className="local-action-review" aria-label="Unsimulated workflow review">
@@ -735,7 +711,7 @@ export function MenuEvidence({ support, risk, compact = false }) {
           )}
         </div>
       </details>
-      <details><summary>Technical forecast evaluation &amp; historical replay</summary><KitchenForecastReplay menus={menus} /></details>
+      <KitchenForecastReplay menus={menus} />
     </div>
   );
 }

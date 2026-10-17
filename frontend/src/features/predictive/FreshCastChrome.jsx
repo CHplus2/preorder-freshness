@@ -1,6 +1,8 @@
 /* global __FRESHCAST_REVISION__: readonly */
 import {decisionSteps} from './decisionNavigation';
 import {stockQuantity} from './kitchenPresentation';
+import {useState} from 'react';
+import RescueDemo from './RescueDemo';
 import './freshCastChrome.css';
 
 export function DecisionSteps({step, onChange, disabled = false}) {
@@ -11,15 +13,15 @@ export function DecisionSteps({step, onChange, disabled = false}) {
 
 export function SourceSelector({value, onChange}) {
   return <label>Data source<select aria-label="Data source" value={value} onChange={event => onChange(event.target.value)}>
-    <option value="local">My kitchen · database orders & stock</option>
-    <option value="live">Genpact · evaluated model demo</option>
-    <option value="demo">Frontend fixtures · no model run</option>
+    <option value="local">My kitchen · orders &amp; stock</option>
+    <option value="live">Genpact · external demand</option>
+    {value==='demo' && <option value="demo">Sample data · no model run</option>}
   </select></label>;
 }
 
 export function SourceNotice({source, synthetic = false}) {
   const title = source === 'local' ? synthetic ? 'Kitchen demo scenario' : 'Your kitchen records'
-    : source === 'live' ? 'Genpact model demo' : 'Illustrative frontend fixtures';
+    : source === 'live' ? 'Genpact model demo' : 'Sample-data demo · no model run';
   const detail = source === 'local' ? synthetic
     ? 'Includes generated history or fictional stock. Forecasts and costs are scenario estimates.'
     : 'Delivery-based demand, accepted recipes and dated stock. Check record coverage before acting.'
@@ -28,9 +30,12 @@ export function SourceNotice({source, synthetic = false}) {
   return <div className={`pd-source ${source}`} role="status"><strong>{title}</strong><p>{detail}</p></div>;
 }
 
-export function BuildIdentity() {
+export function BuildIdentity({source,onSourceChange}) {
+  const [tutorial,setTutorial]=useState(false);
   const revision = typeof __FRESHCAST_REVISION__ === 'string' ? __FRESHCAST_REVISION__ : 'development';
-  return <footer className="fc-build-identity"><details><summary>Technical details</summary><p>FreshCast build <code>{revision}</code> · include this version when reporting a problem.</p></details></footer>;
+  return <footer className="fc-build-identity"><details><summary>Demo &amp; technical tools</summary><p>FreshCast build <code>{revision}</code> · include this version when reporting a problem.</p>
+    {onSourceChange && <><p>Sample data is a fixed example for a model-free walkthrough. It does not read kitchen records or replace a failed API request.</p><div className="fc-demo-tools"><button type="button" onClick={()=>onSourceChange(source==='demo'?'local':'demo')}>{source==='demo'?'Return to my kitchen':'Open sample-data demo'}</button><button type="button" aria-expanded={tutorial} onClick={()=>setTutorial(value=>!value)}>{tutorial?'Close rescue tutorial':'Open illustrative rescue tutorial'}</button></div>{tutorial && <RescueDemo/>}</>}
+  </details></footer>;
 }
 
 export function ZeroWasteNotice({waste, carried = null, unit, windowLabel}) {

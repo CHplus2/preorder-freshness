@@ -14,7 +14,7 @@ export default function ReviewQueue({ risks, selected, onSelect, isFixture }) {
         <div>
           <span className="pd-eyebrow">
             MANAGER’S PLANNING BOARD ·{" "}
-            {isFixture ? "FRONTEND FIXTURES" : "SIMULATED OPERATIONS"}
+            {isFixture ? "SAMPLE DATA · NO MODEL RUN" : "SIMULATED OPERATIONS"}
           </span>
           <h2>Your kitchen review queue</h2>
           <p>

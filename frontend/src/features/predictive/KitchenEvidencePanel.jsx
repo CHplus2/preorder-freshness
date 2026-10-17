@@ -1,5 +1,6 @@
 import {Link} from 'react-router-dom';
 import KitchenReadiness from './KitchenReadiness';
+import EvidenceTabs from './EvidenceTabs';
 
 const methodNames={mean_28:'28-day moving average',mean_7:'7-day moving average',same_weekday:'Same-weekday baseline'};
 const reasonNames={outside_horizon:'Outside this planning window',not_paid:'Payment not confirmed',schedule_needs_review:'Preparation plan needs review',overdue_preparation:'Preparation is overdue'};
@@ -17,22 +18,24 @@ export default function KitchenEvidencePanel({plan, open, onToggle, panelRef, ch
       <li>Lower/higher-demand scenarios are assumptions, not probability ranges. Missing sales or waste records do not establish zero demand or zero waste.</li>
       {plan.decision_support.synthetic_history_items>0 && <li>Generated history is included. These results demonstrate the workflow; they do not establish real customer accuracy.</li>}
     </ul></section>
-    <details><summary>Orders included in stock planning · {plan.coverage.included_orders}</summary>
+    <EvidenceTabs label="Kitchen evidence categories" sections={[
+      {id:'orders',title:'Order coverage',content:<><h3>Orders included in stock planning · {plan.coverage.included_orders}</h3>
       <p>Only paid, pending/processing orders with reviewed dates, complete accepted recipes and undeducted stock qualify. Orders outside the selected dates are excluded even when otherwise valid.</p>
       {!plan.excluded_orders.length ? <p>No orders are excluded from this plan.</p> : <>
         <ul className="local-coverage-groups">{Object.entries(groups).map(([reason,orders])=><li key={reason}><strong>{orders.length}</strong> {reasonNames[reason] || reason.replaceAll('_',' ')}</li>)}</ul>
-        <details><summary>Individual excluded order references</summary><ul>{plan.excluded_orders.map(order=><li key={order.order_id}>Order #{order.order_id}: {reasonNames[order.reason] || order.reason.replaceAll('_',' ')}</li>)}</ul></details>
+        <h4>Individual excluded order references</h4><ul>{plan.excluded_orders.map(order=><li key={order.order_id}>Order #{order.order_id}: {reasonNames[order.reason] || order.reason.replaceAll('_',' ')}</li>)}</ul>
       </>}
       <div className="fc-workflow-links"><Link to="/admin/orders">Review orders</Link><Link to="/admin/planner">Review preparation plans</Link></div>
-    </details>
-    <details><summary>Forecast coverage &amp; methods</summary>
+    </>},
+    {id:'methods',title:'Forecast methods',content:<><h3>Forecast coverage &amp; methods</h3>
       <p>Each menu uses a 28-day moving average, 7-day moving average or same-weekday baseline. With at least 42 history days, the lowest validation MAE selects the method; the latest 14 days are held out for testing. Sparse history uses a limited 28-day baseline.</p>
       {Object.keys(methods).length ? <ul>{Object.entries(methods).map(([method,count])=><li key={method}>{count} {count===1?'menu':'menus'} · {methodNames[method] || method.replaceAll('_',' ')}</li>)}</ul> : <p>No menu forecasts are available yet. Review history and recipe coverage below.</p>}
       <KitchenReadiness plan={plan}/>
-    </details>
-    {children}
-    <details><summary>Detailed calculation rules &amp; source notes</summary>
+    </>},
+    ...(children ? [{id:'weekly',title:'Whole-store weekly sales',content:children}] : []),
+    {id:'notes',title:'Source notes',content:<><h3>Detailed calculation rules &amp; source notes</h3>
       {rules.length ? <ul>{rules.map(rule=><li key={rule}>{rule}</li>)}</ul> : <p>No additional calculation notes were returned.</p>}
-    </details>
+    </>},
+    ]}/>
   </details>;
 }

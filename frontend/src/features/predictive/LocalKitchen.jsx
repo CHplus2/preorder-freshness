@@ -14,6 +14,7 @@ import KitchenStockStory, {EvidenceNotes} from "./KitchenStockStory";
 import {kitchenCase, caseQuantity, stockQuantity} from "./kitchenPresentation";
 import {SourceNotice, SourceSelector, BuildIdentity} from './FreshCastChrome';
 import {stockViewSelection} from './decisionNavigation';
+import EvidenceTabs from './EvidenceTabs';
 
 const qty = (v) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 3 }).format(v);
@@ -96,7 +97,7 @@ export default function LocalKitchen({ view }) {
             setRetry((n) => n + 1);
           }}
         >
-          <RefreshCw size={16} /> Refresh kitchen data
+          <RefreshCw size={16} /> Refresh data
         </button>
       </header>
       <SourceNotice source="local" synthetic={demoBatchCount>0 || plan?.decision_support.synthetic_history_items>0}/>
@@ -166,14 +167,13 @@ export default function LocalKitchen({ view }) {
           </KitchenEvidencePanel>
         </>
       )}
-      <BuildIdentity/>
+      <BuildIdentity source="local" onSourceChange={value=>choose('source',value)}/>
     </main>
   );
 }
 
 function WeeklySalesEvidence({revision}) {
-  const [expanded,setExpanded]=useState(false);
-  return <details onToggle={event=>{if(event.target===event.currentTarget)setExpanded(event.currentTarget.open);}}><summary>Whole-store weekly sales · separate from menu planning</summary>{expanded && <KitchenForecast revision={revision}/>}</details>;
+  return <KitchenForecast revision={revision}/>;
 }
 
 function OrderEvidence({ plan }) {
@@ -307,7 +307,7 @@ function StockEvidence({ plan }) {
         <div className="local-fridge-inspection">
           <PlanningFridge
             count={risks.length}
-            evidenceLabel="database ingredient records"
+            evidenceLabel="recorded ingredient stock"
           >
             <div className="local-fridge-packages">
               {risks.slice(currentPage*6,currentPage*6+6).map((r) => (
@@ -361,9 +361,10 @@ function StockEvidence({ plan }) {
         </div>
         {pages>1 && <div className="fc-journey-controls"><button disabled={currentPage===0} onClick={()=>setPage(currentPage-1)}>Previous shelf</button><span>Shelf {currentPage+1} of {pages}</span><button disabled={currentPage>=pages-1} onClick={()=>setPage(currentPage+1)}>Next shelf</button></div>}
       </section>
-      {selected && <section className="pd-card"><KitchenStockStory risk={selected} window={plan.window}/><details className="local-deep-evidence"><summary>Inspect batches & exact calculations</summary><StockFlowEvidence risk={selected} window={plan.window}/></details></section>}
-      <details className="pd-card">
-        <summary>Exact forecast and ingredient risk evidence</summary>
+      {selected && <section className="pd-card"><KitchenStockStory risk={selected} window={plan.window}/></section>}
+      <details className="pd-card"><summary>Supporting evidence</summary><EvidenceTabs label="Kitchen inventory evidence" sections={[
+        ...(selected ? [{id:'selected',title:'Selected stock',content:<StockFlowEvidence risk={selected} window={plan.window}/>}]:[]),
+        {id:'risks',title:'Ingredient risks',content:
         <section>
           <h2>Database stock & ingredient risks</h2>
           <p>
@@ -407,9 +408,8 @@ function StockEvidence({ plan }) {
           </div>
           <RiskTable plan={plan} />
         </section>
-      </details>
-      <details className="pd-card">
-        <summary>All batch allocations and eligibility</summary>
+      },
+        {id:'batches',title:'Batch eligibility',content:
         <section>
           <h2>Batch evidence</h2>
           <div className="pd-table-wrap">
@@ -448,7 +448,8 @@ function StockEvidence({ plan }) {
             </table>
           </div>
         </section>
-      </details>
+      },
+      ]}/></details>
     </>
   );
 }

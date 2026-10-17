@@ -18,7 +18,7 @@ export default function ActionComparison({ risk, scenarioRisk, isFixture }) {
       <header>
         <span className="pd-eyebrow">
           DECISION WORKBENCH ·{" "}
-          {isFixture ? "FRONTEND FIXTURES" : "API EVIDENCE"}
+          {isFixture ? "SAMPLE DATA · NO MODEL RUN" : "API EVIDENCE"}
         </span>
         <h3>What changes for {risk.ingredient_id}?</h3>
         <p>

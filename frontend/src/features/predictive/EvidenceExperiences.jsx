@@ -21,8 +21,12 @@ const money = (n) =>
 
 export function DemandExplorer({ rows, scenario, week, isFixture }) {
   const [inspected, setInspected] = useState(null);
-  const [display, setDisplay] = useState("baseline");
-  const selected = rows.find((r) => r.meal_id === inspected) || rows[0];
+  const [display, setDisplay] = useState(scenario?'promotion':'baseline');
+  const [page,setPage]=useState(0);
+  const pages=Math.max(1,Math.ceil(rows.length/6));
+  const currentPage=Math.min(page,pages-1);
+  const visibleRows=rows.slice(currentPage*6,currentPage*6+6);
+  const selected = visibleRows.find((r) => r.meal_id === inspected) || visibleRows[0];
   const scenarioMeals = new Map(
     scenario?.meal_forecasts.map((r) => [r.meal_id, r.predicted_orders]) || [],
   );
@@ -70,8 +74,7 @@ export function DemandExplorer({ rows, scenario, week, isFixture }) {
       </div>
       {!scenario && (
         <p className="pd-note">
-          To compare a promotion, select the promotion scenario in Kitchen &
-          data.
+          To compare a promotion, use the Scenario control above.
         </p>
       )}
       <div
@@ -79,7 +82,7 @@ export function DemandExplorer({ rows, scenario, week, isFixture }) {
         role="group"
         aria-label="Meal forecast tickets"
       >
-        {rows.map((r) => (
+        {visibleRows.map((r) => (
           <button
             key={r.meal_id}
             className="fc-order-ticket"
@@ -104,10 +107,11 @@ export function DemandExplorer({ rows, scenario, week, isFixture }) {
           </button>
         ))}
       </div>
+      {pages>1 && <div className="fc-journey-controls"><button disabled={currentPage===0} onClick={()=>setPage(currentPage-1)}>Previous meals</button><span>Meals {currentPage*6+1}–{Math.min(rows.length,currentPage*6+6)} of {rows.length}</span><button disabled={currentPage===pages-1} onClick={()=>setPage(currentPage+1)}>Next meals</button></div>}
       <div className="fc-ticket-inspector" aria-live="polite">
         <h3>Meal {selected.meal_id} · the demand story</h3>
         <p>
-          {isFixture ? "Fixture estimate" : "Model estimate"}:{" "}
+          {isFixture ? "Sample estimate" : "Model estimate"}:{" "}
           <strong>{qty(selected.predicted_orders)} baseline orders</strong> for
           this week. This is expected demand, not confirmed bookings.
         </p>
@@ -192,13 +196,14 @@ export function InventoryExplorer({ data, isFixture }) {
           </button>
         ))}
       </div>
+      {rows.length>0 && <label className="local-menu-select">Ingredient<select aria-label="Ingredient" value={selected.ingredient_id} onChange={event=>setInspected(event.target.value)}>{rows.map(risk=><option key={risk.ingredient_id} value={risk.ingredient_id}>{risk.ingredient_id}</option>)}</select></label>}
       {!rows.length ? (
         <p role="status" className="pd-empty">
           No ingredients match this view.
         </p>
       ) : (
         <>
-          <PlanningFridge count={rows.length}>
+          <div className="fc-stock-layout"><PlanningFridge count={rows.length}>
             <div
               className="fc-stock-shelf"
               role="group"
@@ -254,12 +259,6 @@ export function InventoryExplorer({ data, isFixture }) {
               </span>
             </div>
             <ZeroWasteNotice waste={selected.expiring_unused_kg} carried={genpactCarriedStock(data,selected)} unit="kg" windowLabel={`during week ${data.week}`}/>
-            <ForecastReplay
-              key={`${data.center_id}:${data.week}:${data.promotion_scenario}:${selected.ingredient_id}`}
-              data={data}
-              risk={selected}
-              isFixture={isFixture}
-            />
             {selected.risk_type !== "none" && (
               <Link
                 className="fc-open-decision"
@@ -275,6 +274,8 @@ export function InventoryExplorer({ data, isFixture }) {
               </Link>
             )}
           </div>
+          </div>
+          <ForecastReplay key={`${data.center_id}:${data.week}:${data.promotion_scenario}:${selected.ingredient_id}`} data={data} risk={selected} isFixture={isFixture}/>
         </>
       )}
       <p className="pd-note">

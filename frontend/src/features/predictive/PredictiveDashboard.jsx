@@ -7,10 +7,10 @@ import { loadOptions, loadDashboard, rankRisks } from "./api";
 import "./predictive.css";
 import DecisionAssistant from "./DecisionAssistant";
 import RestaurantStations from "./RestaurantStations";
-import RescueDemo from "./RescueDemo";
 import LocalKitchen from "./LocalKitchen";
 import { DemandExplorer, InventoryExplorer } from "./EvidenceExperiences";
 import {SourceNotice, SourceSelector, BuildIdentity} from './FreshCastChrome';
+import EvidenceTabs from './EvidenceTabs';
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
 const money = (n) =>
@@ -36,14 +36,14 @@ function Empty({ text }) {
 }
 function Warnings({ items }) {
   return (
-    <details className="pd-assumptions">
-      <summary>Data sources & limitations</summary>
+    <section className="pd-assumptions">
+      <h3>Data sources &amp; limitations</h3>
       <ul>
         {[...new Set(items.filter(Boolean))].map((w, i) => (
           <li key={i}>{w}</li>
         ))}
       </ul>
-    </details>
+    </section>
   );
 }
 function Forecast({ baseline, scenario, meal, setMeal, isFixture }) {
@@ -66,9 +66,9 @@ function Forecast({ baseline, scenario, meal, setMeal, isFixture }) {
     <section className="pd-card">
       <div className="pd-section-heading">
         <div>
-          <h2>Weekly meal demand</h2>
+          <h2>What might customers order?</h2>
           <p>
-            Genpact week {baseline.week} · one-week horizon · estimated orders,
+            {isFixture?'Example':'Genpact'} week {baseline.week} · one-week horizon · estimated orders,
             not bookings
           </p>
         </div>
@@ -182,8 +182,8 @@ function Inventory({ data, isFixture }) {
         data={data}
         isFixture={isFixture}
       />
-      <details className="pd-card">
-        <summary>Exact ingredient risk table</summary>
+      <details className="pd-card"><summary>Supporting evidence</summary><EvidenceTabs label="External inventory evidence" sections={[
+        {id:'risks',title:'Ingredient risks',content:
         <section className="pd-card">
           <h2>Ingredient risk · center {data.center_id}</h2>
           <p>
@@ -233,9 +233,8 @@ function Inventory({ data, isFixture }) {
             </div>
           )}
         </section>
-      </details>
-      <details className="pd-card">
-        <summary>All batch allocations</summary>
+      },
+        {id:'batches',title:'Batch eligibility',content:
         <section className="pd-card">
           <h2>Hypothetical FEFO allocation</h2>
           <p>
@@ -283,7 +282,8 @@ function Inventory({ data, isFixture }) {
             </div>
           )}
         </section>
-      </details>
+      },
+      ]}/></details>
     </>
   );
 }
@@ -522,19 +522,12 @@ function GenpactDashboardContent({ view }) {
           <p>Spot a problem. Explore your options. Choose your next move.</p>
         </div>
         <button onClick={() => setRetry((n) => n + 1)}>
-          <RefreshCw size={16} /> Refresh
+          <RefreshCw size={16} /> Refresh data
         </button>
       </header>
       <SourceNotice source={mode}/>
-      <div className="pd-controls"><SourceSelector value={mode} onChange={value => choose('source',value)}/></div>
-      <details className="fc-context" open={view !== "decisions"}>
-        <summary>
-          Kitchen & data ·{" "}
-          {data
-            ? `Center ${data.center_id}, week ${data.week}`
-            : "configure this session"}
-        </summary>
         <div className="pd-controls">
+          <SourceSelector value={mode} onChange={value => choose('source',value)}/>
           <label>
             Fulfillment center
             <select
@@ -559,9 +552,9 @@ function GenpactDashboardContent({ view }) {
             </select>
           </label>
           <label>
-            Forecast horizon
+            Planning window
             <input
-              aria-label="Forecast horizon"
+              aria-label="Planning window"
               readOnly
               value={
                 options
@@ -582,14 +575,12 @@ function GenpactDashboardContent({ view }) {
             </select>
           </label>
         </div>
-      </details>
       <RestaurantStations
         params={params}
         baseline={current.baseline}
         status={current.status}
         isFixture={mode === "demo"}
       />
-      {view === "inventory" && <RescueDemo />}
       {current.status === "loading" && (
         <div className="pd-state" role="status">
           Loading predictive API data…
@@ -598,7 +589,7 @@ function GenpactDashboardContent({ view }) {
       {current.status === "error" && (
         <div className="pd-state" role="alert">
           <AlertTriangle />
-          <h2>Unable to load this dashboard</h2>
+          <h2>Unable to load this source</h2>
           <p>{current.error}</p>
           <button onClick={() => setRetry((n) => n + 1)}>Try again</button>
         </div>
@@ -610,7 +601,7 @@ function GenpactDashboardContent({ view }) {
         <>
           <div className="pd-context">
             <span>
-              Center {data.center_id} · Genpact week {data.week} ·{" "}
+              Center {data.center_id} · {mode==='demo'?'Example':'Genpact'} week {data.week} ·{" "}
               {data.horizon_weeks}-week horizon
             </span>
             <strong>
@@ -646,26 +637,27 @@ function GenpactDashboardContent({ view }) {
                   } else choose("scenario", "promotion");
                 }}
               />
-              <details className="pd-card">
-                <summary>Explore the promotion comparison</summary>
-                <Decisions
-                  baseline={current.baseline}
-                  scenario={current.scenario}
-                  data={data}
-                />
-              </details>
             </>
           )}
         </>
       )}
-      {metrics && (
-        <details className="pd-card">
-          <summary>How reliable is the model?</summary>
+      <details className="pd-card"><summary>Evidence &amp; data checks</summary><EvidenceTabs label="External evidence categories" sections={[
+        {id:'notes',title:'Source notes',content:<Warnings
+        items={[
+          mode==='demo'?'Fixed example responses; no forecasting model is run.':'External Genpact weekly demand; no verified mapping to local menu items.',
+          "Inventory risks are center-wide and are not filtered by the selected meal.",
+          "No orders, purchases or stock changes are executed. Weekly expiry is not proof of food safety.",
+          ...(options?.centers.warnings || []),
+          ...(options?.metrics.warnings || []),
+          metrics?.warning || "",
+          ...(data?.warnings || []),
+          ...(current.scenario ? current.baseline.warnings : []),
+        ]}
+      />},
+        ...(metrics && mode!=='demo' ? [{id:'model',title:'Model evaluation',content:
           <section className="pd-card">
             <h2>
-              {mode === "demo"
-                ? "Fixture metrics · not evaluated"
-                : "Model evaluation · returned metrics"}
+              Model evaluation · returned metrics
             </h2>
             <div className="pd-comparison">
               <div>
@@ -688,21 +680,10 @@ function GenpactDashboardContent({ view }) {
               individual meal.
             </p>
           </section>
-        </details>
-      )}
-      <Warnings
-        items={[
-          "External Genpact weekly demand; no verified mapping to local menu items.",
-          "Inventory risks are center-wide and are not filtered by the selected meal.",
-          "No orders, purchases or stock changes are executed. Weekly expiry is not proof of food safety.",
-          ...(options?.centers.warnings || []),
-          ...(options?.metrics.warnings || []),
-          metrics?.warning || "",
-          ...(data?.warnings || []),
-          ...(current.scenario ? current.baseline.warnings : []),
-        ]}
-      />
-      <BuildIdentity/>
+        }] : []),
+        ...(current.status==='ready' && view==='decisions' ? [{id:'comparison',title:'Center summary',content:<Decisions baseline={current.baseline} scenario={current.scenario} data={data}/>}]:[]),
+      ]}/></details>
+      <BuildIdentity source={mode} onSourceChange={value=>choose('source',value)}/>
     </main>
   );
 }

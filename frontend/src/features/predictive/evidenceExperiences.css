@@ -6,6 +6,9 @@
   padding: 24px;
   margin: 24px 0;
 }
+.fc-stock-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; align-items: start; }
+.fc-stock-layout > * { min-width: 0; }
+@media(max-width:1000px) { .fc-stock-layout { grid-template-columns: minmax(0,1fr); } }
 .fc-board-heading {
   display: flex;
   justify-content: space-between;
