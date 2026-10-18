@@ -1,5 +1,5 @@
 import {Link} from 'react-router-dom';
-import {planningReadiness} from '../utils/planner';
+import {planningReadiness,savedPlanIssue} from '../utils/planner';
 import {orderMenuState} from '../utils/orderQueue';
 import useOrderCatalogue from '../hooks/useOrderCatalogue';
 import BatchDeliveryDates from './BatchDeliveryDates';
@@ -18,6 +18,7 @@ export default function PlannerSetup({menus,orders,onReview,onSaved,now}) {
   {groups.needsPlan.length>0 && <div className="planner-setup-row"><div>
    <h2>{groups.needsPlan.length} upcoming {groups.needsPlan.length===1?'order needs':'orders need'} preparation review</h2>
    <p>These pending orders have future delivery dates. Review and confirm their task plans before starting work.</p>
+   {groups.needsPlan.filter(order=>savedPlanIssue(order,now)).slice(0,3).map(order=><p key={order.id}>Order #{order.id}: {savedPlanIssue(order,now)}</p>)}
   </div><button type="button" onClick={()=>onReview(groups.needsPlan[0].id)}>Plan upcoming orders</button></div>}
   {groups.missingDelivery.length>0 && <div className="planner-setup-row"><div>
    <h2>{groups.missingDelivery.length} {groups.missingDelivery.length===1?'delivery date needs':'delivery dates need'} review</h2>

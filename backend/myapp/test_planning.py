@@ -37,6 +37,19 @@ class PlanningTests(TestCase):
         lines,total=preparation_work([self.item(p,25)])
         self.assertEqual(total,130);self.assertEqual(lines[0]['batches'],3)
 
+    def test_same_day_or_tomorrow_request_never_backdates_preparation(self):
+        now=self.now.replace(hour=16)
+        p=self.product(lead_hours=0,max_preparation_days=7,max_early_minutes=0,
+            preparation_tasks=[self.task(worker=True,minutes=120)])
+        same_day=now.replace(hour=18)
+        plan=schedule_order([self.item(p)],same_day,self.store,now=now,allow_manual_review=True)
+        self.assertTrue(plan['needs_review']);self.assertIsNone(plan['start']);self.assertFalse(plan['tasks'])
+        tomorrow=(now+timedelta(days=1)).replace(hour=18)
+        plan=schedule_order([self.item(p)],tomorrow,self.store,now=now,notice_from=now)
+        self.assertGreaterEqual(plan['start'],now)
+        for task in plan['tasks']:
+            self.assertGreaterEqual(timezone.datetime.fromisoformat(task['start']),now)
+
     def test_tight_finish_recipe_can_be_placed_before_long_recipe(self):
         long=self.product(name='Long recipe', max_early_minutes=120,
             preparation_tasks=[self.task(worker=True,minutes=90)])

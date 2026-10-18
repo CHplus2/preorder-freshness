@@ -1,13 +1,24 @@
 export const malaysiaDate = value => new Date(value).toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'});
 export const duration = minutes => `${Math.floor(minutes/60)}h ${Math.round(minutes%60)}m`;
+export function savedPlanIssue(order, now=Date.now()) {
+ const tasks=order.preparation_plan?.tasks || [];
+ if(!tasks.length)return '';
+ const starts=tasks.map(t=>Date.parse(t.start || '')),ends=tasks.map(t=>Date.parse(t.end || ''));
+ if(starts.some((start,i)=>!Number.isFinite(start) || !Number.isFinite(ends[i]) || ends[i]<=start))return 'Saved task times are missing or invalid. Generate and review a new task plan.';
+ const first=Math.min(...starts),last=Math.max(...ends),created=Date.parse(order.created_at || ''),delivery=Date.parse(order.delivery_at || '');
+ if(Number.isFinite(created) && first<created)return 'Saved preparation starts before this order was placed. Review the recorded dates and replan before starting work.';
+ if(Number.isFinite(delivery) && last>delivery)return 'Saved preparation finishes after delivery. Review the delivery arrangement and task plan.';
+ if(order.status==='pending' && !order.inventory_deducted && first<now)return 'The saved preparation start has passed while this order is still pending. Confirm actual progress or replan the remaining work.';
+ return '';
+}
 export function planningReadiness(orders, now=Date.now()) {
  const groups={needsPlan:[],missingDelivery:[],overdue:[],started:[]};
  for(const order of orders || []) {
   if(!['pending','processing'].includes(order.status))continue;
   const delivery=Date.parse(order.delivery_at || '');
   if(!Number.isFinite(delivery))groups.missingDelivery.push(order);
-  else if(order.preparation_plan?.tasks?.length && !order.preparation_plan?.needs_review)continue;
   else if(delivery<=now)groups.overdue.push(order);
+  else if(order.preparation_plan?.tasks?.length && !order.preparation_plan?.needs_review && !savedPlanIssue(order,now))continue;
   else if(order.status!=='pending' || order.inventory_deducted)groups.started.push(order);
   else groups.needsPlan.push(order);
  }

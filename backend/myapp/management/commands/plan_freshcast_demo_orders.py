@@ -2,8 +2,10 @@
 import hashlib
 import json
 import os
+from copy import deepcopy
 from datetime import timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from uuid import uuid4
 
 from django.contrib.auth import get_user_model
@@ -24,7 +26,7 @@ from myapp.views.delivery_date_batch import context as date_context, propose as 
 from myapp.views.rescheduling import CUTOFF_HOURS
 from .prepare_freshcast_demo import ROOT
 
-SALT = 'fictional-preparation-batch-v2'
+SALT = 'fictional-preparation-batch-v3'
 
 
 def encode(value):
@@ -56,6 +58,45 @@ def diagnosis(order):
             'menus': [item.product_name for item in order.items.all()]}
 
 
+def fictional_finish_plan(items, order, store, now):
+    """Find a bounded demo finish allowance; never edit catalogue or step gaps."""
+    for minutes in (15, 30, 60, 90, 120, 180, 240, 360, 480, 720, 1440):
+        targets, scheduled = {}, []
+        for item in items:
+            terms = deepcopy(preparation_snapshot(item.product))
+            terms['max_early_minutes'] = max(terms['max_early_minutes'],
+                min(minutes, terms['max_preparation_days'] * 1440))
+            targets[item.pk] = terms
+            scheduled.append(SimpleNamespace(product_id=item.product_id, quantity=item.quantity,
+                product=SimpleNamespace(id=item.product_id, name=item.product_name, **terms)))
+        try:
+            plan = schedule_order(scheduled, order.delivery_at, store, now=now,
+                exclude_order_id=order.pk, notice_from=order.created_at)
+        except ValidationError:
+            continue
+        assumptions = [{'menu': item.product_name, 'maximum_early_finish_minutes': targets[item.pk]['max_early_minutes']}
+            for item in items if targets[item.pk]['max_early_minutes'] != item.product.max_early_minutes]
+        plan['fictional_timing'] = {'label': 'Fictional demo timing',
+            'note': 'Illustrative finish allowances for fictional orders; not verified food holding or storage limits.',
+            'allowances': assumptions}
+        return plan, targets
+    return None, {}
+
+
+def accepted_plan_needs_review(order, now):
+    try:
+        tasks = order.preparation_plan.get('tasks', [])
+        for task in tasks:
+            start, end = parse_datetime(task['start']), parse_datetime(task['end'])
+            if (not start or not end or timezone.is_naive(start) or timezone.is_naive(end)
+                    or end <= start or start < order.created_at or start < now
+                    or end > order.delivery_at):
+                return True
+    except (KeyError, TypeError, ValueError):
+        return True
+    return False
+
+
 class Command(BaseCommand):
     help = 'Preview/apply feasible detailed plans for fictional pending orders; diagnose unresolved dates and timings.'
 
@@ -66,6 +107,8 @@ class Command(BaseCommand):
                             help='Explicitly amend preparation snapshots to current menu timings only; preserve accepted ingredient recipes and prices.')
         parser.add_argument('--repair-unstarted-requests', action='store_true',
                             help='Return undated fictional processing records with no tasks, preparation times or stock use to pending, and propose future request dates.')
+        parser.add_argument('--demo-finish-allowance', action='store_true',
+                            help='For fictional orders only: try labelled early-finish assumptions within the existing preparation span; requires --use-current-preparation. Catalogue policies and step waits stay unchanged.')
         parser.add_argument('--apply', action='store_true')
         parser.add_argument('--confirm-fictional', action='store_true')
         parser.add_argument('--confirm', help='Signed token from the reviewed preview (valid for ten minutes).')
@@ -75,6 +118,8 @@ class Command(BaseCommand):
         actor = get_user_model().objects.filter(pk=options['actor_id'], is_staff=True).first()
         if not actor:
             raise CommandError('Choose an existing staff actor ID.')
+        if options['demo_finish_allowance'] and not options['use_current_preparation']:
+            raise CommandError('--demo-finish-allowance requires --use-current-preparation so the timings being amended are explicit.')
         previous = None
         if options['apply']:
             if not all(options[k] for k in ('confirm_fictional', 'confirm', 'backup')):
@@ -89,6 +134,7 @@ class Command(BaseCommand):
             raise CommandError('Use --apply to save a reviewed preview.')
         intent = {'order_ids': sorted(set(options['order_id'] or [])),
                   'use_current_preparation': options['use_current_preparation'],
+                  'demo_finish_allowance': options['demo_finish_allowance'],
                   'repair_unstarted_requests': options['repair_unstarted_requests']}
         if previous and previous['intent'] != intent:
             raise CommandError('Options differ from the reviewed preview. Run a new preview with these options.')
@@ -193,11 +239,13 @@ class Command(BaseCommand):
                             or order.payment_status == 'refunded' or any(p.kind == 'refund' for p in order.payment_events.all())):
                         unchanged.append(dict(facts, reason='Started work, consumed stock or refund records preserved.'))
                         continue
-                    if order.preparation_plan.get('tasks') and not order.preparation_plan.get('needs_review'):
+                    if (order.preparation_plan.get('tasks') and not order.preparation_plan.get('needs_review')
+                            and not accepted_plan_needs_review(order, now)):
                         unchanged.append(dict(facts, reason='Existing accepted task plan preserved.'))
                         continue
                     items = list(order.items.all())
                     zero_finish = []
+                    target_terms = {item.pk: preparation_snapshot(item.product) for item in items if item.product_id}
                     try:
                         if not items or any(not item.product_id for item in items):
                             raise ValidationError('Resolve missing menu references first.')
@@ -213,8 +261,17 @@ class Command(BaseCommand):
                                 if ((final['worker'] and other_final['worker'])
                                         or (final['resource'] != 'none' and final['resource'] == other_final['resource'])):
                                     zero_finish.extend([line['menu'], other['menu']])
-                        plan = schedule_order(scheduled, order.delivery_at, store,
-                            exclude_order_id=order.pk, notice_from=order.created_at, now=now)
+                        try:
+                            plan = schedule_order(scheduled, order.delivery_at, store,
+                                exclude_order_id=order.pk, notice_from=order.created_at, now=now)
+                        except ValidationError:
+                            if not intent['demo_finish_allowance']:
+                                raise
+                            plan, proposed_terms = fictional_finish_plan(items, order, store, now)
+                            if plan is None:
+                                raise ValidationError('No feasible demo plan found by extending early finish alone. '
+                                    'Preparation span, step gaps, task durations, dates, capacity and working-hour limits remain in force.')
+                            target_terms = proposed_terms
                     except ValidationError as error:
                         row = dict(facts, delivery_at=order.delivery_at, reason=error.detail)
                         if len(zero_finish) > 1:
@@ -228,9 +285,11 @@ class Command(BaseCommand):
                         preparation_start=plan['start'], preparation_end=plan['end'],
                         task_count=len(plan['tasks']), plan=plan_snapshot(plan),
                         preparation_changes=[{'item_id': item.pk, 'menu': item.product_name,
-                            'before': item.preparation_snapshot, 'after': preparation_snapshot(item.product)}
+                            'before': item.preparation_snapshot, 'after': target_terms[item.pk]}
                             for item in items if intent['use_current_preparation']
-                            and item.preparation_snapshot != preparation_snapshot(item.product)])
+                            and item.preparation_snapshot != target_terms[item.pk]])
+                    if row['plan'].get('fictional_timing'):
+                        row['fictional_timing'] = row['plan']['fictional_timing']
                     plans.append(row)
                     # Later candidates must see earlier proposed reservations.
                     order.preparation_at, order.preparation_end_at = plan['start'], plan['end']
@@ -249,7 +308,7 @@ class Command(BaseCommand):
             report = {'mode': 'preview', 'proposed_plans': plans, 'blocked_plans': blocked,
                       'proposed_request_repairs': repairs,
                       'missing_delivery_dates': missing, 'unchanged_orders': unchanged,
-                      'note': 'Only feasible detailed task plans can be saved. Explicit request repairs change only eligible fictional processing records to pending with future request dates. No payments, ingredient recipes, stock or menu policies change.'}
+                      'note': 'Only feasible detailed task plans can be saved. Explicit request repairs change only eligible fictional processing records to pending with future request dates. Demo finish allowances, when requested, amend only the fictional order preparation snapshots and stay labelled. No payments, ingredient recipes, stock or catalogue policies change.'}
             if not previous:
                 report['confirm'] = signing.dumps(signed, salt=SALT, compress=True)
             else:

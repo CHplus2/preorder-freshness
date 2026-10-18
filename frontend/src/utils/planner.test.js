@@ -53,7 +53,7 @@ test('readiness separates missing dates and overdue records from actionable upco
   pending(4,'2026-10-24T18:00:00+08:00',{preparation_plan:{needs_review:true,tasks:[]}}),
   pending(5,'2026-10-24T18:00:00+08:00',{status:'processing'}),
   pending(6,'2026-10-24T18:00:00+08:00',{inventory_deducted:true}),
-  pending(7,'2026-10-24T18:00:00+08:00',{preparation_plan:{tasks:[{name:'Manual reservation'}]}}),
+  pending(7,'2026-10-24T18:00:00+08:00',{preparation_plan:{tasks:[{name:'Manual reservation',start:'2026-10-24T14:00:00+08:00',end:'2026-10-24T16:30:00+08:00'}]}}),
   pending(8,null,{status:'delivered'}),pending(9,null,{status:'cancelled'})];
  const before=JSON.stringify(rows), groups=planningReadiness(rows,now);
  assert.deepEqual(groups.missingDelivery.map(o=>o.id),[1,2]);
@@ -75,4 +75,18 @@ test('readiness compares actual delivery instants and keeps incomplete plans und
 test('saved tasks do not hide an open order with no delivery date',()=>{
  const groups=planningReadiness([{id:11,status:'pending',delivery_at:null,preparation_plan:{tasks:[{name:'Old task'}]}}]);
  assert.deepEqual(groups.missingDelivery.map(o=>o.id),[11]);
+});
+
+test('saved tasks cannot hide overdue deliveries, pre-order preparation or missed pending work',()=>{
+ const now=Date.parse('2026-10-18T12:00:00+08:00');
+ const order=(id,delivery,created,start,end,status='pending')=>({id,status,delivery_at:delivery,created_at:created,preparation_plan:{tasks:[{name:'Cook',start,end}]}});
+ const rows=[order(1,'2026-10-17T18:00:00+08:00','2026-10-16T12:00:00+08:00','2026-10-17T14:00:00+08:00','2026-10-17T16:30:00+08:00'),
+  order(2,'2026-10-20T18:00:00+08:00','2026-10-18T10:00:00+08:00','2026-10-17T14:00:00+08:00','2026-10-17T16:30:00+08:00'),
+  order(3,'2026-10-18T18:00:00+08:00','2026-10-17T10:00:00+08:00','2026-10-18T11:00:00+08:00','2026-10-18T16:30:00+08:00'),
+  order(4,'2026-10-18T18:00:00+08:00','2026-10-17T10:00:00+08:00','2026-10-18T11:00:00+08:00','2026-10-18T16:30:00+08:00','processing')];
+ const before=JSON.stringify(rows),groups=planningReadiness(rows,now);
+ assert.deepEqual(groups.overdue.map(o=>o.id),[1]);
+ assert.deepEqual(groups.needsPlan.map(o=>o.id),[2,3]);
+ assert.deepEqual(groups.started,[]);
+ assert.equal(JSON.stringify(rows),before);
 });

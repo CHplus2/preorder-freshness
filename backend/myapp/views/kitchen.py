@@ -113,6 +113,8 @@ def manual_order_plan(request, pk):
             order.preparation_plan = dict(original_plan, mode='manual_tasks', needs_review=False, tasks=tasks,
                 manually_confirmed_by=request.user.pk, manually_confirmed_at=timezone.now().isoformat(),
                 reason=snapshot['reason'], warnings=warnings)
+        if original_plan.get('fictional_timing'):
+            order.preparation_plan['fictional_timing'] = original_plan['fictional_timing']
         order.save(update_fields=['preparation_at','preparation_end_at','preparation_plan','updated_at'])
         OrderAmendment.objects.create(order=order, actor=request.user, before=before,
             after={'manual_request_id': snapshot['request_id'], 'plan': order.preparation_plan})
@@ -184,6 +186,8 @@ def review_order_plan(request, pk):
         raise serializers.ValidationError('Add preparation steps in Menus first: '+', '.join(missing)+'.')
     plan = schedule_order(scheduled, order.delivery_at, store, exclude_order_id=order.pk, notice_from=order.created_at)
     snapshot = dict(order=order.pk,start=plan['start'].isoformat(),end=plan['end'].isoformat(),plan=plan_snapshot(plan))
+    if not adopt_current and order.preparation_plan.get('fictional_timing'):
+        snapshot['plan']['fictional_timing'] = order.preparation_plan['fictional_timing']
     snapshot['adopt_current'] = adopt_current
     snapshot['recipes'] = [{'item': i.pk, 'menu': i.product_name,
         'ingredients': [{'raw_material': r.raw_material_id, 'name': r.raw_material.name,
@@ -218,7 +222,7 @@ def review_order_plan(request, pk):
                 item.recipe_source = 'owner_amended'
                 item.packaging_unit_cost = row['packaging']
                 item.save(update_fields=['preparation_snapshot', 'recipe_source', 'packaging_unit_cost'])
-        order.preparation_at=plan['start'];order.preparation_end_at=plan['end'];order.preparation_plan=plan_snapshot(plan)
+        order.preparation_at=plan['start'];order.preparation_end_at=plan['end'];order.preparation_plan=snapshot['plan']
         order.save(update_fields=['preparation_at','preparation_end_at','preparation_plan','updated_at'])
         OrderAmendment.objects.create(order=order, actor=request.user, before=before, after=snapshot)
         return Response({'order':OrderSerializer(order).data})

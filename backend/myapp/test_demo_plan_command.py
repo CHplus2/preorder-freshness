@@ -148,7 +148,8 @@ class DemoPlanCommandTests(TestCase):
         self.assertEqual(item.packaging_unit_cost, cost)
 
     def test_existing_plans_and_completed_history_preserved(self):
-        self.order.preparation_plan = {'tasks': [{'name': 'Accepted'}]}; self.order.save()
+        self.order.preparation_plan = {'tasks': [{'name': 'Accepted',
+            'start':(self.date-timedelta(hours=3)).isoformat(),'end':(self.date-timedelta(hours=2)).isoformat()}]}; self.order.save()
         history = self.order_for(status='delivered', payment_status='paid')
         preview = self.command('--use-current-preparation')
         self.assertFalse(preview['proposed_plans'])
@@ -321,3 +322,67 @@ class DemoPlanCommandTests(TestCase):
         self.assertEqual(len(result['repaired_request_ids']),2)
         self.assertEqual(OrderAmendment.objects.count(),5)
         self.assertFalse(Order.objects.filter(delivery_at__isnull=True).exists())
+
+    def test_labelled_demo_allowance_fixes_eight_orders_without_changing_catalogue(self):
+        self.order.delete()
+        self.menu.max_early_minutes=0;self.menu.save()
+        other=Product.objects.create(name='Second menu',price=10,lead_hours=0,max_early_minutes=0,
+            preparation_tasks=self.menu.preparation_tasks)
+        for day in range(8):
+            order=self.order_for(delivery_at=self.date+timedelta(days=day))
+            OrderItem.objects.create(order=order,product=other,product_name=other.name,quantity=1,unit_price=10,subtotal=10)
+        original_items=list(OrderItem.objects.values())
+        self.assertEqual(len(self.command()['blocked_plans']),8)
+        args=['--use-current-preparation','--demo-finish-allowance']
+        preview=self.command(*args)
+        self.assertEqual(len(preview['proposed_plans']),8)
+        self.assertFalse(preview['blocked_plans'])
+        self.assertEqual(list(OrderItem.objects.values()),original_items)
+        for row in preview['proposed_plans']:
+            self.assertTrue(row['fictional_timing']['allowances'])
+            self.assertTrue(all(change['after']['max_early_minutes']==30 for change in row['preparation_changes']))
+            self.assertTrue(all(change['after']['preparation_tasks']==change['before']['preparation_tasks'] for change in row['preparation_changes']))
+        with TemporaryDirectory() as folder:result=self.apply(preview,folder,*args)
+        self.assertEqual(len(result['planned_order_ids']),8)
+        self.menu.refresh_from_db();other.refresh_from_db()
+        self.assertEqual(self.menu.max_early_minutes,0);self.assertEqual(other.max_early_minutes,0)
+        self.assertFalse(PaymentEvent.objects.exists());self.assertFalse(IngredientConsumption.objects.exists())
+        from rest_framework.test import APIClient
+        client=APIClient();client.force_authenticate(self.owner)
+        order=Order.objects.first();url=f'/api/admin/orders/{order.pk}/preparation-plan/'
+        response=client.post(url,{},format='json')
+        self.assertEqual(response.status_code,200,response.data)
+        self.assertIn('fictional_timing',response.data['preview']['plan'])
+        saved=client.post(url,{'confirm':response.data['confirm']},format='json')
+        self.assertEqual(saved.status_code,200,saved.data)
+        order.refresh_from_db();self.assertIn('fictional_timing',order.preparation_plan)
+        manual_url=f'/api/admin/orders/{order.pk}/manual-plan/'
+        manual=client.post(manual_url,{'mode':'window','start':order.preparation_at.isoformat(),
+            'end':order.preparation_end_at.isoformat(),'reason':'Fictional owner-reviewed test window'},format='json')
+        self.assertEqual(manual.status_code,200,manual.data)
+        confirmed=client.post(manual_url,{'confirm':manual.data['confirm']},format='json')
+        self.assertEqual(confirmed.status_code,200,confirmed.data)
+        order.refresh_from_db();self.assertIn('fictional_timing',order.preparation_plan)
+
+    def test_demo_allowance_does_not_move_work_before_order_or_override_closures(self):
+        self.menu.max_early_minutes=0;self.menu.save()
+        other=Product.objects.create(name='Another menu',price=10,lead_hours=0,max_early_minutes=0,
+            preparation_tasks=self.menu.preparation_tasks)
+        OrderItem.objects.create(order=self.order,product=other,product_name=other.name,quantity=1,unit_price=10,subtotal=10)
+        KitchenBlock.objects.create(start_at=self.date-timedelta(days=30),end_at=self.date,reason='Closed')
+        args=['--use-current-preparation','--demo-finish-allowance']
+        preview=self.command(*args)
+        self.assertFalse(preview['proposed_plans']);self.assertEqual(len(preview['blocked_plans']),1)
+        self.order.refresh_from_db();self.assertFalse(self.order.preparation_plan)
+        with self.assertRaises(CommandError):self.command('--demo-finish-allowance')
+
+    def test_pre_order_or_missed_saved_plan_is_replanned_for_pending_request(self):
+        start=self.order.created_at-timedelta(days=1)
+        self.order.preparation_at=start;self.order.preparation_end_at=start+timedelta(minutes=20)
+        self.order.preparation_plan={'tasks':[{'name':'Old saved task','start':start.isoformat(),'end':(start+timedelta(minutes=20)).isoformat()}]}
+        self.order.save()
+        now=timezone.now()
+        preview=self.command()
+        self.assertEqual(len(preview['proposed_plans']),1)
+        start=timezone.datetime.fromisoformat(preview['proposed_plans'][0]['preparation_start'])
+        self.assertGreaterEqual(start,now);self.assertGreaterEqual(start,self.order.created_at)

@@ -34,6 +34,12 @@ try {
   assert.match(upcoming,/1 active menu needs preparation steps/);
   assert.match(upcoming,/1 upcoming order needs preparation review/);
   assert.match(upcoming,/Plan upcoming orders/);
+  const corrupted=setup([{id:32,status:'pending',created_at:'2026-10-17T10:00:00+08:00',delivery_at:'2026-10-24T18:00:00+08:00',preparation_plan:{tasks:[{start:'2026-10-16T14:00:00+08:00',end:'2026-10-16T16:00:00+08:00'}]}}]);
+  assert.match(corrupted,/starts before this order was placed/);
+  assert.match(corrupted,/1 upcoming order needs preparation review/);
+  const {default:PlanTimingNotice}=await server.ssrLoadModule('/src/components/PlanTimingNotice.jsx');
+  const demo=renderToStaticMarkup(createElement(PlanTimingNotice,{order:{preparation_plan:{fictional_timing:{allowances:[{menu:'Nasi Ayam',maximum_early_finish_minutes:120}]}}}}));
+  assert.match(demo,/Fictional demo timing/);assert.match(demo,/not verified food holding/);assert.match(demo,/2h 0m/);
   const {default:TaskConflicts}=await server.ssrLoadModule('/src/components/TaskConflicts.jsx');
   const conflictHtml=renderToStaticMarkup(createElement(TaskConflicts,{onReview:()=>{},conflicts:[{kind:'Worker',name:'Mix batter',orderId:21,start:Date.parse('2026-10-03T10:00:00+08:00'),end:Date.parse('2026-10-03T11:00:00+08:00')}]}));
   for(const value of ['Mix batter','Review order #21','10:00','11:00','Worker'])assert.ok(conflictHtml.includes(value));

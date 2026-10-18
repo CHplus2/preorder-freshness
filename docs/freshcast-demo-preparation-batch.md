@@ -112,3 +112,70 @@ After updating from the earlier command, generate a **new preview**. Old tokens
 are intentionally incompatible with the corrected confirmation format. Keep the
 same PowerShell window and local SECRET_KEY between preview and apply. This key
 signs local maintenance previews; it does not change Vercel or database settings.
+
+## Finish the eight remaining fictional requests
+
+The owner confirmed a successful apply: requests #2 and #14 received dates and
+pending status; #8, #15 and #17 received detailed plans. Eight requests remain:
+#2, #4, #7, #9, #10, #13, #14 and #16. Their recorded zero-minute finish allowances
+cannot accommodate multiple recipes sharing the worker and equipment.
+
+The optional `--demo-finish-allowance --use-current-preparation` mode tries
+early-finish allowances of 15, 30, 60, 90, 120, 180, 240, 360, 480, 720 and 1440
+minutes, stopping at the first feasible candidate per order. These are **coarse
+fictional scenario assumptions, not a mathematical minimum or verified food
+holding limits**. The existing preparation span caps each menu's allowance.
+
+This mode changes only the accepted preparation snapshots of successfully
+planned fictional orders. It does not edit the catalogue, change preparation
+spans or step waits, shorten cooking, overlap workers/equipment, move delivery
+dates or plan before the current time. If changing early finish alone cannot
+produce a valid plan, the request stays blocked. New customer orders continue
+using the catalogue's actual settings. Supplier, holding and storage processes
+must be reviewed separately for a real kitchen.
+
+Saved plans carry `fictional_timing` metadata. Planner visibly labels the
+assumptions, and subsequent owner review/manual edits preserve that label while
+using the accepted preparation terms. Explicit adoption of the current catalogue
+returns to those current terms and drops the old scenario label.
+
+The short runner handles fresh tokens, error messages and private backups. In
+the **same working PowerShell database session**, from the repository root:
+
+```powershell
+git pull --ff-only origin integration/dormathon-demo
+if ($LASTEXITCODE -ne 0) { throw 'Git update failed.' }
+.\backend\venv\Scripts\python.exe scripts/finish_freshcast_demo.py
+```
+
+The default prints the proposed timings in Malaysia time and makes no persistent
+changes. After reviewing those fictional assumptions, save with:
+
+```powershell
+.\backend\venv\Scripts\python.exe scripts/finish_freshcast_demo.py --apply
+```
+
+Only the eight IDs above are in scope. The runner uses the existing database
+configuration, refuses missing/non-PostgreSQL configuration or a schema other
+than `django_app`, never prints credentials, and invokes the current virtual
+environment's Python. It creates a temporary local signing key when necessary,
+within one process, then creates a new signed preview for apply. No token needs
+to be copied. Before-backups go to `FreshCast-backups` in the user's home folder.
+Successful existing plans are preserved on repeat; a no-op returns a readable
+message. The final applied IDs and blocker count determine what was actually
+saved; a code deployment alone does not alter the database.
+
+## Earlier preparation and saved-plan warnings
+
+The current automatic scheduler bounds preparation by the current time and the
+order's notice period. Same-day orders that cannot fit are rejected or returned
+as unscheduled review requests, rather than placed before the order date.
+The owner's earlier reported case could not be independently inspected because
+its order ID/timestamps were unavailable; its historical cause is unconfirmed.
+
+Planner previously checked for saved tasks before checking whether delivery was
+past due. It now surfaces overdue deliveries even when tasks exist, flags saved
+tasks before order creation or after delivery, and brings missed pending starts
+back to preparation review. Order cards show order-placement and preparation
+timestamps in Malaysia time. Recorded tasks remain visible; warnings do not
+rewrite records or assume that a processing order has not started work.
