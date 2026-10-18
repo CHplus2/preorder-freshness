@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {dailyWork,planningReadiness} from './planner.js';
+import {dailyWork,planningReadiness,duration} from './planner.js';
+test('fractional work minutes round without displaying 60 minutes',()=>{assert.equal(duration(119.9),'2h 0m');assert.equal(duration(60.1),'1h 0m')});
 const date='2026-09-20';
 const task=(start,end,worker=true)=>({name:'Task',start:date+'T'+start+':00+08:00',end:date+'T'+end+':00+08:00',worker,resource:worker?'stove':'fridge'});
 const plan=tasks=>({availability:{open_hour:8,close_hour:16,blocks:[]},orders:[{id:1,status:'pending',items:[],preparation_plan:{tasks}}]});

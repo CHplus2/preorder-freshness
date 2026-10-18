@@ -60,6 +60,15 @@ class ProductSerializer(serializers.ModelSerializer):
         from .services.scheduling import validate_tasks
         return validate_tasks(value)
 
+    def validate(self, attrs):
+        if self.instance is not None and not {'max_preparation_days', 'max_early_minutes'} & attrs.keys():
+            return attrs
+        span = attrs.get('max_preparation_days', getattr(self.instance, 'max_preparation_days', 7))
+        early = attrs.get('max_early_minutes', getattr(self.instance, 'max_early_minutes', 120))
+        if early > span*1440:
+            raise serializers.ValidationError({'max_early_minutes': 'Early finish cannot exceed the menu preparation span. Review both settings together.'})
+        return attrs
+
     def validate_ingredients(self, value):
         ids = [x['raw_material'].pk for x in value]
         if len(ids) != len(set(ids)):
@@ -81,7 +90,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'preparation_minutes': {'min_value': 1, 'max_value': 1440},
             'additional_batch_minutes': {'min_value': 1, 'max_value': 1440},
             'packing_minutes_per_portion': {'min_value': 0, 'max_value': 60},
-            'max_early_minutes': {'min_value': 0, 'max_value': 720},
+            'max_early_minutes': {'min_value': 0, 'max_value': 43200},
         }
 
 

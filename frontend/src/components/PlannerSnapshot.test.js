@@ -40,6 +40,16 @@ try {
   const {default:PlanTimingNotice}=await server.ssrLoadModule('/src/components/PlanTimingNotice.jsx');
   const demo=renderToStaticMarkup(createElement(PlanTimingNotice,{order:{preparation_plan:{fictional_timing:{allowances:[{menu:'Nasi Ayam',maximum_early_finish_minutes:120}]}}}}));
   assert.match(demo,/Fictional demo timing/);assert.match(demo,/not verified food holding/);assert.match(demo,/2h 0m/);
+  const {default:PreparationDays}=await server.ssrLoadModule('/src/components/PreparationDays.jsx');
+  const days=renderToStaticMarkup(createElement(PreparationDays,{plan:{daily_work:[
+    {date:'2026-10-19',hands_on_minutes:490,pause_minutes:240},
+    {date:'2026-10-20',hands_on_minutes:510,pause_minutes:480}]}}));
+  assert.match(days,/Preparation across 2 days/);assert.match(days,/8h 10m hands-on/);
+  assert.equal(renderToStaticMarkup(createElement(PreparationDays,{plan:{daily_work:[{date:'2026-10-19'}]}})),'');
+  const {default:PreparationTasks}=await server.ssrLoadModule('/src/components/PreparationTasks.jsx');
+  const editor=renderToStaticMarkup(createElement(PreparationTasks,{value:{preparation_tasks:[{name:'Prep',resource:'prep_table',worker:true,minutes:1000,splittable:true,max_pause_minutes:720,pause_resource:'fridge'}]},onChange:()=>{}}));
+  assert.match(editor,/Allow this preparation work to pause and resume/);assert.match(editor,/Maximum pause between work sessions/);assert.match(editor,/Fridge space/);
+  assert.match(editor,/value="720"/);
   const {default:TaskConflicts}=await server.ssrLoadModule('/src/components/TaskConflicts.jsx');
   const conflictHtml=renderToStaticMarkup(createElement(TaskConflicts,{onReview:()=>{},conflicts:[{kind:'Worker',name:'Mix batter',orderId:21,start:Date.parse('2026-10-03T10:00:00+08:00'),end:Date.parse('2026-10-03T11:00:00+08:00')}]}));
   for(const value of ['Mix batter','Review order #21','10:00','11:00','Worker'])assert.ok(conflictHtml.includes(value));

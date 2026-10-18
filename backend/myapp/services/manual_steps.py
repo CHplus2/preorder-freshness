@@ -27,7 +27,7 @@ def edit_steps(order, changes, store):
         if not task.get('overnight') and (a.date()!=b.date() or a.hour<store.kitchen_open_hour or (b.hour,b.minute,b.second)>(store.kitchen_close_hour,0,0)):
             warnings.append(f'{task["menu"]}: {task["name"]} falls outside kitchen working hours.')
     for rows in groups.values():
-        rows.sort(key=lambda t:t.get('sequence',0))
+        rows.sort(key=lambda t:(t.get('sequence',0),t.get('segment_index',0)))
         for earlier, later in zip(rows, rows[1:]):
             gap = parse_datetime(later['start'])-parse_datetime(earlier['end'])
             if gap < timedelta(0):

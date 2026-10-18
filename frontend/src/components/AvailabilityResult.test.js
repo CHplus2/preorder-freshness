@@ -11,6 +11,11 @@ try {
   assert.match(render({}), /Your requested time is available/);
   assert.match(render({}), /continue to place your preorder/);
   assert.match(render({}), /stock is not reserved/);
+  const multi=render({quote:{...quote,plan:{...quote.plan,daily_work:[
+    {date:'2026-10-19',hands_on_minutes:490,pause_minutes:240,task_count:2},
+    {date:'2026-10-20',hands_on_minutes:510,pause_minutes:480,task_count:2}]}}});
+  assert.match(multi,/Preparation across 2 days/);assert.match(multi,/8h 10m hands-on/);
+  assert.match(multi,/planned pause/);assert.match(multi,/Your requested time is available/);
   assert.match(render({quote:{...quote, plan:{...quote.plan, procurement_required:true}}}), /needs to purchase ingredients/);
   const manual=render({quote:{...quote,plan:{needs_review:true,preparation_at:null}}});
   assert.match(manual,/Kitchen confirmation needed/);

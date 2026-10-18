@@ -115,6 +115,10 @@ def manual_order_plan(request, pk):
                 reason=snapshot['reason'], warnings=warnings)
         if original_plan.get('fictional_timing'):
             order.preparation_plan['fictional_timing'] = original_plan['fictional_timing']
+        from ..services.work_sessions import work_days
+        days = work_days(order.preparation_plan['tasks'])
+        order.preparation_plan.update(daily_work=days, calendar_days=len(days),
+            hands_on_days=sum(day['hands_on_minutes'] > 0 for day in days))
         order.save(update_fields=['preparation_at','preparation_end_at','preparation_plan','updated_at'])
         OrderAmendment.objects.create(order=order, actor=request.user, before=before,
             after={'manual_request_id': snapshot['request_id'], 'plan': order.preparation_plan})

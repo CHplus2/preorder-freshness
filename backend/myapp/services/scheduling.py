@@ -3,12 +3,14 @@ Existing bookings are immutable. Conservative greedy placement may reject a plan
 that a human could improve; it never promises globally optimal packing.
 """
 from datetime import datetime, time, timedelta
+from collections import Counter
 from math import ceil
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.db.models import Sum
 from rest_framework.exceptions import ValidationError
 from ..models import Order, OrderItem, KitchenBlock
+from .work_sessions import PAUSABLE_RESOURCES, resumable_sessions, work_days
 
 RESOURCES = {'prep_table', 'stove', 'oven', 'rice_cooker', 'fridge', 'packing_area', 'none'}
 
@@ -26,18 +28,25 @@ def validate_tasks(value):
         row = {'name': name.strip(), 'resource': task.get('resource', 'prep_table')}
         if not isinstance(row['resource'], str) or row['resource'] not in RESOURCES:
             raise ValidationError('Choose a supported kitchen resource.')
-        for key, default, low, high in [('minutes', 1, 1, 43200), ('additional_batch_minutes', 0, 0, 43200), ('max_wait_minutes', 0, 0, 10080)]:
+        for key, default, low, high in [('minutes', 1, 1, 43200), ('additional_batch_minutes', 0, 0, 43200), ('max_wait_minutes', 0, 0, 10080), ('max_pause_minutes', 0, 0, 10080)]:
             v = task.get(key, default)
             if type(v) is not int or not low <= v <= high:
                 raise ValidationError(f'{name}: {key.replace("_", " ")} must be a whole number between {low} and {high}.')
             row[key] = v
-        for key, default in [('worker', True), ('overnight', False), ('independent_batches', False)]:
+        for key, default in [('worker', True), ('overnight', False), ('independent_batches', False), ('splittable', False)]:
             v = task.get(key, default)
             if type(v) is not bool:
                 raise ValidationError(f'{name}: choose yes or no for {key}.')
             row[key] = v
         if row['overnight'] and (row['worker'] or row['resource'] not in {'fridge', 'none'}):
             raise ValidationError('Only unattended fridge/rest steps can run outside working hours. Split setup and finishing into attended steps.')
+        row['pause_resource'] = task.get('pause_resource', 'none')
+        if not isinstance(row['pause_resource'], str) or row['pause_resource'] not in {'fridge', 'none'}:
+            raise ValidationError(f'{name}: choose fridge or no dedicated equipment for pause storage.')
+        if row['splittable'] and (not row['worker'] or row['resource'] not in PAUSABLE_RESOURCES or row['overnight']):
+            raise ValidationError(f'{name}: only attended prep-table, packing or no-equipment work may pause. Cooking and unattended steps must remain uninterrupted.')
+        if row['splittable'] and not row['max_pause_minutes']:
+            raise ValidationError(f'{name}: record a positive maximum pause before allowing this work to resume later.')
         clean.append(row)
     if len({t["independent_batches"] for t in clean}) > 1:
         raise ValidationError("Choose the same batch scheduling mode for every recipe step.")
@@ -94,7 +103,7 @@ def place_line(line, ready, advance, busy, store):
     finish_limit = ready-timedelta(minutes=line['max_early_minutes'])
     working_minutes = (store.kitchen_close_hour-store.kitchen_open_hour)*60
     for task in line['tasks']:
-        if not task['overnight'] and task['minutes'] > working_minutes:
+        if not task['overnight'] and not task.get('splittable') and task['minutes'] > working_minutes:
             raise ValidationError(f'{line["menu"]}: {task["name"]} needs {task["minutes"]} uninterrupted minutes, '
                 f'but kitchen hours allow {working_minutes} minutes per day. A later date alone will not fix this. '
                 'Ask the owner to review portions per batch, durations or independent-batch planning.')
@@ -105,6 +114,19 @@ def place_line(line, ready, advance, busy, store):
         shift = None
         for index in range(len(line['tasks'])-1, -1, -1):
             task = line['tasks'][index]
+            if task.get('splittable'):
+                sessions = resumable_sessions(task, next_start, earliest, busy, store)
+                actual_end = sessions[-1]['end']
+                earliest_end = finish_limit if index == len(line['tasks'])-1 else next_start-timedelta(minutes=task['max_wait_minutes'])
+                if actual_end < earliest_end:
+                    if index < len(line['tasks'])-1:
+                        shift = max(timedelta(minutes=1), earliest_end-actual_end)
+                        break
+                    raise ValidationError(f'{line["menu"]}: resumable work would finish before its permitted early-finish limit.')
+                trial.extend(dict(row, menu=line['menu'], product_id=line['product_id'],
+                    sequence=index+1, portions=line['portions'], batch_number=line.get('batch_number')) for row in sessions)
+                next_start = sessions[0]['start']
+                continue
             duration = timedelta(minutes=task['minutes'])
             end = next_start
             earliest_end = finish_limit if index == len(line['tasks'])-1 else next_start-timedelta(minutes=task['max_wait_minutes'])
@@ -163,8 +185,11 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
     if delivery_at <= now or delivery_at > now+timedelta(days=90):
         raise ValidationError('Choose a future delivery within the next 90 days.')
     booked = dict(OrderItem.objects.filter(product_id__in=[i.product_id for i in items], order__delivery_at__date=local.date()).exclude(order__status='cancelled').exclude(order_id=exclude_order_id).values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
+    requested = Counter()
     for item in items:
-        if booked.get(item.product_id, 0)+item.quantity > item.product.daily_capacity:
+        requested[item.product_id] += item.quantity
+    for item in items:
+        if booked.get(item.product_id, 0)+requested[item.product_id] > item.product.daily_capacity:
             raise ValidationError(f'{item.product.name} has insufficient capacity on this day. Choose another date.')
     advance = max(now, (notice_from or now)+timedelta(hours=max(i.product.lead_hours for i in items)))
     if allow_manual_review and delivery_at < advance+timedelta(minutes=store.delivery_buffer_minutes):
@@ -208,8 +233,12 @@ def automatic_plan(items, delivery_at, store, exclude_order_id, advance):
     else:
         raise failure
     planned.sort(key=lambda t:t['start'])
+    days = work_days(planned)
     return dict(start=min(t['start'] for t in planned), end=max(t['end'] for t in planned),
-                minutes=minutes, hands_on_minutes=sum(t['minutes'] for t in planned if t['worker']),
+                minutes=sum(t['minutes'] for t in planned), recipe_minutes=minutes,
+                hands_on_minutes=sum(t['minutes'] for t in planned if t['worker']),
+                pause_minutes=sum(t['minutes'] for t in planned if t.get('segment_role') == 'pause'),
+                daily_work=days, calendar_days=len(days), hands_on_days=sum(d['hands_on_minutes'] > 0 for d in days),
                 tasks=[dict(t,start=t['start'].isoformat(),end=t['end'].isoformat()) for t in planned],
                 lines=lines, delivery_buffer_minutes=store.delivery_buffer_minutes,
                 lead_hours=max(i.product.lead_hours for i in items))

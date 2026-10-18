@@ -10,3 +10,10 @@ test('basic cook/pack formula matches backend example',()=>{const p=preparationE
 test('incomplete inputs do not produce misleading zero estimates',()=>{for(const q of ['',0,'bad','1.5'])assert.ok(preparationEstimate(menu,q).error);assert.ok(preparationEstimate({...menu,batch_size:''},10).error);assert.ok(preparationEstimate({...menu,preparation_tasks:[{...step,minutes:''}]},10).error);});
 test('unattended overnight steps are exempt from work-window warning',()=>{const p=preparationEstimate({...menu,preparation_tasks:[{...step,minutes:1440,worker:false,overnight:true}]},1,store);assert.equal(p.warnings.length,1);assert.match(p.warnings[0],/worker time/);});
 test('warns about oversized steps and capacity, without assuming unknown hours',()=>{const m={...menu,daily_capacity:1,preparation_tasks:[{...step,minutes:800}]};assert.equal(preparationEstimate(m,2,store).warnings.length,2);assert.equal(preparationEstimate(m,2).warnings.length,1);});
+test('resumable prep reports workday lower bound without treating it as one uninterrupted task',()=>{
+ const m={batch_size:1,preparation_tasks:[{...step,resource:'prep_table',minutes:1000,splittable:true,max_pause_minutes:720,pause_resource:'fridge'}]};
+ const result=preparationEstimate(m,1,store);
+ assert.equal(result.total,1000);assert.equal(result.minimumWorkDays,2);assert.equal(result.steps[0].splittable,true);
+ assert.equal(result.warnings.length,0);
+ for(const change of [{max_pause_minutes:0},{resource:'stove'},{worker:false},{pause_resource:'oven'}])assert.ok(preparationEstimate({...m,preparation_tasks:[{...m.preparation_tasks[0],...change}]},1,store).error);
+});

@@ -1,5 +1,5 @@
 export const malaysiaDate = value => new Date(value).toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'});
-export const duration = minutes => `${Math.floor(minutes/60)}h ${Math.round(minutes%60)}m`;
+export const duration = minutes => {const rounded=Math.round(minutes);return `${Math.floor(rounded/60)}h ${rounded%60}m`;};
 export function savedPlanIssue(order, now=Date.now()) {
  const tasks=order.preparation_plan?.tasks || [];
  if(!tasks.length)return '';
