@@ -5,6 +5,13 @@ Dashboard branch: `feature/ai-dashboard`.
 
 ## Availability and scope
 
+Staff recovery download: `GET /api/admin/predictive/model-backup/` uses the existing
+staff session and returns the fixed checksum-verified original runtime archive
+(`application/gzip`, attachment, `X-Checksum-SHA256`, private/no-store). It accepts
+no parameters, rejects nonstaff access and returns 503 if the archive is missing
+or corrupt. It exports no kitchen database records. The separate bearer-only
+deployment transfer route is unchanged. See [GitHub backups](github-backups.md).
+
 **The five Genpact endpoints, `backtest/`, `local-plan/` and `local-scenario/` are implemented**.
 The local plan reads database orders and stock without using a model; its distinct
 schema is documented below. The evaluated Genpact CatBoost artifact

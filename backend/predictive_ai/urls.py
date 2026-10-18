@@ -4,6 +4,7 @@ from myapp.views.local_planning import local_planning, local_scenario, local_for
 from myapp.views.kitchen_reviews import local_reviews, review_outcome
 
 urlpatterns=[
+    path('model-backup/', predictive.model_backup, name='model-backup'),
     path('local-reviews/', local_reviews),
     path('local-review-outcomes/', review_outcome),
     path('local-decisions/', local_planning, name='local-decisions'),

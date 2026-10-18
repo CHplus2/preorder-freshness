@@ -1,0 +1,52 @@
+name: Back up original Genpact model
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: original-genpact-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Download and verify the existing original archive
+        env:
+          FRESHCAST_BUNDLE_TOKEN: ${{ secrets.FRESHCAST_BUNDLE_TOKEN }}
+        run: python scripts/prepare_genpact_release.py --output "$RUNNER_TEMP/original-model"
+
+      - name: Publish a verified GitHub backup release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag=freshcast-genpact-original-697f8e10ee6b
+          mkdir "$RUNNER_TEMP/recheck"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release download "$tag" --pattern freshcast-runtime-bundle.tar.gz --dir "$RUNNER_TEMP/recheck"
+          else
+            gh release create "$tag" --target "$GITHUB_SHA" --latest=false \
+              --title "FreshCast original Genpact model backup" \
+              --notes-file docs/github-backups.md \
+              "$RUNNER_TEMP/original-model/freshcast-runtime-bundle.tar.gz" \
+              "$RUNNER_TEMP/original-model/SHA256SUMS" \
+              "$RUNNER_TEMP/original-model/manifest.json" \
+              "$RUNNER_TEMP/original-model/RESTORE.md"
+            gh release download "$tag" --pattern freshcast-runtime-bundle.tar.gz --dir "$RUNNER_TEMP/recheck"
+          fi
+          cp "$RUNNER_TEMP/original-model/SHA256SUMS" "$RUNNER_TEMP/recheck/SHA256SUMS"
+          cd "$RUNNER_TEMP/recheck"
+          sha256sum --check SHA256SUMS
+          echo "Original model release downloaded back and checksum verified." >> "$GITHUB_STEP_SUMMARY"

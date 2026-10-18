@@ -3,6 +3,18 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from predictive_ai import service
+from django.views.decorators.cache import cache_control
+
+
+@cache_control(private=True, no_store=True)
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def model_backup(request):
+    """Owner download using the existing staff session; no database export."""
+    if request.query_params:
+        return Response({'detail':'This download does not accept parameters.'},status=400)
+    from predictive_ai.bundle_export import verified_bundle_response
+    return verified_bundle_response()
 
 
 def dispatch(request, operation):
