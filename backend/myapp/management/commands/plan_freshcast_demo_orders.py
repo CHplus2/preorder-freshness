@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+from datetime import timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -9,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.core import serializers, signing
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.db.models import Prefetch
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
@@ -19,9 +21,10 @@ from myapp.services.commitments import preparation_snapshot, scheduled_item
 from myapp.services.scheduling import plan_snapshot, preparation_work, schedule_order
 from myapp.services.initial_delivery import initial_delivery_plan
 from myapp.views.delivery_date_batch import context as date_context, propose as propose_dates
+from myapp.views.rescheduling import CUTOFF_HOURS
 from .prepare_freshcast_demo import ROOT
 
-SALT = 'fictional-preparation-batch-v1'
+SALT = 'fictional-preparation-batch-v2'
 
 
 def encode(value):
@@ -30,6 +33,19 @@ def encode(value):
 
 def digest(value):
     return hashlib.sha256(encode(value).encode()).hexdigest()
+
+
+def committed_changes(plans, repairs):
+    """Sign saved decisions, independent of ordering and explanatory failure text."""
+    return {
+        'plans': sorted(plans, key=lambda row: row['order_id']),
+        'repairs': [dict(order_id=row['order_id'], before_status=row['before_status'],
+            after_status=row['after_status'], delivery_at=row['delivery_at'],
+            payment_status=row['payment_status'],
+            needs_review=row['request_plan']['needs_review'], tasks=row['request_plan']['tasks'],
+            delivery_buffer_minutes=row['request_plan']['delivery_buffer_minutes'])
+            for row in sorted(repairs, key=lambda row: row['order_id'])],
+    }
 
 
 def diagnosis(order):
@@ -107,7 +123,9 @@ class Command(BaseCommand):
             if previous and previous['fingerprint'] != fingerprint:
                 raise CommandError('Orders, menus or kitchen availability changed. Run a new preview.')
             orders = Order.objects.filter(status__in=['pending', 'processing']).prefetch_related(
-                'items__product', 'items__consumption', 'payment_events').order_by('delivery_at', 'pk')
+                Prefetch('items', queryset=OrderItem.objects.select_related('product')
+                    .prefetch_related('consumption').order_by('pk')),
+                'payment_events').order_by('delivery_at', 'pk')
             if intent['order_ids']:
                 orders = orders.filter(pk__in=intent['order_ids'])
             orders = list(orders)
@@ -128,8 +146,14 @@ class Command(BaseCommand):
                             order.status = 'pending'
                             order.save(update_fields=['status'])
                             eligible.append(order)
-                    _, _, counts = date_context(store, now)
-                    dates, _ = propose_dates(eligible, store, now, counts)
+                    if previous:
+                        # Confirmation retains exactly the dates reviewed by the
+                        # owner. Re-running the suggestion algorithm can choose a
+                        # different day as its rolling notice cutoff advances.
+                        dates = previous['request_dates']
+                    else:
+                        _, _, counts = date_context(store, now)
+                        dates, _ = propose_dates(eligible, store, now, counts)
                     by_id = {row['order_id']: row for row in dates}
                     for order in eligible:
                         if order.pk not in by_id:
@@ -137,7 +161,20 @@ class Command(BaseCommand):
                             order.save(update_fields=['status'])
                             continue
                         date = parse_datetime(by_id[order.pk]['delivery_at'])
-                        request_plan = initial_delivery_plan(list(order.items.all()), date, store, order.pk, now)
+                        if previous:
+                            terms = [scheduled_item(item) if item.preparation_snapshot else item
+                                for item in order.items.all()]
+                            earliest = now + timedelta(hours=max(CUTOFF_HOURS,
+                                max(item.product.lead_hours for item in terms)),
+                                minutes=store.delivery_buffer_minutes)
+                            if date <= earliest:
+                                raise CommandError(f'Order #{order.pk}: the reviewed delivery date is now too close '
+                                    'for the required notice and delivery buffer. No changes saved. Run a fresh preview.')
+                        try:
+                            request_plan = initial_delivery_plan(list(order.items.all()), date, store, order.pk, now)
+                        except ValidationError as error:
+                            raise CommandError(f'Order #{order.pk}: the reviewed delivery date is no longer valid: '
+                                f'{error.detail}. Run a fresh preview.') from None
                         repairs.append(dict(order_id=order.pk, before_status='processing', after_status='pending',
                             old_delivery_at=None, delivery_at=date, request_plan=plan_snapshot(request_plan),
                             payment_status=order.payment_status,
@@ -200,8 +237,12 @@ class Command(BaseCommand):
                     order.preparation_plan = row['plan']
                     order.save(update_fields=['preparation_at', 'preparation_end_at', 'preparation_plan'])
                 transaction.set_rollback(True)
+            changes = committed_changes(plans, repairs)
             signed = {'actor': actor.pk, 'intent': intent, 'fingerprint': fingerprint,
-                      'plans_digest': digest({'plans': plans, 'repairs': repairs}),
+                      'plans_digest': digest(changes),
+                      'plan_digests': {str(row['order_id']): digest(row) for row in changes['plans']},
+                      'request_dates': [{'order_id': row['order_id'], 'delivery_at': row['delivery_at'].isoformat()}
+                          for row in repairs],
                       'planned_ids': [row['order_id'] for row in plans],
                       'changed_ids': sorted({row['order_id'] for row in plans + repairs}),
                       'request_id': previous['request_id'] if previous else str(uuid4())}
@@ -213,7 +254,12 @@ class Command(BaseCommand):
                 report['confirm'] = signing.dumps(signed, salt=SALT, compress=True)
             else:
                 if signed != previous:
-                    raise CommandError('The computed schedule changed. Review a fresh preview.')
+                    changed_plans = sorted(set(signed['plan_digests']) | set(previous['plan_digests']), key=int)
+                    changed_plans = [pk for pk in changed_plans
+                        if signed['plan_digests'].get(pk) != previous['plan_digests'].get(pk)]
+                    detail = ('Task timings or preparation settings changed for orders: '
+                        + ', '.join('#'+pk for pk in changed_plans)) if changed_plans else 'The reviewed request repairs changed'
+                    raise CommandError(detail + '. No changes saved. Run a fresh preview.')
                 if not signed['changed_ids']:
                     raise CommandError('No feasible plans to save. Review blocked_plans and missing_delivery_dates.')
                 path = Path(options['backup']).resolve()

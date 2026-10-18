@@ -245,3 +245,79 @@ class DemoPlanCommandTests(TestCase):
             with patch('django.core.signing.time.time',return_value=time.time()+601):
                 with self.assertRaises(CommandError): self.apply(preview,folder)
             self.assertFalse((Path(folder)/'private'/'before.json').exists())
+
+    def test_apply_uses_reviewed_request_dates_not_new_suggestions(self):
+        self.order.status='processing'; self.order.delivery_at=None; self.order.save()
+        args=['--repair-unstarted-requests']
+        preview=self.command(*args)
+        reviewed=preview['proposed_request_repairs'][0]['delivery_at']
+        with TemporaryDirectory() as folder:
+            with patch('myapp.management.commands.plan_freshcast_demo_orders.propose_dates',
+                       side_effect=AssertionError('Apply must validate reviewed dates instead of suggesting new ones')):
+                self.apply(preview,folder,*args)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.delivery_at,timezone.datetime.fromisoformat(reviewed))
+
+    def test_explanatory_note_changes_do_not_invalidate_unchanged_request(self):
+        self.order.status='processing'; self.order.delivery_at=None; self.order.save()
+        args=['--repair-unstarted-requests']
+        from .services.initial_delivery import initial_delivery_plan
+        target='myapp.management.commands.plan_freshcast_demo_orders.initial_delivery_plan'
+        def describe(note):
+            def run(*args,**kwargs):
+                return dict(initial_delivery_plan(*args,**kwargs),review_reason=note)
+            return run
+        with patch(target,side_effect=describe('Preview explanation')):
+            preview=self.command(*args)
+        with TemporaryDirectory() as folder:
+            with patch(target,side_effect=describe('Rechecked explanation')):
+                self.apply(preview,folder,*args)
+        self.order.refresh_from_db();self.assertTrue(self.order.preparation_plan['tasks'])
+
+    def test_changed_task_timing_without_record_changes_still_rejects_before_backup(self):
+        preview=self.command()
+        from .services.scheduling import schedule_order
+        def different_plan(*args,**kwargs):
+            plan=schedule_order(*args,**kwargs)
+            plan['start']-=timedelta(minutes=1)
+            return plan
+        with TemporaryDirectory() as folder:
+            with patch('myapp.management.commands.plan_freshcast_demo_orders.schedule_order',side_effect=different_plan):
+                with self.assertRaisesMessage(CommandError,f'Task timings or preparation settings changed for orders: #{self.order.pk}'):
+                    self.apply(preview,folder)
+            self.assertFalse((Path(folder)/'private'/'before.json').exists())
+        self.order.refresh_from_db();self.assertFalse(self.order.preparation_plan)
+
+    def test_reviewed_date_crossing_notice_cutoff_is_rejected_without_writes(self):
+        self.order.status='processing';self.order.delivery_at=None;self.order.save()
+        now=timezone.localtime().replace(hour=16,minute=29,second=0,microsecond=0)
+        args=['--repair-unstarted-requests']
+        with patch('django.utils.timezone.now',return_value=now):
+            preview=self.command(*args)
+        with TemporaryDirectory() as folder:
+            with patch('django.utils.timezone.now',return_value=now+timedelta(minutes=2)):
+                with self.assertRaisesMessage(CommandError,'now too close'):
+                    self.apply(preview,folder,*args)
+            self.assertFalse((Path(folder)/'private'/'before.json').exists())
+        self.order.refresh_from_db();self.assertEqual(self.order.status,'processing');self.assertIsNone(self.order.delivery_at)
+
+    def test_three_feasible_and_eight_blocked_plans_with_two_date_repairs(self):
+        self.order_for(delivery_at=self.date+timedelta(days=1))
+        self.order_for(delivery_at=self.date+timedelta(days=2))
+        self.menu.max_early_minutes=0;self.menu.save()
+        other=Product.objects.create(name='Second packed menu',price=10,lead_hours=0,
+            max_early_minutes=0,preparation_tasks=self.menu.preparation_tasks)
+        for index in range(8):
+            order=self.order_for(delivery_at=None if index<2 else self.date+timedelta(days=3+index),
+                status='processing' if index<2 else 'pending')
+            OrderItem.objects.create(order=order,product=other,product_name=other.name,quantity=1,unit_price=10,subtotal=10)
+        args=['--repair-unstarted-requests','--use-current-preparation']
+        preview=self.command(*args)
+        self.assertEqual(len(preview['proposed_plans']),3)
+        self.assertEqual(len(preview['blocked_plans']),8)
+        self.assertEqual(len(preview['proposed_request_repairs']),2)
+        with TemporaryDirectory() as folder:result=self.apply(preview,folder,*args)
+        self.assertEqual(len(result['planned_order_ids']),3)
+        self.assertEqual(len(result['repaired_request_ids']),2)
+        self.assertEqual(OrderAmendment.objects.count(),5)
+        self.assertFalse(Order.objects.filter(delivery_at__isnull=True).exists())

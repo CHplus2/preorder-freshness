@@ -21,7 +21,10 @@ resolve the local branch difference rather than resetting it.
 git pull --ff-only origin integration/dormathon-demo
 if ($LASTEXITCODE -ne 0) { throw 'Update failed; preserve local work before continuing.' }
 $env:DATABASE_SCHEMA = 'django_app'
-$preview = python backend/manage.py plan_freshcast_demo_orders --actor-id 2 --repair-unstarted-requests --use-current-preparation | ConvertFrom-Json
+$env:PYTHON_DOTENV_DISABLED = '1'
+if (!$env:SECRET_KEY) { $env:SECRET_KEY = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N') }
+$preview = $null
+$preview = .\backend\venv\Scripts\python.exe backend/manage.py plan_freshcast_demo_orders --actor-id 2 --repair-unstarted-requests --use-current-preparation | ConvertFrom-Json
 if ($LASTEXITCODE -ne 0 -or $preview.mode -ne 'preview' -or !$preview.confirm) { throw 'A successful preview is required.' }
 $preview.proposed_request_repairs | Select-Object order_id, before_status, after_status, delivery_at, payment_status | Format-Table
 $preview.proposed_plans | Select-Object order_id, delivery_at, preparation_start, preparation_end, task_count | Format-Table
@@ -56,7 +59,7 @@ proposed tasks and requested repairs. Changed data requires a new preview.
 
 ```powershell
 $backup = Join-Path ([Environment]::GetFolderPath('UserProfile')) ('FreshCast-backups\before-preparation-batch-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.json')
-$result = python backend/manage.py plan_freshcast_demo_orders --actor-id 2 --repair-unstarted-requests --use-current-preparation --apply --confirm-fictional --confirm $preview.confirm --backup $backup | ConvertFrom-Json
+$result = .\backend\venv\Scripts\python.exe backend/manage.py plan_freshcast_demo_orders --actor-id 2 --repair-unstarted-requests --use-current-preparation --apply --confirm-fictional --confirm $preview.confirm --backup $backup | ConvertFrom-Json
 if ($LASTEXITCODE -ne 0 -or $result.mode -ne 'applied') { throw 'Batch was not applied; read the command error.' }
 $result | Select-Object mode, repaired_request_ids, planned_order_ids, backup | Format-List
 $result.blocked_plans | Select-Object order_id, reason, timing_issue | Format-List
@@ -90,3 +93,22 @@ Paid, delivered history feeds FreshCast independently of these pending plans.
 Unpaid requests remain unpaid and do not become confirmed stock requirements
 because a preparation plan exists. This maintenance does not train or alter a
 forecasting model.
+
+## Stable confirmation after the preview/apply fix
+
+Confirmation retains the exact delivery dates reviewed in preview, then validates
+them against the live notice, delivery buffer, menu-day and capacity constraints.
+It does not run the date suggestion algorithm again. Order lines are explicitly
+ordered by ID so recipe placement does not depend on database return order.
+
+The signed comparison covers actual saved task plans, preparation amendments,
+request states, dates and review flags. Advisory failure explanations are not
+part of the decision digest: changing a note must not invalidate identical saved
+decisions. Record changes and actual task-timing changes still reject the entire
+batch before creating the backup or applying changes. A task mismatch names the
+affected orders; crossing a notice cutoff produces a date-specific error.
+
+After updating from the earlier command, generate a **new preview**. Old tokens
+are intentionally incompatible with the corrected confirmation format. Keep the
+same PowerShell window and local SECRET_KEY between preview and apply. This key
+signs local maintenance previews; it does not change Vercel or database settings.
