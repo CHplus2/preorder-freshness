@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {filterOrders,overdueOrder,orderMenuState} from './orderQueue.js';
+import {generatedSalesHistory,closedGeneratedHistory} from './orderPresentation.js';
 const filters={search:'',status:'',payment:'',date:'',overdue:false,sort:'newest'};
 const now=Date.parse('2026-09-30T12:00:00+08:00');
 const order={id:21,status:'pending',payment_status:'unpaid',delivery_at:'2026-09-29T20:00:00Z',user:{username:'Buyer'},items:[{product_name:'Rice bowl'}]};
@@ -51,4 +52,17 @@ test('missing-date review matches planner warnings, including dated tasks with n
   {...order,id:5}, {...order,id:6,delivery_at:null,preparation_plan:{tasks:[{name:'Legacy task'}]}},
   {...order,id:7,delivery_at:null,status:'processing'}];
  assert.deepEqual(filterOrders(rows,{...filters,review:'missing-delivery'},now).map(o=>o.id),[7,6,2,1]);
+});
+test('generated history has a separate view; open requests and ordinary customers remain in the queue',()=>{
+ const generated={...order,id:146,status:'delivered',payment_status:'paid',payment_instructions:{freshcast_synthetic_history:{version:'1'}}};
+ const openGenerated={...generated,id:147,status:'pending',delivery_at:null};
+ const ordinary={...order,id:148,user:{username:'freshcast_synthetic_history_v1'}};
+ const unknownVersion={...generated,id:149,payment_instructions:{freshcast_synthetic_history:{version:'2'}}};
+ const rows=[order,generated,openGenerated,ordinary,unknownVersion];
+ assert.equal(generatedSalesHistory(generated),true);assert.equal(closedGeneratedHistory(openGenerated),false);
+ assert.deepEqual(filterOrders(rows,filters,now).map(o=>o.id),[149,148,147,21]);
+ assert.deepEqual(filterOrders(rows,{...filters,historyScope:'generated'},now).map(o=>o.id),[146]);
+ assert.equal(filterOrders(rows,{...filters,historyScope:'all'},now).length,5);
+ assert.deepEqual(filterOrders(rows,{...filters,review:'missing-delivery'},now).map(o=>o.id),[147]);
+ assert.equal(rows[1],generated);assert.equal(generated.status,'delivered');
 });

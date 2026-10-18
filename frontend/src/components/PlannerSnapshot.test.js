@@ -39,7 +39,16 @@ try {
   assert.match(corrupted,/1 upcoming order needs preparation review/);
   const {default:PlanTimingNotice}=await server.ssrLoadModule('/src/components/PlanTimingNotice.jsx');
   const demo=renderToStaticMarkup(createElement(PlanTimingNotice,{order:{preparation_plan:{fictional_timing:{allowances:[{menu:'Nasi Ayam',maximum_early_finish_minutes:120}]}}}}));
-  assert.match(demo,/Fictional demo timing/);assert.match(demo,/not verified food holding/);assert.match(demo,/2h 0m/);
+  assert.match(demo,/Demo timing/);assert.match(demo,/not verified food holding/);assert.match(demo,/2h 0m/);
+  assert.match(demo,/<details class="plan-demo-assumptions"><summary>/);assert.doesNotMatch(demo,/<details[^>]*open/);
+  const {default:PlannerOrderCard}=await server.ssrLoadModule('/src/components/PlannerOrderCard.jsx');
+  const card=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(PlannerOrderCard,{now:Date.parse('2026-10-18T17:11:00+08:00'),onSaved:()=>{},order:{id:4,status:'pending',created_at:'2026-04-17T08:24:31+08:00',delivery_at:'2026-10-19T18:00:00+08:00',preparation_at:'2026-10-18T16:40:00+08:00',items:[{product_name:'Nasi Ayam Kicap',quantity:1}],preparation_plan:{tasks:[{name:'Prep',resource:'prep_table',menu:'Nasi Ayam Kicap',start:'2026-10-18T16:40:00+08:00',end:'2026-10-18T17:40:00+08:00',worker:true}]}}})));
+  for(const label of ['Order #4','Not started','Nasi Ayam Kicap','Review preparation timing','Hands-on work','Equipment &amp; pauses','Start to finish','href="/admin/orders?order=4"'])assert.ok(card.includes(label),label);
+  assert.doesNotMatch(card,/ORDER #4 \/ pending|Step time:|8:24:31/);
+  const {default:GeneratedHistoryCard}=await server.ssrLoadModule('/src/components/GeneratedHistoryCard.jsx');
+  const history=renderToStaticMarkup(createElement(GeneratedHistoryCard,{reference:'ORD-00146',order:{delivery_at:'2026-10-16T12:00:00+08:00',total_amount:'491.50',items:[{product_name:'Nasi Lemak Telur',quantity:4}]}}));
+  for(const label of ['Demo data','No customer payment or delivery occurred','Scenario sales total','491.50','4 portions','View menu quantities'])assert.ok(history.includes(label),label);
+  assert.doesNotMatch(history,/freshcast_synthetic_history_v1|Edit order|Payment records|payment-paid|status-delivered/);
   const {default:PreparationDays}=await server.ssrLoadModule('/src/components/PreparationDays.jsx');
   const days=renderToStaticMarkup(createElement(PreparationDays,{plan:{daily_work:[
     {date:'2026-10-19',hands_on_minutes:490,pause_minutes:240},

@@ -1,4 +1,5 @@
 import {malaysiaDate,planningReadiness} from './planner.js';
+import {closedGeneratedHistory} from './orderPresentation.js';
 export const overdueOrder = (order, now) => !['delivered','cancelled'].includes(order.status) &&
   !!order.delivery_at && Date.parse(order.delivery_at) < now;
 
@@ -22,7 +23,9 @@ export function filterOrders(orders, filters, now, catalogue=null) {
   return orders.filter(order=>{
     const searchable=[String(order.id),`ord-${String(order.id).padStart(5,'0')}`,order.user?.username,
       ...(order.items || []).map(i=>i.product_name)].filter(Boolean).join(' ').toLowerCase();
-    return (filters.includeArchived!==false || filters.review==='archived-menus' || !hiddenArchivedHistory(order,catalogue)) &&
+    const scope=filters.historyScope || 'orders';
+    return (scope==='all' || (scope==='generated' ? closedGeneratedHistory(order) : !closedGeneratedHistory(order))) &&
+      (filters.includeArchived!==false || filters.review==='archived-menus' || !hiddenArchivedHistory(order,catalogue)) &&
       (filters.review!=='missing-delivery' || planningReadiness([order],now).missingDelivery.length>0) &&
       (filters.review!=='archived-menus' || archivedOnlyOrder(order,catalogue)) &&
       (!query || searchable.includes(query.replace(/^#/,''))) &&

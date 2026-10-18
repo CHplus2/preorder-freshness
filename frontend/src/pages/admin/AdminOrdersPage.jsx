@@ -10,14 +10,16 @@ import { useUI } from "../../contexts/UIContext";
 import { useOrder } from "../../contexts/OrderContext";
 import {filterOrders,overdueOrder,archivedOnlyOrder,hiddenArchivedHistory,orderMenuState} from '../../utils/orderQueue';
 import useOrderCatalogue from '../../hooks/useOrderCatalogue';
+import GeneratedHistoryCard from '../../components/GeneratedHistoryCard';
+import {closedGeneratedHistory,generatedSalesHistory,orderStatusLabel,orderDate} from '../../utils/orderPresentation';
 
 
 export default function AdminOrdersPage() {
-  const emptyFilters={search:'',status:'',payment:'',date:'',overdue:false,sort:'newest',includeArchived:false};
+  const emptyFilters={search:'',status:'',payment:'',date:'',overdue:false,sort:'newest',includeArchived:false,historyScope:'orders'};
   const [params,setParams]=useSearchParams();
   const review=['missing-delivery','archived-menus'].includes(params.get('review'))?params.get('review'):'';
   const changeReview=value=>{setFilters(emptyFilters);setParams(value?{review:value}:{});};
-  const [filters,setFilters]=useState(emptyFilters);
+  const [filters,setFilters]=useState({...emptyFilters,search:/^[1-9]\d*$/.test(params.get('order') || '')?'#ORD-'+params.get('order').padStart(5,'0'):''});
   const [now,setNow]=useState(()=>Date.now());
   useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
   const [editingOrder, setEditingOrder] = useState(null);
@@ -30,6 +32,10 @@ export default function AdminOrdersPage() {
   const {catalogue,error:catalogueError,retry:retryCatalogue}=useOrderCatalogue(adminOrders);
   const visibleOrders=filterOrders(adminOrders,{...filters,review},now,catalogue);
   const archivedHistoryCount=adminOrders.filter(order=>hiddenArchivedHistory(order,catalogue)).length;
+  const generatedCount=adminOrders.filter(closedGeneratedHistory).length;
+  const historyView=filters.historyScope==='generated';
+  const resultKind=historyView?'history record':filters.historyScope==='all'?'record':'order';
+  const clearFilters=()=>{setFilters({...emptyFilters,historyScope:filters.historyScope,includeArchived:historyView});setParams({});};
 
   useEffect(() => {
     fetchAdminOrders();
@@ -57,46 +63,47 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="orders-container">
-      <h1 className="orders-title">{review==='missing-delivery'?'Review missing delivery dates':review==='archived-menus'?'Orders containing only archived menus':'Orders'}</h1>
+      <h1 className="orders-title">{review==='missing-delivery'?'Review missing delivery dates':review==='archived-menus'?'Orders containing only archived menus':filters.historyScope==='generated'?'Generated sales history':'Orders'}</h1>
       {review==='missing-delivery' && <p className="order-review-explanation">Set an agreed future date to keep a request open, or review closing an obsolete request. Setting a date does not mark an order paid or delivered.</p>}
       {review==='archived-menus' && <p className="order-review-explanation">Every item in these orders refers to an archived menu. Open orders still need a decision; archiving a menu does not cancel a booking.</p>}
+      {generatedCount>0 && <div className="admin-tabs order-record-tabs" role="group" aria-label="Order record source">{[['orders',`Orders (${adminOrders.length-generatedCount})`],['generated',`Generated history (${generatedCount})`],['all','All records']].map(([value,label])=><button key={value} aria-pressed={filters.historyScope===value} onClick={()=>{setFilters({...emptyFilters,historyScope:value,includeArchived:value==='generated'});setParams({});}}>{label}</button>)}</div>}
+      {filters.historyScope==='generated' && <p className="order-source-note">Generated daily sales summaries used by FreshCast. These are fictional history, separate from customer orders.</p>}
       <div className="fyp-form inline" aria-label="Filter orders">
-        <label>Review records<select value={review} onChange={e=>changeReview(e.target.value)}><option value="">Order queue</option><option value="missing-delivery">Open orders missing delivery dates</option><option value="archived-menus" disabled={!catalogue}>Archived menus only</option></select></label>
-        <label>Search order, customer or menu<input type="search" value={filters.search} onChange={e=>setFilters({...filters,search:e.target.value})}/></label>
-        <label>Order status<select value={filters.status} onChange={e=>setFilters({...filters,status:e.target.value})}><option value="">All statuses</option>{['pending','processing','cooked','shipped','delivered','cancelled'].map(s=><option key={s} value={s}>{s}</option>)}</select></label>
-        <label>Payment<select value={filters.payment} onChange={e=>setFilters({...filters,payment:e.target.value})}><option value="">All payments</option>{['unpaid','paid','refunded'].map(s=><option key={s} value={s}>{s}</option>)}</select></label>
-        <label>Delivery date (Malaysia)<input type="date" value={filters.date} onChange={e=>setFilters({...filters,date:e.target.value})}/></label>
-        <label>Sort by<select value={filters.sort} onChange={e=>setFilters({...filters,sort:e.target.value})}><option value="newest">Newest order</option><option value="delivery">Earliest delivery</option></select></label>
+        {!historyView && <label>Review records<select value={review} onChange={e=>changeReview(e.target.value)}><option value="">Order queue</option><option value="missing-delivery">Open orders missing delivery dates</option><option value="archived-menus" disabled={!catalogue}>Archived menus only</option></select></label>}
+        <label>{historyView?'Search history or menu':'Search order, customer or menu'}<input type="search" value={filters.search} onChange={e=>setFilters({...filters,search:e.target.value})}/></label>
+        {!historyView && <><label>Order status<select value={filters.status} onChange={e=>setFilters({...filters,status:e.target.value})}><option value="">All statuses</option>{['pending','processing','cooked','shipped','delivered','cancelled'].map(s=><option key={s} value={s}>{orderStatusLabel(s)}</option>)}</select></label>
+        <label>Payment<select value={filters.payment} onChange={e=>setFilters({...filters,payment:e.target.value})}><option value="">All payments</option>{['unpaid','paid','refunded'].map(s=><option key={s} value={s}>{s}</option>)}</select></label></>}
+        <label>{historyView?'Sales date (Malaysia)':'Delivery date (Malaysia)'}<input type="date" value={filters.date} onChange={e=>setFilters({...filters,date:e.target.value})}/></label>
+        <label>Sort by<select value={filters.sort} onChange={e=>setFilters({...filters,sort:e.target.value})}><option value="newest">{historyView?'Newest record':'Newest order'}</option><option value="delivery">{historyView?'Earliest sales date':'Earliest delivery'}</option></select></label>
       </div>
-      <div className="admin-toolbar"><label className="owner-overdue-filter"><input type="checkbox" checked={filters.overdue} onChange={e=>setFilters({...filters,overdue:e.target.checked})}/> Overdue deliveries only</label><button onClick={()=>changeReview('')}>Clear filters</button><button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Refresh orders</button></div>
-      <div className="order-history-scope"><label className="owner-overdue-filter"><input type="checkbox" checked={filters.includeArchived || review==='archived-menus'} disabled={review==='archived-menus' || !catalogue} onChange={e=>setFilters({...filters,includeArchived:e.target.checked})}/> Include completed or cancelled archived-menu history</label>
-        <p>Open requests and mixed-menu orders stay visible. {catalogue ? `${archivedHistoryCount} archived-menu history records can be included. Order references stay unchanged; list positions run from 1 through the current results.` : catalogueError ? 'Menu status is unavailable, so no history is hidden.' : 'Checking menu status; all orders remain visible until checked.'}</p>
+      <div className="admin-toolbar">{!historyView && <label className="owner-overdue-filter"><input type="checkbox" checked={filters.overdue} onChange={e=>setFilters({...filters,overdue:e.target.checked})}/> Overdue deliveries only</label>}<button onClick={clearFilters}>Clear filters</button><button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Refresh {historyView?'history':'orders'}</button></div>
+      {!historyView && (archivedHistoryCount>0 || !catalogue) && <div className="order-history-scope"><label className="owner-overdue-filter"><input type="checkbox" checked={filters.includeArchived || review==='archived-menus'} disabled={review==='archived-menus' || !catalogue} onChange={e=>setFilters({...filters,includeArchived:e.target.checked})}/> Include completed or cancelled archived-menu history</label>
+        <p>{catalogue ? `${archivedHistoryCount} archived-menu history records available. Open requests stay visible.` : catalogueError ? 'Menu status is unavailable; archived history has not been filtered.' : 'Checking menu status…'}</p>
         {catalogueError && <p role="alert">Menu status could not be loaded: {catalogueError} <button type="button" onClick={retryCatalogue}>Retry menu status</button></p>}
-      </div>
-      {!adminOrdersLoading && !adminOrdersError && <p role="status">Showing {visibleOrders.length} of {adminOrders.length} orders. {adminOrders.filter(o=>overdueOrder(o,now)).length} open orders are past their requested delivery time.</p>}
+      </div>}
+      {!adminOrdersLoading && !adminOrdersError && <p className="order-results-summary" role="status">{visibleOrders.length} {resultKind}{visibleOrders.length===1?'':'s'} shown{filters.historyScope==='orders' && generatedCount>0?` · ${generatedCount} generated history records in a separate view`:''}{!historyView && adminOrders.some(o=>overdueOrder(o,now))?` · ${adminOrders.filter(o=>overdueOrder(o,now)).length} overdue deliveries`:''}</p>}
 
       {adminOrdersError && <p role="alert">{adminOrdersError} <button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Retry loading orders</button></p>}
       {adminOrdersLoading && <p role="status">Loading orders…</p>}
       {adminOrdersError ? null : adminOrders.length > 0 ? (
         <>
-          {!visibleOrders.length && <p>No orders match these filters. Adjust the review filters or include archived history.</p>}
-          {visibleOrders.map((order,index) => (
+          {!visibleOrders.length && <p>No records match these filters. Adjust the filters or choose another record view.</p>}
+          {visibleOrders.map(order => closedGeneratedHistory(order) ? <GeneratedHistoryCard key={order.id} order={order} reference={formatOrderNumber(order.id)}/> : (
             <div key={order.id} className="order-card">
 
               {/* HEADER */}
               <div className="order-header">
                 <div>
-                  <p className="order-list-position">List item {index+1} of {visibleOrders.length}</p>
                   <p className="order-id">Order #{formatOrderNumber(order.id)}</p>
                   {archivedOnlyOrder(order,catalogue) && <span className="order-archived-label">Archived menus only</span>}
                   <p className="order-user">
-                    {order.user?.username ?? "Unknown"}
+                    {generatedSalesHistory(order)?'Generated history record':order.user?.username ?? "Unknown"}
                   </p>
                 </div>
 
                 <div className="badge-group">
                   <span className={`status-badge status-${order.status}`}>
-                    {order.status}
+                    {orderStatusLabel(order.status)}
                   </span>
 
                   <span className={`payment-badge payment-${order.payment_status}`}>
@@ -105,9 +112,8 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              <p>Prepare: {order.payment_instructions?.freshcast_synthetic_history?.version==='1' ? 'Synthetic historical summary — no cooking reservation' : order.preparation_at ? new Date(order.preparation_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Owner planning required — unscheduled'}</p>
-              {order.payment_instructions?.freshcast_synthetic_history?.version==='1' && <p className="owner-order-note"><strong>Synthetic daily sales summary.</strong> Generated demo history; no real customer payment, preparation or delivery occurred.</p>}
-              <p>Deliver: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Unscheduled'} · {order.delivery_method}</p>
+              <dl className="order-key-dates"><div><dt>Delivery</dt><dd>{orderDate(order.delivery_at)}</dd></div><div><dt>Preparation starts</dt><dd>{order.preparation_at?orderDate(order.preparation_at):'Needs a plan'}</dd></div></dl>
+              {generatedSalesHistory(order) && <p className="owner-order-note">Demo data · Generated history record requiring review; not a customer transaction.</p>}
               {review==='missing-delivery' && catalogue && <p className="owner-order-note">{orderMenuState(order,catalogue)==='unlinked'?'Some menu references are missing from the catalogue. An old name in an order is a historical snapshot; it does not prove the menu is still available.':orderMenuState(order,catalogue)==='archived'?'This request contains only archived menus. Review whether it is still needed.':orderMenuState(order,catalogue)==='mixed'?'This request mixes current and archived menus. Review the items before arranging a new date.':'Menu references are available. Use Set delivery date to review a future request.'}</p>}
               {overdueOrder(order,now) && <p className="admin-follow-up"><strong>Delivery follow-up</strong><span>The requested time has passed. Confirm delivery with the customer, then update the order status.</span></p>}
               {order.status==='pending' && order.preparation_plan?.needs_review && <div className="owner-order-note"><strong>Delivery time awaiting your confirmation</strong><p>Review the recipe, kitchen workload and handling limits. Contact the customer if another time is needed. Set and confirm preparation times in Planner before moving this order to Processing.</p><details><summary>Automatic planning notes</summary><p>{order.preparation_plan.review_reason}</p></details></div>}
