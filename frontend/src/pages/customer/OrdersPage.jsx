@@ -1,3 +1,4 @@
+import {Link} from 'react-router-dom';
 import OrderProgress from '../../components/OrderProgress';
 import {orderProgress} from '../../utils/orderProgress';
 import ManualPayment from '../../components/ManualPayment';
@@ -71,6 +72,7 @@ export default function OrdersPage() {
                 RM {(Number(order.total_amount)+Number(order.shipping_fee)).toFixed(2)}
               </div>
             </div>
+            {order.payment_method==='paypal' && <section className="paypal-order-note"><p><strong>PayPal Sandbox · test transaction</strong></p><p>{order.payment_status==='paid'?'Sandbox payment recorded. No real money was transferred.':'This preorder is saved. Check its payment status before trying again.'}</p><Link to={'/payment/paypal?order='+order.id}>{order.payment_status==='paid'?'View Sandbox payment':'Resume or check PayPal payment'}</Link></section>}
             <RescheduleOrder order={order} onSaved={fetchOrders}/>
 
           </div>

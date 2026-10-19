@@ -27,7 +27,7 @@ Separate optional paths:
 
 Declared production stack: Python `>=3.13,<3.14`; Django `6.0.3`; Django REST Framework `3.17.1`; django-cors-headers `4.9.0`; dj-database-url `3.1.2`; python-dotenv `1.2.2`; psycopg2-binary `2.9.11`; WhiteNoise `6.12.0`. Frontend package ranges include React/React DOM `^19.2.5`, React Router `^7.14.2`, Axios `^1.15.2`, Vite `^8.0.10`, Framer Motion `^12.38.0`, Lucide React `^1.9.0`, and ethers `^6.17.0`. These are manifest declarations, not a statement that all installations resolve to precisely the range's minimum. [Sources: root `pyproject.toml`, `requirements.txt`; `frontend/package.json`.]
 
-`backend/requirements.txt` contains a broader historical dependency list, including Google AI SDKs and Gunicorn. The root production dependencies are smaller. A PayPal React package is declared but checkout does not provide a working PayPal integration. The Solidity demonstration uses compiler `0.8.30`, ethers and Ganache. [Sources: the dependency files above; `escrow/package.json`; `backend/myapp/views/orders.py::place_order`.]
+`backend/requirements.txt` contains a broader historical dependency list, including Google AI SDKs and Gunicorn. The root production dependencies are smaller. PayPal Sandbox checkout is available when configured; the server creates and verifies MYR captures. See `PAYPAL-SANDBOX.md` for setup and remaining reconciliation limits. The Solidity demonstration uses compiler `0.8.30`, ethers and Ganache. [Sources: the dependency files above; `escrow/package.json`; `backend/myapp/views/orders.py::place_order`.]
 
 Development Vite proxies `/api` to `127.0.0.1:8000`. Production configuration serves SPA routes through Django's `TemplateView(index.html)` and builds assets with `/static/` base. Root `app.py` inserts `backend` into `sys.path` and exposes WSGI `application`; `vercel.json` and `pyproject.toml` identify that entrypoint. `build.py::main` runs frontend dependency installation/build; migrations are a separate release step. `config/asgi.py` and `config/wsgi.py` also exist as Django entrypoint modules; they do not establish WebSocket features. [Sources: `frontend/vite.config.js`; `backend/config/urls.py::urlpatterns`; `backend/config/settings.py`; `app.py`; `build.py::main`.]
 
@@ -42,7 +42,7 @@ Database settings use `DATABASE_URL` when present, otherwise `backend/db.sqlite3
 - `/products/:id`: `ProductDetailPage.jsx::{ProductDetailPage,ProductContent}`. Product information, lead time, recorded freshness message, add-to-cart, social link and reviews. Abortable fetching, unavailable/error states, retry and return-to-menu are implemented. AI-summary rendering is commented out.
 - `/cart`: `CartPage.jsx::CartPage`, backed by `CartProvider`, for quantities/removal and pricing totals.
 - `/checkout`: `CheckoutPage.jsx::CheckoutPage`. One saved address, delivery datetime/service choice, advisory scheduling quote, payment choice and placement. The delivery plan is stored in sessionStorage; wallet navigation also stores an address ID in localStorage. The backend still verifies address ownership and recalculates the order.
-- `/payment/:method`: `PaymentPage.jsx::PaymentPage`. Demo-wallet creation/top-up/payment; the PayPal branch displays an unavailable/setup message.
+- `/payment/:method`: `PaymentPage.jsx::PaymentPage`. Demo-wallet creation/top-up/payment; the PayPal branch opens the saved-order Sandbox checkout and status recovery page.
 - `/orders`: `OrdersPage.jsx::OrdersPage`. Customer order records, statuses and saved manual-payment instructions through `ManualPayment`.
 - `/admin/products`: `AdminProductsPage.jsx::AdminProductsPage`. Menu CRUD, recipe quantities, scheduling parameters, preparation steps and photo URL editing; components `RecipeEditor`, `PreparationTasks`, `MenuPhotoField` and `DeleteProduct`.
 - `/admin/inventory`: `AdminInventoryPage.jsx::AdminInventoryPage`. Raw-material and batch CRUD, search/material/freshness filters, expiry inputs, loading/error/retry states, and stale-edit recovery. `ExpiryFields` supplies evidence/handling fields.
@@ -131,7 +131,7 @@ Customers add positive quantities to a persistent user cart. Adds merge the same
 `place_order` executes in an atomic transaction:
 
 1. Lock the requesting User row; validate owned address, nonempty cart and supported payment.
-2. Reject PayPal. For manual payment require enabled settings plus transfer text or a QR URL.
+2. Require explicitly configured Sandbox credentials for PayPal. Requests needing kitchen review remain unpaid COD. For manual payment require enabled settings plus transfer text or a QR URL.
 3. Ensure Storefront PK 1 exists and lock it to serialize bookings across the single kitchen; lock the involved products in ID order.
 4. Parse delivery datetime and call `schedule_order` for lead-time, working-hours, task/resource conflict, horizon and capacity checks. Validate standard/express method; independently recheck per-product delivery-day capacity.
 5. Calculate prices from current database product prices, not client totals. If total portions reach `bulk_minimum`, apply the configured percentage to the food subtotal, rounded to cents. Shipping is RM5 when the **pre-discount** food subtotal is below RM50, otherwise zero. `Order.total_amount` is discounted food only; payable amount adds `shipping_fee`.

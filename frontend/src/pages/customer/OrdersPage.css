@@ -138,4 +138,6 @@
   background: transparent;
   -webkit-background-clip: text;
   -webkit-text-fill-color: currentColor;
-}
+}.paypal-order-note{margin:20px 0;padding:16px;border:1px solid #d8e1e8;background:#f6f9fd;border-radius:8px}
+.paypal-order-note p{font-size:13px;line-height:1.65;margin:0 0 10px}
+.paypal-order-note a{display:inline-flex;align-items:center;min-height:44px;color:#194c7f;font-size:14px;font-weight:600}

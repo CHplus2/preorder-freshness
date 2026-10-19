@@ -141,7 +141,7 @@ Then schedule one worker every 15 minutes to run `manage.py send_order_reminders
 
 ## Payments
 
-Cash on delivery works. The existing wallet is explicitly a **demo credit ledger**, not blockchain settlement. PayPal checkout is disabled because the previous client-only flow lacked server verification. Real payment integrations require verified provider credentials, server-created amounts, webhook verification and reconciliation; no cryptocurrency or real payment service has been activated.
+Cash on delivery works. The existing wallet is explicitly a **demo credit ledger**, not blockchain settlement. PayPal Sandbox checkout is available when explicitly configured; Django creates and verifies captures before recording a paid test order. See [PayPal Sandbox setup](PAYPAL-SANDBOX.md). Webhooks, automatic PayPal refunds and live payments are not included; no cryptocurrency or real payment service has been activated.
 
 ## Verification
 

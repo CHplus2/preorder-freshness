@@ -52,6 +52,8 @@ def payments(request, pk):
                 raise serializers.ValidationError('Choose the unresolved refund attempt and its final outcome.')
         elif pending:
             raise serializers.ValidationError('Resolve the pending refund before recording another attempt.')
+        if order.payment_method == 'paypal' and kind == 'receipt':
+            raise serializers.ValidationError('PayPal receipts require server-verified capture. Use the customer payment status check; do not mark it paid manually.')
         if order.payment_method == 'wallet' and kind == 'receipt':
             raise serializers.ValidationError('Demo wallet receipts are created by checkout, not manually.')
         amount = order.total_amount + order.shipping_fee
@@ -76,4 +78,4 @@ def payments(request, pk):
         'unresolved_refund': next((r.pk for r in rows if r.kind == 'refund' and r.outcome == 'pending'
             and not any(x.resolves_id == r.pk for x in rows)), None),
         'amount': str(order.total_amount + order.shipping_fee),
-        'policy': 'Full-order receipts and refunds only. Bank/COD records confirm an external action; they do not transfer money. Completed demo-wallet refunds return demo credits.'})
+        'policy': 'Full-order receipts and refunds only. Bank/COD records confirm an external action; they do not transfer money. Completed demo-wallet refunds return demo credits. PayPal Sandbox receipts require server verification; refund records do not execute provider refunds.'})

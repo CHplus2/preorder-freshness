@@ -208,3 +208,8 @@ PREDICTIVE_ARTIFACT_DIR = os.getenv('PREDICTIVE_ARTIFACT_DIR', str(BASE_DIR / 'p
 # Separate deployment-only bearer credential; never expose to frontend code.
 FRESHCAST_BUNDLE_EXPORT_TOKEN = os.getenv('FRESHCAST_BUNDLE_EXPORT_TOKEN', '')
 FRESHCAST_BUNDLE_SHA256 = os.getenv('FRESHCAST_BUNDLE_SHA256', '697f8e10ee6b2c1b794ee38ec81067477870315fb7c51a1280684e7f0601361a')
+
+# Sandbox only. No live PayPal host or frontend secret is supported.
+PAYPAL_SANDBOX_ENABLED = os.getenv('PAYPAL_SANDBOX_ENABLED', 'False').lower() == 'true'
+PAYPAL_SANDBOX_CLIENT_ID = os.getenv('PAYPAL_SANDBOX_CLIENT_ID', '')
+PAYPAL_SANDBOX_CLIENT_SECRET = os.getenv('PAYPAL_SANDBOX_CLIENT_SECRET', '')

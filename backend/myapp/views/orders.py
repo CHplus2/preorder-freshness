@@ -113,8 +113,6 @@ def place_order(request):
 
     if payment not in ('cod', 'wallet', 'paypal', 'manual'):
         raise ValidationError('Choose a supported payment method.')
-    if payment == 'paypal':
-        raise ValidationError('Online payment is not configured. Choose cash on delivery.')
     # One lock serialises scheduling across different menus in this single kitchen.
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
@@ -129,6 +127,10 @@ def place_order(request):
     if needs_review:
         # Review requests never debit credits or invite an advance transfer.
         payment = 'cod'
+    if payment == 'paypal':
+        from ..services.paypal import enabled
+        if not enabled():
+            raise ValidationError('PayPal Sandbox is unavailable. Choose another payment method.')
     method = request.data.get('delivery_method', 'standard')
     if method not in ('standard', 'express'):
         raise ValidationError('Invalid delivery method.')

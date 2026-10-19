@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {paypalConfig,paypalStatus} from './paypalResponse.js';
+const config={enabled:true,sandbox:true,currency:'MYR',client_id:'fixture-public-id'};
+assert.equal(paypalConfig(config),config);
+for(const changed of [{sandbox:false},{currency:'USD'},{client_id:''},{enabled:'true'}])assert.throws(()=>paypalConfig({...config,...changed}));
+const status={order_id:147,order_status:'pending',sandbox:true,currency:'MYR',amount:'97.20',payment_status:'unpaid',state:'created',paypal_order_id:'PPTEST123',capture_id:null,can_pay:true,reason:'',configured:true};
+assert.equal(paypalStatus(status,147),status);
+for(const changed of [{order_id:148},{sandbox:false},{amount:'97.20oops'},{amount:'NaN'},{currency:'USD'},{can_pay:'true'},{state:'completed'},{paypal_order_id:'../../capture'}])assert.throws(()=>paypalStatus({...status,...changed},147));
+assert.equal(paypalStatus({...status,state:'completed',capture_id:'CAPTEST123',payment_status:'paid',can_pay:false},147).payment_status,'paid');
+assert.equal(paypalStatus({...status,state:'completed',capture_id:'CAPTEST123',payment_status:'refunded',can_pay:false},147).payment_status,'refunded');
+assert.equal(paypalConfig({...config,enabled:false,client_id:''}).enabled,false);
+console.log('PayPal responses: Sandbox-only configuration, exact order/amount types, completed capture evidence and refund state passed.');

@@ -1,3 +1,4 @@
+import PayPalPage from "./PayPalPage";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useUI } from "../../contexts/UIContext";
@@ -6,7 +7,12 @@ import { useOrder } from "../../contexts/OrderContext";
 import "./PaymentPage.css";
 import {apiError} from "../../utils/apiError";
 
-export default function PaymentPage() {
+export default function PaymentPage(){
+    const {method}=useParams();
+    return method==="paypal"?<PayPalPage/>:<DemoWalletPage/>;
+}
+
+function DemoWalletPage() {
     const { setAlert } = useUI();
     const { cart, cartLoading, cartError, refreshCart, finalTotal, wallet, walletLoading, walletError, refreshWallet, createWallet, topupWallet } = useCart();
     const { placeOrder } = useOrder();
@@ -23,11 +29,11 @@ export default function PaymentPage() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!addressId) {
+        if (method !== "paypal" && !addressId) {
             setAlert({ message: "Session expired. Please checkout again", type: "error" })
             navigate("/checkout")
         }
-    }, [addressId, setAlert, navigate])
+    }, [addressId, method, setAlert, navigate])
 
     const handlePay = async () => {
         if(paying)return;

@@ -184,7 +184,7 @@ supplier ordering system.
   the real receipt externally; showing a QR does not establish payment success.
 - **Demo wallet:** demonstration credits only. Successful debits are recorded
   transactionally; review-request fallback does not debit credits.
-- **PayPal:** online checkout is not configured as a working production gateway.
+- **PayPal:** optional Sandbox checkout with server-verified MYR captures and saved-order recovery. Requires Sandbox credentials; no live payments. See [setup](PAYPAL-SANDBOX.md).
 - **Testnet/crypto demonstration:** separate demo functionality, not real-money
   settlement or a substitute for verified food-order payment.
 - **Express delivery:** a request/arrangement for the owner, not automatic
