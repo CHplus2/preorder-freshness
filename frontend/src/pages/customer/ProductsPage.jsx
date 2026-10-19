@@ -5,18 +5,20 @@ import {apiError} from '../../utils/apiError';
 import InventoryFreshness from '../../components/InventoryFreshness';
 import {PageMeta} from "../../components/BusinessLayout";
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { useUI } from "../../contexts/UIContext";
 import { useProduct } from "../../contexts/ProductContext";
-import { useCart } from "../../contexts/CartContext";
+import {Search,X,CalendarDays,ArrowDown,MapPin,UtensilsCrossed} from 'lucide-react';
+import {useStorefront} from '../../contexts/StorefrontContext';
+import OrderJourney from '../../components/OrderJourney';
+import BasketBar from '../../components/BasketBar';
+import MenuFoodCard from '../../components/MenuFoodCard';
 import "./ProductsPage.css";
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const { categories } = useProduct();
-  const { fallback_img, formatPrice } = useUI();
-  const { addToCart } = useCart();
+  const {store}=useStorefront();
+  const searchInput=useRef(null);
 
   const [listing,setListing]=useState({rows:[],count:0,next:false});
   const [page,setPage]=useState(1),[loading,setLoading]=useState(true),[error,setError]=useState(''),[retry,setRetry]=useState(0);
@@ -37,65 +39,26 @@ export default function ProductsPage() {
   const showInventory=e=>{e.preventDefault();const section=document.getElementById('inventory-freshness');if(section){section.open=true;section.scrollIntoView({block:'start'});section.querySelector('summary')?.focus({preventScroll:true})}};
 
   return (
-    <div className="products-page">
+    <main className="products-page menu-storefront">
       <PageMeta title="The menu" description="Explore this kitchen’s current food menu, prices and preorder notice. Choose a favourite and schedule your delivery."/>
-      <section className="menu-intro"><span className="dk-eyebrow">FIND YOUR NEXT FAVOURITE</span><h1>What sounds <em>good?</em></h1><p>Explore the current menu. Every item shows its price, advance notice and daily portion limit.</p></section>
-      <p className="menu-availability-note">Need a particular delivery date? Use the menu finder below, then check delivery times for your combined basket before checkout. <Link to="/cart">Check basket times</Link></p>
+      <OrderJourney current="menu"/>
+      <section className="menu-welcome" aria-labelledby="menu-welcome-title">
+        <div className="menu-welcome-copy"><span className="menu-kitchen-label"><UtensilsCrossed size={15} aria-hidden="true"/>{store.name} · The menu</span><h1 id="menu-welcome-title">Good food.<br/><em>Better planned.</em></h1><p>Find your favourites, build a basket, and choose a delivery time that works for your plans.</p><div className="menu-welcome-links"><a href="#menu-browse">Explore the menu <ArrowDown size={16} aria-hidden="true"/></a><span><MapPin size={14} aria-hidden="true"/>{store.service_area || 'Home kitchen & preorders'}</span></div></div>
+        <div className="menu-welcome-art" aria-hidden="true"><span className="menu-art-ring"/><img className="menu-hero-meal" src={`${import.meta.env.BASE_URL}menu-images/nasi-lemak.jpg`} alt=""/><div className="menu-hero-bake"><img src={`${import.meta.env.BASE_URL}menu-images/walnut-brownies.jpg`} alt=""/><span>A little something sweet</span></div><span className="menu-art-note">Made for<br/><em>your plans.</em></span></div>
+      </section>
       <GuidedMenu/>
-
-      {/* Search & Filter */}
-      <div className="browse-controls">
-        <input
-          type="text"
-          aria-label="Search the menu" placeholder="Search meals, kuih, cakes…"
-          value={searchTerm}
-          onChange={(e) => changeFilter(setSearchTerm,e.target.value)}
-          className="search-input"
-        />
-        <select
-          value={selectedCategory}
-          onChange={(e) => changeFilter(setSelectedCategory,e.target.value)}
-          className="category-select" aria-label="Menu category"
-        >
-          <option value="">All Categories</option>
-          {(Array.isArray(categories) ? categories : []).map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-      </div>
+      <section id="menu-browse" className="menu-toolbar" aria-label="Browse the menu">
+        <div className="menu-search"><Search size={19} aria-hidden="true"/><input ref={searchInput} type="search" aria-label="Search the menu" placeholder="Find your next favourite…" value={searchTerm} onChange={e=>changeFilter(setSearchTerm,e.target.value)}/>{searchTerm && <button type="button" aria-label="Clear menu search" onClick={()=>{changeFilter(setSearchTerm,'');searchInput.current?.focus();}}><X size={17}/></button>}</div>
+        <button type="button" className="menu-date-shortcut" onClick={()=>{const finder=document.getElementById('menu-finder');if(finder){finder.open=true;finder.scrollIntoView({block:'start'});finder.querySelector('input')?.focus({preventScroll:true});}}}><CalendarDays size={17} aria-hidden="true"/>Find by delivery date</button>
+        <div className="menu-category-tabs" role="group" aria-label="Menu categories"><button type="button" aria-pressed={selectedCategory===''} onClick={()=>changeFilter(setSelectedCategory,'')}>All food</button>{(Array.isArray(categories)?categories:[]).map(c=><button type="button" key={c.id} aria-pressed={String(selectedCategory)===String(c.id)} onClick={()=>changeFilter(setSelectedCategory,String(c.id))}>{c.name}</button>)}</div>
+      </section>
 
       <div className="menu-list-meta"><MenuListingStatus loading={loading} error={error} count={listing.count} shown={listing.rows.length}/><a href="#inventory-freshness" onClick={showInventory}>View ingredient storage records</a></div>
       {/* Products Grid */}
       <div className="products-container" aria-busy={loading}>
         {loading && !filteredProducts.length && Array.from({length:6},(_,i)=><div className="menu-skeleton" aria-hidden="true" key={i}><div/><span/><span/></div>)}
         {filteredProducts.length > 0 ? (
-          filteredProducts.map((p) => (
-            <div key={p.id} className="product-card">
-              <Link to={`/products/${p.id}`} className="product-link">
-                <div className="product-image-wrapper">
-                  {p.image_url ? (
-                    <img loading="lazy" decoding="async"
-                      src={p.image_url} 
-                      alt={p.name} 
-                      className="product-image" 
-                      onError={(e) => {e.currentTarget.onerror=null;if(e.currentTarget.getAttribute("src")!==fallback_img)e.currentTarget.src=fallback_img}}
-                    />
-                  ) : (
-                    <div className="image-placeholder">Photo coming soon</div>
-                  )}
-                </div>
-                <div className="product-info">
-                  <h2 className="product-title">{p.name}</h2>
-                  <p className="product-price">{formatPrice(p.price)}</p>
-                  <small>{p.lead_hours}h advance notice · {p.daily_capacity} portions/day</small>
-                </div>
-              </Link>
-              {p.social_url && <a className="menu-video-link" href={p.social_url} target="_blank" rel="noreferrer">Watch this food being made <span aria-hidden="true">↗</span></a>}
-              <button className="add-btn" onClick={() => addToCart(p.id)}>
-                Add to basket
-              </button>
-            </div>
-          ))
+          filteredProducts.map(p=><MenuFoodCard key={p.id} product={p}/>)
         ) : !loading && !error ? (
           <p className="no-results">No menu items match. Try another category or check back when the kitchen updates its menu.</p>
         ) : null}
@@ -106,6 +69,7 @@ export default function ProductsPage() {
         {listing.next && !error && <button className="dk-primary" disabled={loading} onClick={()=>{if(!loading){setLoading(true);setPage(n=>n+1)}}}>{loading?'Loading meals...':'Load more meals'}</button>}
       </div>
       <InventoryFreshness/>
-    </div>
+      <BasketBar/>
+    </main>
   );
 }

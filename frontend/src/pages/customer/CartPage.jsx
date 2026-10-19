@@ -1,135 +1,53 @@
 import {useState} from 'react';
+import {Link,useNavigate} from 'react-router-dom';
+import {ArrowLeft,ArrowRight,ShoppingBag,CalendarDays,Minus,Plus,Trash2} from 'lucide-react';
 import BasketSlots from '../../components/BasketSlots';
-import {deliveryDaysText, deliveryDayIssue} from '../../utils/deliveryDays';
 import BasketDeliveryDays from '../../components/BasketDeliveryDays';
-import { useNavigate } from "react-router-dom";
-import { useUI } from "../../contexts/UIContext";
-import { useCart } from "../../contexts/CartContext";
-import "./CartPage.css";
+import OrderJourney from '../../components/OrderJourney';
+import {PageMeta} from '../../components/BusinessLayout';
+import {deliveryDaysText,deliveryDayIssue} from '../../utils/deliveryDays';
+import {useUI} from '../../contexts/UIContext';
+import {useCart} from '../../contexts/CartContext';
+import './CartPage.css';
 
-export default function CartPage() { 
-  const { formatPrice } = useUI();
-  const { cart, cartLoading, cartError, refreshCart, removeFromCart, updateQuantity } = useCart();
-  const navigate = useNavigate();
-  const [openedAt]=useState(()=>Date.now());
-  const [deliveryDay,setDeliveryDay]=useState('');
-  const [selectedTime,setSelectedTime]=useState('');
-  const [selectionKey,setSelectionKey]=useState('');
-  const [slotNotice,setSlotNotice]=useState('');
-  const basketKey=JSON.stringify(cart.map(i=>[i.id,i.quantity]));
-
-  const unavailable = cart.some(item => item.product.selling_status && item.product.selling_status !== "active");
-  const incompatibleDays = Boolean(deliveryDayIssue(cart, ''));
-  const selectedDayIssue = deliveryDayIssue(cart,deliveryDay);
-  const advanceHours = Math.max(0,...cart.map(item=>item.product.lead_hours ?? 24));
-  const overDailyLimit = cart.filter(item=>Number.isFinite(item.product.daily_capacity) && item.quantity>item.product.daily_capacity);
-  const today = new Date(openedAt+8*3600000).toISOString().slice(0,10);
-  const lastDay = new Date(openedAt+90*86400000+8*3600000).toISOString().slice(0,10);
-  const total = cart.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0
-  );
-
-  return (
-    <div className="cart-container">
-      <h1 className="cart-title">Your basket</h1>
-      {cartLoading && <p role="status">Loading your basket…</p>}
-      {cartError && <p role="alert">{cartError} <button onClick={refreshCart}>Try again</button></p>}
-
-      {unavailable && <p role="alert" className="cart-unavailable">Some items are no longer accepting orders. Remove the marked items to continue to checkout.</p>}
-      {cart.length > 0 ? (
-        <>
-          {cart.map((item) => (
-            <div key={item.id} className="cart-item">
-              
-              {/* LEFT: IMAGE + INFO */}
-              <div className="cart-left">
-                <div className="cart-image-wrapper">
-                  {item.product.image_url ? (
-                    <img
-                      src={item.product.image_url}
-                      alt={item.product.name}
-                      className="cart-item-image"
-                    />
-                  ) : (
-                    <div className="cart-image-placeholder">No Image</div>
-                  )}
-                </div>
-
-                <div className="cart-item-info">
-                  <p className="cart-item-name">{item.product.name}</p>
-                  {item.product.selling_status && item.product.selling_status !== "active" && <p className="cart-unavailable-label">Orders unavailable · Please remove this item</p>}
-                  {item.product.delivery_weekdays?.length > 0 && <p className="cart-delivery-days">{deliveryDaysText(item.product.delivery_weekdays)}</p>}
-                  <p className="cart-item-price">
-                    {formatPrice(item.product.price)}
-                  </p>
-                </div>
-              </div>
-
-              {/* RIGHT SIDE */}
-              <div className="cart-right">
-                <div className="qty-controls">
-                  <button
-                    className="qty-btn"
-                    aria-label={`Decrease quantity of ${item.product.name}`}
-                    disabled={item.quantity <= 1 || cartLoading}
-                    onClick={() =>
-                      updateQuantity(item.id, Math.max(1, item.quantity - 1))
-                    }
-                  >
-                    −
-                  </button>
-
-                  <span className="qty-number">{item.quantity}</span>
-
-                  <button
-                    className="qty-btn"
-                    aria-label={`Increase quantity of ${item.product.name}`}
-                    disabled={cartLoading || Boolean(item.product.selling_status && item.product.selling_status !== "active")}
-                    onClick={() =>
-                      updateQuantity(item.id, item.quantity + 1)
-                    }
-                  >
-                    +
-                  </button>
-                </div>
-
-                <button
-                  className="remove-btn"
-                  aria-label={`Remove ${item.product.name} from basket`}
-                  onClick={() => removeFromCart(item.id)}
-                >
-                  Remove
-                </button>
-              </div>
-
-            </div>
-          ))}
-        </>
-      ) : (
-        !cartLoading && !cartError && <p>Your basket is empty. Add a meal from the menu to get started.</p>
-      )}
-
-      {cart.length > 0 && !unavailable && <BasketDeliveryDays cart={cart} value={deliveryDay} showBasketLink={false}/>}
-      {cart.length > 0 && !unavailable && !incompatibleDays && <section className="cart-availability" aria-label="Basket delivery times">
-        <h2>Find a delivery time</h2><p>Check your whole basket before checkout. These menus require {advanceHours} hours of advance notice before preparation starts; cooking and delivery need additional time.</p>{overDailyLimit.map(item=><p role="alert" key={item.id}>{item.product.name}: {item.quantity} requested exceeds the menu’s daily limit of {item.product.daily_capacity}. Reduce the quantity or contact the kitchen about separate deliveries.</p>)}
-        <label htmlFor="basket-delivery-day">Preferred delivery date</label><input id="basket-delivery-day" type="date" min={today} max={lastDay} value={deliveryDay} onChange={e=>{setDeliveryDay(e.target.value);setSelectedTime('');setSlotNotice('');}}/>
-        <BasketSlots key={basketKey} value={deliveryDay} disabled={cartLoading || !!selectedDayIssue} onSelect={time=>{setSelectionKey(basketKey);setSelectedTime(time);try{sessionStorage.setItem('preferredDelivery',time+':00+08:00');setSlotNotice('Selected for checkout. Availability will be checked again when you order.');}catch{setSlotNotice('Your browser could not save this selection. Choose the time again at checkout.');}}}/>
-        {selectedTime && selectionKey===basketKey && <p role="status">{selectedTime.replace('T',' ')} (Malaysia time). {slotNotice}</p>}
-      </section>}
-      {cart.length > 0 && <div className="cart-total">
-        Total: <strong>{formatPrice(total)}</strong>
-      </div>}
-
-      {cart.length > 0 && (
-        <button
-          className="checkout-btn"
-          disabled={unavailable || incompatibleDays || cartLoading || Boolean(cartError)}
-          onClick={() => navigate("/checkout")}
-        >
-          Proceed to Checkout
-        </button>
-      )}
-    </div>
-  );
+export default function CartPage(){
+ const {formatPrice}=useUI();
+ const {cart,cartLoading,cartError,refreshCart,removeFromCart,updateQuantity,total,discount,SHIPPING_FEE,finalTotal}=useCart();
+ const navigate=useNavigate();
+ const [openedAt]=useState(()=>Date.now());
+ const [deliveryDay,setDeliveryDay]=useState('');
+ const [selectedTime,setSelectedTime]=useState('');
+ const [selectionKey,setSelectionKey]=useState('');
+ const [slotNotice,setSlotNotice]=useState('');
+ const basketKey=JSON.stringify(cart.map(i=>[i.id,i.quantity]));
+ const count=cart.reduce((n,i)=>n+i.quantity,0);
+ const unavailable=cart.some(item=>item.product.selling_status && item.product.selling_status!=='active');
+ const incompatibleDays=Boolean(deliveryDayIssue(cart,''));
+ const selectedDayIssue=deliveryDayIssue(cart,deliveryDay);
+ const advanceHours=Math.max(0,...cart.map(item=>item.product.lead_hours ?? 24));
+ const overDailyLimit=cart.filter(item=>Number.isFinite(item.product.daily_capacity) && item.quantity>item.product.daily_capacity);
+ const today=new Date(openedAt+8*3600000).toISOString().slice(0,10);
+ const lastDay=new Date(openedAt+90*86400000+8*3600000).toISOString().slice(0,10);
+ return <main className="cart-container cart-storefront">
+  <PageMeta title="Your basket" description="Review your food, check delivery times and continue to preorder checkout."/>
+  <OrderJourney current="cart"/>
+  <div className="cart-page-heading"><div><span className="cart-eyebrow">A LITTLE SOMETHING GOOD</span><h1 className="cart-title">Your basket</h1><p>A few favourites. One less thing to plan.</p></div><Link to="/menu"><ArrowLeft size={16} aria-hidden="true"/>Keep exploring</Link></div>
+  {cartLoading && <p role="status">Loading your basket…</p>}
+  {cartError && <p role="alert">{cartError} <button onClick={refreshCart}>Try again</button></p>}
+  {unavailable && <p role="alert" className="cart-unavailable">Some items are no longer accepting orders. Remove the marked items to continue to checkout.</p>}
+  {cart.length>0?<div className="cart-layout"><div className="cart-main">
+   <section className="cart-choices" aria-labelledby="cart-choices-title"><div className="cart-section-heading"><h2 id="cart-choices-title">Your choices</h2><span>{count} {count===1?'item':'items'}</span></div>
+    {cart.map(item=><article key={item.id} className="cart-item">
+     <div className="cart-left"><div className="cart-image-wrapper">{item.product.image_url?<img src={item.product.image_url} alt="" className="cart-item-image"/>:<ShoppingBag size={26} aria-hidden="true"/>}</div><div className="cart-item-info"><Link to={`/products/${item.product.id}`} className="cart-item-name">{item.product.name}</Link>{item.product.selling_status && item.product.selling_status!=='active' && <p className="cart-unavailable-label">Orders unavailable · Please remove this item</p>}{item.product.delivery_weekdays?.length>0 && <p className="cart-delivery-days">{deliveryDaysText(item.product.delivery_weekdays)}</p>}<p className="cart-item-price">{formatPrice(item.product.price)} each</p></div></div>
+     <div className="cart-right"><div className="qty-controls" role="group" aria-label={`Quantity of ${item.product.name}`}><button className="qty-btn" aria-label={`Decrease quantity of ${item.product.name}`} disabled={item.quantity<=1 || cartLoading} onClick={()=>updateQuantity(item.id,Math.max(1,item.quantity-1))}><Minus size={15}/></button><span className="qty-number" aria-live="polite">{item.quantity}</span><button className="qty-btn" aria-label={`Increase quantity of ${item.product.name}`} disabled={cartLoading || Boolean(item.product.selling_status && item.product.selling_status!=='active')} onClick={()=>updateQuantity(item.id,item.quantity+1)}><Plus size={15}/></button></div><strong className="cart-line-total">{formatPrice(item.product.price*item.quantity)}</strong><button className="remove-btn" disabled={cartLoading} aria-label={`Remove ${item.product.name} from basket`} onClick={()=>removeFromCart(item.id)}><Trash2 size={16} aria-hidden="true"/><span>Remove</span></button></div>
+    </article>)}
+   </section>
+   {!unavailable && <BasketDeliveryDays cart={cart} value={deliveryDay} showBasketLink={false}/>}
+   {!unavailable && !incompatibleDays && <section className="cart-availability" aria-label="Basket delivery times"><div className="cart-section-heading"><h2><CalendarDays size={19} aria-hidden="true"/>Find a delivery time</h2><span>Optional preview</span></div><p>These menus need {advanceHours} hours of advance notice before preparation starts. Cooking and delivery need additional time.</p>{overDailyLimit.map(item=><p role="alert" key={item.id}>{item.product.name}: {item.quantity} requested exceeds the menu’s daily limit of {item.product.daily_capacity}. Reduce the quantity or contact the kitchen about separate deliveries.</p>)}
+    <label htmlFor="basket-delivery-day">Preferred delivery date</label><input id="basket-delivery-day" type="date" min={today} max={lastDay} value={deliveryDay} onChange={e=>{setDeliveryDay(e.target.value);setSelectedTime('');setSlotNotice('');}}/>
+    <BasketSlots key={basketKey} value={deliveryDay} disabled={cartLoading || !!selectedDayIssue} onSelect={time=>{setSelectionKey(basketKey);setSelectedTime(time);try{sessionStorage.setItem('preferredDelivery',time+':00+08:00');setSlotNotice('Selected for checkout. Availability will be checked again when you order.');}catch{setSlotNotice('Your browser could not save this selection. Choose the time again at checkout.');}}}/>
+    {selectedTime && selectionKey===basketKey && <p role="status" className="cart-selected-time">{selectedTime.replace('T',' ')} (Malaysia time). {slotNotice}</p>}
+   </section>}
+  </div><aside className="cart-summary" aria-labelledby="cart-summary-title"><span className="cart-summary-icon"><ShoppingBag size={23} aria-hidden="true"/></span><h2 id="cart-summary-title">Order summary</h2><p>{cart.length} {cart.length===1?'choice':'choices'} · {count} {count===1?'item':'items'}</p><dl><div><dt>Food subtotal</dt><dd>{formatPrice(total)}</dd></div>{discount>0 && <div className="cart-discount"><dt>Bulk discount</dt><dd>−{formatPrice(discount)}</dd></div>}<div><dt>Delivery</dt><dd>{SHIPPING_FEE?formatPrice(SHIPPING_FEE):'Free'}</dd></div><div className="cart-bill-total"><dt>Total</dt><dd>{formatPrice(finalTotal)}</dd></div></dl><p className="cart-summary-note">Choose your address, delivery time and payment at checkout.</p><div className="cart-checkout-action order-action-bar"><div className="cart-mobile-total"><span>Total</span><strong>{formatPrice(finalTotal)}</strong></div><button className="checkout-btn" disabled={unavailable || incompatibleDays || cartLoading || Boolean(cartError)} onClick={()=>navigate('/checkout')}>Proceed to Checkout <ArrowRight size={18} aria-hidden="true"/></button></div><Link className="cart-add-more" to="/menu">Add something else</Link></aside></div>:!cartLoading && !cartError && <section className="cart-empty"><ShoppingBag size={42} aria-hidden="true"/><h2>A good meal is a few clicks away.</h2><p>Your basket is empty. Find something you fancy from the kitchen.</p><Link to="/menu" className="dk-primary">Explore the menu <ArrowRight size={17} aria-hidden="true"/></Link></section>}
+ </main>;
 }

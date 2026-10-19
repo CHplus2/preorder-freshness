@@ -21,7 +21,7 @@ export default function GuidedMenu(){
   };
   const updateForm=next=>{generation.current++;setForm(next);setData(null);setError('');setBusy(false)};
   const add=async (row,slot)=>{rememberSuggestion('preferredDelivery',slot.delivery_at);rememberSuggestion('recommendationSession',data.session);void track('click',row.id);const saved=await addToCart(row.id,row.portions);if(saved)await track('added',row.id)};
-  return <details className="dk-panel guided-menu"><summary>Need help choosing? Find food for your date</summary><p>Choose a date and group size to see up to three suggestions.</p>
+  return <details id="menu-finder" className="dk-panel guided-menu"><summary>Need help choosing? Find food for your date</summary><p>Choose a date and group size to see up to three suggestions.</p>
     <form className="fyp-form inline" onSubmit={search}>
       <label>Delivery date<input type="date" required min={today()} value={form.date} onChange={e=>updateForm({...form,date:e.target.value})}/></label>
       <label>Portions<input type="number" required min="1" max="100" value={form.portions} onChange={e=>updateForm({...form,portions:e.target.value})}/></label>
