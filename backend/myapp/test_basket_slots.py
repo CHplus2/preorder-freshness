@@ -87,29 +87,26 @@ class BasketSlotTests(TestCase):
         self.assertEqual(quote.status_code, 200, quote.data)
         self.assertFalse(quote.data.get('needs_review', False))
 
-    def test_no_suggestions_does_not_relax_two_zero_holding_recipes(self):
+    def test_zero_finish_menus_pack_sequentially_and_quote_is_recheckable(self):
         self.line.quantity = 1
         self.line.save()
         brownies = Product.objects.create(name='Walnut Brownies - Box of 6', price=18,
             lead_hours=24, max_early_minutes=0, preparation_minutes=60, packing_minutes_per_portion=15)
         CartItem.objects.create(user=self.customer, product=brownies, quantity=1)
         response = self.search('2026-10-21')
-        self.assertEqual(response.data['slots'], [])
-        self.assertIn('early-finish limit', response.data['unavailable_reason'])
-        self.assertEqual(response.data['unavailable_code'], 'simultaneous_finish')
-        self.assertIn('Walnut Brownies', response.data['unavailable_reason'])
-        self.assertIn('exactly at dispatch', response.data['unavailable_reason'])
+        self.assertTrue(response.data['slots'], response.data)
         next_day = self.client.post('/api/orders/slots/', {'find_next': True}, format='json')
-        self.assertEqual(next_day.data['unavailable_code'], 'simultaneous_finish')
-        self.assertEqual(next_day.data['searched_days'], 1)
+        self.assertTrue(next_day.data['slots'], next_day.data)
         quote = self.client.post('/api/orders/quote/', {'delivery_at': '2026-10-21T18:00:00+08:00'}, format='json')
         self.assertEqual(quote.status_code, 200, quote.data)
-        self.assertTrue(quote.data['needs_review'])
-        self.assertFalse(quote.data['tasks'])
+        self.assertFalse(quote.data.get('needs_review', False))
+        packing = [t for t in quote.data['tasks'] if t['name'] == 'Pack']
+        self.assertEqual(len(packing), 2)
+        self.assertNotEqual(packing[0]['end'], packing[1]['end'])
+        self.assertLessEqual(packing[0]['end'], packing[1]['start'])
         self.assertFalse(Order.objects.exists())
 
-    def test_bakery_recipes_need_finish_flexibility_not_more_calendar_days(self):
-        # Reproduce the published demo recipes, including two cookie batches.
+    def test_reported_two_batch_bakery_basket_has_slots_without_policy_edits(self):
         def steps(durations, names):
             resources = ['prep_table', 'oven', 'oven', 'oven', 'none', 'packing_area']
             return [dict(name=name, minutes=minutes, additional_batch_minutes=minutes,
@@ -125,38 +122,48 @@ class BasketSlotTests(TestCase):
             preparation_tasks=steps([25, 15, 30, 5, 75, 15],
                 ['Mix batter', 'Load brownies', 'Bake brownies', 'Unload brownies', 'Cool brownies', 'Cut and box']))
         CartItem.objects.create(user=self.customer, product=brownies, quantity=1)
-        failed = self.search('2026-10-21')
-        self.assertEqual(failed.data['unavailable_code'], 'simultaneous_finish')
-        self.assertIn('Count, label and pack', failed.data['unavailable_reason'])
-        self.assertIn('Cut and box', failed.data['unavailable_reason'])
-        # A hypothetical reviewed allowance in this isolated test can make the
-        # same basket feasible. This is not a recommended real holding limit.
-        brownies.max_early_minutes = 300
-        brownies.save()
         found = self.search('2026-10-21')
         self.assertTrue(found.data['slots'], found.data)
-        self.assertEqual(found.data['unavailable_code'], '')
         quote = self.client.post('/api/orders/quote/',
             {'delivery_at': found.data['slots'][0]['delivery_at']}, format='json')
         self.assertEqual(quote.status_code, 200, quote.data)
         self.assertFalse(quote.data.get('needs_review', False))
-        self.cookies.refresh_from_db()
+        from .services.manual_steps import conflict
+        tasks = quote.data['tasks']
+        for index, task in enumerate(tasks):
+            for other in tasks[index+1:]:
+                self.assertFalse(conflict(task, other), (task, other))
+            start, end = timezone.localtime(parse_datetime(task['start'])), timezone.localtime(parse_datetime(task['end']))
+            self.assertEqual(start.date(), end.date())
+            self.assertEqual(str(start.date()), '2026-10-21')
+            self.assertGreaterEqual(start.hour, self.store.kitchen_open_hour)
+            self.assertLessEqual(end.hour, self.store.kitchen_close_hour)
+        from .models import Address
+        address = Address.objects.create(user=self.customer, line1='Test', city='KL', state='KL', postal_code='50000', phone='0100000000')
+        saved = self.client.post('/api/orders/place/', dict(delivery_at=found.data['slots'][0]['delivery_at'],
+            address_id=address.pk, payment='cod'), format='json')
+        self.assertEqual(saved.status_code, 201, saved.data)
+        order = Order.objects.get()
+        self.assertFalse(order.preparation_plan.get('needs_review', False))
+        self.assertTrue(order.preparation_plan['tasks'])
+        self.assertTrue(all(item.preparation_snapshot['max_early_minutes'] == 0 for item in order.items.all()))
+        self.cookies.refresh_from_db(); brownies.refresh_from_db()
         self.assertEqual(self.cookies.max_early_minutes, 0)
-        self.assertFalse(Order.objects.exists())
+        self.assertEqual(brownies.max_early_minutes, 0)
 
-    def test_finish_rule_detection_only_rejects_shared_resources(self):
-        from .services.scheduling import validate_finish_rules
-        def line(name, resource, worker):
-            return dict(menu=name, max_early_minutes=0,
-                tasks=[dict(name='Rest', minutes=15, worker=worker, resource=resource)])
-        # Two unattended, independent endings can legitimately coincide.
-        validate_finish_rules([line('One', 'none', False), line('Two', 'none', False)])
-        validate_finish_rules([line('One', 'oven', False), line('Two', 'fridge', False)])
-        from rest_framework.exceptions import ValidationError
-        with self.assertRaises(ValidationError) as caught:
-            validate_finish_rules([line('One', 'oven', False), line('Two', 'oven', False)])
-        self.assertEqual(caught.exception.detail[0].code, 'simultaneous_finish')
-        self.assertIn('same oven', str(caught.exception.detail))
+    def test_explicit_tight_finish_limit_still_requires_owner_review(self):
+        self.line.quantity = 1; self.line.save()
+        self.cookies.max_early_minutes = 1; self.cookies.packing_minutes_per_portion = 15; self.cookies.save()
+        brownies = Product.objects.create(name='Tightly timed brownies', price=18,
+            lead_hours=24, max_early_minutes=1, preparation_minutes=60, packing_minutes_per_portion=15)
+        CartItem.objects.create(user=self.customer, product=brownies, quantity=1)
+        failed = self.search('2026-10-21')
+        self.assertFalse(failed.data['slots'])
+        self.assertIn('1-minute early-finish limit', failed.data['unavailable_reason'])
+        quote = self.client.post('/api/orders/quote/', {'delivery_at': '2026-10-21T18:00:00+08:00'}, format='json')
+        self.assertEqual(quote.status_code, 200, quote.data)
+        self.assertTrue(quote.data['needs_review'])
+        self.assertFalse(quote.data['tasks'])
 
     def test_database_failure_is_not_reported_as_no_available_slots(self):
         with patch('myapp.services.scheduling.schedule_order', side_effect=OperationalError('private connection info')):
@@ -239,7 +246,9 @@ class BasketSlotTests(TestCase):
         OrderItem.objects.create(order=order, product=self.cookies, product_name=self.cookies.name,
             quantity=1, unit_price=10, subtotal=10)
         quote = self.client.post('/api/orders/quote/', {'delivery_at': slot['delivery_at']}, format='json')
-        self.assertEqual(quote.status_code, 400)
+        self.assertEqual(quote.status_code, 200)
+        self.assertTrue(quote.data['needs_review'])
+        self.assertFalse(quote.data['tasks'])
         self.assertIn('daily limit 10', str(quote.data))
         self.assertEqual(Order.objects.count(), 1)
 

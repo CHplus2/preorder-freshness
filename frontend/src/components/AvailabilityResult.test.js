@@ -31,6 +31,12 @@ try {
   assert.doesNotMatch(render({quote:null}), /Your requested time is available/);
   const {default: BasketSlots} = await server.ssrLoadModule('/src/components/BasketSlots.jsx');
   assert.doesNotMatch(renderToStaticMarkup(createElement(BasketSlots, {value:'', onSelect:()=>{}})), /No hourly slots found/);
+  const {default: RecipeEditor} = await server.ssrLoadModule('/src/components/RecipeEditor.jsx');
+  const flexible=renderToStaticMarkup(createElement(RecipeEditor,{value:{max_early_minutes:0,max_preparation_days:2},onChange:()=>{}}));
+  assert.match(flexible,/Flexible on the dispatch day/);assert.match(flexible,/Completed food does not occupy the worker/);
+  assert.doesNotMatch(flexible,/finish exactly|Zero early finish|May finish up to/);
+  const limited=renderToStaticMarkup(createElement(RecipeEditor,{value:{max_early_minutes:120,max_preparation_days:2},onChange:()=>{}}));
+  assert.match(limited,/May finish up to/);
   console.log('Availability result: success, procurement, stale selection, pending, failure and initial state passed.');
 } finally {
   await server.close();

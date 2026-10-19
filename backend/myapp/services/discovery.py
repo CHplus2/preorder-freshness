@@ -32,23 +32,19 @@ def slot_search(items, day, store, limit=3, now=None):
     snapshot = availability_snapshot(items, day, store)
     found = []
     last_reason = ''
-    reason_code = ''
     for hour in range(9, 22):
         delivery = timezone.make_aware(datetime.combine(day, time(hour)))
         try:
             plan = schedule_order(items, delivery, store, now=now, availability=snapshot)
         except ValidationError as exc:
             last_reason = ' '.join(str(part) for part in exc.detail)
-            if any(getattr(part, 'code', '') == 'simultaneous_finish' for part in exc.detail):
-                reason_code = 'simultaneous_finish'
-                break
             continue
         found.append({'delivery_at': delivery.isoformat(), 'preparation_at': plan['start'].isoformat(),
             'preparation_end_at': plan['end'].isoformat(), 'hands_on_minutes': plan['hands_on_minutes']})
         if len(found) >= limit:
             break
     return {'slots': found, 'unavailable_reason': last_reason if not found else '',
-        'unavailable_code': reason_code if not found else '',
+        'unavailable_code': '',
         'earliest_preparation_at': advance.isoformat(), 'delivery_request_after': request_after.isoformat(),
         'suggested_date': day.isoformat() if found else None,
         'searched_from': day.isoformat(), 'searched_through': day.isoformat(), 'searched_days': 1}
@@ -74,7 +70,7 @@ def next_basket_slots(items, day, store):
         date = first+timedelta(days=offset)
         result = slot_search(items, date, store, limit=13, now=now)
         result.update(searched_from=first.isoformat(), searched_days=offset+1)
-        if result['slots'] or result.get('unavailable_code') == 'simultaneous_finish':
+        if result['slots']:
             return result
     return result
 

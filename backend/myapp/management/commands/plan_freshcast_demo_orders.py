@@ -20,7 +20,7 @@ from rest_framework.exceptions import ValidationError
 from myapp.models import (IngredientConsumption, KitchenBlock, Order, OrderAmendment,
                           OrderItem, Product, Storefront)
 from myapp.services.commitments import preparation_snapshot, scheduled_item
-from myapp.services.scheduling import plan_snapshot, preparation_work, schedule_order
+from myapp.services.scheduling import plan_snapshot, schedule_order
 from myapp.services.initial_delivery import initial_delivery_plan
 from myapp.views.delivery_date_batch import context as date_context, propose as propose_dates
 from myapp.views.rescheduling import CUTOFF_HOURS
@@ -244,7 +244,6 @@ class Command(BaseCommand):
                         unchanged.append(dict(facts, reason='Existing accepted task plan preserved.'))
                         continue
                     items = list(order.items.all())
-                    zero_finish = []
                     target_terms = {item.pk: preparation_snapshot(item.product) for item in items if item.product_id}
                     try:
                         if not items or any(not item.product_id for item in items):
@@ -252,15 +251,6 @@ class Command(BaseCommand):
                         scheduled = items if intent['use_current_preparation'] else [scheduled_item(item) for item in items]
                         if any(not item.product.preparation_tasks for item in scheduled):
                             raise ValidationError('Accepted preparation steps are missing. Review --use-current-preparation to adopt current timings without replacing ingredient recipes.')
-                        lines, _ = preparation_work(scheduled)
-                        exact_finish = [line for line in lines if line['max_early_minutes'] == 0]
-                        for index, line in enumerate(exact_finish):
-                            final = line['tasks'][-1]
-                            for other in exact_finish[index+1:]:
-                                other_final = other['tasks'][-1]
-                                if ((final['worker'] and other_final['worker'])
-                                        or (final['resource'] != 'none' and final['resource'] == other_final['resource'])):
-                                    zero_finish.extend([line['menu'], other['menu']])
                         try:
                             plan = schedule_order(scheduled, order.delivery_at, store,
                                 exclude_order_id=order.pk, notice_from=order.created_at, now=now)
@@ -274,11 +264,6 @@ class Command(BaseCommand):
                             target_terms = proposed_terms
                     except ValidationError as error:
                         row = dict(facts, delivery_at=order.delivery_at, reason=error.detail)
-                        if len(zero_finish) > 1:
-                            row['timing_issue'] = ('Multiple menu batches must finish exactly at dispatch but share a worker or equipment. '
-                                'Changing the delivery date cannot resolve that constraint. Review actual permitted early-finish times in Menus, '
-                                'then preview adoption of those preparation settings; no handling limit has been changed.')
-                            row['zero_early_finish_menus'] = list(dict.fromkeys(zero_finish))
                         blocked.append(row)
                         continue
                     row = dict(order_id=order.pk, delivery_at=order.delivery_at,

@@ -11,7 +11,10 @@ explicitly adopts the current recipe and replans them.
   from dispatch. This permits earlier work; it does not extend working hours.
 - **Finished batches may be ready early:** record the actual permitted finish
   allowance in minutes. 1440 minutes is one day. The allowance cannot exceed the
-  preparation span. Zero requires the last step to finish at dispatch.
+  preparation span. **0 means flexible finishing on the dispatch day**, within
+  kitchen working hours. It does not force menus to finish together or permit a
+  previous-day final finish. Positive values explicitly limit early finish and
+  may permit a previous-day finish when the preparation span also allows it.
 - **Split larger orders into complete recipe batches:** each batch repeats the
   full recipe. Complete batches may occupy different days when their finish
   allowances permit it. A partial final batch still takes a full batch duration.
@@ -45,10 +48,13 @@ Daily menu capacity remains **portions delivered on that date**. It is not a
 per-preparation-day quota. Duplicate basket lines are added together when
 checking this limit.
 
-If a recipe plan cannot fit, checkout may submit an owner-review request without
-reserving preparation tasks or taking payment. Advance notice, delivery weekdays
-and delivery capacity remain hard checks. Multi-day settings do not guarantee
-acceptance of arbitrarily large orders.
+If a recipe plan cannot fit, checkout can submit an unpaid owner-review request
+without reserving preparation tasks or daily capacity. Short notice and quantities
+above automatic daily capacity also become review requests at checkout. Suggestions
+and normal planning remain strict; owner replan/maintenance checks do not inherit
+these checkout exceptions. Future dates, the 90-day horizon, active menus, delivery
+weekdays and the 09:00–21:00 delivery window remain enforced. The owner must confirm
+a real arrangement; a submitted request does not promise acceptance.
 
 ## Additive API fields
 
@@ -69,8 +75,9 @@ reserved pauses; `recipe_minutes` excludes those added pauses. Hands-on totals
 exclude unattended pauses. Manual step edits refresh the daily breakdown.
 
 These settings use the existing JSON fields; **no database migration is needed**.
-No live menu policies or existing accepted orders are automatically changed by
-deploying this code. Forecast models and inventory deduction rules are unchanged.
+The catalogue is not rewritten and saved task reservations are not moved. New
+automatic plans and explicit replans interpret existing zero finish allowances as
+flexible same-day finishing. Positive finish caps retain their existing meaning. Forecast models and inventory deduction rules are unchanged.
 
 ## Verification
 

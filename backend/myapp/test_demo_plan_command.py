@@ -112,7 +112,7 @@ class DemoPlanCommandTests(TestCase):
         for order in started:
             order.refresh_from_db(); self.assertEqual(order.status, 'processing'); self.assertIsNone(order.delivery_at)
 
-    def test_zero_finish_multi_menu_is_reported_not_relaxed(self):
+    def test_zero_finish_multi_menu_uses_flexible_day_without_catalogue_changes(self):
         self.menu.max_early_minutes = 0; self.menu.save()
         item = self.order.items.first()
         item.preparation_snapshot['max_early_minutes'] = 0
@@ -122,9 +122,10 @@ class DemoPlanCommandTests(TestCase):
         OrderItem.objects.create(order=self.order, product=other, product_name=other.name,
             quantity=1, unit_price=10, subtotal=10)
         preview = self.command()
-        self.assertEqual(preview['proposed_plans'], [])
-        self.assertEqual(len(preview['blocked_plans'][0]['zero_early_finish_menus']), 2)
-        self.assertIn('Changing the delivery date cannot resolve', preview['blocked_plans'][0]['timing_issue'])
+        self.assertEqual(len(preview['proposed_plans']), 1)
+        self.assertFalse(preview['blocked_plans'])
+        tasks = preview['proposed_plans'][0]['plan']['tasks']
+        self.assertLessEqual(tasks[0]['end'], tasks[1]['start'])
         self.order.refresh_from_db(); self.assertEqual(self.order.preparation_plan, {})
         self.menu.refresh_from_db(); self.assertEqual(self.menu.max_early_minutes, 0)
 
@@ -182,10 +183,10 @@ class DemoPlanCommandTests(TestCase):
 
     def test_request_date_saved_honestly_when_multi_menu_plan_is_infeasible(self):
         self.order.status='processing'; self.order.delivery_at=None; self.order.save()
-        self.menu.max_early_minutes=0; self.menu.save()
+        self.menu.max_early_minutes=1; self.menu.save()
         self.order.items.update(preparation_snapshot={})
         other = Product.objects.create(name='Another menu', price=10, lead_hours=0,
-            max_early_minutes=0, preparation_tasks=self.menu.preparation_tasks)
+            max_early_minutes=1, preparation_tasks=self.menu.preparation_tasks)
         OrderItem.objects.create(order=self.order, product=other, product_name=other.name,
             quantity=1, unit_price=10, subtotal=10)
         args=['--repair-unstarted-requests', '--use-current-preparation']
@@ -305,9 +306,9 @@ class DemoPlanCommandTests(TestCase):
     def test_three_feasible_and_eight_blocked_plans_with_two_date_repairs(self):
         self.order_for(delivery_at=self.date+timedelta(days=1))
         self.order_for(delivery_at=self.date+timedelta(days=2))
-        self.menu.max_early_minutes=0;self.menu.save()
+        self.menu.max_early_minutes=1;self.menu.save()
         other=Product.objects.create(name='Second packed menu',price=10,lead_hours=0,
-            max_early_minutes=0,preparation_tasks=self.menu.preparation_tasks)
+            max_early_minutes=1,preparation_tasks=self.menu.preparation_tasks)
         for index in range(8):
             order=self.order_for(delivery_at=None if index<2 else self.date+timedelta(days=3+index),
                 status='processing' if index<2 else 'pending')
@@ -325,8 +326,8 @@ class DemoPlanCommandTests(TestCase):
 
     def test_labelled_demo_allowance_fixes_eight_orders_without_changing_catalogue(self):
         self.order.delete()
-        self.menu.max_early_minutes=0;self.menu.save()
-        other=Product.objects.create(name='Second menu',price=10,lead_hours=0,max_early_minutes=0,
+        self.menu.max_early_minutes=1;self.menu.save()
+        other=Product.objects.create(name='Second menu',price=10,lead_hours=0,max_early_minutes=1,
             preparation_tasks=self.menu.preparation_tasks)
         for day in range(8):
             order=self.order_for(delivery_at=self.date+timedelta(days=day))
@@ -345,7 +346,7 @@ class DemoPlanCommandTests(TestCase):
         with TemporaryDirectory() as folder:result=self.apply(preview,folder,*args)
         self.assertEqual(len(result['planned_order_ids']),8)
         self.menu.refresh_from_db();other.refresh_from_db()
-        self.assertEqual(self.menu.max_early_minutes,0);self.assertEqual(other.max_early_minutes,0)
+        self.assertEqual(self.menu.max_early_minutes,1);self.assertEqual(other.max_early_minutes,1)
         self.assertFalse(PaymentEvent.objects.exists());self.assertFalse(IngredientConsumption.objects.exists())
         from rest_framework.test import APIClient
         client=APIClient();client.force_authenticate(self.owner)

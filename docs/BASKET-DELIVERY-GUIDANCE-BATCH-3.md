@@ -15,14 +15,15 @@ Validation: frontend utility suite, checkout result rendering, guidance renderin
 candidate fits, this is the last scheduler validation reason, not proof that
 all possible minute-by-minute or manually arranged plans are impossible. The
 search includes 09:00 through 21:00 Malaysia time and uses one request-time
-snapshot. No capacity, advance notice, early-finish, storage or equipment rule
-is relaxed. Database failures remain service errors, never empty availability.
+snapshot. Automatic suggestions enforce capacity, advance notice, working hours, the
+current finishing policy, storage and equipment rules. Database failures remain service errors, never empty availability.
 
 The basket shows menu advance notice and quantities above the menu's own daily
-limit before searching; existing bookings are counted on the server. A request
-above a menu's daily limit cannot be solved simply by choosing a later date.
+limit before searching; existing bookings are counted on the server. A quantity
+above a menu's automatic daily limit cannot receive a scheduled suggestion merely
+by choosing a later date; checkout can instead submit an unpaid owner-review request.
 A same-day basket needing 24 hours' notice cannot be automatically scheduled
-for today. The empty state displays the server reason and distinguishes owner
+for today, but can be submitted for explicit owner review at checkout. The empty state displays the server reason and distinguishes owner
 review from confirmed availability. A new date clears the previous result and
 cancels its pending request. Only selected, current-date suggestions transfer
 to checkout, where the complete basket is checked again.

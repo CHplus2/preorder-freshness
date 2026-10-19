@@ -77,17 +77,18 @@ the order stays pending with `needs_review`, empty tasks and no reserved times.
 
 ## Why some plans can remain blocked
 
-Several menu guide templates have a zero-minute maximum early finish. If two
-menus both need the same worker or packing area for their final step, they
-cannot both finish exactly at dispatch. A later delivery date alone cannot
-resolve this. The preview identifies the affected orders and menu names.
+Zero-minute finish values now select flexible finishing on the dispatch day.
+They no longer force two packing steps to end simultaneously. The obsolete
+`zero_early_finish_menus` diagnostic has been removed. Existing saved task plans
+remain in place; this command only proposes and applies plans explicitly reviewed
+by the operator.
 
-Review the actual permitted early finish in **Menus → Advance preparation
-limits**, and allowed waits in each preparation step. Do not invent handling
-limits merely to clear a warning. After reviewing those terms, rerun the batch
-with `--use-current-preparation`. This command does not loosen holding limits,
-change kitchen hours, overlap resources, drop cooking steps, fabricate completed
-sales, or accept a generic manual reservation as a detailed task plan.
+Plans can still be blocked by actual worker/equipment bookings, kitchen hours,
+step gaps, notice, delivery capacity, or a positive early-finish cap. Review these
+rules in **Menus → Recipe & preorder settings** before adopting current settings.
+Changing the date alone cannot solve an oversized uninterrupted cooking step.
+The maintenance command keeps strict booking checks; it does not use checkout's
+unpaid-request exception path or fabricate completed sales.
 
 Paid, delivered history feeds FreshCast independently of these pending plans.
 Unpaid requests remain unpaid and do not become confirmed stock requirements

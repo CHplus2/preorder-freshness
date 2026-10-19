@@ -8,12 +8,24 @@ from dataclasses import dataclass
 from math import ceil
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from rest_framework.exceptions import ValidationError
 from ..models import Order, OrderItem, KitchenBlock
 from .work_sessions import PAUSABLE_RESOURCES, resumable_sessions, work_days
 
 RESOURCES = {'prep_table', 'stove', 'oven', 'rice_cooker', 'fridge', 'packing_area', 'none'}
+
+
+def capacity_bookings(items):
+    """Unaccepted review requests do not reserve a daily delivery quota."""
+    return OrderItem.objects.filter(product_id__in=items).exclude(order__status='cancelled').filter(
+        Q(order__status__in=['processing', 'cooked', 'shipped', 'delivered'])
+        | Q(order__preparation_plan__needs_review__isnull=True) | Q(order__preparation_plan__needs_review=False))
+
+
+def review_request(reason, store):
+    return dict(start=None, end=None, tasks=[], needs_review=True, review_reason=reason,
+                delivery_buffer_minutes=store.delivery_buffer_minutes)
 
 
 def validate_tasks(value):
@@ -99,9 +111,23 @@ def booked_tasks(orders, store):
     return result
 
 
+def earliest_finish(line, ready, store):
+    """Zero selects flexible same-dispatch-day finishing, never exact synchrony.
+
+    Positive allowances remain explicit limits and may permit a previous-day
+    finish. Earlier recipe work still respects the separate preparation span.
+    """
+    if line['max_early_minutes']:
+        return ready-timedelta(minutes=line['max_early_minutes'])
+    day = timezone.localtime(ready).date()
+    return timezone.make_aware(datetime.combine(day, time(store.kitchen_open_hour)))
+
+
 def place_line(line, ready, advance, busy, store):
     earliest = max(advance, ready-timedelta(days=line['max_preparation_days']))
-    finish_limit = ready-timedelta(minutes=line['max_early_minutes'])
+    finish_limit = earliest_finish(line, ready, store)
+    finish_rule = (f'the {line["max_early_minutes"]}-minute early-finish limit'
+        if line['max_early_minutes'] else 'the flexible same-day finish window')
     working_minutes = (store.kitchen_close_hour-store.kitchen_open_hour)*60
     for task in line['tasks']:
         if not task['overnight'] and not task.get('splittable') and task['minutes'] > working_minutes:
@@ -146,7 +172,7 @@ def place_line(line, ready, advance, busy, store):
                         break
                     raise ValidationError(f'{line["menu"]}: cannot fit {task["name"]} ({task["minutes"]} minutes) within '
                         f'kitchen hours {store.kitchen_open_hour}:00–{store.kitchen_close_hour}:00, existing bookings, '
-                        f'the {line["max_early_minutes"]}-minute early-finish limit and permitted step gaps. '
+                        f'{finish_rule} and permitted step gaps. '
                         'Try a later delivery time, fewer portions or contact the owner to review the recipe plan. '
                         'Changing only the date may not help; no booking or handling limit has been overridden.')
                 conflicts = [b for b in busy if b['start'] < end and b['end'] > start and
@@ -180,8 +206,8 @@ def availability_snapshot(items, day, store):
     first_ready = timezone.make_aware(datetime.combine(day, time(9)))-timedelta(minutes=store.delivery_buffer_minutes)
     last_ready = timezone.make_aware(datetime.combine(day, time(21)))-timedelta(minutes=store.delivery_buffer_minutes)
     horizon = first_ready-timedelta(days=max(item.product.max_preparation_days for item in items))
-    booked = dict(OrderItem.objects.filter(product_id__in=ids, order__delivery_at__date=day)
-        .exclude(order__status='cancelled').values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
+    booked = dict(capacity_bookings(ids).filter(order__delivery_at__date=day)
+        .values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
     busy = [dict(start=a, end=b, resource='all', worker=True) for a,b in
         KitchenBlock.objects.filter(start_at__lt=last_ready, end_at__gt=horizon).values_list('start_at', 'end_at')]
     orders = Order.objects.filter(status__in=['pending','processing'], inventory_deducted=False,
@@ -191,7 +217,7 @@ def availability_snapshot(items, day, store):
     return AvailabilitySnapshot(day, ids, booked, tuple(busy))
 
 
-def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, notice_from=None, allow_manual_review=False, availability=None):
+def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, notice_from=None, allow_manual_review=False, availability=None, allow_request_exceptions=False):
     now = now or timezone.now()
     items = list(items)
     if not items:
@@ -214,7 +240,8 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
         raise ValidationError('Choose delivery between 9am and 9pm Malaysia time.')
     if delivery_at <= now or delivery_at > now+timedelta(days=90):
         raise ValidationError('Choose a future delivery within the next 90 days.')
-    booked = availability.booked if availability is not None else dict(OrderItem.objects.filter(product_id__in=[i.product_id for i in items], order__delivery_at__date=local.date()).exclude(order__status='cancelled').exclude(order_id=exclude_order_id).values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
+    booked = availability.booked if availability is not None else dict(capacity_bookings([i.product_id for i in items]).filter(order__delivery_at__date=local.date()).exclude(order_id=exclude_order_id).values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
+    request_reasons = []
     requested = Counter()
     for item in items:
         requested[item.product_id] += item.quantity
@@ -225,14 +252,22 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
         if reserved+quantity > capacity:
             next_step = ('Reduce the quantity or contact the kitchen about separate deliveries.'
                 if quantity > capacity else 'Choose another date or reduce the quantity.')
-            raise ValidationError(f'{item.product.name} has insufficient capacity on this day: '
+            reason = (f'{item.product.name} exceeds the automatic capacity on this day: '
                 f'{quantity} requested + {reserved} already booked; daily limit {capacity}. {next_step}')
+            if not (allow_manual_review and allow_request_exceptions):
+                raise ValidationError(reason)
+            request_reasons.append(reason)
     advance = max(now, (notice_from or now)+timedelta(hours=max(i.product.lead_hours for i in items)))
     if delivery_at < advance+timedelta(minutes=store.delivery_buffer_minutes):
         starts = timezone.localtime(advance).strftime('%d %b %Y, %I:%M %p')
-        raise ValidationError('Choose a delivery time after the menu advance notice and delivery buffer. '
+        reason = ('Automatic planning needs a delivery time after the menu advance notice and delivery buffer. '
             f'Preparation can start no earlier than {starts} Malaysia time; '
             f'allow {store.delivery_buffer_minutes} minutes for delivery, plus the recipe preparation time.')
+        if not (allow_manual_review and allow_request_exceptions):
+            raise ValidationError(reason)
+        request_reasons.append(reason)
+    if request_reasons:
+        return review_request(' '.join(request_reasons), store)
     try:
         return automatic_plan(items, delivery_at, store, exclude_order_id, advance,
             existing_busy=availability.busy if availability is not None else None)
@@ -241,41 +276,11 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
             raise
         # Only recipe/planning validation is advisory. Database and unexpected
         # failures propagate; never turn an outage into an accepted request.
-        return dict(start=None, end=None, tasks=[], needs_review=True,
-                    review_reason=' '.join(str(part) for part in exc.detail),
-                    delivery_buffer_minutes=store.delivery_buffer_minutes)
-
-
-def validate_finish_rules(lines):
-    """Detect incompatible deadlines within a basket, independent of bookings.
-
-    A zero early-finish allowance fixes a line's final step at dispatch. Two
-    positive-duration final steps cannot end together on one shared resource.
-    This is a proven conflict, not a greedy search failure.
-    """
-    fixed = [line for line in lines if line['max_early_minutes'] == 0 and line['tasks'][-1]['minutes'] > 0]
-    for index, first in enumerate(fixed):
-        for second in fixed[index+1:]:
-            a, b = first['tasks'][-1], second['tasks'][-1]
-            worker = a['worker'] and b['worker']
-            equipment = a['resource'] != 'none' and a['resource'] == b['resource']
-            if not (worker or equipment):
-                continue
-            def label(line):
-                batch = line.get('batch_number')
-                return f'{line["menu"]} (batch {batch})' if batch else line['menu']
-            shared = 'the kitchen’s one worker' if worker else f'the same {a["resource"].replace("_", " ")}'
-            raise ValidationError(
-                f'{label(first)} and {label(second)} both have a 0-minute early-finish limit. '
-                f'Their final steps ({a["name"]} and {b["name"]}) must finish exactly at dispatch, '
-                f'but need {shared}. A later date alone cannot fix this conflict. '
-                'Ask the kitchen to review permitted early finish and recipe timings, or arrange separate deliveries.',
-                code='simultaneous_finish')
+        return review_request(' '.join(str(part) for part in exc.detail), store)
 
 
 def automatic_plan(items, delivery_at, store, exclude_order_id, advance, existing_busy=None):
     lines, minutes = preparation_work(items)
-    validate_finish_rules(lines)
     ready = delivery_at-timedelta(minutes=store.delivery_buffer_minutes)
     horizon = ready-timedelta(days=max(i.product.max_preparation_days for i in items))
     if existing_busy is None:
@@ -288,7 +293,7 @@ def automatic_plan(items, delivery_at, store, exclude_order_id, advance, existin
     # finish close to dispatch. Try bounded alternative orderings, always from
     # the same immutable existing bookings; never relax storage/gap limits.
     longest = sorted(lines, key=lambda x: (-x['minutes'], x['product_id']))
-    tightest = sorted(lines, key=lambda x: (x['max_early_minutes'], -x['minutes'], x['product_id']))
+    tightest = sorted(lines, key=lambda x: (ready-earliest_finish(x, ready, store), -x['minutes'], x['product_id']))
     failure = None
     for sequence in (longest, tightest, list(reversed(longest))):
         trial_busy = list(busy)

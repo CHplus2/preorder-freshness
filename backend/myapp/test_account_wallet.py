@@ -75,15 +75,27 @@ class AccountWalletTests(TestCase):
         self.assertIsNone(order.preparation_at)
         self.assertEqual(order.payment_status, 'unpaid')
 
-    def test_review_request_does_not_bypass_capacity_or_selling_status(self):
+    def test_over_capacity_request_keeps_wallet_unpaid_and_unreserved(self):
         Product.objects.update(daily_capacity=1)
         response=self.client.post('/api/orders/place/',self.body,format='json')
-        self.assertEqual(response.status_code,400)
-        self.assertFalse(Order.objects.exists())
-        Product.objects.update(daily_capacity=100, selling_status='paused')
+        self.assertEqual(response.status_code,201,response.data)
+        order=Order.objects.get()
+        self.assertTrue(order.preparation_plan['needs_review'])
+        self.assertFalse(order.preparation_plan['tasks'])
+        self.assertIsNone(order.preparation_at)
+        self.assertEqual(order.payment_method,'cod')
+        self.assertEqual(order.payment_status,'unpaid')
+        self.wallet.refresh_from_db()
+        self.assertEqual(self.wallet.balance,Decimal('8836.48'))
+        self.assertFalse(WalletTransaction.objects.exists())
+        self.assertFalse(PaymentEvent.objects.exists())
+
+    def test_review_request_cannot_bypass_selling_status(self):
+        Product.objects.update(selling_status='paused')
         response=self.client.post('/api/orders/place/',self.body,format='json')
         self.assertEqual(response.status_code,400)
         self.assertFalse(Order.objects.exists())
+        self.assertTrue(CartItem.objects.exists())
 
     def test_cod_review_request_for_unsplittable_step(self):
         Product.objects.update(preparation_minutes=1440)

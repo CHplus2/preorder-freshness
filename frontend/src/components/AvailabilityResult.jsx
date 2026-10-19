@@ -7,7 +7,7 @@ export default function AvailabilityResult({checking, error, quote, selectionKey
   else if (error) { tone = 'error'; content = <><strong>Availability could not be confirmed</strong><p>{error}</p></>; }
   else if (quote && quote.selectionKey !== selectionKey) content = <><strong>Please check availability again</strong><p>Your delivery time or basket has changed since the last check.</p></>;
   else if (quote?.plan.needs_review) {
-    content = <><strong>Kitchen confirmation needed</strong><p>You can submit this preorder for owner review. No payment will be taken. The owner will confirm your requested time or contact you to arrange another time.</p><p>A large order can use several preparation days when the menu’s batch and pause settings permit it.</p></>;
+    content = <><strong>Kitchen confirmation needed</strong><p>You can submit this preorder for owner review. No payment will be taken. The owner will confirm your requested time or contact you to arrange another time. No preparation time or delivery quota is reserved yet.</p>{quote.plan.review_reason && <p>{quote.plan.review_reason}</p>}<p>A large order can use several preparation days when the menu’s batch and pause settings permit it.</p></>;
   }
   else if (quote) {
     tone = 'success';

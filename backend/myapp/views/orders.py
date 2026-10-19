@@ -124,21 +124,16 @@ def place_order(request):
     list(Product.objects.select_for_update().filter(id__in=cart_items.values('product_id')).order_by('id'))
     delivery_at = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
     from ..services.scheduling import schedule_order, plan_snapshot
-    plan = schedule_order(cart_items, delivery_at, store, allow_manual_review=True)
+    plan = schedule_order(cart_items, delivery_at, store, allow_manual_review=True, allow_request_exceptions=True)
     needs_review = plan.get('needs_review', False)
     if needs_review:
         # Review requests never debit credits or invite an advance transfer.
         payment = 'cod'
-    local_delivery = timezone.localtime(delivery_at)
     method = request.data.get('delivery_method', 'standard')
     if method not in ('standard', 'express'):
         raise ValidationError('Invalid delivery method.')
-    from django.db.models import Sum
-    for item in cart_items:
-        booked = OrderItem.objects.filter(product=item.product,
-            order__delivery_at__date=local_delivery.date()).exclude(order__status='cancelled').aggregate(n=Sum('quantity'))['n'] or 0
-        if booked + item.quantity > item.product.daily_capacity:
-            raise ValidationError(f'{item.product.name} has insufficient capacity on this day. Choose another date.')
+    # The store/menu locks above protect schedule_order's authoritative capacity
+    # check. Review-only requests reserve neither task time nor a daily quota.
     cart_total = sum(item.quantity * item.product.price for item in cart_items)
     portions = sum(item.quantity for item in cart_items)
     discount = (cart_total * Decimal(store.bulk_discount_percent) / 100).quantize(Decimal('0.01')) if portions >= store.bulk_minimum else Decimal('0.00')
@@ -247,7 +242,7 @@ def preparation_quote(request):
     delivery = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     items = list(CartItem.objects.filter(user=request.user).select_related('product'))
-    plan = schedule_order(items, delivery, store, allow_manual_review=True)
+    plan = schedule_order(items, delivery, store, allow_manual_review=True, allow_request_exceptions=True)
     if plan.get('needs_review'):
         return Response(dict(preparation_at=None, preparation_end_at=None, **plan_snapshot(plan)))
     from ..services.discovery import shopping_preview

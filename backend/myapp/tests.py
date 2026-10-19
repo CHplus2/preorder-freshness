@@ -135,15 +135,28 @@ class KitchenTests(TestCase):
         self.assertEqual(batch.quantity,200)
         self.assertFalse(InventoryLog.objects.exists())
 
-    def test_early_delivery_rejected(self):
-        self.assertEqual(self.checkout(timezone.now()+timedelta(hours=1)).status_code,400)
-        self.assertFalse(Order.objects.exists())
-        self.assertTrue(CartItem.objects.exists())
+    def test_short_notice_delivery_is_an_unpaid_review_request(self):
+        from unittest.mock import patch
+        from django.utils.dateparse import parse_datetime
+        now = parse_datetime('2026-10-19T09:00:00+08:00')
+        with patch('django.utils.timezone.now', return_value=now):
+            response = self.checkout(now+timedelta(hours=1))
+        self.assertEqual(response.status_code,201,response.data)
+        order=Order.objects.get()
+        self.assertTrue(order.preparation_plan['needs_review'])
+        self.assertFalse(order.preparation_plan['tasks'])
+        self.assertIsNone(order.preparation_at)
+        self.assertEqual(order.payment_status,'unpaid')
 
-    def test_capacity_enforced(self):
+    def test_capacity_limit_requires_review_instead_of_reserving_more_work(self):
         self.product.daily_capacity=1;self.product.save()
         self.order()
-        self.assertEqual(self.checkout().status_code,400)
+        result=self.checkout()
+        self.assertEqual(result.status_code,201,result.data)
+        request=Order.objects.get(pk=result.data['order_id'])
+        self.assertTrue(request.preparation_plan['needs_review'])
+        self.assertFalse(request.preparation_plan['tasks'])
+        self.assertIsNone(request.preparation_at)
 
     def test_bulk_discount(self):
         Storefront.objects.create(pk=1,bulk_minimum=1,bulk_discount_percent=10)

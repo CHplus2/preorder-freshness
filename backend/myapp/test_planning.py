@@ -53,7 +53,7 @@ class PlanningTests(TestCase):
     def test_tight_finish_recipe_can_be_placed_before_long_recipe(self):
         long=self.product(name='Long recipe', max_early_minutes=120,
             preparation_tasks=[self.task(worker=True,minutes=90)])
-        tight=self.product(name='Finish at dispatch',max_early_minutes=0,
+        tight=self.product(name='Tight finish window',max_early_minutes=1,
             preparation_tasks=[self.task(worker=True,minutes=10)])
         plan=schedule_order([self.item(long),self.item(tight)],self.delivery,self.store,now=self.now)
         steps=plan['tasks']
@@ -161,7 +161,7 @@ class PlanningTests(TestCase):
     def test_quote_capacity(self):
         p=self.product(daily_capacity=1);plan=schedule_order([self.item(p)],self.delivery,self.store,now=self.now);self.book(p,plan);CartItem.objects.create(user=self.user,product=p,quantity=1)
         r=self.client.post('/api/orders/quote/',{'delivery_at':self.delivery.isoformat()},format='json')
-        self.assertEqual(r.status_code,400);self.assertIn('capacity',str(r.data))
+        self.assertEqual(r.status_code,200);self.assertTrue(r.data['needs_review']);self.assertFalse(r.data['tasks']);self.assertIn('capacity',str(r.data))
     def test_block_protected_by_permission_and_existing_order(self):
         p=self.product();plan=schedule_order([self.item(p)],self.delivery,self.store,now=self.now);self.book(p,plan)
         data={'start_at':plan['start'].isoformat(),'end_at':plan['end'].isoformat(),'reason':'Break'}

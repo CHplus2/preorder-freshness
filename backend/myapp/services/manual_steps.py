@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
+from .scheduling import earliest_finish
 
 
 def edit_steps(order, changes, store):
@@ -38,8 +39,8 @@ def edit_steps(order, changes, store):
         limits=next((line for line in order.preparation_plan.get('lines',[]) if line.get('product_id')==product_id),None)
         if limits:
             ready=order.delivery_at-timedelta(minutes=store.delivery_buffer_minutes)
-            if parse_datetime(rows[-1]['end']) < ready-timedelta(minutes=limits['max_early_minutes']):
-                warnings.append(f'{rows[0]["menu"]}: preparation finishes earlier than its accepted holding limit.')
+            if parse_datetime(rows[-1]['end']) < earliest_finish(limits, ready, store):
+                warnings.append(f'{rows[0]["menu"]}: preparation finishes before its permitted finish window.')
             if parse_datetime(rows[0]['start']) < ready-timedelta(days=limits['max_preparation_days']):
                 warnings.append(f'{rows[0]["menu"]}: preparation starts outside its accepted preparation span.')
     for index, task in enumerate(tasks):

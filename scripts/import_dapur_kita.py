@@ -158,6 +158,11 @@ def menu_payload(menu, categories, materials, new_status=None):
         {'raw_material': materials[item['raw_material'].casefold()]['id'], 'quantity_required': item['quantity_required']}
         for item in payload['ingredients']
     ]
+    # The API normalizes older recipe steps to the current pause schema.
+    # Send those defaults explicitly so verification and reruns compare the
+    # actual stored recipe, rather than mistaking added defaults for corruption.
+    payload['preparation_tasks'] = [dict(splittable=False, max_pause_minutes=0,
+        pause_resource='none', **task) for task in payload['preparation_tasks']]
     if new_status is not None:
         payload['selling_status'] = new_status
     return payload

@@ -37,6 +37,7 @@ export default function ManualPlan({order,onSaved}){
  }
  return <details className="manual-plan" open={order.preparation_plan?.needs_review || undefined}>
   <summary>{order.preparation_at?'Edit preparation times':'Set preparation times'}</summary>
+  <p>The suggested plan is optional. Set your own preparation times, review any conflicts, then confirm the arrangement.</p>
   <p>All times are Malaysia time. Delivery and payment stay unchanged, and previous plans stay in change history.</p>
   {saved?<p role="status">Preparation times saved and kitchen confirmation recorded.</p>:<form className="fyp-form" onSubmit={submit}>
    {detailed && <label>Editing mode<select disabled={busy} value={mode} onChange={e=>{setMode(e.target.value);setPreview(null)}}><option value="steps">Individual preparation steps</option><option value="window">Replace with an overall window</option></select></label>}
