@@ -214,3 +214,33 @@ short-notice request submission, visible owner controls, policy selection and
 1440/390/320px layouts. These checks only modify isolated SQLite fixtures. The
 legacy catalogue import now sends the API's explicit pause defaults so its
 existing save-verification/idempotency checks match the current recipe schema.
+
+### Preparation planning controls
+
+Planner order cards put automatic planning first: **Calculate plan** (or
+**Calculate new plan**) previews the recipe steps, start and finish without asking
+for an end time. **Confirm preparation plan** saves the reviewed replacement;
+calculating or discarding does not change reservations. Accepted settings remain
+the default; adopting current recipes is a separate option. Missing delivery dates
+must be resolved first. Scheduling failures retain the existing plan or leave an
+unconfirmed request unreserved.
+
+**Manual arrangement · advanced** is collapsed initially. Detailed plans can be
+shifted with one new Malaysia-time start, calculating the finish while preserving
+step durations, overlaps and overnight gaps. The existing signed manual-plan API
+checks the proposed tasks and reports conflicts for owner review. Moving steps is
+not an automatic search for free equipment. Individual edits and whole-kitchen
+windows remain explicit advanced overrides; the latter still needs both endpoints
+because no verified step duration can be inferred from an owner-defined window.
+
+**Mark preparation started (optional)** records work beginning; **Mark food ready**
+records completion and ingredient use once. Neither action replans the order.
+Fictional timing provenance remains a small collapsed disclosure on affected demo
+records. Timing alerts flag a missed or invalid saved plan and do not claim food
+was physically prepared.
+
+Validation: frontend utilities, Planner/checkout rendering checks, production build,
+61 Django planning/manual-plan/rescheduling tests, and real local API browser
+checks of calculate/discard/confirm, shifting, late-finish validation and failed
+request planning at 1440px, 390px and 320px. Browser fixtures use isolated SQLite;
+no production orders or catalogue rules are modified.

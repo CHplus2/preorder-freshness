@@ -21,14 +21,14 @@ export default function OrderWorkflowActions({order,onSaved}){
   finally{setBusy('');}
  };
  return <div className="planner-progress-actions" aria-label={`Progress for order ${order.id}`}>
-  {order.status==='pending' && planned && <p>This order is already in Planner. Starting preparation is an optional progress update.</p>}
+  {order.status==='pending' && planned && <p>Already scheduled. “Mark preparation started” records work beginning; “Mark food ready” records cooking finished.</p>}
   {order.status==='pending' && !planned?<p>Confirm this order’s preparation plan before starting or marking it ready.</p>:<>
    <div className="planner-progress-buttons">
-    <button type="button" className="admin-primary" disabled={!!busy} onClick={()=>update(preparing?'cooked':'delivered',preparing?'ready for delivery':'delivered')}>{busy?(preparing?'Saving preparation…':'Saving delivery…'):preparing?'Mark ready for delivery':'Mark delivered'}</button>
-    {order.status==='pending' && <button type="button" disabled={!!busy} onClick={()=>update('processing','preparation started')}>Start preparation (optional)</button>}
+    <button type="button" className="admin-primary" disabled={!!busy} onClick={()=>update(preparing?'cooked':'delivered',preparing?'ready for delivery':'delivered')}>{busy?(preparing?'Saving preparation…':'Saving delivery…'):preparing?'Mark food ready':'Mark delivered'}</button>
+    {order.status==='pending' && <button type="button" disabled={!!busy} onClick={()=>update('processing','preparation started')}>Mark preparation started (optional)</button>}
     {ready && <button type="button" disabled={!!busy} onClick={()=>update('shipped','out for delivery')}>Out for delivery (optional)</button>}
    </div>
-   <p>{preparing?'Mark ready only once the food is prepared. This records ingredient use once, using the accepted recipes and earliest eligible expiry.':'Mark delivered only after the customer receives the order. Payment records are updated separately.'}</p>
+   <p>{preparing?'Mark food ready only after cooking is finished. This deducts ingredients once, using accepted recipes and the earliest eligible expiry. Starting preparation does not deduct stock.':'Mark delivered only after the customer receives the order. Payment records are updated separately.'}</p>
   </>}
   {error && <p role="alert">{error}</p>}
  </div>;

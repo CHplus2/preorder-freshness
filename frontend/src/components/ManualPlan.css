@@ -19,3 +19,10 @@
 .manual-plan-preview ol{line-height:1.6;padding-left:22px}
 .manual-plan-preview ol li+li{margin-top:12px}
 @media(max-width:600px){.manual-plan-fields{grid-template-columns:1fr}.manual-plan{padding:16px}}
+.manual-plan .manual-individual-toggle{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.6}
+.manual-individual-toggle input[type=checkbox]{width:18px;height:18px;min-height:18px;flex-shrink:0;margin-top:2px}
+.manual-plan .manual-calculated-end{padding:14px;border:1px solid #dce7df;border-radius:8px;background:#f6f9f7;font-size:13px;line-height:1.65}
+.manual-plan input[type=datetime-local]{min-width:0;max-width:100%;box-sizing:border-box}
+.manual-plan .fyp-form .manual-individual-toggle{flex-direction:row;align-items:flex-start;font-weight:400;margin:0}
+.manual-plan .fyp-form .manual-individual-toggle input{width:18px;min-height:18px;height:18px;padding:0;margin:2px 0 0}
+.manual-plan .manual-plan-preview li{font-size:14px;line-height:1.6}

@@ -28,6 +28,6 @@ export default function PlannerOrderCard({order,onSaved,now}) {
   <PreparationDays plan={order.preparation_plan}/>
   <div className="planner-order-actions"><Link className="text-link" to={'/admin/orders?order='+order.id}>Manage order #{order.id} →</Link>{order.delivery_method==='express' && <a href="https://www.grab.com/my/express/" target="_blank" rel="noreferrer">Arrange courier</a>}<span>Placed {order.created_at?orderDate(order.created_at):'date not recorded'}</span></div>
   {request && <RescheduleOrder order={order} onSaved={onSaved}/>}
-  {order.status==='pending' ? <div className="planner-order-controls"><ManualPlan key={order.id+order.updated_at} order={order} onSaved={onSaved}/><PlanReview order={order} onSaved={onSaved}/></div> : <p className="planner-order-caption">Preparation is {orderStatusLabel(order.status).toLowerCase()}. Only orders that have not started can be replanned.</p>}
+  {order.status==='pending' ? <div className="planner-order-controls"><PlanReview key={"auto-"+order.id+order.updated_at} order={order} onSaved={onSaved}/><ManualPlan key={order.id+order.updated_at} order={order} onSaved={onSaved}/></div> : <p className="planner-order-caption">Preparation is {orderStatusLabel(order.status).toLowerCase()}. Only orders that have not started can be replanned.</p>}
  </article>;
 }
