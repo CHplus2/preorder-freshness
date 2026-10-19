@@ -39,3 +39,10 @@
  .checkout-submit-dock>.checkout-submit{font-size:12px;flex:1;width:auto;min-height:48px;margin:0;padding:12px}
  .checkout-container .checkout-title{font-size:36px}
 }
+
+.checkout-alternative-times{margin:4px 0 24px;border-top:1px solid #d9e1d3;padding-top:16px}
+.checkout-alternative-times>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#31523a;list-style:none}
+.checkout-alternative-times>summary::before{content:'+';margin-right:10px;font-size:20px}
+.checkout-alternative-times[open]>summary::before{content:'−'}
+.checkout-alternative-times>summary:focus-visible{outline:3px solid #477b4f;outline-offset:3px;border-radius:4px}
+.checkout-alternative-times .basket-slot-search{margin-top:12px}

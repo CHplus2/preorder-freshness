@@ -126,6 +126,37 @@ coverage verifies automatic pending-order visibility, two-update completion,
 optional stages, staff access, reviewed-plan guards, shortage rollback,
 exactly-once inventory use and unchanged unpaid status.
 
+## One delivery choice through checkout
+
+The basket has one primary **Find delivery times** action. With a preferred date,
+it checks that day. Without one (or when that weekday is unavailable), it searches
+for the next available day. **Search later dates** appears only after a selected
+day returns no suggestions. A new result replaces the earlier failure, and each
+time is an alternative for the same basket, not another required delivery.
+
+Checkout carries forward the selected timestamp. It automatically calls the
+existing quote endpoint once a complete date/time and current basket are ready,
+with a short debounce while editing. The normal **Check availability** button has
+been removed. **Find another time** holds the optional suggestion search, collapsed
+by default. Customers can still enter an exact request or search from a blank date.
+Selection changes are saved for navigation back to checkout when browser storage
+is available.
+
+The quote check asks whether the exact selected time fits the whole basket; the
+suggestion search finds candidate times. Neither reserves stock or tasks. Actual
+order placement retains its locked backend recheck. Date/basket/policy changes
+invalidate the previous quote immediately and cancel its request; late responses
+cannot show availability for an older selection. Submission waits for the current
+check, and a failed/invalid response cannot leave an old success visible. Service
+failures provide a retry; a review result uses **Send for kitchen review**.
+
+Frontend utility and component checks, targeted lint and the build pass. Real
+local API browser checks cover one basket finder, failure-to-later-date recovery,
+selection transfer, automatic quote, cancelled stale replies, outage/invalid-data
+retry, optional checkout search, changed basket quantities and 1440/390/320px
+layouts. Only isolated fixture basket quantities were changed; no orders were
+placed in this UI batch. Backend scheduling and payment logic are unchanged.
+
 ## Adaptive scheduling verification
 
 The full Django app suite passes (395 tests; four environment-specific tests

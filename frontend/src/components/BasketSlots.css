@@ -3,3 +3,6 @@
 .basket-slot-search .basket-slot-actions>.basket-next-day{background:#285a3e;color:#fff;border-color:#285a3e}
 .basket-slot-search .basket-found-date{font-size:13px;line-height:1.7;color:#455f40;margin:14px 0}
 .basket-found-date strong{display:block;color:#2c5435;margin-bottom:4px}
+
+:is(.cart-availability,.checkout-alternative-times) .slot-suggestions button[aria-pressed=true]{background:#285a3e;color:#fff;border-color:#285a3e}
+.basket-slot-empty>button{min-height:44px;margin-top:12px}

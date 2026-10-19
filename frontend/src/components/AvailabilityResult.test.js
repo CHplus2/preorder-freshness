@@ -30,7 +30,9 @@ try {
   assert.doesNotMatch(failed, /Your requested time is available/);
   assert.doesNotMatch(render({quote:null}), /Your requested time is available/);
   const {default: BasketSlots} = await server.ssrLoadModule('/src/components/BasketSlots.jsx');
-  assert.doesNotMatch(renderToStaticMarkup(createElement(BasketSlots, {value:'', onSelect:()=>{}})), /No hourly slots found/);
+  const initialSlots=renderToStaticMarkup(createElement(BasketSlots,{value:'',onSelect:()=>{}}));
+  assert.doesNotMatch(initialSlots,/No hourly slots found|Suggest times for this basket|Find the next available day|Search later dates/);
+  assert.equal((initialSlots.match(/Find delivery times/g) || []).length,1);
   const {default: RecipeEditor} = await server.ssrLoadModule('/src/components/RecipeEditor.jsx');
   const flexible=renderToStaticMarkup(createElement(RecipeEditor,{value:{max_early_minutes:0,max_preparation_days:2},onChange:()=>{}}));
   assert.match(flexible,/Flexible on the dispatch day/);assert.match(flexible,/Completed food does not occupy the worker/);
