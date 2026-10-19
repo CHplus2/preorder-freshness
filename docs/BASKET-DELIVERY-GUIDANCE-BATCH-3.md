@@ -33,3 +33,6 @@ The model-release link points at the owner's published `freshcast-model-backup-v
 release; the deployment credential workflow remains documented in GitHub rather
 than occupying the everyday Settings screen. These controls do not export the
 kitchen database or modify orders.
+
+The next-date search and simplified Planner progress updates are documented in
+[`basket-next-date-and-kitchen-progress.md`](basket-next-date-and-kitchen-progress.md).

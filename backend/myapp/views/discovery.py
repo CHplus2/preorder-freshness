@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from ..models import Product, Storefront, CartItem, RecommendationSession, RecommendationEvent
-from ..services.discovery import slots, slot_search, candidate_item, owner_key
+from ..services.discovery import slots, slot_search, next_basket_slots, candidate_item, owner_key
 from ..services.recommendation import get_score, get_user_top_categories, get_user_product_counts, get_global_product_popularity
 from ..services.auth_limits import limit
 
@@ -19,6 +19,16 @@ class GuideInput(serializers.Serializer):
     portions = serializers.IntegerField(min_value=1, max_value=100, default=1)
     budget = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0.01'), required=False)
     category = serializers.IntegerField(min_value=1, required=False)
+
+
+class BasketSlotsInput(serializers.Serializer):
+    date = serializers.DateField(required=False)
+    find_next = serializers.BooleanField(default=False)
+
+    def validate(self, data):
+        if not data.get('find_next') and 'date' not in data:
+            raise serializers.ValidationError({'date': 'Choose a date or find the next available day.'})
+        return data
 
 
 @api_view(['POST'])
@@ -81,12 +91,14 @@ def guided_menu(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def basket_slots(request):
-    data = GuideInput(data=request.data)
+    data = BasketSlotsInput(data=request.data)
     data.is_valid(raise_exception=True)
     items = list(CartItem.objects.filter(user=request.user).select_related('product'))
     if not items:
         raise serializers.ValidationError('Your basket is empty.')
     store = Storefront.objects.filter(pk=1).first() or Storefront()
+    if data.validated_data['find_next']:
+        return Response(next_basket_slots(items, data.validated_data.get('date'), store))
     return Response(slot_search(items, data.validated_data['date'], store, limit=13))
 
 

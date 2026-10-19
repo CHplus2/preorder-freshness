@@ -1,0 +1,5 @@
+.basket-slot-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:12px 0}
+.basket-slot-search .basket-slot-actions>button{min-height:44px;margin:0;font-size:12px;line-height:1.5;box-shadow:none}
+.basket-slot-search .basket-slot-actions>.basket-next-day{background:#285a3e;color:#fff;border-color:#285a3e}
+.basket-slot-search .basket-found-date{font-size:13px;line-height:1.7;color:#455f40;margin:14px 0}
+.basket-found-date strong{display:block;color:#2c5435;margin-bottom:4px}

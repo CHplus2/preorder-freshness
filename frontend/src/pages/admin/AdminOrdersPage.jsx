@@ -116,7 +116,7 @@ export default function AdminOrdersPage() {
               {generatedSalesHistory(order) && <p className="owner-order-note">Demo data · Generated history record requiring review; not a customer transaction.</p>}
               {review==='missing-delivery' && catalogue && <p className="owner-order-note">{orderMenuState(order,catalogue)==='unlinked'?'Some menu references are missing from the catalogue. An old name in an order is a historical snapshot; it does not prove the menu is still available.':orderMenuState(order,catalogue)==='archived'?'This request contains only archived menus. Review whether it is still needed.':orderMenuState(order,catalogue)==='mixed'?'This request mixes current and archived menus. Review the items before arranging a new date.':'Menu references are available. Use Set delivery date to review a future request.'}</p>}
               {overdueOrder(order,now) && <p className="admin-follow-up"><strong>Delivery follow-up</strong><span>The requested time has passed. Confirm delivery with the customer, then update the order status.</span></p>}
-              {order.status==='pending' && order.preparation_plan?.needs_review && <div className="owner-order-note"><strong>Delivery time awaiting your confirmation</strong><p>Review the recipe, kitchen workload and handling limits. Contact the customer if another time is needed. Set and confirm preparation times in Planner before moving this order to Processing.</p><details><summary>Automatic planning notes</summary><p>{order.preparation_plan.review_reason}</p></details></div>}
+              {order.status==='pending' && order.preparation_plan?.needs_review && <div className="owner-order-note"><strong>Delivery time awaiting your confirmation</strong><p>Review the recipe, kitchen workload and handling limits. Contact the customer if another time is needed. Set and confirm preparation times in Planner before starting or marking this order ready.</p><details><summary>Automatic planning notes</summary><p>{order.preparation_plan.review_reason}</p></details></div>}
               {/* BODY */}
               <div className="order-body">
                 {order.items.map((item) => (
@@ -190,10 +190,10 @@ export default function AdminOrdersPage() {
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
                 >
-                  <option value="pending">Pending</option>
-                  <option value="processing">Processing</option>
-                  <option value="cooked">Cooked — deduct ingredients</option>
-                  <option value="shipped">Shipped</option>
+                  <option value="pending">Not started</option>
+                  <option value="processing">Preparing (optional update)</option>
+                  <option value="cooked">Ready for delivery — record ingredient use</option>
+                  <option value="shipped">Out for delivery (optional update)</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
                 </select>

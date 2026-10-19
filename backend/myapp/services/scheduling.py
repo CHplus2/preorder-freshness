@@ -2,8 +2,9 @@
 Existing bookings are immutable. Conservative greedy placement may reject a plan
 that a human could improve; it never promises globally optimal packing.
 """
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from collections import Counter
+from dataclasses import dataclass
 from math import ceil
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
@@ -164,7 +165,33 @@ def place_line(line, ready, advance, busy, store):
     raise ValidationError(f'{line["menu"]}: automatic planning reached its search limit. Contact the owner to review the plan; availability has not been confirmed.')
 
 
-def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, notice_from=None, allow_manual_review=False):
+@dataclass(frozen=True)
+class AvailabilitySnapshot:
+    day: date
+    product_ids: frozenset
+    booked: dict
+    busy: tuple
+
+
+def availability_snapshot(items, day, store):
+    """Request-local read snapshot for advisory hourly checks, never checkout."""
+    items = list(items)
+    ids = frozenset(item.product_id for item in items)
+    first_ready = timezone.make_aware(datetime.combine(day, time(9)))-timedelta(minutes=store.delivery_buffer_minutes)
+    last_ready = timezone.make_aware(datetime.combine(day, time(21)))-timedelta(minutes=store.delivery_buffer_minutes)
+    horizon = first_ready-timedelta(days=max(item.product.max_preparation_days for item in items))
+    booked = dict(OrderItem.objects.filter(product_id__in=ids, order__delivery_at__date=day)
+        .exclude(order__status='cancelled').values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
+    busy = [dict(start=a, end=b, resource='all', worker=True) for a,b in
+        KitchenBlock.objects.filter(start_at__lt=last_ready, end_at__gt=horizon).values_list('start_at', 'end_at')]
+    orders = Order.objects.filter(status__in=['pending','processing'], inventory_deducted=False,
+        preparation_at__lt=last_ready, delivery_at__gt=horizon).only(
+            'preparation_at','preparation_end_at','delivery_at','preparation_plan')
+    busy.extend(booked_tasks(orders, store))
+    return AvailabilitySnapshot(day, ids, booked, tuple(busy))
+
+
+def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, notice_from=None, allow_manual_review=False, availability=None):
     now = now or timezone.now()
     items = list(items)
     if not items:
@@ -174,6 +201,9 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
             if getattr(item.product, 'selling_status', 'active') != 'active':
                 raise ValidationError(f'{item.product.name} is not accepting new orders. Remove it from your basket before continuing.')
     local = timezone.localtime(delivery_at)
+    if availability is not None and (exclude_order_id is not None or availability.day != local.date()
+            or availability.product_ids != frozenset(i.product_id for i in items)):
+        raise ValueError('Advisory availability snapshot does not match this basket and date.')
     for item in items:
         weekdays = getattr(item.product, "delivery_weekdays", [])
         if weekdays and local.weekday() not in weekdays:
@@ -184,7 +214,7 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
         raise ValidationError('Choose delivery between 9am and 9pm Malaysia time.')
     if delivery_at <= now or delivery_at > now+timedelta(days=90):
         raise ValidationError('Choose a future delivery within the next 90 days.')
-    booked = dict(OrderItem.objects.filter(product_id__in=[i.product_id for i in items], order__delivery_at__date=local.date()).exclude(order__status='cancelled').exclude(order_id=exclude_order_id).values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
+    booked = availability.booked if availability is not None else dict(OrderItem.objects.filter(product_id__in=[i.product_id for i in items], order__delivery_at__date=local.date()).exclude(order__status='cancelled').exclude(order_id=exclude_order_id).values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
     requested = Counter()
     for item in items:
         requested[item.product_id] += item.quantity
@@ -204,7 +234,8 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
             f'Preparation can start no earlier than {starts} Malaysia time; '
             f'allow {store.delivery_buffer_minutes} minutes for delivery, plus the recipe preparation time.')
     try:
-        return automatic_plan(items, delivery_at, store, exclude_order_id, advance)
+        return automatic_plan(items, delivery_at, store, exclude_order_id, advance,
+            existing_busy=availability.busy if availability is not None else None)
     except ValidationError as exc:
         if not allow_manual_review:
             raise
@@ -215,13 +246,16 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
                     delivery_buffer_minutes=store.delivery_buffer_minutes)
 
 
-def automatic_plan(items, delivery_at, store, exclude_order_id, advance):
+def automatic_plan(items, delivery_at, store, exclude_order_id, advance, existing_busy=None):
     lines, minutes = preparation_work(items)
     ready = delivery_at-timedelta(minutes=store.delivery_buffer_minutes)
     horizon = ready-timedelta(days=max(i.product.max_preparation_days for i in items))
-    busy = [dict(start=a, end=b, resource='all', worker=True) for a,b in KitchenBlock.objects.filter(start_at__lt=ready,end_at__gt=horizon).values_list('start_at','end_at')]
-    orders = Order.objects.filter(status__in=['pending','processing'],inventory_deducted=False,preparation_at__lt=ready,delivery_at__gt=horizon).exclude(pk=exclude_order_id).only('preparation_at','preparation_end_at','delivery_at','preparation_plan')
-    busy.extend(booked_tasks(orders, store))
+    if existing_busy is None:
+        busy = [dict(start=a, end=b, resource='all', worker=True) for a,b in KitchenBlock.objects.filter(start_at__lt=ready,end_at__gt=horizon).values_list('start_at','end_at')]
+        orders = Order.objects.filter(status__in=['pending','processing'],inventory_deducted=False,preparation_at__lt=ready,delivery_at__gt=horizon).exclude(pk=exclude_order_id).only('preparation_at','preparation_end_at','delivery_at','preparation_plan')
+        busy.extend(booked_tasks(orders, store))
+    else:
+        busy = list(existing_busy)
     # A long recipe placed first can unnecessarily block a recipe that must
     # finish close to dispatch. Try bounded alternative orderings, always from
     # the same immutable existing bookings; never relax storage/gap limits.

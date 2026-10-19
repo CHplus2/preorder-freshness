@@ -3,6 +3,7 @@ import ManualPlan from './ManualPlan';
 import PlanReview from './PlanReview';
 import PlanTimingNotice from './PlanTimingNotice';
 import PreparationDays from './PreparationDays';
+import OrderWorkflowActions from './OrderWorkflowActions';
 import {duration} from '../utils/planner';
 import {orderDate,orderStatusLabel} from '../utils/orderPresentation';
 import './PlannerOrderCard.css';
@@ -19,6 +20,7 @@ export default function PlannerOrderCard({order,onSaved,now}) {
   <ul className="planner-order-menus" aria-label="Ordered menus">{order.items.map((item,index)=><li key={item.id || index}><span>{item.product_name}</span><strong aria-label={item.quantity+' portions'}>×{item.quantity}</strong></li>)}</ul>
   <dl className="planner-order-dates"><div><dt>Delivery</dt><dd>{orderDate(order.delivery_at)}</dd></div><div><dt>Preparation starts</dt><dd>{orderDate(order.preparation_at)}</dd></div></dl>
   <PlanTimingNotice order={order} now={now}/>
+  <OrderWorkflowActions order={order} onSaved={onSaved}/>
   {valid && <><dl className="planner-order-stats"><div><dt>Hands-on work</dt><dd>{duration(hands)}</dd></div><div><dt>Equipment & pauses</dt><dd>{duration(passive)}</dd></div><div><dt>Start to finish</dt><dd>{duration(elapsed)}</dd></div></dl><p className="planner-order-caption">The full window includes breaks; unattended steps can overlap.</p></>}
   <PreparationDays plan={order.preparation_plan}/>
   <div className="planner-order-actions"><Link className="text-link" to={'/admin/orders?order='+order.id}>Manage order #{order.id} →</Link>{order.delivery_method==='express' && <a href="https://www.grab.com/my/express/" target="_blank" rel="noreferrer">Arrange courier</a>}<span>Placed {order.created_at?orderDate(order.created_at):'date not recorded'}</span></div>

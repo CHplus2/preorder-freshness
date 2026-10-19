@@ -39,8 +39,9 @@ system at earlier points in development.
 - Submit once and inspect My orders. If the response is lost, check My orders
   before repeating the action. Checkout references protect retries from creating
   the same order twice.
-- Order stages are pending, processing, cooked, shipped and delivered. The owner
-  updates actual progress. Reviews are subject to purchase/review eligibility.
+- Scheduled pending orders already appear in Planner. The owner can mark food
+  ready, then delivered; preparing and out-for-delivery updates are optional.
+  The underlying statuses remain pending, processing, cooked, shipped and delivered. Reviews are subject to purchase/review eligibility.
 - Contact links offer WhatsApp or the device's email application. SMTP does not
   control whether a customer's laptop has an email application configured.
   Copying the email/enquiry is an alternative when an email link cannot open.

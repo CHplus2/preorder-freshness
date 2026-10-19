@@ -1,0 +1,12 @@
+.planner-progress-actions{padding:16px 0;border-top:1px solid #dce5dc;margin:14px 0}
+.planner-progress-actions>p{font-size:12px!important;font-weight:400!important;line-height:1.65!important;color:#5b6e5e;margin:8px 0 14px!important}
+.planner-progress-actions>p[role=alert]{color:#863f32;background:#fff3ed;border-radius:6px;padding:12px}
+.planner-progress-buttons{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.planner-progress-buttons>button{min-height:44px;margin:0;font-size:12px;line-height:1.5;white-space:normal}
+.planner-day-orders{margin:20px 0 26px;padding:20px;border:1px solid #d7e3d5;background:#f5f8f0;border-radius:12px}
+.planner-day-orders>h2{font-size:18px;margin:0 0 10px}
+.planner-day-orders>p{font-size:13px;line-height:1.7;margin:0 0 18px;color:#5d705a}
+.planner-day-order{margin-top:18px}
+.planner-day-order>button{font-size:13px;min-height:44px;margin:0}
+.planner-day-order .planner-progress-actions{margin-top:10px}
+@media(max-width:560px){.planner-progress-buttons{align-items:stretch;flex-direction:column}.planner-progress-buttons>button{width:100%}.planner-day-orders{padding:16px}}

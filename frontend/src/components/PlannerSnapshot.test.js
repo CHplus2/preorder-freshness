@@ -71,5 +71,17 @@ try {
   const {default:ShoppingSheet}=await server.ssrLoadModule('/src/components/ShoppingSheet.jsx');
   const sheet=renderToStaticMarkup(createElement(ShoppingSheet,{through:'2026-10-10',missingRecipes:true,loadedAt:'2026-10-03T01:00:00Z',groups:[{key:'1:g',material:'Rice',quantity:'300.000',unit:'g',earliest:'2026-10-08',requirements:[{needed_by:'2026-10-08',order:21,quantity:'300.000'}]}]}));
   for(const text of ['INCOMPLETE','Rice','300.000','2026-10-08','order #21','Plan loaded','Paper ticks do not change the app'])assert.ok(sheet.includes(text),text);
+  const {default:OrderWorkflowActions}=await server.ssrLoadModule('/src/components/OrderWorkflowActions.jsx');
+  const progress=(status,fields={})=>renderToStaticMarkup(createElement(OrderWorkflowActions,{onSaved:()=>{},order:{id:12,status,delivery_at:'2026-10-20T18:00:00+08:00',preparation_at:'2026-10-20T10:00:00+08:00',preparation_end_at:'2026-10-20T12:00:00+08:00',preparation_plan:{},...fields}}));
+  const notStarted=progress('pending');
+  assert.match(notStarted,/already in Planner/);assert.match(notStarted,/Mark ready for delivery/);assert.match(notStarted,/Start preparation \(optional\)/);
+  assert.match(notStarted,/ingredient use once/);
+  assert.doesNotMatch(progress('pending',{preparation_plan:{needs_review:true}}),/Mark ready for delivery/);
+  assert.doesNotMatch(progress('pending',{preparation_end_at:null}),/Mark ready for delivery/);
+  assert.doesNotMatch(progress('pending',{preparation_end_at:'2026-10-20T09:00:00+08:00'}),/Mark ready for delivery/);
+  assert.match(progress('processing'),/Mark ready for delivery/);assert.doesNotMatch(progress('processing'),/Start preparation/);
+  assert.match(progress('cooked'),/Mark delivered/);assert.match(progress('cooked'),/Out for delivery \(optional\)/);
+  assert.match(progress('shipped'),/Mark delivered/);assert.equal(progress('delivered'),'');
+  console.log('Planner progress: scheduled pending orders, guarded unreviewed plans, optional intermediate stages and actual completion actions passed.');
   console.log('Planner snapshot: initial loading, refresh with cached data, failed refresh, missing response and ready state passed.');
 } finally {await server.close();}

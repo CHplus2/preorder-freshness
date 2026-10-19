@@ -20,19 +20,22 @@ def candidate_item(product, portions):
     return SimpleNamespace(product=product, product_id=product.pk, quantity=portions)
 
 
-def slot_search(items, day, store, limit=3):
-    from .scheduling import schedule_order
-    now = timezone.now()
+def slot_search(items, day, store, limit=3, now=None):
+    from .scheduling import schedule_order, availability_snapshot
+    now = now or timezone.now()
     today = timezone.localtime(now).date()
     if day < today or day > today + timedelta(days=90):
         raise ValidationError('Choose today or a future date within 90 days.')
     items = list(items)
+    advance = now+timedelta(hours=max(item.product.lead_hours for item in items))
+    request_after = advance+timedelta(minutes=store.delivery_buffer_minutes)
+    snapshot = availability_snapshot(items, day, store)
     found = []
     last_reason = ''
     for hour in range(9, 22):
         delivery = timezone.make_aware(datetime.combine(day, time(hour)))
         try:
-            plan = schedule_order(items, delivery, store, now=now)
+            plan = schedule_order(items, delivery, store, now=now, availability=snapshot)
         except ValidationError as exc:
             last_reason = ' '.join(str(part) for part in exc.detail)
             continue
@@ -40,7 +43,35 @@ def slot_search(items, day, store, limit=3):
             'preparation_end_at': plan['end'].isoformat(), 'hands_on_minutes': plan['hands_on_minutes']})
         if len(found) >= limit:
             break
-    return {'slots': found, 'unavailable_reason': last_reason if not found else ''}
+    return {'slots': found, 'unavailable_reason': last_reason if not found else '',
+        'earliest_preparation_at': advance.isoformat(), 'delivery_request_after': request_after.isoformat(),
+        'suggested_date': day.isoformat() if found else None,
+        'searched_from': day.isoformat(), 'searched_through': day.isoformat(), 'searched_days': 1}
+
+
+def next_basket_slots(items, day, store):
+    """Bounded seven-day search; suggestions never reserve capacity or stock."""
+    items = list(items)
+    now = timezone.now()
+    today = timezone.localtime(now).date()
+    latest = today+timedelta(days=90)
+    if day is not None and day > latest:
+        raise ValidationError('Choose a date within the next 90 days.')
+    advance = now+timedelta(hours=max(item.product.lead_hours for item in items))
+    request_after = advance+timedelta(minutes=store.delivery_buffer_minutes)
+    first = max(day or today, today, timezone.localtime(request_after).date())
+    last = min(first+timedelta(days=6), latest)
+    if first > latest or request_after >= now+timedelta(days=90):
+        return {'slots': [], 'unavailable_reason': 'This basket needs more advance notice than the 90-day booking window allows. Contact the kitchen.',
+            'earliest_preparation_at': advance.isoformat(), 'delivery_request_after': request_after.isoformat(),
+            'suggested_date': None, 'searched_from': None, 'searched_through': None, 'searched_days': 0}
+    for offset in range((last-first).days+1):
+        date = first+timedelta(days=offset)
+        result = slot_search(items, date, store, limit=13, now=now)
+        result.update(searched_from=first.isoformat(), searched_days=offset+1)
+        if result['slots']:
+            return result
+    return result
 
 
 def slots(items, day, store, limit=3):

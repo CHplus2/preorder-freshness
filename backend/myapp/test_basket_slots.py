@@ -109,3 +109,93 @@ class BasketSlotTests(TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertNotIn('private connection info', str(response.data))
         self.assertNotIn('slots', response.data)
+
+    def test_next_day_search_skips_notice_and_returns_a_recheckable_time(self):
+        self.now = parse_datetime('2026-10-19T15:27:00+08:00')
+        with patch('django.utils.timezone.now', return_value=self.now):
+            self.line.quantity = 1
+            self.line.save()
+            response = self.client.post('/api/orders/slots/', {'date': '2026-10-19', 'find_next': True}, format='json')
+            self.assertEqual(response.status_code, 200, response.data)
+            self.assertEqual(response.data['suggested_date'], '2026-10-20')
+            self.assertEqual(parse_datetime(response.data['earliest_preparation_at']), self.now+timedelta(hours=24))
+            self.assertEqual(response.data['searched_days'], 1)
+            slot = response.data['slots'][0]
+            self.assertGreaterEqual(parse_datetime(slot['preparation_at']), self.now+timedelta(hours=24))
+            quote = self.client.post('/api/orders/quote/', {'delivery_at': slot['delivery_at']}, format='json')
+            self.assertEqual(quote.status_code, 200, quote.data)
+            self.assertFalse(quote.data.get('needs_review', False))
+        self.assertFalse(Order.objects.exists())
+
+    def test_next_search_without_date_respects_weekdays_and_skips_closures(self):
+        self.line.quantity = 1
+        self.line.save()
+        self.cookies.delivery_weekdays = [2]  # Wednesday, 21 October.
+        self.cookies.save()
+        response = self.client.post('/api/orders/slots/', {'find_next': True}, format='json')
+        self.assertEqual(response.data['suggested_date'], '2026-10-21')
+        self.assertEqual(response.data['searched_days'], 2)
+        KitchenBlock.objects.create(start_at=parse_datetime('2026-10-21T00:00:00+08:00'),
+            end_at=parse_datetime('2026-10-22T00:00:00+08:00'), reason='Closed Wednesday')
+        blocked = self.client.post('/api/orders/slots/', {'find_next': True}, format='json')
+        self.assertEqual(blocked.data['slots'], [])
+        self.assertEqual(blocked.data['searched_days'], 7)
+        self.assertEqual(blocked.data['searched_from'], '2026-10-20')
+        self.assertEqual(blocked.data['searched_through'], '2026-10-26')
+
+    def test_next_search_never_solves_quantity_limit_by_changing_date(self):
+        response = self.client.post('/api/orders/slots/', {'find_next': True}, format='json')
+        self.assertEqual(response.data['slots'], [])
+        self.assertIn('daily limit 10', response.data['unavailable_reason'])
+        self.assertLessEqual(response.data['searched_days'], 7)
+        self.assertFalse(Order.objects.exists())
+
+    def test_hourly_checks_share_three_read_queries_and_match_fresh_scheduling(self):
+        from .services.discovery import slot_search
+        from .services.scheduling import schedule_order
+        from rest_framework.exceptions import ValidationError
+        from datetime import datetime, time
+        self.line.quantity = 1
+        self.line.save()
+        day = timezone.localdate()+timedelta(days=3)
+        items = list(CartItem.objects.filter(user=self.customer).select_related('product'))
+        KitchenBlock.objects.create(start_at=timezone.make_aware(datetime.combine(day, time(9))),
+            end_at=timezone.make_aware(datetime.combine(day, time(12))), reason='Morning closure')
+        with self.assertNumQueries(3):
+            response = slot_search(items, day, self.store, limit=13)
+        expected = []
+        for hour in range(9, 22):
+            delivery = timezone.make_aware(datetime.combine(day, time(hour)))
+            try:
+                plan = schedule_order(items, delivery, self.store, now=self.now)
+            except ValidationError:
+                continue
+            expected.append((delivery.isoformat(), plan['start'].isoformat()))
+        self.assertEqual([(s['delivery_at'], s['preparation_at']) for s in response['slots']], expected)
+
+    def test_suggestions_are_not_reservations_checkout_rechecks_new_bookings(self):
+        self.line.quantity = 10
+        self.line.save()
+        response = self.client.post('/api/orders/slots/', {'find_next': True}, format='json')
+        slot = response.data['slots'][0]
+        delivery = parse_datetime(slot['delivery_at'])
+        order = Order.objects.create(user=self.customer, delivery_at=delivery)
+        OrderItem.objects.create(order=order, product=self.cookies, product_name=self.cookies.name,
+            quantity=1, unit_price=10, subtotal=10)
+        quote = self.client.post('/api/orders/quote/', {'delivery_at': slot['delivery_at']}, format='json')
+        self.assertEqual(quote.status_code, 400)
+        self.assertIn('daily limit 10', str(quote.data))
+        self.assertEqual(Order.objects.count(), 1)
+
+    def test_next_search_is_bounded_by_the_ninety_day_booking_window(self):
+        self.line.quantity = 1
+        self.line.save()
+        self.cookies.lead_hours = 90*24
+        self.cookies.save()
+        response = self.client.post('/api/orders/slots/', {'find_next': True}, format='json')
+        self.assertEqual(response.data['slots'], [])
+        self.assertEqual(response.data['searched_days'], 0)
+        self.assertIn('90-day booking window', response.data['unavailable_reason'])
+        self.assertEqual(self.client.post('/api/orders/slots/', {}, format='json').status_code, 400)
+        self.assertEqual(self.client.post('/api/orders/slots/', {'find_next':'maybe'}, format='json').status_code, 400)
+        self.assertEqual(self.client.post('/api/orders/slots/', {'find_next':True, 'date':'2027-10-19'}, format='json').status_code, 400)
