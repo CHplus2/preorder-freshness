@@ -234,3 +234,6 @@
 .cart-availability input {min-height:44px;padding:10px;max-width:100%;box-sizing:border-box;}
 .cart-availability .slot-suggestions {display:flex;flex-wrap:wrap;gap:12px;margin-top:16px;}
 .cart-availability button {min-height:44px;}
+
+.cart-availability .basket-slot-search{margin-top:16px}
+.cart-availability .basket-slot-empty{margin-top:16px;padding:16px;border:1px solid #d5dfd6;border-radius:8px;background:#f6f8f3}

@@ -11,6 +11,7 @@ export default function CartPage() {
   const { formatPrice } = useUI();
   const { cart, cartLoading, cartError, refreshCart, removeFromCart, updateQuantity } = useCart();
   const navigate = useNavigate();
+  const [openedAt]=useState(()=>Date.now());
   const [deliveryDay,setDeliveryDay]=useState('');
   const [selectedTime,setSelectedTime]=useState('');
   const [selectionKey,setSelectionKey]=useState('');
@@ -19,6 +20,11 @@ export default function CartPage() {
 
   const unavailable = cart.some(item => item.product.selling_status && item.product.selling_status !== "active");
   const incompatibleDays = Boolean(deliveryDayIssue(cart, ''));
+  const selectedDayIssue = deliveryDayIssue(cart,deliveryDay);
+  const advanceHours = Math.max(0,...cart.map(item=>item.product.lead_hours ?? 24));
+  const overDailyLimit = cart.filter(item=>Number.isFinite(item.product.daily_capacity) && item.quantity>item.product.daily_capacity);
+  const today = new Date(openedAt+8*3600000).toISOString().slice(0,10);
+  const lastDay = new Date(openedAt+90*86400000+8*3600000).toISOString().slice(0,10);
   const total = cart.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
@@ -104,11 +110,11 @@ export default function CartPage() {
         !cartLoading && !cartError && <p>Your basket is empty. Add a meal from the menu to get started.</p>
       )}
 
-      {cart.length > 0 && !unavailable && <BasketDeliveryDays cart={cart} value="" showBasketLink={false}/>}
+      {cart.length > 0 && !unavailable && <BasketDeliveryDays cart={cart} value={deliveryDay} showBasketLink={false}/>}
       {cart.length > 0 && !unavailable && !incompatibleDays && <section className="cart-availability" aria-label="Basket delivery times">
-        <h2>Find a delivery time</h2><p>Check your whole basket before checkout. Available times depend on quantities and kitchen preparation capacity.</p>
-        <label htmlFor="basket-delivery-day">Preferred delivery date</label><input id="basket-delivery-day" type="date" value={deliveryDay} onChange={e=>{setDeliveryDay(e.target.value);setSelectedTime('');setSlotNotice('');}}/>
-        <BasketSlots key={basketKey} value={deliveryDay} disabled={cartLoading} onSelect={time=>{setSelectionKey(basketKey);setSelectedTime(time);try{sessionStorage.setItem('preferredDelivery',time+':00+08:00');setSlotNotice('Selected for checkout. Availability will be checked again when you order.');}catch{setSlotNotice('Your browser could not save this selection. Choose the time again at checkout.');}}}/>
+        <h2>Find a delivery time</h2><p>Check your whole basket before checkout. These menus require {advanceHours} hours of advance notice before preparation starts; cooking and delivery need additional time.</p>{overDailyLimit.map(item=><p role="alert" key={item.id}>{item.product.name}: {item.quantity} requested exceeds the menu’s daily limit of {item.product.daily_capacity}. Reduce the quantity or contact the kitchen about separate deliveries.</p>)}
+        <label htmlFor="basket-delivery-day">Preferred delivery date</label><input id="basket-delivery-day" type="date" min={today} max={lastDay} value={deliveryDay} onChange={e=>{setDeliveryDay(e.target.value);setSelectedTime('');setSlotNotice('');}}/>
+        <BasketSlots key={basketKey} value={deliveryDay} disabled={cartLoading || !!selectedDayIssue} onSelect={time=>{setSelectionKey(basketKey);setSelectedTime(time);try{sessionStorage.setItem('preferredDelivery',time+':00+08:00');setSlotNotice('Selected for checkout. Availability will be checked again when you order.');}catch{setSlotNotice('Your browser could not save this selection. Choose the time again at checkout.');}}}/>
         {selectedTime && selectionKey===basketKey && <p role="status">{selectedTime.replace('T',' ')} (Malaysia time). {slotNotice}</p>}
       </section>}
       {cart.length > 0 && <div className="cart-total">

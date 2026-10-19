@@ -16,8 +16,6 @@
 .settings-page .settings-save-actions>[role=status]:empty{display:none}
 .settings-page .settings-shortcuts{display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px;margin-top:16px}
 .settings-page .settings-shortcuts a{display:inline-flex;align-items:center;justify-content:center;gap:16px;min-height:44px;text-underline-offset:4px}
-.settings-page .settings-shortcuts .settings-shortcut{padding:10px 18px;border:1px solid #285a3e;border-radius:8px;background:#285a3e;color:#fff;text-decoration:none;font-weight:600}
-.settings-page .settings-shortcuts .settings-shortcut:hover{background:#1f4731}
 .settings-page .settings-shortcuts a:focus-visible,.settings-page #backups:focus-visible{outline:2px solid #285a3e;outline-offset:4px}
 .settings-page #backups{scroll-margin-top:7rem}
 @media(max-width:600px){.settings-page .settings-group{padding:20px}.settings-page .settings-save-actions{align-items:stretch;flex-direction:column}.settings-page .settings-save-actions>button{width:100%}}
@@ -25,3 +23,5 @@
 .settings-page #store-identity,.settings-page #store-contact{scroll-margin-top:7rem}
 .settings-page .setup-steps a{display:inline-flex;align-items:center;min-height:44px;margin-top:8px;text-decoration:underline;text-underline-offset:4px}
 .settings-page .setup-steps a:focus-visible{outline:2px solid currentColor;outline-offset:4px}
+
+.settings-page .settings-advanced{margin-top:36px}

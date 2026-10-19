@@ -1,5 +1,5 @@
 export const SOURCE_ZIP='https://github.com/CHplus2/preorder-freshness/archive/refs/heads/main.zip';
-export const BACKUP_WORKFLOW='https://github.com/CHplus2/preorder-freshness/actions/workflows/backup-original-genpact.yml';
+export const MODEL_RELEASE='https://github.com/CHplus2/preorder-freshness/releases/tag/freshcast-model-backup-v1';
 
 export async function downloadModelBytes(fetcher=globalThis.fetch,crypto=globalThis.crypto) {
  const response=await fetcher('/api/admin/predictive/model-backup/',{credentials:'same-origin',headers:{Accept:'application/gzip, application/json'}});

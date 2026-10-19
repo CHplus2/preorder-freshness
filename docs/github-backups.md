@@ -14,7 +14,7 @@ Source downloads exclude kitchen database records and the ignored model bundle.
 ## Download the model using the website
 
 After this feature is deployed, sign in with the existing staff account and open
-**Settings → Backups & recovery → Download Genpact model backup**. The download
+**Settings → Advanced → Backups & recovery → Download Genpact model backup**. The download
 uses the normal staff session; no deployment token or terminal is needed. Its
 fixed archive and checksum are verified server-side and again in the browser.
 The existing deployment-to-deployment bearer route remains protected separately.
@@ -30,6 +30,10 @@ adding repeated archives to website source history. Release downloads persist
 until the release/assets are deleted; GitHub Actions artifacts can expire.
 Asset visibility follows repository visibility. The current session could not
 read repository visibility or publish releases because GitHub's API returned 403.
+
+The owner has published the original archive at
+https://github.com/CHplus2/preorder-freshness/releases/tag/freshcast-model-backup-v1.
+The reported asset checksum matches the pinned original checksum below.
 
 ## Automated original-model backup
 

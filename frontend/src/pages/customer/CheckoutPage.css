@@ -23,3 +23,7 @@
 .account-settings .checkout-section {margin-bottom:24px;}
 .account-settings .checkout-section>h2 {font:600 20px/1.4 system-ui,sans-serif;margin:0 0 20px;}
 .escrow-demo>.checkout-back {min-height:44px;margin-bottom:20px;text-decoration:underline;text-underline-offset:4px;}
+
+.checkout-section .basket-slot-search{margin:16px 0 24px}
+.checkout-section .slot-suggestions{display:flex;flex-wrap:wrap;gap:10px}
+.checkout-section .basket-slot-empty{margin-top:16px;padding:16px;border:1px solid #d5dfd6;border-radius:8px;background:#f6f8f3}

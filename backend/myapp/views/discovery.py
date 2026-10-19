@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from ..models import Product, Storefront, CartItem, RecommendationSession, RecommendationEvent
-from ..services.discovery import slots, candidate_item, owner_key
+from ..services.discovery import slots, slot_search, candidate_item, owner_key
 from ..services.recommendation import get_score, get_user_top_categories, get_user_product_counts, get_global_product_popularity
 from ..services.auth_limits import limit
 
@@ -87,7 +87,7 @@ def basket_slots(request):
     if not items:
         raise serializers.ValidationError('Your basket is empty.')
     store = Storefront.objects.filter(pk=1).first() or Storefront()
-    return Response({'slots': slots(items, data.validated_data['date'], store, limit=12)})
+    return Response(slot_search(items, data.validated_data['date'], store, limit=13))
 
 
 @api_view(['POST'])

@@ -34,8 +34,8 @@ system at earlier points in development.
   month/day/year even when other text uses day/month/year. Read the full date.
 - Check availability or request suggested times. Suggestions are sampled hourly
   and limited in number; an empty suggestion list does not prove no manual
-  arrangement is possible. The hourly search currently checks 09:00 through 20:00;
-  checkout also accepts exactly 21:00.
+  arrangement is possible. The hourly search checks 09:00 through 21:00 inclusive, using the same
+  advance notice, daily capacity and recipe constraints as checkout.
 - Submit once and inspect My orders. If the response is lost, check My orders
   before repeating the action. Checkout references protect retries from creating
   the same order twice.

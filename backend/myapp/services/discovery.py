@@ -20,23 +20,31 @@ def candidate_item(product, portions):
     return SimpleNamespace(product=product, product_id=product.pk, quantity=portions)
 
 
-def slots(items, day, store, limit=3):
+def slot_search(items, day, store, limit=3):
     from .scheduling import schedule_order
-    today = timezone.localdate()
+    now = timezone.now()
+    today = timezone.localtime(now).date()
     if day < today or day > today + timedelta(days=90):
         raise ValidationError('Choose today or a future date within 90 days.')
+    items = list(items)
     found = []
-    for hour in range(9, 21):
+    last_reason = ''
+    for hour in range(9, 22):
         delivery = timezone.make_aware(datetime.combine(day, time(hour)))
         try:
-            plan = schedule_order(items, delivery, store)
-        except ValidationError:
+            plan = schedule_order(items, delivery, store, now=now)
+        except ValidationError as exc:
+            last_reason = ' '.join(str(part) for part in exc.detail)
             continue
         found.append({'delivery_at': delivery.isoformat(), 'preparation_at': plan['start'].isoformat(),
             'preparation_end_at': plan['end'].isoformat(), 'hands_on_minutes': plan['hands_on_minutes']})
         if len(found) >= limit:
             break
-    return found
+    return {'slots': found, 'unavailable_reason': last_reason if not found else ''}
+
+
+def slots(items, day, store, limit=3):
+    return slot_search(items, day, store, limit)['slots']
 
 
 def shopping_preview(items, preparation_at, preparation_end_at):

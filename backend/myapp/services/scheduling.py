@@ -189,11 +189,20 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
     for item in items:
         requested[item.product_id] += item.quantity
     for item in items:
-        if booked.get(item.product_id, 0)+requested[item.product_id] > item.product.daily_capacity:
-            raise ValidationError(f'{item.product.name} has insufficient capacity on this day. Choose another date.')
+        reserved = booked.get(item.product_id, 0)
+        quantity = requested[item.product_id]
+        capacity = item.product.daily_capacity
+        if reserved+quantity > capacity:
+            next_step = ('Reduce the quantity or contact the kitchen about separate deliveries.'
+                if quantity > capacity else 'Choose another date or reduce the quantity.')
+            raise ValidationError(f'{item.product.name} has insufficient capacity on this day: '
+                f'{quantity} requested + {reserved} already booked; daily limit {capacity}. {next_step}')
     advance = max(now, (notice_from or now)+timedelta(hours=max(i.product.lead_hours for i in items)))
-    if allow_manual_review and delivery_at < advance+timedelta(minutes=store.delivery_buffer_minutes):
-        raise ValidationError('Choose a delivery time after the menu advance notice and delivery buffer.')
+    if delivery_at < advance+timedelta(minutes=store.delivery_buffer_minutes):
+        starts = timezone.localtime(advance).strftime('%d %b %Y, %I:%M %p')
+        raise ValidationError('Choose a delivery time after the menu advance notice and delivery buffer. '
+            f'Preparation can start no earlier than {starts} Malaysia time; '
+            f'allow {store.delivery_buffer_minutes} minutes for delivery, plus the recipe preparation time.')
     try:
         return automatic_plan(items, delivery_at, store, exclude_order_id, advance)
     except ValidationError as exc:
