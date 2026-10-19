@@ -31,3 +31,6 @@
 .kitchen-chat-actions { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-top:20px; padding-top:12px; border-top:1px solid #e0e7df; font-size:12px; flex-wrap:wrap; }
 .kitchen-chat-actions button { border:0; padding:8px; font-size:12px; }
 @media(max-width:600px) { .kitchen-chat { right:12px; bottom:calc(78px + env(safe-area-inset-bottom)); width:calc(100vw - 24px); max-height:calc(100dvh - 104px - env(safe-area-inset-bottom)); } .kitchen-chat-body,.kitchen-chat-compose { padding:12px 16px; } .kitchen-chat input:not([type=checkbox]),.kitchen-chat select { font-size:16px; } }
+.kitchen-chat-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;background:#edf3ee;border-radius:9px;margin:14px 0}
+.kitchen-chat-tabs button{border:0;background:transparent;font-size:13px;padding:9px}
+.kitchen-chat-tabs button[aria-pressed=true]{background:white;box-shadow:0 1px 5px #193e2214;color:#214c31;font-weight:600}

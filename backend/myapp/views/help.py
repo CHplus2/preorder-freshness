@@ -66,4 +66,4 @@ class KitchenHelp(APIView):
             if not menus:
                 answer += '\n\n' + text['none']
         return Response({'answer': answer, 'topic': topic, 'mode': mode, 'menus': menus,
-                         'href': '/orders' if topic == 'orders' else '/menu' if topic in ['menu', 'preorder', 'freshness', 'review'] else '/contact'})
+                         'href': '/orders' if topic in ['orders','payment'] else '/menu' if topic in ['menu', 'preorder', 'freshness', 'review'] else '/contact'})

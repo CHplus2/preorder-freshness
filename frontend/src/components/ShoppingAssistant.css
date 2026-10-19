@@ -1,0 +1,27 @@
+.shopping-assistant h3{font-size:18px;line-height:1.4;margin:12px 0}
+.shopping-assistant h4{font-size:15px;line-height:1.5;margin:0 0 10px}
+.shopping-assistant .shopping-steps{font-size:11px;letter-spacing:.2px;color:#627768;margin:14px 0}
+.shopping-request textarea{width:100%;min-height:80px;border:1px solid #b7c9bc;border-radius:9px;padding:12px;font:inherit;box-sizing:border-box;resize:vertical}
+.shopping-request>button{width:100%;margin:8px 0 0}
+.shopping-assistant .shopping-example{font-size:12px;background:#f3f7f2;border-style:dashed}
+.shopping-mode{font-size:11px;padding:4px 7px;border-radius:4px;background:#edf4ef;color:#3d654b}
+.shopping-fields{display:grid;grid-template-columns:1fr;gap:8px}
+.shopping-menu,.shopping-confirmation,.shopping-added{border:1px solid #d7e2d9;border-radius:10px;padding:15px;margin:14px 0;background:#fbfdfb}
+.shopping-assistant .shopping-scope{font-size:12px;line-height:1.65}
+.shopping-menu p{font-size:13px;margin:8px 0}
+.shopping-menu button{width:100%;margin-top:8px}
+.shopping-confirmation dl>div{display:flex;justify-content:space-between;gap:14px;padding:8px 0;font-size:13px}
+.shopping-confirmation dt{font-weight:400;line-height:1.5}
+.shopping-confirmation dd{margin:0;font-weight:600;text-align:right;flex-shrink:0}
+.shopping-confirmation .shopping-total{border-top:1px solid #c9d9cc;margin-top:8px;padding-top:16px}
+.shopping-confirmation>button,.shopping-added>button{display:block;width:100%;margin:10px 0}
+.shopping-assistant [role=alert]{font-size:13px;background:#fff6ed;padding:12px;border:1px solid #e7d8c2;border-radius:8px}
+.shopping-added>h4{margin-top:20px}
+.shopping-added .basket-slot-empty{font-size:12px;line-height:1.65}
+.shopping-added .slot-suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.shopping-added .slot-suggestions button{font-size:12px;padding:9px}
+.shopping-assistant .shopping-request .kitchen-chat-consent{display:flex;flex-direction:row;gap:8px;margin-top:14px}
+.kitchen-chat .shopping-added .slot-suggestions button[aria-pressed=true]{background:#285a3e;color:#fff;border-color:#285a3e;font-weight:600}
+.shopping-assistant .shopping-selected-time{padding:12px;background:#eaf3ec;border-radius:7px;font-size:13px;line-height:1.6}
+.shopping-selected-time strong{display:block;margin-top:4px}
+@media(max-width:600px){.shopping-request textarea{font-size:16px}}

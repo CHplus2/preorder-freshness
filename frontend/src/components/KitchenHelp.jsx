@@ -1,3 +1,4 @@
+import ShoppingAssistant from './ShoppingAssistant';
 import {useEffect, useRef, useState} from 'react';
 import {Link} from 'react-router-dom';
 import {MessageCircle, X, Send} from 'lucide-react';
@@ -12,6 +13,7 @@ const copy = {
 };
 
 export default function KitchenHelp() {
+  const [mode,setMode]=useState('shop');
   const [open,setOpen]=useState(false), [language,setLanguage]=useState('en');
   const [question,setQuestion]=useState(''), [messages,setMessages]=useState([]);
   const [busy,setBusy]=useState(false), [error,setError]=useState('');
@@ -45,6 +47,8 @@ export default function KitchenHelp() {
       <header><h2 id="kitchen-chat-title">{t.title}</h2><button type="button" onClick={close} aria-label={t.close}><X size={20}/></button></header>
       <div className="kitchen-chat-body">
         <label htmlFor="help-language">{t.language}</label><select id="help-language" value={language} onChange={e=>{reset();setLanguage(e.target.value);}}><option value="en">English</option><option value="ms">Bahasa Melayu</option><option value="zh">中文（简体）</option></select>
+        <div className="kitchen-chat-tabs" role="group" aria-label="Assistant mode"><button type="button" aria-pressed={mode==='shop'} onClick={()=>setMode('shop')}>{language==='zh'?'安排订单':language==='ms'?'Rancang pesanan':'Plan an order'}</button><button type="button" aria-pressed={mode==='guide'} onClick={()=>setMode('guide')}>{language==='zh'?'厨房指南':language==='ms'?'Panduan dapur':'Kitchen guide'}</button></div>
+        {mode==='shop'?<ShoppingAssistant key={language} language={language} aiAvailable={available} onClose={close}/>:<>
         <p>{t.intro}</p>
         <div className="kitchen-chat-topics">{t.topics.map(([topic,label])=><button key={topic} disabled={busy} onClick={()=>ask({topic},label)}>{label}</button>)}</div>
         <details><summary>{t.filters}</summary><form onSubmit={e=>{e.preventDefault();ask({topic:'menu',portions:Number(portions),...(budget?{budget}:{}),search},t.filters);}}>
@@ -60,13 +64,13 @@ export default function KitchenHelp() {
         </div>
         {busy && <p role="status">{t.busy}</p>}
         {error && <div role="alert"><p>{error}</p><button disabled={busy} onClick={()=>lastRequest.current && ask(lastRequest.current.payload,lastRequest.current.label)}>{t.retry}</button></div>}
-        <div ref={end}/>
+        <div ref={end}/></>}
       </div>
-      <form className="kitchen-chat-compose" onSubmit={e=>{e.preventDefault();if(question.trim())ask({message:question.trim()},question.trim());}}>
+      {mode==='guide' && <form className="kitchen-chat-compose" onSubmit={e=>{e.preventDefault();if(question.trim())ask({message:question.trim()},question.trim());}}>
         {available && <label className="kitchen-chat-consent"><input type="checkbox" checked={useAI} onChange={e=>setUseAI(e.target.checked)}/><span>{t.consent}</span></label>}
         <label htmlFor="help-question">{t.question}</label><div className="kitchen-chat-input"><input id="help-question" maxLength={500} required value={question} onChange={e=>setQuestion(e.target.value)} placeholder={t.placeholder}/><button disabled={busy || !question.trim()} aria-label={t.send}><Send size={18}/></button></div>
         <div className="kitchen-chat-actions"><Link to="/contact" onClick={close}>{t.contact}</Link><button type="button" onClick={reset}>{t.clear}</button></div>
-      </form>
+      </form>}
     </section>}
   </>;
 }

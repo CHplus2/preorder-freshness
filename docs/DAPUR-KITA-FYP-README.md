@@ -42,7 +42,7 @@
 
 - [UI/UX, accessibility and performance audit](AUDIT-2026-09-28.md): baseline evidence, implemented fixes, tests, remaining issues and FYP reporting limits.
 
-- [Multilingual Kitchen Help](KITCHEN-HELP.md): features, Groq setup, privacy and limits.
+- [Multilingual Kitchen Help](KITCHEN-HELP.md): guide, Groq setup, privacy and limits. [Conversational ordering](CONVERSATIONAL-ORDERING.md) adds reviewed menu requests, signed basket additions and delivery/PayPal handoff.
 
 - [Testing and FYP evidence](TESTING.md): existing tests, safe execution, report evidence and manual UI checks.
 

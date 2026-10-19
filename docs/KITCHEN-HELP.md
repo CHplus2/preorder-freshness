@@ -1,5 +1,10 @@
 # Kitchen Help: English, Bahasa Melayu and Mandarin
 
+The **Plan an order** mode now adds conversational menu selection, confirmed basket
+additions, whole-basket delivery checks and checkout handoff. See
+[Conversational ordering](CONVERSATIONAL-ORDERING.md) for that mode and its AI/data
+contract. The guide-tab behaviour below remains available.
+
 ## What is implemented
 
 The customer footer includes a responsive help panel. Language selection changes the assistant's
@@ -18,7 +23,7 @@ menus sorted by price, calculates the food total from database prices and exclud
 daily portion ceiling is smaller than the requested quantity. It does NOT check the selected
 day's booked capacity or actual ingredient availability. Results clearly say availability is
 unconfirmed. Checkout remains authoritative for stock, schedule, discounts and delivery fees.
-Natural-language numbers are not silently used as budget/portion inputs: use the labelled fields.
+In the guide tab, use the labelled numeric fields. Plan an order interprets natural-language values, displays the extracted draft for review and still requires a separate signed confirmation before adding to the basket.
 
 Order help links to the authenticated My orders page. It does NOT fetch individual order records
 into chat, approve payments, cancel orders, issue refunds, book a courier or promise an ETA.
@@ -45,14 +50,16 @@ Provider documentation:
 
 ## Data flow and privacy
 
-Only a customer's current question and a fixed classification instruction are sent to Groq,
-and only when no local topic matched AND that customer enabled AI. Topic buttons do not need AI.
+In the guide tab, only the customer's current question and a fixed classification instruction
+are sent to Groq, and only when no local topic matched AND that customer enabled AI. Topic
+buttons do not need AI. Plan an order has separate opt-in structured extraction of the current
+message, described in [Conversational ordering](CONVERSATIONAL-ORDERING.md).
 No order records, addresses, inventory, credentials or conversation history are sent.
 Email addresses, URLs and phone-like number strings receive best-effort redaction.
 Redaction cannot recognise all personal information; the checkbox explicitly asks customers not
 to enter personal/payment details and discloses the provider.
 
-The app does not persist conversations. The panel retains at most a small recent conversation
+The app does not persist conversations. Plan an order does persist structured basket-confirmation receipts for duplicate protection; it does not store the raw messages in those records. The panel retains at most a small recent conversation
 in memory; changing language or clearing conversation removes it. Do not add request-body logging.
 External-provider retention is governed by the provider's terms, not by this application's memory.
 API keys stay in server environment variables, never VITE_ variables or Git.
@@ -71,8 +78,9 @@ the explicit topic buttons or contact the owner.
   needs shared cache or gateway rate limiting for a global limit. Provider quotas remain necessary.
 - Menu lists describe suggestions, never reservations.
 - No medical/allergen/halal-certification guarantees.
-- No multi-turn context inference, automatic language detection, conversion attribution or
-  customer satisfaction analytics in this version.
+- The guide tab has no multi-turn context inference. Plan an order can carry the reviewed
+  structured draft into a correction (for example, “make it eight”). Neither mode claims
+  automatic language detection or customer satisfaction analytics.
 
 This intentionally bounded assistant supports customer self-service without letting the model
 invent business policies. Future enhancements can add authenticated read-only order cards,

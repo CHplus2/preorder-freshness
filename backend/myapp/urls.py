@@ -1,4 +1,5 @@
 from .views.paypal import paypal_config, paypal_payment
+from .views.shopping_assistant import shop_suggestions, shop_cart
 from .views.help import KitchenHelp
 from .views.account import account_profile
 from .views.setup import setup_checklist
@@ -33,6 +34,8 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path('help/shop/', shop_suggestions),
+    path('help/cart/', shop_cart),
     path('payments/paypal/config/', paypal_config),
     path('orders/<int:pk>/paypal/', paypal_payment),
     path('admin/predictive/', include('predictive_ai.urls')),

@@ -8,7 +8,7 @@ import BasketSlots from '../../components/BasketSlots';
 import useDeliveryQuote from '../../hooks/useDeliveryQuote';
 import {apiError} from '../../utils/apiError';
 import {useEffect,useState} from 'react';
-import {Link,useNavigate} from 'react-router-dom';
+import {Link,useNavigate,useLocation} from 'react-router-dom';
 import {MapPin,CalendarDays,CreditCard,Check,ChevronLeft} from 'lucide-react';
 import axios from 'axios';
 import {useUI} from '../../contexts/UIContext';
@@ -20,12 +20,13 @@ const emptyAddress={recipient_name:'',line1:'',line2:'',city:'',state:'',postal_
 const states=['Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Penang','Perak','Perlis','Sabah','Sarawak','Selangor','Terengganu','Kuala Lumpur','Labuan','Putrajaya'];
 const errorText=apiError;
 export default function CheckoutPage(){
+ const location=useLocation();
  const {config:paypalConfig}=usePayPalConfig();
  const [openedAt]=useState(()=>Date.now());
  const [submitError,setSubmitError]=useState(null);
 
  const [address,setAddress]=useState(null),[draft,setDraft]=useState(emptyAddress),[editing,setEditing]=useState(false),[addressLoading,setAddressLoading]=useState(true),[saving,setSaving]=useState(false),[loading,setLoading]=useState(false),[error,setError]=useState('');
- const [form,setForm]=useState(()=>{let preferred='';try{preferred=sessionStorage.getItem('preferredDelivery') || '';}catch{/* The current checkout can still work without a saved choice. */}const stamp=Date.parse(preferred);return {delivery_at:Number.isFinite(stamp)?new Date(stamp+8*3600000).toISOString().slice(0,16):'',delivery_method:'standard',payment:'cod'}});
+ const [form,setForm]=useState(()=>{let preferred=location.state?.preferredDelivery || '';try{preferred=location.state?.preferredDelivery ?? sessionStorage.getItem('preferredDelivery') ?? '';}catch{/* The current checkout can still work without a saved choice. */}const stamp=Date.parse(preferred);return {delivery_at:Number.isFinite(stamp)?new Date(stamp+8*3600000).toISOString().slice(0,16):'',delivery_method:'standard',payment:'cod'}});
  const {formatPrice}=useUI();const {cart,cartLoading,cartError,refreshCart,total,SHIPPING_FEE,finalTotal,discount,promotion}=useCart();const {placeOrder}=useOrder();const navigate=useNavigate();
  useEffect(()=>{refreshCart();},[refreshCart]);
  useEffect(()=>{let active=true;axios.get('/api/address/').then(r=>{if(active){setAddress(r.data);setDraft(r.data || emptyAddress);setEditing(!r.data);}}).catch(e=>{if(active)setError(errorText(e));}).finally(()=>{if(active)setAddressLoading(false);});return()=>{active=false};},[]);
