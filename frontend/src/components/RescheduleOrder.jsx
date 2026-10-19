@@ -3,6 +3,7 @@ import axios from 'axios';
 import {apiError} from '../utils/apiError';
 import {getCookie} from '../utils/cookieUtils';
 import {deliveryPolicy, deliveryPreview, deliveryConfirmation} from '../utils/deliveryResponse';
+import {unconfirmedDeliveryRequest} from '../utils/orderProgress';
 import {useUI} from '../contexts/UIContext';
 import {useAuth} from '../contexts/AuthContext';
 
@@ -70,7 +71,7 @@ export default function RescheduleOrder({order, onSaved}) {
   };
   return <section className="delivery-change">
     <div className="delivery-change-actions">
-      {order.status === 'pending' && order.payment_status !== 'refunded' && <button type="button" aria-expanded={open === 'change'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('change')}>{firstDate?'Set delivery date':'Change delivery time'}</button>}
+      {order.status === 'pending' && order.payment_status !== 'refunded' && <button type="button" aria-expanded={open === 'change'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('change')}>{firstDate?'Set delivery date':unconfirmedDeliveryRequest(order)?'Change requested time':'Change delivery time'}</button>}
       <button type="button" className="delivery-history-toggle" aria-expanded={open === 'history'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('history')}>Delivery history</button>
     </div>
     {open && <div id={panelId} className="delivery-change-panel">
@@ -80,7 +81,7 @@ export default function RescheduleOrder({order, onSaved}) {
       {message && <p className="delivery-change-success" role="status">{message}</p>}
       {open === 'change' && policy && !policy.eligible && <p>{policy.reason}</p>}
       {open === 'change' && policy?.eligible && <form className="fyp-form" noValidate onSubmit={submit}>
-        <p className="delivery-change-hint">{policy.initial_delivery ? 'Record an agreed future delivery request. This does not mark the order paid or delivered, or reserve preparation time.' : <>Change by <strong>{when(policy.cutoff)}</strong>.</>} All times are Malaysia time.</p>
+        <p className="delivery-change-hint">{policy.initial_delivery ? 'Record an agreed future delivery request. This does not mark the order paid or delivered, or reserve preparation time.' : policy.unconfirmed_request ? 'This request has no reserved preparation time. You can propose another future delivery time.' : <>Change by <strong>{when(policy.cutoff)}</strong>.</>} All times are Malaysia time.</p>
         {!preview ? <>
           <label>New date and time
             <input type="datetime-local" required value={delivery} disabled={busy} onChange={e=>{setDelivery(e.target.value);setMessage('');}}/>
@@ -88,14 +89,14 @@ export default function RescheduleOrder({order, onSaved}) {
           <label>{policy.initial_delivery?'Delivery arrangement / reason':'Reason for the change'}
             <textarea rows={2} required maxLength={300} value={reason} disabled={busy} onChange={e=>{setReason(e.target.value);setMessage('');}}/>
           </label>
-          <details className="delivery-change-rules"><summary>How delivery changes work</summary><p>{policy.initial_delivery?'Choose an agreed date within 90 days, more than 24 hours away and after the menu lead time. Delivery restrictions and menu capacity are checked. Preparation still needs owner confirmation.':'Changes close 24 hours before preparation starts, or before requested delivery while awaiting kitchen confirmation. The new time must meet this cutoff and kitchen availability.'} Your items, address and price stay the same.</p></details>
+          <details className="delivery-change-rules"><summary>How delivery changes work</summary><p>{policy.initial_delivery?'Choose an agreed date within 90 days, more than 24 hours away and after the menu lead time. Delivery restrictions and menu capacity are checked. Preparation still needs owner confirmation.':policy.unconfirmed_request?'You can change an unconfirmed request while no preparation is reserved. If the new time cannot be scheduled, it still needs kitchen confirmation.':'Changes close 24 hours before preparation starts. The new time must meet this cutoff and kitchen availability.'} Your items, address and price stay the same.</p></details>
           <div className="delivery-change-actions"><button disabled={busy}>Check new time</button><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Cancel</button></div>
         </> : <div className="delivery-change-review">
           <h4>Confirm your new time</h4>
           <dl><div><dt>Current delivery</dt><dd>{when(preview.preview.previous_delivery)}</dd></div><div><dt>New delivery</dt><dd><strong>{when(preview.preview.delivery_at)}</strong></dd></div></dl>
           <p>Reason: {preview.preview.reason}</p>{preview.preview.needs_review && <p>The requested time will still need kitchen confirmation. No automatic preparation plan has been reserved.</p>}
           <p className="delivery-change-hint">Confirm within 10 minutes. Availability is checked again when you confirm.</p>
-          <details className="delivery-change-rules"><summary>Deadline for any further changes</summary><p>{when(preview.preview.change_closes_at)}. This preview does not reserve kitchen capacity.</p></details>
+          <details className="delivery-change-rules"><summary>Deadline for any further changes</summary><p>{preview.preview.change_closes_at?when(preview.preview.change_closes_at):'No preparation-change deadline applies while this request remains unconfirmed.'} This preview does not reserve kitchen capacity.</p></details>
           <div className="delivery-change-actions"><button type="button" disabled={busy} onClick={e=>submit(e,true)}>Confirm new time</button><button type="button" disabled={busy} onClick={()=>setPreview(null)}>Back</button></div>
         </div>}
       </form>}

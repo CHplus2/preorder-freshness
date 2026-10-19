@@ -157,6 +157,47 @@ retry, optional checkout search, changed basket quantities and 1440/390/320px
 layouts. Only isolated fixture basket quantities were changed; no orders were
 placed in this UI batch. Backend scheduling and payment logic are unchanged.
 
+## Unconfirmed requests and owner follow-up
+
+A review-only checkout creates an order record for tracking, not an accepted
+preparation reservation. Customer cards and checkout notifications now say
+**Delivery request sent**, **Requested delivery**, and explicitly state that no
+preparation slot is reserved. The no-payment claim appears only for unpaid
+records, so older paid requests do not get a contradictory message.
+
+Planner readiness separates unconfirmed delivery requests from existing saved
+plans that need repair. A missed saved preparation start (such as an order left
+pending after its planned start) is a separate follow-up, not an automatic
+failure of the new delivery request. Request cards expose **Change requested
+time** directly; the owner can offer another delivery time or use the existing
+manual-plan preview/confirmation workflow. Past-due records still need an actual
+completion, revised arrangement or closure, rather than an invented delivery.
+
+The existing delivery-change API now identifies an `unconfirmed_request` only
+when the order is pending, has a requested delivery date, `needs_review: true`,
+no preparation timestamps/tasks and no deducted inventory. Its GET policy has
+`unconfirmed_request: true`, `eligible: true` and `cutoff: null`: no preparation
+reservation exists for the 24-hour cutoff to protect. Actor access, refund and
+started-work guards still apply. Existing reservations retain their 24-hour
+cutoffs, including when a review flag is present alongside saved tasks.
+
+A customer or owner can preview another future time for such a request. A time
+that still cannot be automatically scheduled remains unpaid/unreserved and
+requires review; a feasible new time can receive a checked preparation plan.
+The preview adds `unconfirmed_request`; `change_closes_at` is null only for an
+unconfirmed source whose proposed result still needs review. Confirmation stays
+actor-bound, signed, version-checked, revalidated and idempotent, with audit
+history. Items, money, payment status, recipes and stock are not rewritten.
+
+Verification: 62 targeted Django checks pass, including the near-cutoff request,
+owner/customer changes, retained pending review, existing-reservation guards,
+manual acceptance, payment/inventory invariants and audit retry. Frontend tests,
+component checks, lint and build pass. Authenticated local browser verification
+covers a nine-cookie-pack plus one-brownie request with a ten-percent bulk
+reduction (RM108.00 minus RM10.80 = RM97.20), customer amendment, separate Planner
+queues and owner acceptance of a feasible later time at desktop/390/320px widths.
+Only isolated fixture records changed. No live order or migration was applied.
+
 ## Adaptive scheduling verification
 
 The full Django app suite passes (395 tests; four environment-specific tests

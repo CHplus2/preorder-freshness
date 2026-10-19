@@ -155,3 +155,66 @@ class ReschedulingTests(TestCase):
         self.order.status='processing';self.order.save()
         self.assertEqual(self.confirm(preview).status_code,400)
         self.assertFalse(OrderAmendment.objects.exists())
+
+
+    def review_request(self):
+        from django.utils.dateparse import parse_datetime
+        now=parse_datetime('2026-10-19T19:47:00+08:00')
+        self.order.delivery_at=parse_datetime('2026-10-20T16:00:00+08:00')
+        self.order.preparation_at=None;self.order.preparation_end_at=None
+        self.order.preparation_plan={'needs_review':True,'tasks':[]}
+        self.order.payment_status='unpaid';self.order.save()
+        self.product.lead_hours=24;self.product.save()
+        self.item.preparation_snapshot['lead_hours']=24;self.item.save()
+        return now
+
+    def test_short_notice_unconfirmed_request_can_be_moved_to_a_feasible_time(self):
+        now=self.review_request()
+        target=(self.order.delivery_at+timedelta(days=1))
+        with patch('django.utils.timezone.now',return_value=now):
+            policy=self.client.get(self.url)
+            self.assertTrue(policy.data['eligible']);self.assertTrue(policy.data['unconfirmed_request'])
+            self.assertIsNone(policy.data['cutoff'])
+            preview=self.preview(target)
+            self.assertEqual(preview.status_code,200,preview.data)
+            self.assertFalse(preview.data['preview']['needs_review'])
+            result=self.confirm(preview)
+        self.assertEqual(result.status_code,200,result.data)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.delivery_at,target)
+        self.assertTrue(self.order.preparation_plan['tasks'])
+        self.assertEqual(self.order.payment_status,'unpaid')
+        self.assertFalse(self.order.inventory_deducted)
+        self.assertEqual(OrderAmendment.objects.count(),1)
+
+    def test_owner_can_amend_an_unconfirmed_request_inside_the_old_cutoff(self):
+        now=self.review_request();self.client.force_authenticate(self.owner)
+        target=self.order.delivery_at+timedelta(hours=2)
+        with patch('django.utils.timezone.now',return_value=now):
+            preview=self.preview(target)
+            self.assertEqual(preview.status_code,200,preview.data)
+            self.assertTrue(preview.data['preview']['needs_review'])
+            self.assertIsNone(preview.data['preview']['change_closes_at'])
+            result=self.confirm(preview)
+            repeated=self.confirm(preview)
+        self.assertEqual(result.status_code,200,result.data)
+        self.assertTrue(repeated.data['already_applied'])
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.delivery_at,target)
+        self.assertTrue(self.order.preparation_plan['needs_review'])
+        self.assertFalse(self.order.preparation_plan['tasks'])
+        self.assertIsNone(self.order.preparation_at)
+        self.assertEqual(OrderAmendment.objects.get().after['actor_role'],'owner')
+
+    def test_review_flag_cannot_release_an_existing_preparation_reservation(self):
+        now=self.review_request()
+        self.order.preparation_at=self.order.delivery_at-timedelta(hours=3)
+        self.order.preparation_end_at=self.order.delivery_at-timedelta(hours=2)
+        self.order.preparation_plan['tasks']=[dict(name='Saved work',start=self.order.preparation_at.isoformat(),end=self.order.preparation_end_at.isoformat())]
+        self.order.save()
+        with patch('django.utils.timezone.now',return_value=now):
+            policy=self.client.get(self.url)
+            self.assertFalse(policy.data['eligible'])
+            self.assertFalse(policy.data['unconfirmed_request'])
+            self.assertEqual(self.preview().status_code,400)
+        self.assertFalse(OrderAmendment.objects.exists())

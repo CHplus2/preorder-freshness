@@ -13,6 +13,10 @@ assert.doesNotThrow(()=>deliveryConfirmation({...confirmed,already_applied:true}
 assert.doesNotThrow(()=>deliveryPolicy({...policy,initial_delivery:true,cutoff:null}));
 assert.doesNotThrow(()=>deliveryPolicy({...policy,history:[{id:1,at:stamp,delivery_at:stamp,previous_delivery:null,reason:'First agreed date',by:'owner'}]}));
 assert.doesNotThrow(()=>deliveryPreview({...preview,preview:{...preview.preview,previous_delivery:null,needs_review:true}}));
+assert.doesNotThrow(()=>deliveryPolicy({...policy,unconfirmed_request:true,cutoff:null}));
+assert.doesNotThrow(()=>deliveryPreview({...preview,preview:{...preview.preview,unconfirmed_request:true,needs_review:true,change_closes_at:null}}));
+assert.throws(()=>deliveryPolicy({...policy,unconfirmed_request:'true',cutoff:null}),{code:'INVALID_RESPONSE'});
+assert.throws(()=>deliveryPreview({...preview,preview:{...preview.preview,unconfirmed_request:true,needs_review:false,change_closes_at:null}}),{code:'INVALID_RESPONSE'});
 assert.throws(()=>deliveryPolicy({...policy,cutoff:null}),{code:'INVALID_RESPONSE'});
 assert.throws(()=>deliveryPolicy({...policy,initial_delivery:'true',cutoff:null}),{code:'INVALID_RESPONSE'});
 for(const value of [null,{},'<html>Service unavailable</html>',{...policy,history:null},{...policy,history:[null]},{...policy,cutoff:'invalid'}]) {

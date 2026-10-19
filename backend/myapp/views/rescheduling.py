@@ -24,6 +24,13 @@ class ChangeInput(serializers.Serializer):
     reason = serializers.CharField(max_length=300, trim_whitespace=True)
 
 
+def unconfirmed_request(order):
+    return (order.status == 'pending' and not order.inventory_deducted and bool(order.delivery_at)
+        and order.preparation_plan.get('needs_review') is True
+        and not order.preparation_at and not order.preparation_end_at
+        and not order.preparation_plan.get('tasks'))
+
+
 def eligibility(order, now, allow_initial=False):
     anchor = order.delivery_at if order.preparation_plan.get('needs_review') else order.preparation_at
     cutoff = anchor - timedelta(hours=CUTOFF_HOURS) if anchor else None
@@ -34,6 +41,9 @@ def eligibility(order, now, allow_initial=False):
     if allow_initial and order.delivery_at is None:
         if order.preparation_at or order.preparation_end_at or order.preparation_plan.get('tasks'):
             return cutoff, 'Existing preparation reservations need owner review before a delivery date can be assigned.'
+        return None, ''
+    if unconfirmed_request(order):
+        # No accepted reservation exists to protect with a preparation cutoff.
         return None, ''
     if not cutoff or not order.delivery_at:
         return cutoff, 'This order needs its delivery and preparation times resolved by the kitchen.'
@@ -55,6 +65,7 @@ def reschedule_order(request, pk):
     order = get_object_or_404(orders, pk=pk)
     now = timezone.now()
     initial_delivery = bool(request.user.is_staff and order.delivery_at is None)
+    editing_request = unconfirmed_request(order)
     cutoff, blocked = eligibility(order, now, allow_initial=initial_delivery)
     items = list(order.items.select_related('product'))
     if initial_delivery and not blocked:
@@ -66,6 +77,7 @@ def reschedule_order(request, pk):
     if request.method == 'GET':
         return Response({'eligible': not bool(blocked), 'reason': blocked, 'cutoff': cutoff,
             'initial_delivery': initial_delivery,
+            'unconfirmed_request': editing_request,
             'cutoff_hours': CUTOFF_HOURS,
             'history': [{'id': a.pk, 'at': a.created_at, 'by': a.after['actor_role'],
                 'previous_delivery': a.before['delivery_at'], 'delivery_at': a.after['delivery_at'],
@@ -107,9 +119,10 @@ def reschedule_order(request, pk):
     else:
         plan = schedule_order([scheduled_item(i) for i in items], target, store,
                               now=now, exclude_order_id=order.pk,
-                              allow_manual_review=bool(order.preparation_plan.get('needs_review')))
+                              allow_manual_review=bool(order.preparation_plan.get('needs_review')),
+                              allow_request_exceptions=editing_request)
     change_anchor = plan['start'] or target
-    if change_anchor <= now + timedelta(hours=CUTOFF_HOURS):
+    if not editing_request and change_anchor <= now + timedelta(hours=CUTOFF_HOURS):
         raise serializers.ValidationError('The new preparation time must also be more than 24 hours away.')
     snapshot = {'kind': 'delivery_change', 'order': order.pk, 'actor': request.user.pk,
         'actor_role': 'owner' if request.user.is_staff else 'customer',
@@ -130,5 +143,6 @@ def reschedule_order(request, pk):
         OrderAmendment.objects.create(order=order, actor=request.user, before=before, after=snapshot)
         return Response({'order': OrderSerializer(order).data, 'already_applied': False})
     return Response({'preview': {'previous_delivery': order.delivery_at, 'delivery_at': target,
-        'reason': snapshot['reason'], 'change_closes_at': change_anchor-timedelta(hours=CUTOFF_HOURS), 'needs_review': plan.get('needs_review',False)},
+        'reason': snapshot['reason'], 'change_closes_at': None if plan.get('needs_review') and editing_request else change_anchor-timedelta(hours=CUTOFF_HOURS),
+        'unconfirmed_request': editing_request, 'needs_review': plan.get('needs_review',False)},
         'confirm': signing.dumps(snapshot, salt=SALT, compress=True)})

@@ -32,8 +32,9 @@ try {
   assert.match(oldRecords,/These records are not completed sales/);
   const upcoming=setup([{id:28,status:'pending',delivery_at:'2026-10-24T18:00:00+08:00',preparation_plan:{needs_review:true}}],[{id:20,name:'Active rice'}]);
   assert.match(upcoming,/1 active menu needs preparation steps/);
-  assert.match(upcoming,/1 upcoming order needs preparation review/);
-  assert.match(upcoming,/Plan upcoming orders/);
+  assert.match(upcoming,/1 delivery request needs kitchen confirmation/);
+  assert.match(upcoming,/Review delivery requests/);
+  assert.doesNotMatch(upcoming,/1 upcoming order needs preparation review|Plan upcoming orders/);
   const corrupted=setup([{id:32,status:'pending',created_at:'2026-10-17T10:00:00+08:00',delivery_at:'2026-10-24T18:00:00+08:00',preparation_plan:{tasks:[{start:'2026-10-16T14:00:00+08:00',end:'2026-10-16T16:00:00+08:00'}]}}]);
   assert.match(corrupted,/starts before this order was placed/);
   assert.match(corrupted,/1 upcoming order needs preparation review/);
@@ -45,6 +46,12 @@ try {
   const card=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(PlannerOrderCard,{now:Date.parse('2026-10-18T17:11:00+08:00'),onSaved:()=>{},order:{id:4,status:'pending',created_at:'2026-04-17T08:24:31+08:00',delivery_at:'2026-10-19T18:00:00+08:00',preparation_at:'2026-10-18T16:40:00+08:00',items:[{product_name:'Nasi Ayam Kicap',quantity:1}],preparation_plan:{tasks:[{name:'Prep',resource:'prep_table',menu:'Nasi Ayam Kicap',start:'2026-10-18T16:40:00+08:00',end:'2026-10-18T17:40:00+08:00',worker:true}]}}})));
   for(const label of ['Order #4','Not started','Nasi Ayam Kicap','Review preparation timing','Hands-on work','Equipment &amp; pauses','Start to finish','href="/admin/orders?order=4"'])assert.ok(card.includes(label),label);
   assert.doesNotMatch(card,/ORDER #4 \/ pending|Step time:|8:24:31/);
+  const {default:OrderProgress}=await server.ssrLoadModule('/src/components/OrderProgress.jsx');
+  const requestProgress=payment_status=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(OrderProgress,{order:{status:'pending',items:[],payment_status,preparation_plan:{needs_review:true,tasks:[]}}})));
+  assert.match(requestProgress('unpaid'),/requested, not confirmed/);
+  assert.match(requestProgress('unpaid'),/No preparation slot is reserved/);
+  assert.match(requestProgress('unpaid'),/No payment was taken/);
+  assert.doesNotMatch(requestProgress('paid'),/No payment was taken/);
   const {default:GeneratedHistoryCard}=await server.ssrLoadModule('/src/components/GeneratedHistoryCard.jsx');
   const history=renderToStaticMarkup(createElement(GeneratedHistoryCard,{reference:'ORD-00146',order:{delivery_at:'2026-10-16T12:00:00+08:00',total_amount:'491.50',items:[{product_name:'Nasi Lemak Telur',quantity:4}]}}));
   for(const label of ['Demo data','No customer payment or delivery occurred','Scenario sales total','491.50','4 portions','View menu quantities'])assert.ok(history.includes(label),label);

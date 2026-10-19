@@ -46,14 +46,14 @@ export default function CheckoutPage(){
   try {
    sessionStorage.setItem('deliveryPlan',JSON.stringify({delivery_at:form.delivery_at+':00+08:00',delivery_method:form.delivery_method}));
    if(form.payment!=='wallet'){
-    await placeOrder(address.id,form.payment,{throwOnError:true});
-    navigate('/orders',{state:{formPayment:true}});
+    const placed=await placeOrder(address.id,form.payment,{throwOnError:true});
+    navigate('/orders',{state:{formPayment:true,requestNeedsReview:placed.needs_review===true}});
    }else{
     // Route planning review requests to unpaid checkout before presenting payment.
     const checked = await axios.post('/api/orders/quote/',{delivery_at:form.delivery_at+':00+08:00'},{timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
     if(checked.data?.needs_review){
      await placeOrder(address.id,'cod',{throwOnError:true});
-     navigate('/orders');
+     navigate('/orders',{state:{formPayment:true,requestNeedsReview:true}});
      return;
     }
     localStorage.setItem('addressId',address.id);
