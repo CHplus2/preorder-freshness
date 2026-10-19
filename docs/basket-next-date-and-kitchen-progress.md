@@ -22,6 +22,13 @@ Response fields:
 
 - `slots`: existing delivery/preparation timestamps and hands-on minutes.
 - `unavailable_reason`: last scheduler validation when empty, otherwise empty.
+- `unavailable_code`: `simultaneous_finish` when two basket recipe lines require
+  their final steps to end exactly at dispatch but share the single worker or
+  the same equipment. Otherwise empty (older/booking-window responses may omit it).
+  This is a basket-internal conflict, independent of bookings; search stops as
+  soon as it is established instead of trying more hours/days. Ordinary search
+  failures still use the bounded date search. Checkout reports the same reason
+  and can accept a manual-review request, without reserving a plan.
 - `earliest_preparation_at`: notice lower bound, not a promised cooking slot.
 - `delivery_request_after`: notice plus buffer lower bound; recipes still need time.
 - `suggested_date`: Malaysian date of returned slots, or null when empty.
@@ -39,6 +46,25 @@ Each date uses three read queries for current bookings and kitchen blocks,
 shared by its hourly checks. This is a request-local advisory snapshot. Normal
 quote and checkout calls do not reuse it; checkout retains its existing locks
 and rechecks current capacity. Unexpected/database failures remain errors.
+
+### Bakery basket timing review
+
+The manual-entry example sets both cookies and walnut brownies to zero early
+finish, with attended packing as the last step. Both would need the one worker
+and packing area to finish at the same dispatch instant. Extra dates, a longer
+preparation span, or a longer notice period do not resolve that contradiction.
+For example, for an 18:00 delivery with a 90-minute buffer both final steps must
+end at 16:30; two positive-duration packing jobs cannot both end then.
+
+The owner can review each menu in **Menus → Edit → Recipe & preorder settings →
+Preparation across days → Finished batches may be ready early by (minutes)**.
+Use an allowance justified by the actual process, then review any necessary
+**Allowed wait before the next step** settings. Zero wait requires consecutive
+steps. A nonzero allowance may make scheduling possible; the scheduler must
+still check every step, resource, working hour, notice period and daily limit.
+There is no universally safe value and this change does not alter catalogue
+settings, existing bookings or database records. Twelve cookie packs also
+exceed the example's daily maximum of ten; that is a separate constraint.
 
 ## Orders are already planned while not started
 

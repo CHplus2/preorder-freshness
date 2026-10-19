@@ -246,8 +246,36 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
                     delivery_buffer_minutes=store.delivery_buffer_minutes)
 
 
+def validate_finish_rules(lines):
+    """Detect incompatible deadlines within a basket, independent of bookings.
+
+    A zero early-finish allowance fixes a line's final step at dispatch. Two
+    positive-duration final steps cannot end together on one shared resource.
+    This is a proven conflict, not a greedy search failure.
+    """
+    fixed = [line for line in lines if line['max_early_minutes'] == 0 and line['tasks'][-1]['minutes'] > 0]
+    for index, first in enumerate(fixed):
+        for second in fixed[index+1:]:
+            a, b = first['tasks'][-1], second['tasks'][-1]
+            worker = a['worker'] and b['worker']
+            equipment = a['resource'] != 'none' and a['resource'] == b['resource']
+            if not (worker or equipment):
+                continue
+            def label(line):
+                batch = line.get('batch_number')
+                return f'{line["menu"]} (batch {batch})' if batch else line['menu']
+            shared = 'the kitchen’s one worker' if worker else f'the same {a["resource"].replace("_", " ")}'
+            raise ValidationError(
+                f'{label(first)} and {label(second)} both have a 0-minute early-finish limit. '
+                f'Their final steps ({a["name"]} and {b["name"]}) must finish exactly at dispatch, '
+                f'but need {shared}. A later date alone cannot fix this conflict. '
+                'Ask the kitchen to review permitted early finish and recipe timings, or arrange separate deliveries.',
+                code='simultaneous_finish')
+
+
 def automatic_plan(items, delivery_at, store, exclude_order_id, advance, existing_busy=None):
     lines, minutes = preparation_work(items)
+    validate_finish_rules(lines)
     ready = delivery_at-timedelta(minutes=store.delivery_buffer_minutes)
     horizon = ready-timedelta(days=max(i.product.max_preparation_days for i in items))
     if existing_busy is None:

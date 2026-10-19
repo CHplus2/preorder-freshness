@@ -96,11 +96,67 @@ class BasketSlotTests(TestCase):
         response = self.search('2026-10-21')
         self.assertEqual(response.data['slots'], [])
         self.assertIn('early-finish limit', response.data['unavailable_reason'])
+        self.assertEqual(response.data['unavailable_code'], 'simultaneous_finish')
+        self.assertIn('Walnut Brownies', response.data['unavailable_reason'])
+        self.assertIn('exactly at dispatch', response.data['unavailable_reason'])
+        next_day = self.client.post('/api/orders/slots/', {'find_next': True}, format='json')
+        self.assertEqual(next_day.data['unavailable_code'], 'simultaneous_finish')
+        self.assertEqual(next_day.data['searched_days'], 1)
         quote = self.client.post('/api/orders/quote/', {'delivery_at': '2026-10-21T18:00:00+08:00'}, format='json')
         self.assertEqual(quote.status_code, 200, quote.data)
         self.assertTrue(quote.data['needs_review'])
         self.assertFalse(quote.data['tasks'])
         self.assertFalse(Order.objects.exists())
+
+    def test_bakery_recipes_need_finish_flexibility_not_more_calendar_days(self):
+        # Reproduce the published demo recipes, including two cookie batches.
+        def steps(durations, names):
+            resources = ['prep_table', 'oven', 'oven', 'oven', 'none', 'packing_area']
+            return [dict(name=name, minutes=minutes, additional_batch_minutes=minutes,
+                worker=i not in [2, 4], resource=resources[i], max_wait_minutes=0)
+                for i, (minutes, name) in enumerate(zip(durations, names))]
+        self.cookies.preparation_tasks = steps([25, 15, 20, 5, 45, 15],
+            ['Mix dough', 'Load cookies', 'Bake cookies', 'Unload cookies', 'Cool cookies', 'Count, label and pack'])
+        self.cookies.save()
+        self.line.quantity = 10
+        self.line.save()
+        brownies = Product.objects.create(name='Walnut Brownies - Box of 6', price=18,
+            lead_hours=24, max_early_minutes=0, batch_size=4, daily_capacity=8,
+            preparation_tasks=steps([25, 15, 30, 5, 75, 15],
+                ['Mix batter', 'Load brownies', 'Bake brownies', 'Unload brownies', 'Cool brownies', 'Cut and box']))
+        CartItem.objects.create(user=self.customer, product=brownies, quantity=1)
+        failed = self.search('2026-10-21')
+        self.assertEqual(failed.data['unavailable_code'], 'simultaneous_finish')
+        self.assertIn('Count, label and pack', failed.data['unavailable_reason'])
+        self.assertIn('Cut and box', failed.data['unavailable_reason'])
+        # A hypothetical reviewed allowance in this isolated test can make the
+        # same basket feasible. This is not a recommended real holding limit.
+        brownies.max_early_minutes = 300
+        brownies.save()
+        found = self.search('2026-10-21')
+        self.assertTrue(found.data['slots'], found.data)
+        self.assertEqual(found.data['unavailable_code'], '')
+        quote = self.client.post('/api/orders/quote/',
+            {'delivery_at': found.data['slots'][0]['delivery_at']}, format='json')
+        self.assertEqual(quote.status_code, 200, quote.data)
+        self.assertFalse(quote.data.get('needs_review', False))
+        self.cookies.refresh_from_db()
+        self.assertEqual(self.cookies.max_early_minutes, 0)
+        self.assertFalse(Order.objects.exists())
+
+    def test_finish_rule_detection_only_rejects_shared_resources(self):
+        from .services.scheduling import validate_finish_rules
+        def line(name, resource, worker):
+            return dict(menu=name, max_early_minutes=0,
+                tasks=[dict(name='Rest', minutes=15, worker=worker, resource=resource)])
+        # Two unattended, independent endings can legitimately coincide.
+        validate_finish_rules([line('One', 'none', False), line('Two', 'none', False)])
+        validate_finish_rules([line('One', 'oven', False), line('Two', 'fridge', False)])
+        from rest_framework.exceptions import ValidationError
+        with self.assertRaises(ValidationError) as caught:
+            validate_finish_rules([line('One', 'oven', False), line('Two', 'oven', False)])
+        self.assertEqual(caught.exception.detail[0].code, 'simultaneous_finish')
+        self.assertIn('same oven', str(caught.exception.detail))
 
     def test_database_failure_is_not_reported_as_no_available_slots(self):
         with patch('myapp.services.scheduling.schedule_order', side_effect=OperationalError('private connection info')):
