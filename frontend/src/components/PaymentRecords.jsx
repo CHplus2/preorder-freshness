@@ -4,15 +4,19 @@ import {useEffect, useRef, useState} from 'react';
 import axios from 'axios';
 import {getCookie} from '../utils/cookieUtils';
 import {apiError} from '../utils/apiError';
+import {paypalRecovery,paypalStatus} from '../utils/paypalResponse';
+import PayPalRecovery from './PayPalRecovery';
 
 export default function PaymentRecords({order, onSaved}) {
   const {setAlert}=useUI();
   const [data,setData]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
   const [kind,setKind]=useState('receipt'),[outcome,setOutcome]=useState('completed');
   const [reference,setReference]=useState(''),[note,setNote]=useState(''),[revision,setRevision]=useState(0);
+  const [notice,setNotice]=useState('');
   const retry=useRef(null);
+  const checking=useRef(false);
   useEffect(()=>{const c=new AbortController();
-    axios.get(`/api/admin/orders/${order.id}/payments/`,{signal:c.signal}).then(r=>{if(!r.data || !Array.isArray(r.data.events) || !['unpaid','paid','refunded'].includes(r.data.payment_status))throw invalidResponse();setData(r.data);setOutcome('completed');setKind(r.data.payment_status==='unpaid'?'receipt':'refund')}).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});
+    axios.get(`/api/admin/orders/${order.id}/payments/`,{signal:c.signal}).then(r=>{if(!r.data || !Array.isArray(r.data.events) || !['unpaid','paid','refunded'].includes(r.data.payment_status))throw invalidResponse();paypalRecovery(r.data.paypal_recovery);setData(r.data);setOutcome('completed');setKind(r.data.payment_status==='unpaid'?'receipt':'refund')}).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});
     return()=>c.abort();},[order.id,revision]);
   const save=async e=>{e.preventDefault();if(busy || !data)return;setBusy(true);setError('');
     const body={kind,outcome:kind==='receipt'?'completed':outcome,reference,note,resolves:data.unresolved_refund};
@@ -24,12 +28,24 @@ export default function PaymentRecords({order, onSaved}) {
       retry.current=null;setReference('');setNote('');setData(null);setError('');setRevision(n=>n+1);Promise.resolve().then(()=>onSaved()).catch(()=>setAlert({type:'error',message:'Payment record was saved, but the order view could not refresh. Reload records before making another change.'}));
     }catch(e){const message=apiError(e);setError(message);setAlert({type:'error',message});}finally{setBusy(false)}
   };
+  const checkPayPal=async()=>{
+    if(checking.current || busy)return;
+    checking.current=true;setBusy(true);setError('');setNotice('');
+    try{
+      const result=await axios.post(`/api/admin/orders/${order.id}/paypal/check/`,{}, {timeout:45000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+      const payment=paypalStatus(result.data,order.id);
+      setNotice(payment.payment_status==='paid' && payment.state==='completed'?'PayPal confirmed the Sandbox payment. The verified receipt is recorded.':payment.state==='pending'?'PayPal is still processing this payment. It remains unpaid; check again shortly.':'No completed payment was confirmed. The customer can review the saved payment from My orders.');
+      setData(null);setRevision(n=>n+1);
+      Promise.resolve().then(()=>onSaved()).catch(()=>setAlert({type:'error',message:'PayPal was checked, but the order list could not refresh. Reload the list before another change.'}));
+    }catch(e){setError(apiError(e));}finally{checking.current=false;setBusy(false)}
+  };
   return <section className="dk-panel"><h3>Payment records · order #{order.id}</h3>
+    {notice && <p role="status">{notice}</p>}
     {error && <p role="alert">{error} <button type="button" onClick={()=>{setData(null);setError('');setRevision(n=>n+1)}}>Reload records</button></p>}
     {!data?(!error && <p role="status">Loading payment records…</p>):<>
       <p>{data.policy}</p><p>Current status: <strong>{data.payment_status}</strong> · Full amount: RM {data.amount}</p>
-      <ol>{data.events.map(e=><li key={e.id}><strong>{e.kind} · {e.outcome} · RM {e.amount}</strong><br/>{e.reference} · {e.method} · {new Date(e.created_at).toLocaleString('en-MY')}<br/>{e.source==='paypal_sandbox'?'Server-verified PayPal Sandbox capture (test funds).':e.source==='legacy_unverified'?'Imported status: original payment evidence and date unverified.':`Recorded by account #${e.actor ?? 'unavailable'}`}{e.note && <p>{e.note}</p>}</li>)}</ol>
-      {order.payment_method==='paypal' && data.payment_status==='unpaid' && <p>PayPal receipts are recorded automatically after server verification. Ask the customer to check payment status from My orders, then reload these records. Do not record a second payment manually.</p>}
+      <ol>{data.events.map(e=><li key={e.id}><strong>{e.kind} · {e.outcome} · RM {e.amount}</strong><br/>{e.reference} · {e.method} · {new Date(e.created_at).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur'})} (Malaysia)<br/>{e.source==='paypal_sandbox'?'Server-verified PayPal Sandbox capture (test funds).':e.source==='legacy_unverified'?'Imported status: original payment evidence and date unverified.':`Recorded by account #${e.actor ?? 'unavailable'}`}{e.note && <p>{e.note}</p>}</li>)}</ol>
+      {order.payment_method==='paypal' && <PayPalRecovery recovery={data.paypal_recovery} paymentStatus={data.payment_status} busy={busy} onCheck={checkPayPal}/>}
       {order.payment_method==='paypal' && data.payment_status==='paid' && <p>Sandbox test funds only. A refund record here does not send a PayPal refund. Complete any test refund in the PayPal Sandbox dashboard first, then record its reference.</p>}
       {data.payment_status!=='refunded' && !(order.payment_method==='paypal' && data.payment_status==='unpaid') && <form className="fyp-form" onSubmit={save}>
         <label>Action<select value={kind} onChange={e=>setKind(e.target.value)}>

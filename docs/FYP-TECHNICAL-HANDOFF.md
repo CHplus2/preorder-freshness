@@ -285,7 +285,7 @@ Planned/not implemented, supported by repository status documents and absent cor
 - Supplier directory, purchase orders, supplier messages/APIs, expected-arrival/partial-receipt procurement flow. Implemented supplier data is only batch free text.
 - Direct menu photo upload/object-storage pipeline. Current implementation stores external image URLs with preview.
 - Double-entry ledger, balance sheet, e-Invoice/tax integration, bank reconciliation, supplier payables and historical per-order COGS.
-- Live PayPal verification/webhooks, automatic DuitNow/bank confirmation, real-money escrow integrated with orders, automatic refunds.
+- Live-money PayPal integration, automatic DuitNow/bank confirmation, real-money escrow integrated with orders, automatic refunds. Sandbox capture notifications and owner status checks are implemented; see `PAYPAL-RECOVERY.md` for webhook configuration and limits.
 - Courier booking API/live tracking/traffic ETA; social publishing/campaign attribution; full-site localization.
 - Continuous temperature monitoring, image-based freshness diagnosis, measured microbiological safety prediction.
 

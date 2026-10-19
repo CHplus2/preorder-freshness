@@ -1,4 +1,5 @@
-from .views.paypal import paypal_config, paypal_payment
+from .views.paypal import paypal_config, paypal_payment, paypal_owner_check
+from .views.paypal_notifications import paypal_notification
 from .views.shopping_assistant import shop_suggestions, shop_cart
 from .views.help import KitchenHelp
 from .views.account import account_profile
@@ -37,6 +38,8 @@ urlpatterns = [
     path('help/shop/', shop_suggestions),
     path('help/cart/', shop_cart),
     path('payments/paypal/config/', paypal_config),
+    path('payments/paypal/webhook/', paypal_notification),
+    path('admin/orders/<int:pk>/paypal/check/', paypal_owner_check),
     path('orders/<int:pk>/paypal/', paypal_payment),
     path('admin/predictive/', include('predictive_ai.urls')),
     path('admin/pricing-preview/', pricing_preview),

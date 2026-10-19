@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {paypalConfig,paypalStatus} from './paypalResponse.js';
+import {paypalConfig,paypalStatus,paypalRecovery} from './paypalResponse.js';
 const config={enabled:true,sandbox:true,currency:'MYR',client_id:'fixture-public-id'};
 assert.equal(paypalConfig(config),config);
 for(const changed of [{sandbox:false},{currency:'USD'},{client_id:''},{enabled:'true'}])assert.throws(()=>paypalConfig({...config,...changed}));
@@ -9,4 +9,7 @@ for(const changed of [{order_id:148},{sandbox:false},{amount:'97.20oops'},{amoun
 assert.equal(paypalStatus({...status,state:'completed',capture_id:'CAPTEST123',payment_status:'paid',can_pay:false},147).payment_status,'paid');
 assert.equal(paypalStatus({...status,state:'completed',capture_id:'CAPTEST123',payment_status:'refunded',can_pay:false},147).payment_status,'refunded');
 assert.equal(paypalConfig({...config,enabled:false,client_id:''}).enabled,false);
+const recovery={configured:true,has_provider_order:true,state:'pending',checked_at:'2026-10-19T10:00:00Z',checked_via:'notification',check_error:null};
+assert.equal(paypalRecovery(recovery),recovery);assert.equal(paypalRecovery(null),null);
+for(const change of [{configured:'true'},{has_provider_order:1},{state:'paid'},{checked_at:'broken'},{checked_via:'browser'},{check_error:{}}])assert.throws(()=>paypalRecovery({...recovery,...change}));
 console.log('PayPal responses: Sandbox-only configuration, exact order/amount types, completed capture evidence and refund state passed.');

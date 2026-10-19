@@ -107,7 +107,9 @@ capture on production; this batch does not alter that payment integration.
 This version supports one menu per confirmed addition. It does not infer serving
 counts inside a pack, guarantee allergens or inventory, move existing orders,
 choose a customer's payment method, read private orders into chat, or act as an
-unattended purchasing agent. Webhook/refund reconciliation remains a later batch.
+unattended purchasing agent. [Batch 3](PAYPAL-RECOVERY.md) adds verified capture
+notifications and owner checks; automatic refund/reversal reconciliation remains
+future work.
 
 Verification for this batch: full Django application suite (448 tests run, four
 skipped); existing frontend suites, new shopping response/rendering checks and

@@ -11,3 +11,12 @@ export function paypalStatus(data,orderId){
  if(data.state==='completed' && (!data.capture_id || !['paid','refunded'].includes(data.payment_status)))return invalid();
  return data;
 }
+export function paypalRecovery(data){
+ if(data==null)return null;
+ const states=['not_started','creating','created','approved','completed','pending','uncertain','review_required'];
+ if(typeof data.configured!=='boolean' || typeof data.has_provider_order!=='boolean' || !states.includes(data.state))return invalid();
+ if(data.checked_at!=null && (typeof data.checked_at!=='string' || !Number.isFinite(Date.parse(data.checked_at))))return invalid();
+ if(data.checked_via!=null && !['owner','notification'].includes(data.checked_via))return invalid();
+ if(data.check_error!=null && typeof data.check_error!=='string')return invalid();
+ return data;
+}

@@ -53,7 +53,7 @@ def payments(request, pk):
         elif pending:
             raise serializers.ValidationError('Resolve the pending refund before recording another attempt.')
         if order.payment_method == 'paypal' and kind == 'receipt':
-            raise serializers.ValidationError('PayPal receipts require server-verified capture. Use the customer payment status check; do not mark it paid manually.')
+            raise serializers.ValidationError('PayPal receipts require server-verified capture. Use Check PayPal status; do not mark it paid manually.')
         if order.payment_method == 'wallet' and kind == 'receipt':
             raise serializers.ValidationError('Demo wallet receipts are created by checkout, not manually.')
         amount = order.total_amount + order.shipping_fee
@@ -73,7 +73,16 @@ def payments(request, pk):
             order.save(update_fields=['payment_status', 'updated_at'])
         return Response(event_data(row), status=201)
     rows = list(order.payment_events.order_by('created_at', 'pk'))
-    return Response({'events': [event_data(r) for r in rows],
+    from .paypal import state_data
+    from ..services.paypal import provider_id
+    intent = order.payment_instructions.get('paypal_sandbox', {})
+    recovery = None
+    if order.payment_method == 'paypal':
+        payment = state_data(order)
+        recovery = {'configured':payment['configured'], 'has_provider_order':provider_id(intent.get('paypal_order_id')),
+            'state':payment['state'], 'checked_at':intent.get('last_checked_at'),
+            'checked_via':intent.get('last_checked_via'), 'check_error':intent.get('last_check_error')}
+    return Response({'events': [event_data(r) for r in rows], 'paypal_recovery':recovery,
         'payment_status': order.payment_status,
         'unresolved_refund': next((r.pk for r in rows if r.kind == 'refund' and r.outcome == 'pending'
             and not any(x.resolves_id == r.pk for x in rows)), None),

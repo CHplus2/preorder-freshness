@@ -1,5 +1,10 @@
 # PayPal Sandbox checkout — batch 1
 
+Batch 2 adds [conversational ordering](CONVERSATIONAL-ORDERING.md). Batch 3 adds
+[verified capture notifications and owner payment checks](PAYPAL-RECOVERY.md),
+including the extra webhook setup needed for background recovery. The original
+checkout behavior below still applies.
+
 Dapur Kita supports PayPal **Sandbox only**, in MYR. No live payment host, automatic
 refund, chatbot ordering tool or webhook is enabled by this batch. Existing COD,
 manual transfers and demo credits keep their current behaviour.
@@ -100,8 +105,8 @@ an isolated local test fixture; they do not prove PayPal accepted a real Sandbox
 transaction. After setting credentials, perform the customer walkthrough with
 Sandbox accounts and confirm the capture in the PayPal Sandbox activity dashboard.
 
-Webhook verification, automatic refund/reversal reconciliation and chatbot tools
-belong to subsequent batches. Before accepting real money, use a separate reviewed
+Webhook verification and chatbot tools are now documented in the batch guides
+above. Automatic refund/reversal reconciliation remains future work. Before accepting real money, use a separate reviewed
 production integration; this implementation intentionally cannot target live PayPal.
 
 Reference APIs: [Orders v2](https://developer.paypal.com/docs/api/orders/v2/),

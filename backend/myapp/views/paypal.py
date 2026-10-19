@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework import serializers
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from ..models import Order, PaymentEvent
@@ -121,14 +121,73 @@ def reconcile(order, intent, data, user):
     previous = PaymentEvent.objects.filter(request_id=receipt_id).first()
     if previous and (previous.order_id!=order.pk or previous.amount!=Decimal(intent['amount']) or previous.source!='paypal_sandbox'):
         raise PayPalError(code='verification_failed')
-    PaymentEvent.objects.get_or_create(request_id=receipt_id, defaults=dict(order=order,kind='receipt',outcome='completed',
+    receipt, _ = PaymentEvent.objects.get_or_create(request_id=receipt_id, defaults=dict(order=order,kind='receipt',outcome='completed',
         amount=Decimal(intent['amount']),method='paypal',reference=capture_id,source='paypal_sandbox',actor=user,
         note='Verified PayPal Sandbox capture in MYR. Test transaction; no real funds.'))
+    # Recheck the row returned after a concurrent unique-key conflict as well as
+    # the earlier read: one capture can never pay two different local orders.
+    if (receipt.order_id != order.pk or receipt.amount != Decimal(intent['amount'])
+            or receipt.source != 'paypal_sandbox' or receipt.kind != 'receipt' or receipt.outcome != 'completed'):
+        raise PayPalError(code='verification_failed')
     intent.update(state='completed',capture_id=capture_id)
     order.payment_status='paid'
     order.save(update_fields=['payment_status','updated_at'])
     save_intent(order, intent)
     return True
+
+
+def check_existing_payment(order, client, actor, via, expected_capture=None):
+    """Caller holds the order lock. This path can GET, never create or capture."""
+    intent = dict(order.payment_instructions.get('paypal_sandbox', {}))
+    if order.payment_status == 'refunded':
+        raise PayPalError('This order has a refund record. Review its payment records.', 'refund_recorded')
+    if not provider_id(intent.get('paypal_order_id')):
+        raise PayPalError('The customer has not started a PayPal payment for this order.', 'not_started')
+    if intent.get('amount') != amount(order):
+        raise PayPalError('The recorded order amount changed. Review the payment with the kitchen.', 'verification_failed')
+    data = client.get(intent['paypal_order_id'])
+    unit = validate_order(data, intent)
+    if expected_capture:
+        captures = unit.get('payments', {}).get('captures', []) if isinstance(unit.get('payments', {}), dict) else []
+        if not isinstance(captures, list) or len(captures) != 1 or not isinstance(captures[0], dict) or captures[0].get('id') != expected_capture:
+            raise PayPalError('PayPal has not returned the notified capture yet. Check again shortly.', 'capture_not_ready')
+    paid = reconcile(order, intent, data, actor)
+    intent.update(last_checked_at=timezone.now().isoformat(), last_checked_via=via)
+    intent.pop('last_check_error', None)
+    save_intent(order, intent)
+    if expected_capture and not paid:
+        raise PayPalError('PayPal has not confirmed the notified capture yet. Check again shortly.', 'capture_not_ready')
+    return paid
+
+
+def record_check_error(order, error, via):
+    intent = dict(order.payment_instructions.get('paypal_sandbox', {}))
+    if not intent:
+        return
+    intent.update(last_check_error=error.code, last_check_attempt_at=timezone.now().isoformat(), last_check_attempt_via=via)
+    if order.payment_status == 'unpaid' and not (intent.get('state') == 'pending' and error.code != 'verification_failed'):
+        intent['state'] = 'review_required' if error.code == 'verification_failed' else 'uncertain'
+    save_intent(order, intent)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+@throttle_classes([PayPalThrottle])
+@transaction.atomic
+def paypal_owner_check(request, pk):
+    order = get_object_or_404(Order.objects.select_for_update(), pk=pk, payment_method='paypal')
+    if order.payment_status == 'refunded':
+        return Response({'detail':'This order has a refund record. Review its payment records.'}, status=409)
+    if not provider_id(order.payment_instructions.get('paypal_sandbox', {}).get('paypal_order_id')):
+        return Response({'detail':'The customer has not started a PayPal payment for this order.'}, status=409)
+    if not enabled():
+        return Response({'detail':'PayPal Sandbox is not configured. No payment check was made.'}, status=503)
+    try:
+        check_existing_payment(order, SandboxClient(), request.user, 'owner')
+        return Response(state_data(order))
+    except PayPalError as error:
+        record_check_error(order, error, 'owner')
+        return Response({'detail':error.message, 'code':error.code}, status=409 if error.code == 'verification_failed' else 503)
 
 
 @api_view(['GET'])

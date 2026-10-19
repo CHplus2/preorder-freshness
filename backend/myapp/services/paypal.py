@@ -6,7 +6,7 @@ import base64
 import json
 import re
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 from django.conf import settings
 
@@ -97,3 +97,52 @@ class SandboxClient:
         if not provider_id(order_id):
             raise PayPalError(code='invalid_provider_order')
         return self.request('/v2/checkout/orders/'+order_id+'/capture', 'POST', {}, request_id)
+
+    def verify_notification(self, event, headers):
+        """Ask PayPal to verify its signature against this app's webhook ID.
+
+        Never fetch the supplied certificate URL ourselves, or follow event links.
+        """
+        webhook_id = settings.PAYPAL_SANDBOX_WEBHOOK_ID
+        if not re.fullmatch(r'[A-Za-z0-9-]{1,100}', webhook_id):
+            raise PayPalError('PayPal Sandbox notifications are not configured.', 'not_configured')
+        result = self.request('/v1/notifications/verify-webhook-signature', 'POST', {
+            'auth_algo': headers['PAYPAL-AUTH-ALGO'],
+            'cert_url': headers['PAYPAL-CERT-URL'],
+            'transmission_id': headers['PAYPAL-TRANSMISSION-ID'],
+            'transmission_sig': headers['PAYPAL-TRANSMISSION-SIG'],
+            'transmission_time': headers['PAYPAL-TRANSMISSION-TIME'],
+            'webhook_id': webhook_id,
+            'webhook_event': event,
+        })
+        return result.get('verification_status') == 'SUCCESS'
+
+
+def notification_headers(headers):
+    """Bound untrusted header values before any provider request."""
+    from django.utils.dateparse import parse_datetime
+    names = ['PAYPAL-AUTH-ALGO', 'PAYPAL-CERT-URL', 'PAYPAL-TRANSMISSION-ID',
+             'PAYPAL-TRANSMISSION-SIG', 'PAYPAL-TRANSMISSION-TIME']
+    values = {name: headers.get(name, '') for name in names}
+    if any(not value or len(value) > 4096 for value in values.values()):
+        return None
+    if values['PAYPAL-AUTH-ALGO'] != 'SHA256withRSA':
+        return None
+    if not re.fullmatch(r'[A-Za-z0-9-]{1,200}', values['PAYPAL-TRANSMISSION-ID']):
+        return None
+    if not re.fullmatch(r'[A-Za-z0-9+/=]+', values['PAYPAL-TRANSMISSION-SIG']):
+        return None
+    try:
+        stamp = parse_datetime(values['PAYPAL-TRANSMISSION-TIME'])
+        url = urlsplit(values['PAYPAL-CERT-URL'])
+        if not stamp or stamp.utcoffset() is None:
+            return None
+        if (url.scheme != 'https' or url.hostname not in {
+                'api.paypal.com', 'api.sandbox.paypal.com', 'api-m.sandbox.paypal.com'}
+                or url.username or url.password or url.port not in (None, 443)
+                or url.query or url.fragment
+                or not re.fullmatch(r'/v1/notifications/certs/[A-Za-z0-9-]+', url.path)):
+            return None
+    except ValueError:
+        return None
+    return values
