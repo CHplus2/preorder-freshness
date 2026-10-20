@@ -1,6 +1,7 @@
 import {invalidResponse} from './apiResponse.js';
 
 export const SESSION_SIGNAL='dk-session-change';
+export const DECISION_REVIEW_KEY='freshcast.local-decision-reviews.v1';
 const MARKER='dk-account-scope';
 const sessionKeys=['checkoutAttempt','deliveryPlan','preferredDelivery','recommendationSession','walletTopupAttempt'];
 export function authSession(data){
@@ -16,7 +17,7 @@ export function scopeStorage(storage,accountKey,keys=sessionKeys){
 }
 export function syncBrowserScope(accountKey){
  try{scopeStorage(sessionStorage,accountKey)}catch{/* Browser storage may be disabled. */}
- try{scopeStorage(localStorage,accountKey,['addressId'])}catch{/* No private storage is required to sign in. */}
+ try{scopeStorage(localStorage,accountKey,['addressId',DECISION_REVIEW_KEY])}catch{/* No private storage is required to sign in. */}
 }
 export function announceSessionChange(){try{localStorage.setItem(SESSION_SIGNAL,crypto.randomUUID())}catch{/* Focus also rechecks the session. */}}
 export function accountChanged(){const error=new Error('Your account changed. Review the current account before continuing.');error.code='ACCOUNT_CHANGED';return error;}

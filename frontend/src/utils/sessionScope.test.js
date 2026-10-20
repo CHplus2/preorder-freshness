@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {authSession,scopeStorage} from './sessionScope.js';
+import {authSession,scopeStorage,syncBrowserScope,DECISION_REVIEW_KEY} from './sessionScope.js';
 import {mutationAttempt} from './checkoutStorage.js';
 import {walletData,walletBalance} from './walletResponse.js';
 const a=authSession({authenticated:true,user_id:1,username:'alice',is_admin:false});
@@ -22,4 +22,14 @@ const wallet={id:1,balance:10.25,wallet_address:'fixture-wallet'};
 assert.equal(walletData(wallet),wallet);assert.equal(walletBalance({balance:15}),15);
 for(const balance of [NaN,Infinity,-1,'10',null,100000000])assert.throws(()=>walletBalance({balance}));
 assert.throws(()=>walletData({...wallet,id:0}));
+// Staff slips contain internal forecast/cost evidence. Keep them on a same-user
+// reload, and remove them on logout/account changes just like private checkout.
+const sessionValues=new Map(),localValues=new Map();
+const memory=values=>({getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)});
+globalThis.sessionStorage=memory(sessionValues);globalThis.localStorage=memory(localValues);
+syncBrowserScope(a.accountKey);
+localStorage.setItem(DECISION_REVIEW_KEY,JSON.stringify([{token:'private-token',snapshot:{id:'private-review'}}]));
+syncBrowserScope(a.accountKey);assert.ok(localStorage.getItem(DECISION_REVIEW_KEY));
+syncBrowserScope('anonymous');assert.equal(localStorage.getItem(DECISION_REVIEW_KEY),null);
+delete globalThis.localStorage;delete globalThis.sessionStorage;
 console.log('Session isolation: distinct account/role scope, retained same-account retries, cross-account checkout clearing, blocked storage and finite wallet responses passed.');

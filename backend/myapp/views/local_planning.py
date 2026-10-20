@@ -68,7 +68,7 @@ def local_scenario(request):
     scenario = local_plan(values['horizon_days'], hypothetical_purchase=values, snapshot=snapshot)
     if request.resolver_match.url_name == 'local-decision-scenario':
         from ..services.kitchen_decisions import decision_support, demand_snapshot
-        demand = demand_snapshot()
+        demand = demand_snapshot(today=today,horizon_days=values['horizon_days'])
         baseline['decision_support'] = decision_support(baseline, snapshot=demand)
         scenario['decision_support'] = decision_support(scenario, snapshot=demand)
     purchase = {key: str(value) if key in ('quantity', 'unit_cost', 'arrival_date', 'expiry_date') and value is not None else value

@@ -2,7 +2,8 @@
 import json
 import re
 from datetime import timedelta
-from urllib.request import Request, urlopen
+from urllib.request import Request
+from .ai_provider import open_provider as urlopen
 from django.conf import settings
 from django.utils import timezone
 

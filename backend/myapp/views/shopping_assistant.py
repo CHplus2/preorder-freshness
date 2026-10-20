@@ -124,6 +124,8 @@ def owner(request):
 @throttle_classes([HelpThrottle])
 @transaction.atomic
 def shop_cart(request):
+    if not isinstance(request.data,dict):
+        raise serializers.ValidationError('Provide a JSON object for the basket preview or confirmation.')
     # Same lock order as checkout: user, storefront, products.
     User.objects.select_for_update().get(pk=request.user.pk)
     Storefront.objects.get_or_create(pk=1)

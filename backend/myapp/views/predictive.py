@@ -27,6 +27,8 @@ def dispatch(request, operation):
                 raise service.PredictiveError('invalid_parameters','Repeated query parameters are not supported.',400)
             result=service.forecast(values,scenario=operation=='what-if')
         else:
+            if request.query_params:
+                raise service.PredictiveError('invalid_parameters','This endpoint takes no query parameters.',400)
             history,_,metrics,centers=service.bundle()
             if operation=='metrics':
                 result=dict(api_version='1',model_status='ready',metrics=metrics,warnings=[metrics.get('warning','')])

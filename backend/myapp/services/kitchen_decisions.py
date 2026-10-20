@@ -7,6 +7,7 @@ from datetime import timedelta
 from statistics import mean
 
 from django.utils import timezone
+from django.db.models import Q
 from ..models import Order, Product
 from .demo_provenance import synthetic_history
 
@@ -126,16 +127,22 @@ def project_batches(plan, daily_need, *, trace=None):
     return waste, shortage, {m: None if m in unknown else cost[m] for m in waste}
 
 
-def demand_snapshot():
+def demand_snapshot(*, today=None, horizon_days=28):
+    today = today or timezone.localdate()
+    start, end = today-timedelta(days=112), today+timedelta(days=horizon_days)
+    # Match decision_support's delivery-date/fallback window before prefetching
+    # items. Older and distant future orders cannot affect this daily forecast.
+    window = Q(delivery_at__date__gte=start, delivery_at__date__lt=end) | Q(
+        delivery_at__isnull=True, created_at__date__gte=start, created_at__date__lt=end)
     return (list(Product.objects.prefetch_related('ingredients__raw_material').order_by('id')),
-            list(Order.objects.prefetch_related('items').order_by('pk')), timezone.localtime())
+            list(Order.objects.filter(window).prefetch_related('items').order_by('pk')), timezone.localtime())
 
 
 def decision_support(plan, *, today=None, snapshot=None):
     today = today or timezone.localdate()
     horizon = plan['window']['horizon_days']
     start = today-timedelta(days=112)
-    products, orders, earliest = snapshot or demand_snapshot()
+    products, orders, earliest = snapshot or demand_snapshot(today=today,horizon_days=horizon)
     product_map = {p.pk: p for p in products}
     history = defaultdict(Counter)
     synthetic_by_menu = Counter()

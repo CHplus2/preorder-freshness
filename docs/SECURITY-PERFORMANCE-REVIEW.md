@@ -13,7 +13,7 @@ the deployed service has been audited.
 | 1 | Browser/admin login, signup, password recovery, session/CSRF boundaries, sampled owner permissions, private response caching, runtime defaults and authentication housekeeping | Completed; deployment limitations below remain |
 | 2 | Basket, addresses, checkout, delivery quotes, orders, demo wallet, receipts, refunds and PayPal: ownership, cross-account browser state, pricing, duplicate/concurrent mutations, query count and transaction duration | Completed locally; live-provider and scale checks remain |
 | 3 | Menu management, recipes, inventory/FEFO, planner, manual schedules and availability: validation, permissions, scheduling bounds, locks and query growth | Completed locally; scale and operational limits below remain |
-| 4 | All FreshCast data modes, forecast/scenario APIs, Groq help and shopping tools: data privacy, untrusted input, resource limits, model loading and response cost | Pending |
+| 4 | All FreshCast data modes, forecast/scenario APIs, Groq help and shopping tools: data privacy, untrusted input, resource limits, model loading and response cost | Completed locally; live-model/provider and load limits below remain |
 | 5 | Images/external URLs, reviews, reports/CSV, reminders, recovery mail, backups/downloads and maintenance: injection, outbound access, export scope and large responses | Pending |
 | 6 | Customer/admin React routes, mobile interaction, browser storage, DOM/XSS, third-party scripts, dependencies/CI, Git history and deployment: bundles, images, caching, accessibility and measured page performance | Pending |
 
@@ -165,6 +165,51 @@ usable on the day the owner records completion. These serve different purposes;
 a future shopping projection is not proof that stock is available when cooking
 actually happens.
 
+## Batch 4 findings and changes
+
+| Finding | Impact and evidence | Resolution |
+| --- | --- | --- |
+| Medium/privacy: saved kitchen decisions were not cleared at account changes | Signed slips contain internal forecast, batch and cost evidence. The browser's review key was separate from checkout cleanup, and asynchronous save/import callbacks could write it after their account session ended. | Clear saved reviews/notes on logout or account changes; keep them across same-account reloads. Guard save/import results against the current session scope before writing storage. Explain that users must download slips to retain them after signing out. The browser regression uses actual local signed-review APIs and a delayed response. |
+| Reliability/resource cost: malformed Genpact requests could reach model loading first | Forecast/backtest validation ran after bundle loading. Oversized digit strings could also reach Python's integer-conversion limit. The new regression detected bundle access for invalid parameters before the fix. | Reject unknown fields, invalid types, zero/negative IDs and digit strings over ten characters before bundle loading. Bound IDs/week indices to positive signed 32-bit integers; preserve bundle-based membership/week checks. Reject unexpected metrics/centers query parameters. No forecast formula, trained artifact or source label changes. |
+| Reliability: malformed shopping-confirmation bodies acquired locks before validation | Array/string/null bodies reached customer/kitchen locking and then object access, instead of a structured 400. The boundary regression failed before the fix. | Require an object before acquiring mutation locks. Valid cart previews/confirmations retain existing actor binding, signatures, current-price checks and idempotent additions; this does not place or pay for an order. |
+| Credential handling: AI requests used the default redirect handler | Python's default HTTP redirect handling can copy request headers to another URL. Groq's endpoint is fixed server-side; no actual credential leak or provider redirect was observed. | A shared provider opener refuses redirects, preserving normal proxy and TLS verification. Both assistants retain their five-second timeout, bounded response read and guided fallback when the transport fails. Mocked redirect failures verify neither assistant treats a redirect as an answer. No live Groq call was made. |
+| Performance: daily kitchen decisions prefetched irrelevant order history | The per-menu forecasting layer loaded every order/item before applying its 112-day history and requested future window in Python. | Apply the same delivery-date/fallback date window in SQL before prefetching items. A boundary regression checks the first/last included dates, excluded older/future dates and fallback orders, and compares the complete decision output with the former all-orders snapshot. Forecast math and synthetic-data labels are unchanged. |
+
+### Batch 4 verification and source boundaries
+
+- Full isolated Django suite: 512 tests run, ten skipped. The skipped checks need
+  PostgreSQL or a provisioned real Genpact artifact; their status is not converted
+  into a live-model success claim. A focused 85-test forecast/decision/scenario/
+  help/shopping run passed with two artifact-dependent skips; the final security
+  and shopping checks passed 30 tests after the added malformed-body regression.
+- All predictive route families deny anonymous/customer access before loading
+  the model or calculating private kitchen plans. Existing staff session/CSRF,
+  no-store, signed-review tampering, scenario read-only and no-write tests passed.
+  The browser's downloaded slips remain private files outside logout cleanup;
+  staff can explicitly restore a signed slip after server verification.
+- Actual local Django sessions and APIs exercised saving a signed decision,
+  same-account reload, logout, customer login and fulfillment of a delayed old
+  review response. The review was retained on reload, removed at logout and not
+  recreated by the stale response. The 390px view had no overflow/page errors.
+  Only fictional local fixtures were used.
+- Frontend utilities, predictive adapters/calculations and source-labelled
+  rendering, planner, checkout, PayPal, shopping and UX checks passed. Changed
+  frontend files passed ESLint, and the production build passed. The existing
+  approximately 571 kB main-bundle warning remains for batch 6.
+- Genpact remains the optional saved CatBoost model with simulated operational
+  inputs. Kitchen decisions remain based on kitchen records and existing daily
+  baselines. Frontend sample mode is an explicit fixed example and does not
+  replace an API failure. Existing tests reject mismatched source metadata,
+  malformed/nonfinite responses and silent fixture fallback.
+- Help sends only the opted-in, best-effort-redacted question to its fixed
+  provider endpoint; shopping extraction sends only the opted-in request and
+  fixed prompt. Neither sends database order/customer/stock records. Provider
+  output is validated as a topic or draft fields, never rendered as arbitrary
+  HTML/prose or executed as a payment/tool command. Current catalogue prices and
+  server-signed, user-confirmed basket additions remain authoritative.
+- No migration, model training/retraining, external payment, production database
+  mutation or actual model-accuracy evaluation was performed in this batch.
+
 ## Remaining deployment and operational checks
 
 These remain open; local tests do not establish a secure live deployment.
@@ -206,6 +251,18 @@ These remain open; local tests do not establish a secure live deployment.
   Constant query count does not bound payload size or in-memory allocation work.
   Larger deployments need API/UI pagination or explicit date windows and measured
   load tests, while preserving full relevant booking/stock inputs for scheduling.
+- The daily-decision order window now bounds fetched history by date, not by
+  record count. Very busy kitchens still need query-plan/index inspection and
+  measured load tests. Aggregate weekly kitchen reporting and confirmed-order
+  coverage still scan broader history; this batch does not silently truncate it.
+- Model bundle loading is cached per process, not globally. Cold-start memory,
+  concurrent cold loads, repeated staff forecast/replay requests and native model
+  resource use still need deployment-scale measurement and quota policy. The
+  two-thread prediction setting is not a complete concurrency/cost limit.
+- No real Genpact artifact or live Groq request was exercised in batch 4.
+  Redirect rejection and fallback were verified locally, not against the current
+  provider/deployment. AI consent and best-effort redaction do not establish that
+  all possible personal details can be detected automatically.
 - Recovery email is currently synchronous with a bounded SMTP timeout. Queueing,
   delivery failure handling and timing-based account disclosure need dedicated
   inspection in batch 5. A generic response body alone does not eliminate timing
@@ -213,5 +270,5 @@ These remain open; local tests do not establish a secure live deployment.
 - CSP must account for actual PayPal SDK, images and other sources. It is not
   enabled with a guessed policy in this batch; script/DOM review belongs to batch 6.
 
-Next batch: FreshCast data modes and forecast/scenario APIs, Groq help and shopping
-tools, including data privacy, untrusted input and resource/model-loading limits.
+Next batch: images/external URLs, reviews, reports/CSV, reminders/recovery email,
+backup downloads and maintenance/export boundaries.

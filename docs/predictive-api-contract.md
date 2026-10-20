@@ -69,6 +69,13 @@ quantities must not be labelled real shop observations.
 
 ## Genpact endpoints
 
+`center_id` and `week` use positive integers from 1 to 2147483647, encoded as
+integers or ASCII digit strings of at most 10 characters. Booleans, zero,
+fractional values and oversized strings return 400 `invalid_parameters` before
+model loading. Membership and supported-week checks then use the loaded bundle.
+`metrics/` and `centers/` accept no query parameters. Forecast/scenario responses
+and their source labels are unchanged.
+
 ### Labelled held-out replay (implemented)
 
 `GET backtest/?center_id=13&week=136` requires both positive integer parameters;
@@ -373,6 +380,10 @@ limited_baselines or insufficient_history for the forecasting layer.
 action (purchasing/menu/marketing/wait), optional note (1000 chars), nullable
 nonnegative action_cost and nullable assumed_avoided_percent (0..100). It returns
 a signed, fresh snapshot and token for browser storage/export, not a server log.
+Browser copies and follow-up notes are cleared on logout/account changes; a
+same-account reload retains them. Download a signed slip before signing out to
+restore it later with staff access. Late save/import responses from an older
+account session cannot repopulate browser storage.
 `POST local-review-outcomes/` accepts only token, verifies its signature/one-year
 age, and returns recorded waste for snapshot batches and calendar-day delivered
 paid portions for mapped menus. Both require staff session/CSRF and perform only

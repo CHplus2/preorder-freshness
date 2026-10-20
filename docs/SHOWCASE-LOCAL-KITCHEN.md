@@ -85,7 +85,9 @@ The snapshot contains ingredient/batch/menu IDs, baseline risk, model evaluation
 date, action and explicit worksheet assumptions; no customer data is included.
 Up to 20 reviews and editable follow-up notes are held in **this browser**.
 Download a slip with its signed review; the follow-up panel can restore that
-file after checking the signature. Clearing storage otherwise removes reviews.
+file after checking the signature. Signing out, switching accounts or clearing
+browser storage removes reviews and notes. A same-account reload retains them.
+Download slips before signing out; keep those files privately.
 Signatures expire after one year and depend on the deployment's signing key.
 This is deliberately not a shared server audit log and needs no schema migration.
 

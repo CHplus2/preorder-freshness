@@ -1,4 +1,4 @@
-const KEY='freshcast.local-decision-reviews.v1';
+import {DECISION_REVIEW_KEY as KEY} from '../../utils/sessionScope.js';
 export function readReviews(storage){
   try{
     const rows=JSON.parse((storage||globalThis.localStorage).getItem(KEY)||'[]');

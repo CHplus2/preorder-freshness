@@ -3,16 +3,14 @@ from . import service
 
 
 def backtest(values):
-    history, model, metrics, _ = service.bundle()
     if set(values) != {'center_id', 'week'}:
         raise service.PredictiveError('invalid_parameters', 'Provide only center_id and week.', 400)
     parsed = {}
     for name in ('center_id', 'week'):
         value = values[name]
-        if isinstance(value, bool) or not str(value).isascii() or not str(value).isdigit() or int(value) < 1:
-            raise service.PredictiveError('invalid_parameters', 'center_id and week must be positive integers.', 400)
-        parsed[name] = int(value)
+        parsed[name] = service.integer_parameter(value)
     center, week = parsed['center_id'], parsed['week']
+    history, model, metrics, _ = service.bundle()
     start, end = metrics.get('validation_start_week'), metrics.get('validation_end_week')
     cutoff = metrics.get('train_max_week')
     if not all(type(v) is int for v in (start, end, cutoff)) or not cutoff < start <= end:

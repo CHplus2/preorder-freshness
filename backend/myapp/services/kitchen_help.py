@@ -4,7 +4,8 @@ Never send database records to the provider or render provider-generated prose.
 """
 import json
 import re
-from urllib.request import Request, urlopen
+from urllib.request import Request
+from .ai_provider import open_provider as urlopen
 from django.conf import settings
 
 TOPICS = ('menu', 'preorder', 'delivery', 'payment', 'freshness', 'allergy', 'orders', 'review', 'contact')

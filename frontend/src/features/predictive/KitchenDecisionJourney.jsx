@@ -20,6 +20,7 @@ import {
 } from "./kitchenDecision";
 import { getCookie } from "../../utils/cookieUtils";
 import { requestJSON } from "./api";
+import {useAuth} from '../../contexts/AuthContext';
 import {
   readReviews,
   saveReview as saveSignedReview,
@@ -44,6 +45,7 @@ const positions = [
   [54, 49],
   [76, 73],
 ];
+const inactiveSession = () => false;
 
 export default function KitchenDecisionJourney({
   plan,
@@ -51,6 +53,7 @@ export default function KitchenDecisionJourney({
   onComparison,
   onClear,
 }) {
+  const isSessionCurrent = useAuth()?.isSessionCurrent ?? inactiveSession;
   const [params, setParams] = useSearchParams();
   const [page, setPage] = useState(0),
     [scene, setScene] = useState("kitchen"),
@@ -170,7 +173,7 @@ export default function KitchenDecisionJourney({
     saveKey.current = null;
   }
   async function saveReview() {
-    if (save.busy) return;
+    if (save.busy || !isSessionCurrent()) return;
     setSave({ busy: true });
     const assumedCost = worksheet?.campaign_cost ?? worksheet?.action_cost;
     saveKey.current ||= crypto.randomUUID();
@@ -197,6 +200,7 @@ export default function KitchenDecisionJourney({
               : null),
         },
       });
+      if (!isSessionCurrent()) return;
       saveSignedReview(data);
       saveKey.current = null;
       setSave({
@@ -206,7 +210,7 @@ export default function KitchenDecisionJourney({
         revision: data.id,
       });
     } catch (error) {
-      setSave({ error: error.message });
+      if (isSessionCurrent()) setSave({ error: error.message });
     }
   }
   return (
@@ -553,6 +557,7 @@ export default function KitchenDecisionJourney({
             {save.error && <p role="alert">{save.error}</p>}
             <p>
               Reviews are saved in this browser, not in a shared server log.
+              Download a slip to keep it after signing out.
               Save first to include signed evidence in the download. Downloaded
               slips also include this session’s worksheet. Neither executes a
               decision.
@@ -842,6 +847,7 @@ function MarketingComparison({ plan, risk, onWorksheet }) {
 }
 
 export function DecisionReviewBoard({ revision }) {
+  const isSessionCurrent = useAuth()?.isSessionCurrent ?? inactiveSession;
   const [state, setState] = useState({}),
     [retry, setRetry] = useState(0),
     [notes, setNotes] = useState({}),
@@ -876,11 +882,12 @@ export function DecisionReviewBoard({ revision }) {
         }
       }),
     ).then((rows) => {
-      if (!c.signal.aborted) setState({ rows });
+      if (!c.signal.aborted && isSessionCurrent()) setState({ rows });
     });
     return () => c.abort();
-  }, [revision, retry]);
+  }, [revision, retry, isSessionCurrent]);
   function record(id) {
+    if (!isSessionCurrent()) return;
     try {
       saveOutcomeNote(id, notes[id]);
       setRetry((n) => n + 1);
@@ -891,12 +898,13 @@ export function DecisionReviewBoard({ revision }) {
   async function restore(event) {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (!file) return;
+    if (!file || !isSessionCurrent()) return;
     try {
       if (file.size > 500000)
         throw Error("Choose a decision slip smaller than 500 KB.");
       const data = JSON.parse(await file.text()),
         record = data.signed_review || data;
+      if (!isSessionCurrent()) return;
       if (typeof record?.token !== "string")
         throw Error(
           "This file has no signed review. Save a decision before downloading its slip.",
@@ -905,11 +913,12 @@ export function DecisionReviewBoard({ revision }) {
         body: { token: record.token },
         csrfToken: getCookie("csrftoken"),
       });
+      if (!isSessionCurrent()) return;
       saveSignedReview({ token: record.token, snapshot: verified.row });
       setImportMessage("Signed decision restored in this browser.");
       setRetry((n) => n + 1);
     } catch (error) {
-      setImportMessage(error.message);
+      if (isSessionCurrent()) setImportMessage(error.message);
     }
   }
   return (
@@ -975,7 +984,7 @@ export function DecisionReviewBoard({ revision }) {
         <p>No saved decisions in this browser yet.</p>
       )}
       <details><summary>Storage &amp; outcome limitations</summary>
-        <p>Up to 20 signed decisions and their follow-up notes are kept in this browser. Clearing browser storage removes them; download a copy to keep a backup. Signed baseline evidence is checked on the server, but this is not a shared decision log.</p>
+        <p>Up to 20 signed decisions and their follow-up notes are kept in this browser. Signing out, switching accounts or clearing browser storage removes them. Download slips to keep copies. The server checks signed baseline evidence; this is not a shared decision log.</p>
         <p>Outcomes apply only to the saved batches and menus. No waste records does not prove no waste. Recorded sales and costs do not establish savings caused by the decision or a promotion.</p>
       </details>
       <div className="fc-workflow-links"><Link to="/admin/reports#costs">

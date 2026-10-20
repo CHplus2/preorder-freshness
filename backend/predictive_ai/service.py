@@ -50,27 +50,44 @@ def bundle():
         raise PredictiveError('model_unavailable','Model dependencies, artifact or source schema are incompatible.') from exc
 
 
-def parameters(values, history, scenario=False):
+def integer_parameter(value):
+    text = str(value)
+    if isinstance(value, bool) or not 1 <= len(text) <= 10 or not text.isascii() or not text.isdigit():
+        raise PredictiveError('invalid_parameters','center_id and week must be positive integers up to 2147483647.',400)
+    number = int(text)
+    if not 1 <= number <= 2147483647:
+        raise PredictiveError('invalid_parameters','center_id and week must be positive integers up to 2147483647.',400)
+    return number
+
+
+def validate_parameters(values, scenario=False):
+    from collections.abc import Mapping
+    if not isinstance(values, Mapping):
+        raise PredictiveError('invalid_parameters','Expected a JSON object.',400)
     allowed={'center_id','week','promotion_scenario'} if scenario else {'center_id','week'}
     if set(values)-allowed:
         raise PredictiveError('invalid_parameters','Unknown parameters.',400)
-    def integer(value):
-        if isinstance(value,bool) or not str(value).isascii() or not str(value).isdigit():
-            raise PredictiveError('invalid_parameters','center_id and week must be positive integers.',400)
-        return int(value)
-    center=integer(values.get('center_id',''))
-    week=integer(values.get('week',int(history.week.max())+1))
+    integer_parameter(values.get('center_id',''))
+    if 'week' in values:integer_parameter(values['week'])
+    if not isinstance(values.get('promotion_scenario',False),bool):
+        raise PredictiveError('invalid_parameters','promotion_scenario must be a JSON boolean.',400)
+
+
+def parameters(values, history, scenario=False):
+    validate_parameters(values,scenario)
+    center=integer_parameter(values['center_id'])
+    week=integer_parameter(values.get('week',int(history.week.max())+1))
     if center not in set(history.center_id):
         raise PredictiveError('invalid_parameters','Unknown center_id.',400)
     if week!=int(history.week.max())+1:
         raise PredictiveError('invalid_parameters',f'Only week {int(history.week.max())+1} is supported.',400)
     promo=values.get('promotion_scenario',False)
-    if not isinstance(promo,bool):
-        raise PredictiveError('invalid_parameters','promotion_scenario must be a JSON boolean.',400)
     return center,week,promo
 
 
 def forecast(values, scenario=False):
+    # Reject malformed input before importing ML packages or loading CSV/model files.
+    validate_parameters(values,scenario)
     history,model,_,_=bundle()
     center,week,promo=parameters(values,history,scenario)
     import numpy as np
