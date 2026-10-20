@@ -10,6 +10,29 @@ from django.db import IntegrityError, transaction
 from rest_framework import serializers
 from rest_framework.authentication import SessionAuthentication
 from ..services.auth_limits import limit
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.cache import never_cache
+from django.views.decorators.debug import sensitive_post_parameters
+
+
+@sensitive_post_parameters('password')
+@csrf_protect
+@never_cache
+def admin_login(request, extra_context=None):
+    """Keep Django's staff login inside the same database-backed login limits."""
+    from django.contrib import admin
+    from django.http import HttpResponse
+    from rest_framework.exceptions import Throttled
+    if request.method == 'POST':
+        # LoginView validates the full form; bound the throttle key beforehand.
+        username = request.POST.get('username', '')[:150]
+        try:
+            limit(request, 'login', username)
+        except Throttled:
+            response = HttpResponse('Too many sign-in attempts. Please try again later.', status=429, content_type='text/plain')
+            response['Retry-After'] = '900'
+            return response
+    return admin.site.login(request, extra_context)
 
 
 class SignupInput(serializers.Serializer):

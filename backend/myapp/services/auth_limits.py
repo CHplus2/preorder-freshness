@@ -1,5 +1,6 @@
 """Small shared-database limits; production edge limits should complement these."""
 from datetime import timedelta
+from django.core.cache import cache
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
 from rest_framework.exceptions import Throttled
@@ -8,7 +9,10 @@ from ..models import AuthAttempt
 
 def limit(request, scope, identity='', maximum=15):
     now = timezone.now()
-    AuthAttempt.objects.filter(created_at__lt=now-timedelta(days=1)).delete()
+    # Only housekeeping uses the cache. Actual attempt counts stay in the shared
+    # database, so a cache restart cannot reset the login/recovery limits.
+    if cache.add('auth-attempt-cleanup-v1', True, timeout=300):
+        AuthAttempt.objects.filter(created_at__lt=now-timedelta(days=1)).delete()
     ip = request.META.get('REMOTE_ADDR', 'unknown')
     keys = [(salted_hmac('auth-limit', scope+':ip:'+ip).hexdigest(), 60)]
     if identity:

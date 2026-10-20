@@ -30,7 +30,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+# Vercel serves the public app, including preview deployments: never expose a
+# Python traceback there even if a debugging variable was accidentally retained.
+DEBUG = os.getenv('VERCEL') != '1' and os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = []
 
@@ -57,6 +59,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'myapp.middleware.PrivateAPIResponseMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -64,15 +67,16 @@ MIDDLEWARE = [
 def env_list(name, default=''):
     return [value.strip() for value in os.getenv(name, default).split(',') if value.strip()]
 
-ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1')
-CSRF_TRUSTED_ORIGINS = env_list('CSRF_TRUSTED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
-CORS_ALLOWED_ORIGINS = env_list('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
+IS_VERCEL = os.getenv('VERCEL') == '1'
+development_origins = '' if IS_VERCEL else 'http://localhost:5173,http://127.0.0.1:5173'
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', '' if IS_VERCEL else 'localhost,127.0.0.1')
+CSRF_TRUSTED_ORIGINS = env_list('CSRF_TRUSTED_ORIGINS', development_origins)
+CORS_ALLOWED_ORIGINS = env_list('CORS_ALLOWED_ORIGINS', development_origins)
 for hostname in [os.getenv('VERCEL_URL'), os.getenv('VERCEL_PROJECT_PRODUCTION_URL')]:
     if hostname:
         ALLOWED_HOSTS.append(hostname)
         CSRF_TRUSTED_ORIGINS.append('https://' + hostname)
 
-IS_VERCEL = os.getenv('VERCEL') == '1'
 SESSION_COOKIE_SECURE = IS_VERCEL
 CSRF_COOKIE_SECURE = IS_VERCEL
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -188,7 +192,14 @@ STORAGES = {
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
 }
 
-REST_FRAMEWORK = {**globals().get("REST_FRAMEWORK", {}), "EXCEPTION_HANDLER": "myapp.exceptions.api_exception_handler"}
+REST_FRAMEWORK = {
+    **globals().get("REST_FRAMEWORK", {}),
+    # The frontend signs in through the CSRF-protected, rate-limited login view.
+    # DRF's default BasicAuthentication would offer a separate password-checking
+    # path on every protected endpoint, outside those login limits.
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],
+    "EXCEPTION_HANDLER": "myapp.exceptions.api_exception_handler",
+}
 
 CRON_SECRET = os.getenv('CRON_SECRET', '')
 
