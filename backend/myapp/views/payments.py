@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from ..models import Order, PaymentEvent, Wallet, WalletTransaction
+from ..services.demo_wallet import MAX_BALANCE
 
 
 class PaymentInput(serializers.Serializer):
@@ -27,7 +28,8 @@ def event_data(row):
 @permission_classes([IsAdminUser])
 @transaction.atomic
 def payments(request, pk):
-    order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
+    orders = Order.objects.select_for_update() if request.method == 'POST' else Order.objects.all()
+    order = get_object_or_404(orders, pk=pk)
     if request.method == 'POST':
         serializer = PaymentInput(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -60,6 +62,8 @@ def payments(request, pk):
         source = 'owner_verified'
         if order.payment_method == 'wallet' and kind == 'refund' and outcome == 'completed':
             wallet = get_object_or_404(Wallet.objects.select_for_update(), user=order.user)
+            if wallet.balance + amount > MAX_BALANCE:
+                raise serializers.ValidationError('This refund would exceed the demo credit balance limit. No refund or payment status change was recorded.')
             wallet.balance += amount
             wallet.save(update_fields=['balance', 'updated_at'])
             WalletTransaction.objects.create(wallet=wallet, amount=amount, type='refund', reference=f'Order #{order.pk}')

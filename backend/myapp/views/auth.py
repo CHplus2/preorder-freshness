@@ -100,6 +100,7 @@ def check_auth(request):
     if request.user.is_authenticated:
         return Response({
             "authenticated": True,
+            "user_id": request.user.pk,
             "username": request.user.username,
             "is_admin": request.user.is_staff  
         }, status=status.HTTP_200_OK)

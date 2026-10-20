@@ -11,7 +11,7 @@ class CartViewSet(viewsets.ViewSet):
 
     def list(self, request):
         items = CartItem.objects.filter(user=request.user).select_related("product__category").prefetch_related("product__ingredients")
-        serializer = CartItemSerializer(items, many=True)
+        serializer = CartItemSerializer(items, many=True, context={"request":request})
         return Response(serializer.data)
 
     @transaction.atomic
@@ -43,7 +43,7 @@ class CartViewSet(viewsets.ViewSet):
             item.quantity += quantity
             item.save()
 
-        return Response(CartItemSerializer(item).data, status=status.HTTP_201_CREATED)
+        return Response(CartItemSerializer(item, context={"request":request}).data, status=status.HTTP_201_CREATED)
     
     @transaction.atomic
     def partial_update(self, request, pk=None):
@@ -71,7 +71,7 @@ class CartViewSet(viewsets.ViewSet):
         item.quantity = quantity
         item.save()
 
-        return Response(CartItemSerializer(item).data, status=status.HTTP_200_OK)
+        return Response(CartItemSerializer(item, context={"request":request}).data, status=status.HTTP_200_OK)
 
     @transaction.atomic
     def destroy(self, request, pk=None):

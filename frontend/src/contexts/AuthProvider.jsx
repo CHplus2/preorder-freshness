@@ -1,94 +1,74 @@
 import {AuthContext} from './AuthContext';
 import {apiError} from '../utils/apiError';
-import { useEffect, useState, useCallback } from "react";
-import { getCookie } from "../utils/cookieUtils";
-import { useUI } from "./UIContext";
-import axios from "axios";
+import {Fragment,useEffect,useState,useCallback,useMemo,useRef} from 'react';
+import {getCookie} from '../utils/cookieUtils';
+import {authSession,syncBrowserScope,announceSessionChange,SESSION_SIGNAL} from '../utils/sessionScope';
+import {useUI} from './UIContext';
+import axios from 'axios';
 
-export default function AuthProvider({ children }) {
-    const [isAuthenticated, setIsAuthenticated] = useState(null);
-    const [isAdmin, setIsAdmin] = useState(null);
-    const [cart, setCart] = useState([]);
-    const { setAlert, setDropdownOpen, setShowSignup, setShowLogin } = useUI();
-
-    const checkAuth = useCallback(async () => {
-      try {
-        const res = await axios.get("/api/check-auth/", { withCredentials: true })
-        setIsAuthenticated(res.data.authenticated);
-        setIsAdmin(res.data.is_admin); 
-
-      } catch (err) {
-        setIsAuthenticated(false);
-        setIsAdmin(false);
-
-        console.error("checkAuth:", err.response?.data || err.message);
-      }
-    }, []);
-
-    useEffect(() => {
-        const controller=new AbortController();
-        axios.get('/api/check-auth/',{withCredentials:true,signal:controller.signal}).then(({data})=>{
-            setIsAuthenticated(data.authenticated);setIsAdmin(data.is_admin);
-        }).catch(err=>{if(!axios.isCancel(err)){setIsAuthenticated(false);setIsAdmin(false);}});
-        return()=>controller.abort();
-    }, [])
-
-    const signup = async (account) => {
-      try {
-        await axios.post("/api/signup/", account, { 
-            withCredentials: true,
-            headers: { "X-CSRFToken": getCookie("csrftoken") }, 
-        });
-
-        setAlert({ message: "", type: "" });
-        checkAuth();
-        setShowSignup(false);
-        return null;
-
-      } catch (err) {
-        setAlert({ message: apiError(err, "Signup failed"), type: "error" });
-        console.error("signup:", err.response?.data || err.message);
-        return apiError(err, "Signup failed. Please try again.");
-      }
-    }
-
-    const login = async (account) => {
-      try {
-        await axios.post("/api/login/", account, { 
-            withCredentials: true,
-            headers: { "X-CSRFToken": getCookie("csrftoken") }, 
-        });
-
-        setAlert({ message: "", type: "" });
-        checkAuth();
-        setShowLogin(false);
-        return null;
-      } catch (err) {
-          setAlert({ message: apiError(err, "Invalid username or password"), type: "error" });
-          console.error("login:", err.response?.data || err.message);
-          return apiError(err, "Invalid username or password");
-      }
-    }
-
-    const logout = async () => {
-      try {
-        await axios.post("/api/logout/", {}, {
-          withCredentials: true,
-          headers: { "X-CSRFToken": getCookie("csrftoken") },
-        });
-        setCart([]);
-        setAlert({ message: "", type: "" });
-        checkAuth();
-        setDropdownOpen(false);
-    } catch (err) {
-      setAlert({ message: apiError(err, "An error occurred while logging out"), type: "error" });
-      console.error("logout:", err.response?.data || err.message);
-    }
+export default function AuthProvider({children}){
+ const [session,setSession]=useState({isAuthenticated:null,isAdmin:null,accountKey:null});
+ const [version,setVersion]=useState(0);
+ const scope=useRef(0),identity=useRef(null),authRequest=useRef(0),controller=useRef(null);
+ const accountChangeBusy=useRef(false);
+ const {setAlert,setDropdownOpen,setShowSignup,setShowLogin}=useUI();
+ const cancelAuthChecks=useCallback(()=>{++authRequest.current;controller.current?.abort()},[]);
+ const invalidate=useCallback(()=>{
+  cancelAuthChecks();
+  setVersion(++scope.current);
+  setSession({isAuthenticated:null,isAdmin:null,accountKey:null});
+ },[cancelAuthChecks]);
+ const commit=useCallback(data=>{
+  const next=authSession(data);
+  syncBrowserScope(next.accountKey);
+  if(identity.current!==next.accountKey){identity.current=next.accountKey;setVersion(++scope.current)}
+  setSession(next);return next;
+ },[]);
+ const checkAuth=useCallback(async()=>{
+  const request=++authRequest.current;
+  controller.current?.abort();const current=new AbortController();controller.current=current;
+  try{
+   const {data}=await axios.get('/api/check-auth/',{withCredentials:true,signal:current.signal});
+   if(request!==authRequest.current || current.signal.aborted)return null;
+   return commit(data);
+  }catch{
+   if(request!==authRequest.current || current.signal.aborted)return null;
+   commit({authenticated:false});return null;
   }
-
-  return <AuthContext.Provider
-    value={{isAuthenticated, isAdmin, cart, setIsAuthenticated, setIsAdmin, setCart, checkAuth, signup, login, logout}}
-  >
-    {children}
-  </AuthContext.Provider>
+ },[commit]);
+ useEffect(()=>{
+  checkAuth();
+  const refresh=()=>{if(!accountChangeBusy.current)checkAuth()};
+  const changed=event=>{if(event.key===SESSION_SIGNAL){invalidate();checkAuth()}};
+  window.addEventListener('focus',refresh);window.addEventListener('storage',changed);
+  return()=>{cancelAuthChecks();window.removeEventListener('focus',refresh);window.removeEventListener('storage',changed)};
+ },[checkAuth,invalidate,cancelAuthChecks]);
+ const signIn=async(url,account)=>{
+  if(accountChangeBusy.current)return 'An account change is already running.';
+  accountChangeBusy.current=true;
+  try{
+   await axios.post(url,account,{withCredentials:true,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   invalidate();announceSessionChange();
+   const next=await checkAuth();
+   if(!next?.isAuthenticated){setAlert({type:'error',message:'The sign-in result could not be verified. Refresh before continuing.'});return 'Could not verify this session.'}
+   setAlert({message:'',type:''});setShowLogin(false);setShowSignup(false);return null;
+  }catch(error){const message=apiError(error,'Could not sign in.');setAlert({type:'error',message});return message}
+  finally{accountChangeBusy.current=false}
+ };
+ const logout=async()=>{
+  if(accountChangeBusy.current)return;
+  accountChangeBusy.current=true;
+  try{
+   await axios.post('/api/logout/',{},{withCredentials:true,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   invalidate();commit({authenticated:false});announceSessionChange();
+   setAlert({message:'',type:''});setDropdownOpen(false);
+  }catch(error){setAlert({type:'error',message:apiError(error,'Could not sign out.')})}
+  finally{accountChangeBusy.current=false}
+ };
+ // Every account/role boundary remounts private providers and pages. Requests
+ // captured by an old tree cannot refill a new account's basket/order/wallet.
+ const isSessionCurrent=useMemo(()=>()=>scope.current===version,[version]);
+ return <AuthContext.Provider value={{...session,isSessionCurrent,checkAuth,login:account=>signIn('/api/login/',account),signup:account=>signIn('/api/signup/',account),logout}}>
+  <Fragment key={version}>{children}</Fragment>
+ </AuthContext.Provider>;
 }

@@ -227,7 +227,8 @@ class AddressListCreate(generics.ListAPIView):
 @transaction.atomic
 def saved_address(request):
     from django.contrib.auth.models import User
-    User.objects.select_for_update().get(pk=request.user.pk)
+    if request.method != 'GET':
+        User.objects.select_for_update().get(pk=request.user.pk)
     address = Address.objects.filter(user=request.user, is_default=True).first()
     if request.method == 'GET':
         return Response(AddressSerializer(address).data if address else None)

@@ -8,10 +8,13 @@ export function readCheckout(storage,key,fallback) {
  catch {throw storageError();}
 }
 export function checkoutAttempt(storage,key,newId) {
- const previous=readCheckout(storage,'checkoutAttempt',null);
+ return mutationAttempt(storage,'checkoutAttempt',key,newId);
+}
+export function mutationAttempt(storage,storageKey,key,newId) {
+ const previous=readCheckout(storage,storageKey,null);
  if(previous!==null && (typeof previous!=='object' || typeof previous.key!=='string' || typeof previous.id!=='string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(previous.id)))throw storageError();
  if(previous?.key===key)return previous;
  const attempt={key,id:newId()};
- try {storage.setItem('checkoutAttempt',JSON.stringify(attempt));}catch{throw storageError();}
+ try {storage.setItem(storageKey,JSON.stringify(attempt));}catch{throw storageError();}
  return attempt;
 }

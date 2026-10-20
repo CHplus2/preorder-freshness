@@ -6,6 +6,8 @@ import PaymentOptions from '../../components/PaymentOptions';
 import AvailabilityResult from '../../components/AvailabilityResult';
 import BasketSlots from '../../components/BasketSlots';
 import useDeliveryQuote from '../../hooks/useDeliveryQuote';
+import {useAuth} from '../../contexts/AuthContext';
+import {accountChanged} from '../../utils/sessionScope';
 import {apiError} from '../../utils/apiError';
 import {useEffect,useState} from 'react';
 import {Link,useNavigate,useLocation} from 'react-router-dom';
@@ -20,6 +22,7 @@ const emptyAddress={recipient_name:'',line1:'',line2:'',city:'',state:'',postal_
 const states=['Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Penang','Perak','Perlis','Sabah','Sarawak','Selangor','Terengganu','Kuala Lumpur','Labuan','Putrajaya'];
 const errorText=apiError;
 export default function CheckoutPage(){
+ const {isSessionCurrent}=useAuth();
  const location=useLocation();
  const {config:paypalConfig}=usePayPalConfig();
  const [openedAt]=useState(()=>Date.now());
@@ -55,6 +58,7 @@ export default function CheckoutPage(){
    }else{
     // Route planning review requests to unpaid checkout before presenting payment.
     const checked = await axios.post('/api/orders/quote/',{delivery_at:form.delivery_at+':00+08:00'},{timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+    if(!isSessionCurrent())throw accountChanged();
     if(checked.data?.needs_review){
      await placeOrder(address.id,'cod',{throwOnError:true});
      navigate('/orders',{state:{formPayment:true,requestNeedsReview:true}});
