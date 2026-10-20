@@ -8,13 +8,13 @@ no external app assets, ratings, urgency claims or delivery promises were added.
 
 ## Customer experience
 
-- Menu: illustrated introduction using existing credited food photos, searchable
+- Menu: compact kitchen introduction (updated in the 20 October UX batch), searchable
   paginated catalogue, keyboard-accessible category buttons, compact date-finder
   shortcut, visible notice and daily limits, image failure placeholders, and
   inline basket quantity controls. The existing catalogue and cart APIs remain
   authoritative. Guests retain the existing sign-in action when adding food.
 - Basket: item photos, per-unit and line prices, quantity/removal controls,
-  optional whole-basket time check and an itemized summary. The summary uses the
+  automatic whole-basket delivery-time choices and an itemized summary. The summary uses the
   same food subtotal, active bulk discount, delivery charge and final total as
   checkout. Desktop uses two columns; mobile keeps checkout within reach.
 - Checkout: shared three-step orientation and a reachable mobile total/action
@@ -38,3 +38,6 @@ slot transfer; matching basket and checkout totals; quote success; and native
 required-date validation. No checkout order is submitted by these checks.
 Desktop/tablet/mobile screenshots were inspected, including overlay reachability.
 Production Vercel deployment is separate from these local checks.
+
+See [the current UX batch record](UI-UX-IMPROVEMENT-BATCHES.md) for the compact
+menu and meal-detail improvements and the remaining review sequence.

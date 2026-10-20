@@ -435,3 +435,12 @@ body {
 @media(min-width:481px) and (max-width:560px){.menu-toolbar{top:74px}}
 
 @media(max-width:700px){.menu-storefront .guided-menu form input,.menu-storefront .guided-menu form select{font-size:16px}}
+
+/* Batch 1: put search and real menu choices within easy reach. */
+.menu-storefront .menu-toolbar{margin-bottom:2px}
+.menu-storefront .menu-list-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.menu-list-meta .menu-reset-filters{min-height:44px;padding:8px 0;margin:0;background:transparent;border:0;color:#285a3e;font-size:12px;font-weight:600;text-decoration:underline;text-underline-offset:4px;box-shadow:none}
+.menu-empty-result{grid-column:1/-1;padding:30px 20px;border:1px dashed #c9d6c3;background:#f5f8ef;border-radius:12px;text-align:center;color:#3c563b}.menu-empty-result h2{font-size:18px;margin:0 0 8px;line-height:1.4}.menu-empty-result p{font-size:14px;line-height:1.6}.menu-empty-result button{min-height:44px}
+.menu-food-days{display:block;font-size:11px;line-height:1.6;color:#53694c;margin:-10px 0 14px}
+.menu-storefront .guided-menu{margin-top:24px;scroll-margin-top:260px}
+@media(max-width:480px){.menu-storefront .menu-list-meta{padding:8px 0}.menu-food-days{font-size:11px;margin:-5px 0 12px}.menu-storefront .menu-category-tabs button{padding-inline:14px}}

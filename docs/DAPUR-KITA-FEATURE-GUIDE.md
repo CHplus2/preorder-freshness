@@ -25,8 +25,11 @@ system at earlier points in development.
 
 ## 2. Customer journey and account
 
-- Browse menus, descriptions, prices and delivery information. Save portions in
-  the basket, then review the food subtotal, delivery fee and any discount.
+- Browse the food-first menu with search and category filters. Restricted
+  delivery weekdays and advance notice are visible on food cards. Meal details
+  show quantity and food subtotal before adding, with a persistent mobile action.
+  Save items in the basket, then review delivery and any configured group discount.
+  The optional date finder remains accessible below the menu or from its shortcut.
 - Account settings stores profile name and a default delivery address. Checkout
   can also update the saved address. Each accepted order keeps an address snapshot;
   changing the default address does not rewrite old orders.

@@ -1,12 +1,14 @@
 import MenuPhoto from '../../components/MenuPhoto';
 import {deliveryDaysText} from '../../utils/deliveryDays';
+import {menuDetail} from '../../utils/menuPresentation';
+import {PageMeta} from '../../components/BusinessLayout';
+import ProductOrderPanel from '../../components/ProductOrderPanel';
+import {ChevronLeft,Clock3,CalendarDays,Users,MessageCircle,ChefHat,ArrowUpRight} from 'lucide-react';
 import MenuReviews from "../../components/MenuReviews";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import PageLoading from "../../components/PageLoading";
-import { apiError } from "../../utils/apiError";
-import { useUI } from "../../contexts/UIContext"
-import { useCart } from "../../contexts/CartContext";
+import { readApiError } from "../../utils/apiError";
 import axios from "axios";
 import "./ProductDetailPage.css";
 
@@ -15,72 +17,36 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null);
   const [failure, setFailure] = useState(null);
   const [attempt, setAttempt] = useState(0);
-  const { formatPrice } = useUI();
-  const { addToCart } = useCart();
 
   useEffect(() => {
     const controller = new AbortController();
     axios.get(`/api/products/${id}/`, { signal: controller.signal })
-      .then(res => { if (!controller.signal.aborted) { setProduct({ id, attempt, data: res.data }); setFailure(null); } })
-      .catch(err => { if (!controller.signal.aborted) setFailure({ id, attempt, message: err.response?.status === 404 ? 'This menu item is no longer available.' : apiError(err, 'Unable to load this meal. Please try again.') }); });
+      .then(res => { if (!controller.signal.aborted) { setProduct({ id, attempt, data: menuDetail(res.data,id) }); setFailure(null); } })
+      .catch(err => { if (!controller.signal.aborted) setFailure({ id, attempt, message: err.response?.status === 404 ? 'This menu item is no longer available.' : readApiError(err, 'Unable to load this meal. Please try again.') }); });
     return () => controller.abort();
   }, [id, attempt]);
 
-  if (failure?.id === id && failure.attempt === attempt) return <section className="product-detail-container"><div><h1>Meal unavailable</h1><p role="alert">{failure.message}</p><div className="detail-recovery"><button onClick={() => setAttempt(n => n + 1)}>Try again</button><Link to="/menu">Back to menu</Link></div></div></section>;
+  if (failure?.id === id && failure.attempt === attempt) return <main className="meal-detail-page"><div className="meal-detail-unavailable"><h1>Meal unavailable</h1><p role="alert">{failure.message}</p><div className="detail-recovery"><button onClick={() => setAttempt(n => n + 1)}>Try again</button><Link to="/menu">Back to menu</Link></div></div></main>;
   if (product?.id !== id || product.attempt !== attempt) return <PageLoading label="Loading meal..." />;
-  return <ProductContent product={product.data} id={id} formatPrice={formatPrice} addToCart={addToCart}/>;
+  return <ProductContent key={id} product={product.data} id={id}/>;
 }
 
-function ProductContent({product, id, formatPrice, addToCart}) {
-  return (
-    <div className="product-detail-container">
-      
-      {/* LEFT: IMAGE */}
-      <div className="product-detail-left">
-        {product.image_url && (
-          <MenuPhoto sizes="(max-width: 768px) calc(100vw - 88px), 470px"
-            src={product.image_url}
-            alt={product.name}
-            decoding="async"
-            referrerPolicy="no-referrer"
-            className="product-detail-image"
-          />
-        )}
-      </div>
-
-      {/* RIGHT: INFO */}
-      <div className="product-detail-right">
-        <h1 className="detail-title">{product.name}</h1>
-
-        {/*<div className="ai-summary">
-          {product.ai_summary}
-        </div>*/}
-
-        <p className="detail-description">{product.description}</p>
-
-        <div className="price">
-          {formatPrice(product.price)}
-        </div>
-
-        <div className="meta">
-          <span>{deliveryDaysText(product.delivery_weekdays)}</span>
-          <span>{product.lead_hours} hours advance notice</span>
-          <span>{product.freshness}</span>
-          <span>Category: {product.category_name}</span>
-        </div>
-
-        <button
-          disabled={product.selling_status && product.selling_status!=='active'}
-          onClick={() => addToCart(product.id)}
-          className="add-btn"
-        >
-          {product.selling_status==='archived'?'No longer offered':product.selling_status==='paused'?'Orders paused':'Add to basket'}
-        </button>
-        <p>Ingredient dates describe current stock; future meals may use new batches. Contact the owner about allergies.</p>
-        {product.social_url && <a href={product.social_url} target="_blank" rel="noreferrer">See this food on social media ↗</a>}
-        <MenuReviews id={id}/>
-      </div>
-
-    </div>
-  );
+function ProductContent({product,id}) {
+ const [imageFailed,setImageFailed]=useState(false);
+ return <main className="meal-detail-page">
+  <PageMeta title={product.name} description={product.description || `View ${product.name}, preorder information and delivery days.`}/>
+  <Link className="meal-back-link" to="/menu"><ChevronLeft size={17} aria-hidden="true"/>Back to menu</Link>
+  <div className="meal-detail-grid"><div className="meal-detail-photo">
+   {product.image_url && !imageFailed?<MenuPhoto sizes="(max-width: 700px) calc(100vw - 32px), 520px" src={product.image_url} alt={product.name} className="product-detail-image" decoding="async" onError={()=>setImageFailed(true)}/>:<div className="meal-photo-placeholder"><ChefHat size={48} aria-hidden="true"/><span>Photo coming soon</span></div>}
+   {product.social_url && <a className="meal-social-link" href={product.social_url} target="_blank" rel="noreferrer">See how it’s made <ArrowUpRight size={15} aria-hidden="true"/></a>}
+  </div><div className="meal-detail-copy">
+   {product.category_name && <span className="meal-category">{product.category_name}</span>}
+   <h1>{product.name}</h1>{product.description && <p className="meal-description">{product.description}</p>}
+   <ProductOrderPanel product={product}/>
+   <dl className="meal-order-facts"><div><dt><Clock3 size={18} aria-hidden="true"/>Order ahead</dt><dd>{product.lead_hours>0?`${product.lead_hours} hours before preparation starts`:'Available times are checked in your basket'}</dd></div><div><dt><CalendarDays size={18} aria-hidden="true"/>Delivery days</dt><dd>{deliveryDaysText(product.delivery_weekdays).replace('Delivery: ','')}</dd></div><div><dt><Users size={18} aria-hidden="true"/>Daily menu limit</dt><dd>{product.daily_capacity} items, subject to other bookings</dd></div></dl>
+   <p className="meal-schedule-note">Choose a delivery time for your whole basket. Preparation and kitchen bookings are checked together.</p>
+   <div className="meal-kitchen-contact"><MessageCircle size={20} aria-hidden="true"/><div><strong>Allergies or dietary needs?</strong><p>Check with the kitchen before ordering.</p><Link to="/contact">Ask the kitchen</Link></div></div>
+   <details className="meal-ingredient-note"><summary>About ingredient records</summary><p>Ingredient dates describe current stock; future meals may use new batches. Records do not establish an allergen-free kitchen.</p>{product.freshness && <p>Current ingredient record: {product.freshness}.</p>}</details>
+  </div></div><MenuReviews id={id}/>
+ </main>;
 }

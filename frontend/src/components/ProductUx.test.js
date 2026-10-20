@@ -5,6 +5,24 @@ import {MemoryRouter} from 'react-router-dom';
 import {createServer} from 'vite';
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
+ const {default:MenuKitchenHeader}=await server.ssrLoadModule('/src/components/MenuKitchenHeader.jsx');
+ const kitchenHeader=store=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(MenuKitchenHeader,{store:{name:'Local home kitchen',...store}})));
+ assert.match(kitchenHeader({}),/What sounds good/);assert.doesNotMatch(kitchenHeader({}),/% off|Free delivery|15.minutes/);
+ assert.match(kitchenHeader({bulk_discount_percent:10,bulk_minimum:12}),/10% off food from 12 items/);
+ const {default:ProductOrderPanel}=await server.ssrLoadModule('/src/components/ProductOrderPanel.jsx');
+ const {CartContext}=await server.ssrLoadModule('/src/contexts/CartContext.js');
+ const {AuthContext}=await server.ssrLoadModule('/src/contexts/AuthContext.js');
+ const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
+ const orderPanel=(product={},cart=[],auth=true)=>renderToStaticMarkup(createElement(MemoryRouter,null,
+  createElement(UIContext.Provider,{value:{formatPrice:value=>'RM '+Number(value).toFixed(2)}},
+  createElement(AuthContext.Provider,{value:{isAuthenticated:auth}},
+  createElement(CartContext.Provider,{value:{cart,cartLoading:false,addToCart:async()=>true}},
+  createElement(ProductOrderPanel,{product:{id:1,name:'Meal',price:'12.00',selling_status:'active',...product}}))))));
+ const buying=orderPanel();assert.match(buying,/Add 1 · RM 12.00/);assert.match(buying,/Quantity to add/);
+ assert.match(buying,/Delivery and any group discount/);
+ const full=orderPanel({},[{product:{id:1},quantity:10000}]);assert.match(full,/Basket limit reached/);assert.match(full,/10000 already in your basket/);
+ const paused=orderPanel({selling_status:'paused'});assert.match(paused,/Orders paused/);assert.match(paused,/Explore the current menu/);
+ assert.doesNotMatch(paused,/>Add 1/);assert.match(orderPanel({},[],null),/<button[^>]*disabled/);
  const {default:MenuListingStatus}=await server.ssrLoadModule('/src/components/MenuListingStatus.jsx');
  const status=p=>renderToStaticMarkup(createElement(MenuListingStatus,p));
  assert.match(status({error:true,count:0,shown:0}),/temporarily unavailable/);
