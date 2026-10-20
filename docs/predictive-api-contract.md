@@ -540,3 +540,22 @@ Missing calendar weeks are zero **recorded sales**, with recording coverage and
 menu availability unverified. Demo orders remain demo evidence. Aggregate demand
 cannot identify dish-specific ingredients; confirmed bookings still drive stock
 planning, and forecast quantities must not be blindly added to them.
+
+
+## Planner handoff: existing kitchen endpoints
+
+The existing staff endpoint `POST /api/admin/orders/<id>/preparation-plan/`
+previews a pending order using accepted settings by default;
+`adopt_current: true` explicitly selects current recipe/preparation settings.
+It returns `preview` and a signed, owner/order-bound `confirm` token valid for
+ten minutes. Confirmation repeats the adoption choice and sends the token.
+It returns `order` and `already_applied`; repeating an applied confirmation
+returns the current order without writing another amendment or reservation.
+New availability/term changes require a fresh preview. This does not change
+payment or delivery time and does not accept a forecast as an order.
+
+The separate delivery-change endpoint can reserve a feasible replacement plan
+when its preview is confirmed. An infeasible unconfirmed request can instead
+remain `needs_review: true` with no reserved tasks. Such requests are excluded
+from planner delivery commitments, packing totals and calendar exports. See
+[planner review](PLANNER-REVIEW-2026-10-20.md) for integration checks and limits.

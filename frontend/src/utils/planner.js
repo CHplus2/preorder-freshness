@@ -1,5 +1,7 @@
 export const malaysiaDate = value => new Date(value).toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'});
 export const duration = minutes => {const rounded=Math.round(minutes);return `${Math.floor(rounded/60)}h ${rounded%60}m`;};
+export const scheduledDelivery = order => ['pending','processing','cooked','shipped'].includes(order.status)
+ && order.preparation_plan?.needs_review!==true && Number.isFinite(Date.parse(order.delivery_at || ''));
 export function savedPlanIssue(order, now=Date.now()) {
  const tasks=order.preparation_plan?.tasks || [];
  if(!tasks.length)return '';
@@ -62,5 +64,5 @@ export function dailyWork(plan,date){
  const blocks=(plan?.availability?.blocks || []).map(b=>[Math.max(open,Date.parse(b.start_at)),Math.min(close,Date.parse(b.end_at))]).filter(([a,b])=>b>a);
  const hands=tasks.filter(t=>t.worker),handsMinutes=hands.reduce((n,t)=>n+t.dayMinutes,0);
  const intervals=hands.map(t=>[Math.max(start,Date.parse(t.start)),Math.min(end,Date.parse(t.end))]);
- return {tasks,equipmentConflictMinutes:unionMinutes(equipmentConflicts),closureConflictMinutes:unionMinutes(closureConflicts),handsMinutes,outsideHoursMinutes:hands.reduce((n,t)=>n+t.dayMinutes-overlap(Date.parse(t.start),Date.parse(t.end),open,close)/60000,0),availableMinutes:Math.max(0,(close-open)/60000-unionMinutes(blocks)),conflictingMinutes:Math.max(0,handsMinutes-unionMinutes(intervals)),deliveries:orders.filter(o=>o.delivery_at && malaysiaDate(o.delivery_at)===date),unscheduled:orders.filter(o=>['pending','processing'].includes(o.status) && !o.preparation_plan?.tasks?.length)};
+ return {tasks,equipmentConflictMinutes:unionMinutes(equipmentConflicts),closureConflictMinutes:unionMinutes(closureConflicts),handsMinutes,outsideHoursMinutes:hands.reduce((n,t)=>n+t.dayMinutes-overlap(Date.parse(t.start),Date.parse(t.end),open,close)/60000,0),availableMinutes:Math.max(0,(close-open)/60000-unionMinutes(blocks)),conflictingMinutes:Math.max(0,handsMinutes-unionMinutes(intervals)),deliveries:orders.filter(o=>scheduledDelivery(o) && malaysiaDate(o.delivery_at)===date),requests:orders.filter(o=>o.status==='pending' && o.preparation_plan?.needs_review===true && Number.isFinite(Date.parse(o.delivery_at || '')) && malaysiaDate(o.delivery_at)===date),unscheduled:orders.filter(o=>['pending','processing'].includes(o.status) && !o.preparation_plan?.tasks?.length)};
 }

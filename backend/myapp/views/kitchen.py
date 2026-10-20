@@ -12,6 +12,11 @@ class StepTimeInput(serializers.Serializer):
     start = serializers.DateTimeField()
 
 
+class PlanReviewInput(serializers.Serializer):
+    adopt_current = serializers.BooleanField(default=False)
+    confirm = serializers.CharField(max_length=300000, required=False, trim_whitespace=False)
+
+
 class ManualPlanInput(serializers.Serializer):
     mode = serializers.ChoiceField(choices=['window','steps'], default='window')
     start = serializers.DateTimeField(required=False)
@@ -43,6 +48,8 @@ def manual_order_plan(request, pk):
         order = get_object_or_404(Order, pk=pk)
         return Response({'history': [{'id': a.pk, 'at': a.created_at, 'actor': a.actor_id, 'before': a.before, 'after': a.after}
             for a in order.amendments.order_by('-created_at','-pk')[:20]]})
+    if not isinstance(request.data, dict):
+        raise serializers.ValidationError('Provide a preparation plan object.')
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
     order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
@@ -167,11 +174,27 @@ def kitchen_block_detail(request, pk):
 @transaction.atomic
 def review_order_plan(request, pk):
     from django.core import signing
+    from uuid import uuid4
     from ..services.scheduling import schedule_order, plan_snapshot
     from ..serializers import OrderSerializer
+    from ..models import OrderAmendment
+    incoming = PlanReviewInput(data=request.data)
+    incoming.is_valid(raise_exception=True)
+    token = incoming.validated_data.get('confirm')
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
     order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
+    previous = None
+    if token is not None:
+        try:
+            previous = signing.loads(token, salt='kitchen-plan-review', max_age=600)
+        except signing.BadSignature:
+            raise serializers.ValidationError('This preview has expired. Preview the plan again before saving.')
+        if (not isinstance(previous, dict) or previous.get('order') != order.pk
+                or previous.get('actor') != request.user.pk or not previous.get('request_id')):
+            raise serializers.ValidationError('This preview belongs to another order or owner. Calculate a new plan.')
+        if order.amendments.filter(after__automatic_request_id=previous['request_id']).exists():
+            return Response({'order': OrderSerializer(order).data, 'already_applied': True})
     if order.status != 'pending' or order.inventory_deducted:
         raise serializers.ValidationError('Only orders that have not started preparation can be replanned.')
     if not order.delivery_at:
@@ -181,7 +204,7 @@ def review_order_plan(request, pk):
         raise serializers.ValidationError('An ordered menu was removed. Resolve its recipe before planning.')
     from ..services.commitments import scheduled_item, preparation_snapshot
     from ..models import OrderIngredient, Product
-    adopt_current = serializers.BooleanField(default=False).run_validation(request.data.get('adopt_current', False))
+    adopt_current = incoming.validated_data['adopt_current']
     list(Product.objects.select_for_update().filter(pk__in=[i.product_id for i in items]).order_by('pk'))
     # Reload after locks so an editor and this approval cannot cross.
     items = list(order.items.select_related('product').prefetch_related('accepted_ingredients'))
@@ -202,15 +225,11 @@ def review_order_plan(request, pk):
         'packaging': str(i.product.packaging_cost) if i.product.packaging_cost is not None else None}
         for i in items] if adopt_current else []
     snapshot['order_version'] = order.updated_at.isoformat()
-    token = request.data.get('confirm')
-    if token:
-        try:
-            previous = signing.loads(token, salt='kitchen-plan-review', max_age=600)
-        except (signing.BadSignature, TypeError):
-            raise serializers.ValidationError('This preview has expired. Preview the plan again before saving.')
+    snapshot['actor'] = request.user.pk
+    snapshot['request_id'] = previous['request_id'] if previous else str(uuid4())
+    if previous is not None:
         if previous != snapshot:
             return Response({'detail':'Availability or menu timings changed. Preview again to review the updated plan.'},status=409)
-        from ..models import OrderAmendment
         before = {'plan': order.preparation_plan, 'items': [
             {'id': i.pk, 'recipe_source': i.recipe_source, 'preparation': i.preparation_snapshot,
              'packaging': str(i.packaging_unit_cost) if i.packaging_unit_cost is not None else None,
@@ -229,8 +248,9 @@ def review_order_plan(request, pk):
                 item.save(update_fields=['preparation_snapshot', 'recipe_source', 'packaging_unit_cost'])
         order.preparation_at=plan['start'];order.preparation_end_at=plan['end'];order.preparation_plan=snapshot['plan']
         order.save(update_fields=['preparation_at','preparation_end_at','preparation_plan','updated_at'])
-        OrderAmendment.objects.create(order=order, actor=request.user, before=before, after=snapshot)
-        return Response({'order':OrderSerializer(order).data})
+        OrderAmendment.objects.create(order=order, actor=request.user, before=before,
+            after=dict(snapshot, automatic_request_id=snapshot['request_id']))
+        return Response({'order':OrderSerializer(order).data, 'already_applied': False})
     return Response({'preview':snapshot,'confirm':signing.dumps(snapshot,salt='kitchen-plan-review',compress=True)})
 
 

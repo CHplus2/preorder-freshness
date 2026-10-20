@@ -2,6 +2,13 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {packingList} from './packing.js';
 const order = {id:1,status:'pending',delivery_at:'2026-10-02T16:00:00Z',items:[{id:1,product:5,product_name:'Rice',quantity:2}]};
+test('unconfirmed requests cannot inflate quantities or enter printed packing totals',()=>{
+ const request={...order,id:147,preparation_plan:{needs_review:true,tasks:[]},items:[{...order.items[0],quantity:90}]};
+ const result=packingList([order,request],'2026-10-03');
+ assert.deepEqual(result.orders.map(o=>o.id),[1]);assert.equal(result.portions,2);
+ assert.equal(result.menus[0].quantity,2);assert.equal(result.awaitingConfirmation,1);
+ assert.equal(packingList([request],'2026-10-04').awaitingConfirmation,0);
+});
 test('uses Malaysia date and excludes dispatched, completed and cancelled orders',()=>{
  const rows=[order,...['shipped','delivered','cancelled'].map(status=>({...order,status,id:2}))];
  assert.equal(packingList(rows,'2026-10-03').orders.length,1);

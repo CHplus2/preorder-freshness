@@ -340,7 +340,9 @@ In Planner, open **Review delivery requests**, select the request and use
 **Calculate plan → Confirm preparation plan** first. If calculation cannot fit,
 review the error and either agree another delivery or adjust reviewed menu
 settings. The advanced manual arrangement is a separate owner option, not a
-required step for every request. Saving a requested date alone does not allocate
+required step for every request. If a changed delivery can be automatically
+scheduled, **Confirm new time** saves its preparation reservation as well.
+**Save requested time** is used when it still cannot fit and does not allocate
 worker/equipment time or authorize starting that request.
 
 Multi-day preparation already supports separate recipe steps on different days,
@@ -377,3 +379,16 @@ optional and direct completion paths. Frontend utility, UX, planner, checkout
 and build checks pass. Browser fixtures verify the request remains unconfirmed
 after saving and that expanding the expiry summary opens the correct batch.
 Live records are not modified by these checks.
+
+### Planner calendar and packing commitments
+
+Unconfirmed requests appear separately from scheduled deliveries in the monthly
+and daily calendar. They do not enter packing quantities or calendar reminder
+downloads. On small screens T means preparation tasks, D means scheduled
+deliveries and R means requests; selecting a day opens its work and follow-up.
+
+Automatic-plan confirmation can be retried with the same preview after an
+uncertain response; the server saves it once. Changed availability still needs
+a fresh calculation. Invalid saved dates leave repair controls available, and
+calendar downloads report omitted invalid task timings. See the
+[planner review](PLANNER-REVIEW-2026-10-20.md) for tested behavior and limits.

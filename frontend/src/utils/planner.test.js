@@ -1,10 +1,36 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {dailyWork,planningReadiness,duration} from './planner.js';
+import {plannerCalendar} from './plannerCalendar.js';
 test('fractional work minutes round without displaying 60 minutes',()=>{assert.equal(duration(119.9),'2h 0m');assert.equal(duration(60.1),'1h 0m')});
 const date='2026-09-20';
 const task=(start,end,worker=true)=>({name:'Task',start:date+'T'+start+':00+08:00',end:date+'T'+end+':00+08:00',worker,resource:worker?'stove':'fridge'});
 const plan=tasks=>({availability:{open_hour:8,close_hour:16,blocks:[]},orders:[{id:1,status:'pending',items:[],preparation_plan:{tasks}}]});
+test('delivery requests remain visible separately from scheduled deliveries and calendar exports',()=>{
+ const p=plan([task('09:00','10:00')]);p.orders[0].delivery_at=date+'T12:00:00+08:00';
+ const request={id:147,status:'pending',items:[],delivery_at:date+'T16:00:00+08:00',preparation_plan:{needs_review:true,tasks:[]}};
+ p.orders.push(request);
+ const day=dailyWork(p,date);
+ assert.deepEqual(day.deliveries.map(o=>o.id),[1]);assert.deepEqual(day.requests.map(o=>o.id),[147]);
+ assert.equal(day.handsMinutes,60);
+ const calendar=plannerCalendar(p.orders,new Date('2026-09-19T12:00:00Z'));
+ assert.equal(calendar.events,2);assert.equal(calendar.invalidTasks,0);
+ assert.match(calendar.content,/DTSTART:20260920T010000Z/);
+ assert.match(calendar.content,/UID:1-delivery@dapur-kita/);
+ assert.doesNotMatch(calendar.content,/147|Invalid Date/);
+ assert.equal(plannerCalendar([request]).events,0);
+});
+test('calendar excludes old preparation for ready orders and survives invalid saved tasks',()=>{
+ const p=plan([task('09:00','10:00'),{start:'bad',end:'bad'},task('12:00','11:00')]);
+ p.orders[0].delivery_at=date+'T16:00:00+08:00';
+ const original=JSON.stringify(p);
+ const calendar=plannerCalendar(p.orders);
+ assert.equal(calendar.events,2);assert.equal(calendar.invalidTasks,2);
+ assert.equal(JSON.stringify(p),original);
+ p.orders[0].status='cooked';const ready=plannerCalendar(p.orders);
+ assert.equal(ready.events,1);assert.doesNotMatch(ready.content,/Prepare order/);
+ p.orders[0].status='cancelled';assert.equal(plannerCalendar(p.orders).events,0);
+});
 test('hands-on time excludes unattended equipment use',()=>{const d=dailyWork(plan([task('09:00','10:00'),task('09:00','13:00',false)]),date);assert.equal(d.handsMinutes,60);assert.equal(d.availableMinutes,480);assert.equal(d.tasks.length,2);assert.equal(d.conflictingMinutes,0)});
 test('multiday resting appears on each occupied day',()=>{const p=plan([{...task('09:00','10:00',false),start:'2026-09-19T18:00:00+08:00',end:'2026-09-21T10:00:00+08:00'}]);assert.equal(dailyWork(p,date).tasks[0].dayMinutes,1440)});
 test('overlapping closures are not double counted',()=>{const p=plan([]);p.availability.blocks=[task('10:00','12:00'),task('11:00','13:00')].map(t=>({start_at:t.start,end_at:t.end}));assert.equal(dailyWork(p,date).availableMinutes,300)});

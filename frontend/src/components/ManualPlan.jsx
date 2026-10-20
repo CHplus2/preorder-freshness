@@ -4,12 +4,12 @@ import {getCookie} from '../utils/cookieUtils';
 import {apiError} from '../utils/apiError';
 import './ManualPlan.css';
 import {shiftPreparation} from '../utils/preparationShift';
-const inputTime=value=>value?new Date(Date.parse(value)+8*3600000).toISOString().slice(0,16):'';
+const inputTime=value=>Number.isFinite(Date.parse(value || ''))?new Date(Date.parse(value)+8*3600000).toISOString().slice(0,16):'';
 const hasPassed=value=>value<=Date.now();
 const when=value=>new Date(value).toLocaleString('en-GB',{timeZone:'Asia/Kuala_Lumpur',dateStyle:'medium',timeStyle:'short'});
 export default function ManualPlan({order,onSaved}){
  const tasks=order.preparation_plan?.tasks || [];
- const detailed=tasks.length>0 && order.preparation_plan?.mode!=='manual_window';
+ const detailed=tasks.length>0 && tasks.every(t=>Number.isFinite(Date.parse(t.start || '')) && Number.isFinite(Date.parse(t.end || '')) && Date.parse(t.end)>Date.parse(t.start)) && order.preparation_plan?.mode!=='manual_window';
  const [individual,setIndividual]=useState(false);
  const [shiftStart,setShiftStart]=useState('');
  const shifted=shiftPreparation(tasks,shiftStart);

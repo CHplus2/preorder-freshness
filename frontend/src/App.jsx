@@ -73,7 +73,7 @@ function AnimatedRoutes() {
         <Route path="/menu" element={<ProductsPage/>}/>
         <Route path="*" element={<main className="dk-workspace"><PageMeta title="Page not found" description="Return to the kitchen menu."/><h1>This page isn’t on the menu.</h1><Link to="/menu">Explore the menu</Link></main>}/>
         <Route path="/admin/settings" element={<RequireAuth message="Admin access required"><StoreSettingsPage/></RequireAuth>}/>
-        <Route path="/admin/planner" element={<RequireAuth message="Admin access required"><PlannerPage/></RequireAuth>}/>
+        <Route path="/admin/planner" element={<RequireAuth message="Admin access required"><PlannerPage key={location.search}/></RequireAuth>}/>
         <Route
           path="/"
           element={

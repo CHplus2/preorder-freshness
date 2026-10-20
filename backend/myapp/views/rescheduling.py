@@ -57,6 +57,8 @@ def eligibility(order, now, allow_initial=False):
 @transaction.atomic
 def reschedule_order(request, pk):
     # Read-only eligibility/history must not serialize the whole kitchen.
+    if request.method == 'POST' and not isinstance(request.data, dict):
+        raise serializers.ValidationError('Provide a delivery change object.')
     orders = Order.objects.all()
     if request.method == 'POST':
         # Same lock order as checkout/replanning: store, then order, then menus.

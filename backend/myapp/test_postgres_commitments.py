@@ -13,6 +13,42 @@ from .models import Storefront, Product, Address, CartItem, Order
 
 @skipUnless(connection.vendor == 'postgresql', 'Requires isolated PostgreSQL to verify real row locking')
 class PostgreSQLCommitmentTests(TransactionTestCase):
+    def test_concurrent_plan_confirmations_save_one_reservation_and_amendment(self):
+        from .models import OrderItem
+        Storefront.objects.create(pk=1)
+        owner = User.objects.create_user('plan-retry-owner', is_staff=True)
+        buyer = User.objects.create_user('plan-retry-buyer')
+        product = Product.objects.create(name='Plan retry meal', price=10, lead_hours=1,
+            preparation_tasks=[dict(name='Prepare', minutes=30, worker=True, resource='prep_table')])
+        delivery = (timezone.localtime()+timedelta(days=3)).replace(hour=18, minute=0, second=0, microsecond=0)
+        order = Order.objects.create(user=buyer, delivery_at=delivery,
+            preparation_plan={'needs_review': True, 'tasks': []})
+        OrderItem.objects.create(order=order, product=product, product_name=product.name,
+            quantity=1, unit_price=10, subtotal=10)
+        url = f'/api/admin/orders/{order.pk}/preparation-plan/'
+        client = APIClient(); client.force_authenticate(owner)
+        preview = client.post(url, {}, format='json')
+        self.assertEqual(preview.status_code, 200, preview.data)
+        barrier = Barrier(2)
+        def confirm(_):
+            close_old_connections()
+            try:
+                current = APIClient(); current.force_authenticate(User.objects.get(pk=owner.pk))
+                barrier.wait(timeout=10)
+                response = current.post(url, {'confirm': preview.data['confirm']}, format='json')
+                return response.status_code, response.data.get('already_applied')
+            finally:
+                connections.close_all()
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(confirm, range(2)))
+        self.assertEqual(sorted(results), [(200, False), (200, True)])
+        order.refresh_from_db()
+        self.assertEqual(order.amendments.count(), 1)
+        self.assertEqual(len(order.preparation_plan['tasks']), 1)
+        self.assertFalse(order.preparation_plan.get('needs_review', False))
+        self.assertEqual(order.status, 'pending')
+        self.assertFalse(order.inventory_deducted)
+
     def test_two_buyers_cannot_reserve_the_last_portion_twice(self):
         Storefront.objects.create(pk=1)
         product=Product.objects.create(name='Last portion',price=10,daily_capacity=1,lead_hours=1)

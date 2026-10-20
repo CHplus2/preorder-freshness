@@ -43,6 +43,12 @@ try {
   assert.match(demo,/Demo record/);assert.match(demo,/not verified food holding/);assert.match(demo,/2h 0m/);
   assert.match(demo,/<details class="plan-demo-assumptions"><summary>/);assert.doesNotMatch(demo,/<details[^>]*open/);
   const {default:PlannerOrderCard}=await server.ssrLoadModule('/src/components/PlannerOrderCard.jsx');
+  const {default:PlannerCalendar}=await server.ssrLoadModule('/src/components/PlannerCalendar.jsx');
+  const calendar=renderToStaticMarkup(createElement(PlannerCalendar,{date:'2026-10-20',onChange:()=>{},orders:[
+    {id:147,status:'pending',delivery_at:'2026-10-20T16:00:00+08:00',preparation_plan:{needs_review:true,tasks:[]}},
+    {id:148,status:'cooked',delivery_at:'2026-10-20T18:00:00+08:00',preparation_plan:{tasks:[]}}]}));
+  assert.match(calendar,/2026-10-20: 0 tasks, 1 deliveries, 1 requests/);
+  assert.match(calendar,/1 request<\/span>/);
   const card=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(PlannerOrderCard,{now:Date.parse('2026-10-18T17:11:00+08:00'),onSaved:()=>{},order:{id:4,status:'pending',created_at:'2026-04-17T08:24:31+08:00',delivery_at:'2026-10-19T18:00:00+08:00',preparation_at:'2026-10-18T16:40:00+08:00',items:[{product_name:'Nasi Ayam Kicap',quantity:1}],preparation_plan:{tasks:[{name:'Prep',resource:'prep_table',menu:'Nasi Ayam Kicap',start:'2026-10-18T16:40:00+08:00',end:'2026-10-18T17:40:00+08:00',worker:true}]}}})));
   for(const label of ['Order #4','Not started','Nasi Ayam Kicap','Preparation timing needs review','Hands-on work','Equipment &amp; pauses','Start to finish','href="/admin/orders?order=4"'])assert.ok(card.includes(label),label);
   assert.ok(card.indexOf('Calculate new plan')<card.indexOf('Manual arrangement · advanced'));
@@ -51,6 +57,10 @@ try {
   assert.match(card,/New preparation start/);
   assert.doesNotMatch(card,/ORDER #4 \/ pending|Step time:|8:24:31/);
   const {default:PlanReview}=await server.ssrLoadModule('/src/components/PlanReview.jsx');
+  const {default:ManualPlan}=await server.ssrLoadModule('/src/components/ManualPlan.jsx');
+  const invalidSaved=renderToStaticMarkup(createElement(ManualPlan,{order:{id:99,preparation_at:'invalid',preparation_end_at:'invalid',preparation_plan:{tasks:[{name:'Old broken task',start:'invalid',end:'invalid'}]}}}));
+  assert.match(invalidSaved,/Use automatic planning above first/);
+  assert.doesNotMatch(invalidSaved,/Invalid Date|Adjust individual step starts/);
   const undated=renderToStaticMarkup(createElement(PlanReview,{order:{id:99,delivery_at:null}}));
   assert.match(undated,/Set an agreed delivery date/);
   assert.match(undated,/<button[^>]*disabled/);

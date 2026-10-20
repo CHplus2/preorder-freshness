@@ -264,7 +264,11 @@ class CommitmentTests(TestCase):
         amendment=OrderAmendment.objects.get()
         self.assertEqual(amendment.before['items'][0]['ingredients'][0]['quantity'],'100.000')
         self.assertEqual(amendment.after['recipes'][0]['ingredients'][0]['quantity'],'150.000')
-        self.assertEqual(self.client.post(url,{'adopt_current':True,'confirm':preview.data['confirm']},format='json').status_code,409)
+        replay=self.client.post(url,{'adopt_current':True,'confirm':preview.data['confirm']},format='json')
+        self.assertEqual(replay.status_code,200,replay.data)
+        self.assertTrue(replay.data['already_applied'])
+        self.assertEqual(OrderAmendment.objects.count(),1)
+        self.assertEqual(order.items.get().accepted_ingredients.get().quantity_per_portion,150)
 
     def test_replan_keeps_accepted_settings_despite_current_menu_edits(self):
         self.product.preparation_tasks=[dict(name='Cook',resource='stove',worker=True,minutes=30,additional_batch_minutes=0,max_wait_minutes=0,overnight=False)]
