@@ -39,12 +39,13 @@ def manual_order_plan(request, pk):
     from ..serializers import OrderSerializer
     import uuid
 
+    if request.method == 'GET':
+        order = get_object_or_404(Order, pk=pk)
+        return Response({'history': [{'id': a.pk, 'at': a.created_at, 'actor': a.actor_id, 'before': a.before, 'after': a.after}
+            for a in order.amendments.order_by('-created_at','-pk')[:20]]})
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
     order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
-    if request.method == 'GET':
-        return Response({'history': [{'id': a.pk, 'at': a.created_at, 'actor': a.actor_id, 'before': a.before, 'after': a.after}
-            for a in order.amendments.order_by('-created_at','-pk')[:20]]})
     token = request.data.get('confirm')
     previous = None
     if token is not None:

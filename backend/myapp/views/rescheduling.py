@@ -56,10 +56,13 @@ def eligibility(order, now, allow_initial=False):
 @permission_classes([IsAuthenticated])
 @transaction.atomic
 def reschedule_order(request, pk):
-    # Same lock order as checkout/replanning: store, then order, then menus.
-    Storefront.objects.get_or_create(pk=1)
-    store = Storefront.objects.select_for_update().get(pk=1)
-    orders = Order.objects.select_for_update()
+    # Read-only eligibility/history must not serialize the whole kitchen.
+    orders = Order.objects.all()
+    if request.method == 'POST':
+        # Same lock order as checkout/replanning: store, then order, then menus.
+        Storefront.objects.get_or_create(pk=1)
+        store = Storefront.objects.select_for_update().get(pk=1)
+        orders = orders.select_for_update()
     if not request.user.is_staff:
         orders = orders.filter(user=request.user)
     order = get_object_or_404(orders, pk=pk)

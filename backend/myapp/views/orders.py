@@ -23,25 +23,47 @@ class OrderList(generics.ListAPIView):
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user).select_related("user", "address").prefetch_related("items").order_by("-created_at")
 
-def deduct_inventory(item, user, order):
+def usable_stock():
+    today = timezone.localdate()
+    return InventoryItem.objects.filter(quantity__gt=0, expiry_date__gte=today,
+        received_date__lte=today, quarantined=False)
+
+
+def deduct_order_inventory(order, user):
+    """Caller holds an atomic order lock; lock stock globally before any writes.
+
+    Orders may list menus/ingredients in different orders. Acquiring each item's
+    lots separately could deadlock two cooks on opposite ingredient sequences.
+    """
+    from collections import defaultdict
+    items = list(order.items.prefetch_related('accepted_ingredients'))
+    by_material = defaultdict(list)
+    material_ids = {ingredient.raw_material_id for item in items for ingredient in item.accepted_ingredients.all()}
+    for batch in usable_stock().select_for_update().filter(raw_material_id__in=material_ids).order_by(
+            'raw_material_id', 'expiry_date', 'received_date', 'id'):
+        by_material[batch.raw_material_id].append(batch)
+    for item in items:
+        deduct_inventory(item, user, order, by_material)
+
+
+def deduct_inventory(item, user, order, by_material=None):
     """
     Deduct raw materials required to produce the ordered quantity
     of a product using FEFO (First Expired, First Out).
     """
 
-    if not item.accepted_ingredients.exists():
+    ingredients = sorted(item.accepted_ingredients.all(), key=lambda ingredient: ingredient.raw_material_id)
+    if not ingredients:
         raise ValidationError("This order has no recorded recipe. Review its accepted recipe before cooking.")
-    for ingredient in item.accepted_ingredients.select_related("raw_material").order_by('raw_material_id'):
+    for ingredient in ingredients:
 
         required_quantity = (
             ingredient.quantity_per_portion * item.quantity
         )
 
-        inventory_items = InventoryItem.objects.select_for_update().filter(
-            raw_material=ingredient.raw_material,
-            quantity__gt=0, expiry_date__gte=timezone.localdate(),
-            received_date__lte=timezone.localdate(), quarantined=False
-        ).order_by("expiry_date", "received_date", "id")
+        inventory_items = (by_material[ingredient.raw_material_id] if by_material is not None else
+            usable_stock().select_for_update().filter(raw_material_id=ingredient.raw_material_id)
+                .order_by('expiry_date', 'received_date', 'id'))
 
         remaining = required_quantity
 
@@ -49,6 +71,8 @@ def deduct_inventory(item, user, order):
 
             if remaining <= 0:
                 break
+            if inventory_item.quantity <= 0:
+                continue
 
             deduction = min(
                 inventory_item.quantity,
@@ -76,7 +100,7 @@ def deduct_inventory(item, user, order):
 
         if remaining > 0:
             raise ValidationError(
-                f"Insufficient {ingredient.raw_material.name} "
+                f"Insufficient {ingredient.material_name} "
                 f"for {item.product_name}: short by {remaining.normalize():f} {ingredient.unit}. "
                 "Add usable stock or review the batch records, then try again. "
                 "Expired, held and not-yet-received batches cannot be used."

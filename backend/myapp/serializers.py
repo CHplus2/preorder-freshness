@@ -108,6 +108,10 @@ class ProductSerializer(serializers.ModelSerializer):
         recipe = validated_data.pop('ingredients', None)
         with transaction.atomic():
             instance = Product.objects.select_for_update().get(pk=instance.pk)
+            # Another editor may have changed the span after is_valid(). Check
+            # coupled preparation limits against the row we now hold locked.
+            self.instance = instance
+            self.validate(validated_data)
             instance = super().update(instance, validated_data)
             if recipe is not None:
                 instance.ingredients.all().delete()
@@ -187,6 +191,11 @@ class InventoryItemSerializer(serializers.ModelSerializer):
         from django.utils import timezone
         def value(key, default=None):
             return attrs.get(key, getattr(self.instance, key, default))
+        def deadline(start, days):
+            try:
+                return start + timedelta(days=days)
+            except (OverflowError, ValueError):
+                raise serializers.ValidationError('The documented storage duration exceeds the supported date range. Review the date and number of days.')
         received = value('received_date')
         if received and received > timezone.localdate():
             raise serializers.ValidationError('Received date cannot be in the future.')
@@ -200,7 +209,7 @@ class InventoryItemSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('Provide the start date, shelf-life days and source of guidance.')
             if basis == 'manufactured' and received and start > received:
                 raise serializers.ValidationError('Manufacture date must not be after receipt.')
-            attrs['expiry_date'] = start + timedelta(days=days)
+            attrs['expiry_date'] = deadline(start, days)
         expiry = attrs.get('expiry_date', value('expiry_date'))
         if not expiry:
             raise serializers.ValidationError('An expiry date is required.')
@@ -223,7 +232,7 @@ class InventoryItemSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError('Opening/thawing dates must be between receipt and today.')
                 if not value('guidance_note', '').strip():
                     raise serializers.ValidationError('Document the source for opened/thawed storage limits.')
-                deadlines.append(event + timedelta(days=days))
+                deadlines.append(deadline(event, days))
         if value('handling_history') == 'documented' and not value('handling_note', '').strip():
             raise serializers.ValidationError('Describe the documented storage history and conditions.')
         if value('handling_history') in ('unknown', 'breach'):

@@ -12,7 +12,7 @@ the deployed service has been audited.
 | --- | --- | --- |
 | 1 | Browser/admin login, signup, password recovery, session/CSRF boundaries, sampled owner permissions, private response caching, runtime defaults and authentication housekeeping | Completed; deployment limitations below remain |
 | 2 | Basket, addresses, checkout, delivery quotes, orders, demo wallet, receipts, refunds and PayPal: ownership, cross-account browser state, pricing, duplicate/concurrent mutations, query count and transaction duration | Completed locally; live-provider and scale checks remain |
-| 3 | Menu management, recipes, inventory/FEFO, planner, manual schedules and availability: validation, permissions, scheduling bounds, locks and query growth | Pending |
+| 3 | Menu management, recipes, inventory/FEFO, planner, manual schedules and availability: validation, permissions, scheduling bounds, locks and query growth | Completed locally; scale and operational limits below remain |
 | 4 | All FreshCast data modes, forecast/scenario APIs, Groq help and shopping tools: data privacy, untrusted input, resource limits, model loading and response cost | Pending |
 | 5 | Images/external URLs, reviews, reports/CSV, reminders, recovery mail, backups/downloads and maintenance: injection, outbound access, export scope and large responses | Pending |
 | 6 | Customer/admin React routes, mobile interaction, browser storage, DOM/XSS, third-party scripts, dependencies/CI, Git history and deployment: bundles, images, caching, accessibility and measured page performance | Pending |
@@ -113,6 +113,58 @@ Changing the amount for that UUID returns 400. Wallet creation returns 201 for a
 new wallet and 200 for the customer's existing wallet. The cent-based maximum
 balance is 99,999,999.99 fictional credits. These APIs never transfer real money.
 
+## Batch 3 findings and changes
+
+| Finding | Impact and evidence | Resolution |
+| --- | --- | --- |
+| Medium/integrity: preparation limits were validated against a stale menu | A partial update could pass validation, then save an early-finish allowance after another editor shortened the preparation span. The regression reproduced a two-day allowance being saved against a newly committed one-day span. | Revalidate the coupled span/early-finish limits after acquiring the current product row lock, before saving either menu or recipe changes. Invalid stale edits return a validation error and do not overwrite the concurrent change. |
+| Medium/reliability: extreme storage durations caused server errors | Large positive shelf-life, opening and thawing durations reached date arithmetic and returned 500 for otherwise structured staff requests. Four variants reproduced this behavior. | Return 400 with a storage-duration message when calculated dates exceed Python's supported range. Existing expiry/receipt, source guidance and quarantine rules remain enforced; no dates are silently shortened. |
+| Integrity/concurrency: batch deletion checked history without a stock lock | Unlike edits, cooking and wastage, DELETE did not lock the batch while checking its traceability records. Checks could race with new adjustments/audit entries. No production traceability loss was observed. | Lock the batch inside an atomic deletion before checking waste, logs and consumption. A PostgreSQL regression holds a concurrent adjustment uncommitted, then verifies deletion waits, sees the committed audit entry, refuses deletion and retains the 90g batch/log link. |
+| Reliability/performance: cooking loaded stock separately for every item | Each ordered menu acquired its own stock locks. Opposite menu sequences could request ingredient locks in opposite orders; repeated ingredients also caused repeated stock queries. The four-menu regression observed four stock reads before the fix. A production deadlock was not observed. | Prefetch all accepted ingredients and acquire usable stock once for the whole order, ordered by material, expiry, receipt and ID. Deduct from the shared locked rows with per-item consumption/cost/audit records. PostgreSQL checks verify two opposite-order cooks cannot overdraw limited stock: one succeeds and the other rolls back with a shortage. |
+| Performance: read-only planning screens locked the single kitchen | Delivery-change eligibility/history and manual-plan history used the store-wide scheduling lock and an order write lock despite making no change. A source-level regression fails if these GETs attempt that lock. | Take store/order locks only on mutations. Keep signed confirmation, permission checks, stale-preview checks and mutation lock order intact. Transaction wrappers remain; no production latency claim is made. |
+
+### Batch 3 verification and business rules
+
+- Full isolated SQLite suite: 506 tests run, ten skipped. Separate TLS-enabled
+  PostgreSQL 16 run: 21 targeted tests passed, including all eight PostgreSQL
+  checkout/wallet/stock concurrency checks. These are local fixtures, not the
+  production Supabase database.
+- Before the fixes, the new operations regressions failed on stale menu limits,
+  four overflowing date cases, read locks and repeated stock reads. Afterward,
+  the focused 116-test operations/planning/recipe/freshness suite passed.
+- FEFO checks verify the accepted 100g recipe survives a live-menu edit to 500g,
+  consumes 60g from the near-expiry lot and 40g from the later lot, excludes
+  expired/quarantined/future-received stock, and records no second deduction on
+  a repeated cooked status. A shortage in a later item rolls back every earlier
+  item, audit entry and status change. A concurrent stale stock edit cannot
+  restore consumed quantities.
+- Operational GETs/writes require staff where appropriate; customers cannot
+  mutate menus or another customer's delivery arrangement. Staff session writes
+  still require CSRF. Existing signed-preview, stale-plan, capacity, equipment,
+  kitchen closure, order notice and multi-day preparation regressions passed.
+- Existing query checks cover inventory lists (one query at one and 30 batches)
+  and planner query growth across one and 13 orders. Cooking now performs one
+  usable-stock SELECT for the four-menu repeated-ingredient fixture. Audit writes
+  still scale with actual allocations; these checks do not measure live latency
+  or large-database throughput.
+- Frontend utility, planner, checkout, PayPal, shopping and all three FreshCast
+  data-mode tests passed, as did the production build. No frontend files or ML
+  models changed. No schema migration is required. The existing bundle-size
+  warning remains for batch 6.
+
+The automatic planner remains a bounded, conservative search, not a globally
+optimal scheduler. It can reject a basket that an owner could arrange differently.
+Multi-day work still needs configured spans, waiting/holding limits, suitable
+resources and explicitly resumable steps; cooking is not silently split. Manual
+owner arrangements can accept disclosed conflicts or out-of-hours work after
+preview. Those overrides require human review and do not establish food safety.
+
+Planner stock allocation is advisory and uses preparation dates conservatively;
+it does not reserve or deduct physical batches. Cooking records consume stock
+usable on the day the owner records completion. These serve different purposes;
+a future shopping projection is not proof that stock is available when cooking
+actually happens.
+
 ## Remaining deployment and operational checks
 
 These remain open; local tests do not establish a secure live deployment.
@@ -147,6 +199,13 @@ These remain open; local tests do not establish a secure live deployment.
   here; no live PayPal network request was made in batch 2.
 - PostgreSQL checks used an isolated, TLS-enabled local server. They do not verify
   production Supabase pooler configuration or the whole suite on PostgreSQL.
+- The current default CI test database is SQLite, so PostgreSQL-only tests skip
+  there. Real locking checks require the isolated PostgreSQL test command; adding
+  a dedicated PostgreSQL CI target remains part of the deployment/CI review.
+- Inventory and operational planner lists still load all matching records.
+  Constant query count does not bound payload size or in-memory allocation work.
+  Larger deployments need API/UI pagination or explicit date windows and measured
+  load tests, while preserving full relevant booking/stock inputs for scheduling.
 - Recovery email is currently synchronous with a bounded SMTP timeout. Queueing,
   delivery failure handling and timing-based account disclosure need dedicated
   inspection in batch 5. A generic response body alone does not eliminate timing
@@ -154,5 +213,5 @@ These remain open; local tests do not establish a secure live deployment.
 - CSP must account for actual PayPal SDK, images and other sources. It is not
   enabled with a guessed policy in this batch; script/DOM review belongs to batch 6.
 
-Next batch: menu/recipe validation, inventory/FEFO, planner and scheduling
-permissions, bounds, transaction behavior and query growth.
+Next batch: FreshCast data modes and forecast/scenario APIs, Groq help and shopping
+tools, including data privacy, untrusted input and resource/model-loading limits.

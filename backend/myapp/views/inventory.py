@@ -48,6 +48,12 @@ class InventoryItemListCreate(generics.ListCreateAPIView):
 
 class InventoryItemDetail(generics.RetrieveUpdateDestroyAPIView):
     @transaction.atomic
+    def destroy(self, request, *args, **kwargs):
+        # Serialize audit-history checks with cooking, adjustments and wastage.
+        self.queryset = InventoryItem.objects.select_for_update()
+        return super().destroy(request, *args, **kwargs)
+
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         # Cooking and wastage also lock this row and advance updated_at.
         self.queryset = InventoryItem.objects.select_for_update()

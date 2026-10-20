@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.db.models import Sum, F
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
-from .orders import deduct_inventory
+from .orders import deduct_order_inventory
 from django.contrib.auth.models import User
 from ..models import Order, OrderItem
 from ..serializers import OrderSerializer, UserSerializer
@@ -45,8 +45,7 @@ def admin_order_detail(request, pk):
                 or order.preparation_end_at > order.delivery_at):
             raise ValidationError('Set and confirm preparation times in Planner before starting or finishing this order.')
         if new_status == 'cooked' and not order.inventory_deducted:
-            for item in order.items.select_related('product'):
-                deduct_inventory(item, request.user, order)
+            deduct_order_inventory(order, request.user)
             order.inventory_deducted = True
         if new_status == 'processing' and (order.preparation_plan.get('needs_review') or not order.preparation_at or not order.preparation_end_at):
             raise ValidationError('Set and confirm preparation times in Planner before starting this order.')
