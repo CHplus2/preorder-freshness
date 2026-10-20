@@ -30,12 +30,24 @@ system at earlier points in development.
 - Account settings stores profile name and a default delivery address. Checkout
   can also update the saved address. Each accepted order keeps an address snapshot;
   changing the default address does not rewrite old orders.
-- Choose a Malaysia-time delivery date and time. A browser date field may display
-  month/day/year even when other text uses day/month/year. Read the full date.
-- Check availability or request suggested times. Suggestions are sampled hourly
-  and limited in number; an empty suggestion list does not prove no manual
-  arrangement is possible. The hourly search checks 09:00 through 21:00 inclusive, using the same
-  advance notice, daily capacity and recipe constraints as checkout.
+- The basket and checkout automatically show delivery-time choices for the
+  whole basket. Leave the preferred day blank for the next available day, or
+  choose a date; a full/unavailable preferred day automatically falls forward
+  to workable options. Select a time instead of guessing into a date/time field.
+- Suggestions are sampled hourly from 09:00 through 21:00 Malaysia time, with
+  preparation, notice, weekday, capacity and existing bookings checked. Search is
+  bounded to seven days after the notice/preferred date; if none fit, check the
+  following week in one action. Suggestions do not reserve capacity or stock.
+- The selected time stays visible and carries into checkout, which rechecks it.
+  Basket quantity/settings changes invalidate old choices. If a carried time
+  becomes unavailable, checkout shows alternatives instead of treating it as a
+  confirmed time. Browser date fields may display month/day/year; read the full
+  date and the Malaysia-time selection summary.
+- **Need a different time? Ask the kitchen** opens a separate custom request.
+  A time already known to require review cannot be submitted through the normal
+  available-time path without opting into kitchen review. Unconfirmed requests
+  take no payment and reserve no preparation. Final checkout still rechecks
+  under locks, so another booking can change availability before submission.
 - Submit once and inspect My orders. If the response is lost, check My orders
   before repeating the action. Checkout references protect retries from creating
   the same order twice.
@@ -53,12 +65,15 @@ all ordering rules.
 
 **Rules that still reject a new request:** an empty basket; an unavailable menu;
 invalid delivery weekday; past date or more than 90 days ahead; outside 09:00–21:00
-Malaysia time; insufficient menu notice plus delivery buffer; or daily portion
-capacity exceeded. Address ownership and supported payment method are also checked.
+Malaysia time. Address ownership and supported payment method are also checked.
+Menu notice, delivery buffer, daily portion capacity and recipe fit determine
+whether an automatic booking is possible. A custom request can instead require
+owner review, with no reserved tasks or payment.
 
 For example, if the current time is 15:30, menu notice is 24 hours and the delivery
-buffer is 90 minutes, the earliest request is no earlier than 17:00 tomorrow.
-The automatic recipe schedule may need additional time beyond that minimum.
+buffer is 90 minutes, the automatic delivery lower bound is 17:00 tomorrow.
+The recipe schedule needs additional cooking time; this is not a suggested slot
+or a restriction that silently confirms a custom request.
 
 **Preparation-fit failures:** the algorithm cannot find a schedule within the
 entered task durations, worker/equipment reservations, working hours and handling
@@ -73,8 +88,8 @@ solver. It works backwards from delivery minus the delivery buffer. It tries a
 bounded set of menu orderings and does not move existing orders to make room.
 
 - **Advance notice:** for an automatic plan, preparation cannot start before the
-  booking/reference time plus the menu's notice. Checkout's request minimum also
-  includes the delivery buffer.
+  booking/reference time plus the menu's notice. Automatic delivery must also
+  allow the delivery buffer and the calculated recipe work.
 - **Batch size:** portions produced in one batch for that menu within that order.
   Batches = ceiling(portions / batch size). Separate customer orders are not merged.
 - **Combined-batch mode:** step minutes = first-batch minutes + (batches − 1) ×

@@ -1,13 +1,13 @@
 import PreparationDays from './PreparationDays';
 
-export default function AvailabilityResult({checking, error, quote, selectionKey}) {
+export default function AvailabilityResult({checking, error, quote, selectionKey, requestMode=true}) {
   let content = null;
   let tone = 'pending';
   if (checking) content = <><strong>Checking kitchen availability…</strong><p>This may take a few seconds.</p></>;
   else if (error) { tone = 'error'; content = <><strong>Availability could not be confirmed</strong><p>{error}</p></>; }
   else if (quote && quote.selectionKey !== selectionKey) content = <><strong>Please check availability again</strong><p>Your delivery time or basket has changed since the last check.</p></>;
   else if (quote?.plan.needs_review) {
-    content = <><strong>Kitchen confirmation needed</strong><p>You can submit this preorder for owner review. No payment will be taken. The owner will confirm your requested time or contact you to arrange another time. No preparation time or delivery quota is reserved yet.</p>{quote.plan.review_reason && <p>{quote.plan.review_reason}</p>}<p>A large order can use several preparation days when the menu’s batch and pause settings permit it.</p></>;
+    content = requestMode?<><strong>Kitchen confirmation needed</strong><p>You can send this time to the kitchen for review. No payment will be taken and no preparation time is reserved until confirmed.</p>{quote.plan.review_reason && <details><summary>Why kitchen confirmation is needed</summary><p>{quote.plan.review_reason}</p></details>}</>:<><strong>Choose another available time</strong><p>This time cannot be scheduled with the current kitchen bookings. Choose one of the suggested alternatives above, or ask the kitchen to review this time.</p></>;
   }
   else if (quote) {
     tone = 'success';

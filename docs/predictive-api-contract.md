@@ -559,3 +559,24 @@ when its preview is confirmed. An infeasible unconfirmed request can instead
 remain `needs_review: true` with no reserved tasks. Such requests are excluded
 from planner delivery commitments, packing totals and calendar exports. See
 [planner review](PLANNER-REVIEW-2026-10-20.md) for integration checks and limits.
+
+## Customer delivery-time discovery: existing separate endpoint
+
+`POST /api/orders/slots/` requires the customer's session and CSRF token. It reads
+that customer's entire current basket and returns advisory times from the same
+scheduler used by checkout; it does not reserve stock or capacity or run a model.
+It is separate from the staff-only predictive endpoints above.
+
+The storefront now sends `find_next: true`, optionally with a preferred ISO
+`date`. Search starts no earlier than menu notice plus the delivery buffer and
+checks at most seven days, returning the first matching day's hourly slots
+(09:00–21:00 Malaysia time), `suggested_date`, `searched_from`, `searched_through`
+and `searched_days`. Sending only `date` retains the exact-day diagnostic search.
+Every returned `delivery_at` is checked again at quote/order submission.
+
+Structurally impossible baskets return no slots, `searched_days: 0`, null searched
+dates and `unavailable_code: quantity_limit` or `no_common_weekday`, with guidance
+in `unavailable_reason`. These are successful constraint responses, distinct from
+network/database failures. The UI can continue an empty bounded search from the
+day after `searched_through`; it never treats a service failure as no availability.
+See [delivery-time choices](DELIVERY-TIME-PICKER.md) for verified customer behavior.

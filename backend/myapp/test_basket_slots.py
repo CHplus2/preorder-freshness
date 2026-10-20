@@ -207,11 +207,42 @@ class BasketSlotTests(TestCase):
         self.assertEqual(blocked.data['searched_through'], '2026-10-26')
 
     def test_next_search_never_solves_quantity_limit_by_changing_date(self):
-        response = self.client.post('/api/orders/slots/', {'find_next': True}, format='json')
+        with patch('myapp.services.discovery.slot_search') as search:
+            response = self.client.post('/api/orders/slots/', {'find_next': True}, format='json')
+        search.assert_not_called()
         self.assertEqual(response.data['slots'], [])
         self.assertIn('daily limit 10', response.data['unavailable_reason'])
-        self.assertLessEqual(response.data['searched_days'], 7)
+        self.assertEqual(response.data['searched_days'], 0)
+        self.assertEqual(response.data['unavailable_code'], 'quantity_limit')
         self.assertFalse(Order.objects.exists())
+
+    def test_next_search_skips_full_preferred_day_without_requiring_another_guess(self):
+        self.line.quantity = 1; self.line.save()
+        KitchenBlock.objects.create(start_at=parse_datetime('2026-10-20T00:00:00+08:00'),
+            end_at=parse_datetime('2026-10-21T00:00:00+08:00'), reason='Preferred day fully booked')
+        response = self.client.post('/api/orders/slots/', {'date': '2026-10-20', 'find_next': True}, format='json')
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(response.data['suggested_date'], '2026-10-21')
+        self.assertEqual(response.data['searched_from'], '2026-10-20')
+        self.assertEqual(response.data['searched_through'], '2026-10-21')
+        for slot in response.data['slots']:
+            quote = self.client.post('/api/orders/quote/', {'delivery_at': slot['delivery_at']}, format='json')
+            self.assertEqual(quote.status_code, 200, quote.data)
+            self.assertFalse(quote.data.get('needs_review', False))
+        self.assertFalse(Order.objects.exists())
+
+    def test_no_common_delivery_weekday_is_detected_without_searching_dates(self):
+        self.line.quantity = 1; self.line.save()
+        self.cookies.delivery_weekdays = [0]; self.cookies.save()
+        other = Product.objects.create(name='Wednesday meal', price=10, delivery_weekdays=[2])
+        CartItem.objects.create(user=self.customer, product=other, quantity=1)
+        with patch('myapp.services.discovery.slot_search') as search:
+            response = self.client.post('/api/orders/slots/', {'find_next': True}, format='json')
+        search.assert_not_called()
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(response.data['unavailable_code'], 'no_common_weekday')
+        self.assertFalse(response.data['slots'])
+        self.assertEqual(response.data['searched_days'], 0)
 
     def test_hourly_checks_share_three_read_queries_and_match_fresh_scheduling(self):
         from .services.discovery import slot_search

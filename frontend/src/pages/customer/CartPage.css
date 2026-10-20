@@ -232,7 +232,6 @@
 .cart-availability p {line-height:1.6;}
 .cart-availability label {display:block;margin:16px 0 8px;}
 .cart-availability input {min-height:44px;padding:10px;max-width:100%;box-sizing:border-box;}
-.cart-availability .slot-suggestions {display:flex;flex-wrap:wrap;gap:12px;margin-top:16px;}
 .cart-availability button {min-height:44px;}
 
 .cart-availability .basket-slot-search{margin-top:16px}

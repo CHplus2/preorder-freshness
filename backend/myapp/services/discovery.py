@@ -60,6 +60,25 @@ def next_basket_slots(items, day, store):
         raise ValidationError('Choose a date within the next 90 days.')
     advance = now+timedelta(hours=max(item.product.lead_hours for item in items))
     request_after = advance+timedelta(minutes=store.delivery_buffer_minutes)
+    empty = dict(slots=[], earliest_preparation_at=advance.isoformat(),
+        delivery_request_after=request_after.isoformat(), suggested_date=None,
+        searched_from=None, searched_through=None, searched_days=0)
+    # Changing dates cannot solve a basket that exceeds a menu's own limit or
+    # contains menus with no shared delivery weekday. Avoid 91 futile checks.
+    from collections import Counter
+    quantities = Counter()
+    weekdays = set(range(7))
+    for item in items:
+        quantities[item.product_id] += item.quantity
+        if item.product.delivery_weekdays:
+            weekdays.intersection_update(item.product.delivery_weekdays)
+    for item in items:
+        if quantities[item.product_id] > item.product.daily_capacity:
+            return dict(empty, unavailable_code='quantity_limit',
+                unavailable_reason=f'{item.product.name}: {quantities[item.product_id]} requested; daily limit {item.product.daily_capacity}. Reduce the quantity or ask the kitchen about separate deliveries.')
+    if not weekdays:
+        return dict(empty, unavailable_code='no_common_weekday',
+            unavailable_reason='These menus have no delivery weekday in common. Order them separately or change your basket.')
     first = max(day or today, today, timezone.localtime(request_after).date())
     last = min(first+timedelta(days=6), latest)
     if first > latest or request_after >= now+timedelta(days=90):
