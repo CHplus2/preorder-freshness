@@ -3,6 +3,7 @@ import hashlib
 import io
 import json
 import os
+from collections import Counter
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -54,6 +55,7 @@ class KitchenBackupTests(TestCase):
                 text = stream.read();records = json.loads(text)
             self.assertNotIn('do-not-export-this-token', text)
             self.assertEqual(len(records), manifest['record_count'])
+            self.assertEqual(dict(Counter(row['model'] for row in records)),manifest['model_counts'])
             self.assertEqual(manifest['model_counts']['myapp.orderitem'], 1)
             if os.name != 'nt':
                 self.assertEqual((path/'kitchen.json.gz').stat().st_mode & 0o777, 0o600)

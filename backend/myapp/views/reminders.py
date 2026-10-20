@@ -17,7 +17,7 @@ def reminder_status(request):
 def run_reminders(request):
     secret = settings.CRON_SECRET
     if len(secret) < 32 or not secrets.compare_digest(
-            request.headers.get('Authorization', ''), 'Bearer '+secret):
+            request.headers.get('Authorization', '').encode('utf-8'), ('Bearer '+secret).encode('utf-8')):
         return Response({'detail': 'Unauthorized.'}, status=401)
     if not email_ready():
         return Response({'detail': 'Configure owner email and SMTP before enabling reminders.'}, status=503)

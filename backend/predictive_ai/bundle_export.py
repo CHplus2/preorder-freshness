@@ -5,6 +5,7 @@ for the five predictive APIs remains unchanged; this is a deployment transfer.
 """
 import hashlib
 import hmac
+import re
 from pathlib import Path
 
 from django.conf import settings
@@ -19,6 +20,11 @@ def verified_bundle_response():
     root=Path(getattr(settings,'PREDICTIVE_ARTIFACT_DIR',Path(__file__).parent/'artifacts'))
     archive=root/Path(RETAINED_ARCHIVE).name
     expected=getattr(settings,'FRESHCAST_BUNDLE_SHA256',ORIGINAL_DEMO_SHA256)
+    if not isinstance(expected,str) or not re.fullmatch('[a-f0-9]{64}',expected):
+        response=JsonResponse({'detail':'Verified deployment archive unavailable.'},status=503)
+        response['Cache-Control']='private, no-store'
+        response['X-Content-Type-Options']='nosniff'
+        return response
     try:
         handle=archive.open('rb')
     except OSError:

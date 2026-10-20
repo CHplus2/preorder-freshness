@@ -13,4 +13,15 @@ await assert.rejects(()=>downloadModelBytes(async()=>new Response(content,{heade
 await assert.rejects(()=>downloadModelBytes(async()=>new Response('{}',{headers:{'Content-Type':'application/json'}}),webcrypto),/could not be verified/);
 await assert.rejects(()=>downloadModelBytes(async()=>new Response(null,{status:403}),webcrypto),/staff account/);
 await assert.rejects(()=>downloadModelBytes(async()=>new Response(null,{status:503}),webcrypto),/does not contain a verified/);
+let cancelled=false,reads=0;
+const oversized=new Response(new ReadableStream({pull(c){reads++;c.enqueue(new Uint8Array(1024));},cancel(){cancelled=true;}}),{headers:{...headers,'Content-Length':String(41*1024*1024)}});
+await assert.rejects(()=>downloadModelBytes(async()=>oversized,webcrypto),/invalid size/);
+assert.equal(cancelled,true);assert.ok(reads<=1);
+cancelled=false;let sent=0;
+const endless=new Response(new ReadableStream({pull(c){sent++;c.enqueue(new Uint8Array(1024*1024));},cancel(){cancelled=true;}}),{headers});
+await assert.rejects(()=>downloadModelBytes(async()=>endless,webcrypto),/invalid size/);
+assert.equal(cancelled,true);assert.ok(sent<=42,'Oversized streams must stop at the size boundary');
+const abort=new AbortController();abort.abort();
+await assert.rejects(()=>downloadModelBytes(()=>{throw Error('Must not start an aborted fetch')},webcrypto,{signal:abort.signal}),/cancelled/);
+await assert.rejects(()=>downloadModelBytes((url,{signal})=>new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(new DOMException('Aborted','AbortError')))),webcrypto,{timeoutMs:5}),/timed out/);
 console.log('Model backup download: staff session, valid bytes, integrity mismatch, invalid response and unavailable archive passed.');

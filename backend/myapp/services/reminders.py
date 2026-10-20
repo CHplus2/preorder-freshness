@@ -2,7 +2,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Exists, OuterRef
 from django.utils import timezone
 from ..models import Order, OrderReminder
 
@@ -14,10 +14,14 @@ def send_due_reminders(limit=3):
     """Bounded worker. Row locks prevent overlapping workers sending the same event."""
     now = timezone.now()
     lower, upper = now-timedelta(hours=24), now+timedelta(hours=24)
-    due = Order.objects.exclude(status__in=['cancelled','delivered']).filter(
-        Q(preparation_at__range=(lower, upper)) | Q(delivery_at__range=(lower, upper)))
+    notified = OrderReminder.objects.filter(order_id=OuterRef('pk'))
+    due = Order.objects.exclude(status__in=['cancelled','delivered']).annotate(
+        prep_notified=Exists(notified.filter(event='preparation_at')),
+        delivery_notified=Exists(notified.filter(event='delivery_at'))).filter(
+        Q(preparation_at__range=(lower,upper),status='pending',prep_notified=False)
+        | Q(delivery_at__range=(lower,upper),delivery_notified=False))
     sent = failed = attempted = 0
-    for pk in due.order_by('delivery_at').values_list('pk', flat=True):
+    for pk in due.order_by('delivery_at','pk').values_list('pk', flat=True)[:limit]:
         for event in ('preparation_at', 'delivery_at'):
             if attempted >= limit:
                 return {'sent': sent, 'failed': failed}

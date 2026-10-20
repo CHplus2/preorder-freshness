@@ -4,12 +4,12 @@ import hashlib
 import io
 import json
 import os
-from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 import shutil
 
 from django import get_version
+from django.apps import apps
 from django.core.management import BaseCommand, CommandError, call_command
 from django.db import connection, transaction
 from django.db.migrations.recorder import MigrationRecorder
@@ -37,6 +37,13 @@ class Command(BaseCommand):
                     with connection.cursor() as cursor:
                         cursor.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY')
                 migrations = sorted([list(pair) for pair in MigrationRecorder(connection).applied_migrations()])
+                counts = {}
+                for model in apps.get_models():
+                    if model._meta.label_lower in EXCLUDED or model._meta.proxy:
+                        continue
+                    count = model._base_manager.count()
+                    if count:counts[model._meta.label_lower] = count
+                counts = dict(sorted(counts.items()))
                 fixture = output / 'kitchen.json.gz'
                 # All managers includes records hidden by custom default managers.
                 with fixture.open('xb') as raw:
@@ -45,14 +52,12 @@ class Command(BaseCommand):
                         with io.TextIOWrapper(compressed, encoding='utf-8') as stream:
                             call_command('dumpdata', use_base_manager=True, use_natural_foreign_keys=True,
                                 exclude=EXCLUDED, indent=2, stdout=stream, verbosity=0)
-            with gzip.open(fixture, 'rt', encoding='utf-8') as stream:
-                records = json.load(stream)
-            counts = dict(sorted(Counter(row['model'] for row in records).items()))
-            digest = hashlib.sha256(fixture.read_bytes()).hexdigest()
+            with fixture.open('rb') as stream:
+                digest = hashlib.file_digest(stream,'sha256').hexdigest()
             manifest = {'format': 'freshcast-kitchen-logical-backup-v1',
                 'created_at': datetime.now(timezone.utc).isoformat(),
                 'django_version': get_version(), 'database_vendor': connection.vendor,
-                'record_count': len(records), 'model_counts': counts,
+                'record_count': sum(counts.values()), 'model_counts': counts,
                 'migrations': migrations, 'excluded_models': EXCLUDED,
                 'files': {'kitchen.json.gz': {'sha256': digest, 'bytes': fixture.stat().st_size}},
                 'scope': 'Django-managed records and relationships. Not a PostgreSQL physical or full Supabase project backup.',
@@ -69,5 +74,5 @@ class Command(BaseCommand):
             shutil.rmtree(output)
             raise CommandError('Kitchen backup failed; partial files were removed. Check database access and the Django schema. No database changes were requested.') from None
         self.stdout.write(json.dumps({'mode': 'backed_up', 'output': str(output),
-            'record_count': len(records), 'model_counts': counts, 'sha256': digest,
+            'record_count': sum(counts.values()), 'model_counts': counts, 'sha256': digest,
             'scope': manifest['scope']}))

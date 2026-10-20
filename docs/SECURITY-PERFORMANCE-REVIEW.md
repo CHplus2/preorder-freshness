@@ -14,7 +14,7 @@ the deployed service has been audited.
 | 2 | Basket, addresses, checkout, delivery quotes, orders, demo wallet, receipts, refunds and PayPal: ownership, cross-account browser state, pricing, duplicate/concurrent mutations, query count and transaction duration | Completed locally; live-provider and scale checks remain |
 | 3 | Menu management, recipes, inventory/FEFO, planner, manual schedules and availability: validation, permissions, scheduling bounds, locks and query growth | Completed locally; scale and operational limits below remain |
 | 4 | All FreshCast data modes, forecast/scenario APIs, Groq help and shopping tools: data privacy, untrusted input, resource limits, model loading and response cost | Completed locally; live-model/provider and load limits below remain |
-| 5 | Images/external URLs, reviews, reports/CSV, reminders, recovery mail, backups/downloads and maintenance: injection, outbound access, export scope and large responses | Pending |
+| 5 | Images/external URLs, reviews, reports/CSV, reminders, recovery mail, backups/downloads and maintenance: injection, outbound access, export scope and large responses | Completed locally; live-mail and scale limits below remain |
 | 6 | Customer/admin React routes, mobile interaction, browser storage, DOM/XSS, third-party scripts, dependencies/CI, Git history and deployment: bundles, images, caching, accessibility and measured page performance | Pending |
 
 Each batch investigates concrete findings, fixes reproducible defects where
@@ -210,6 +210,63 @@ actually happens.
 - No migration, model training/retraining, external payment, production database
   mutation or actual model-accuracy evaluation was performed in this batch.
 
+## Batch 5 findings and changes
+
+| Finding | Impact and evidence | Resolution |
+| --- | --- | --- |
+| Medium/resource cost: the browser checked archive size after reading everything | `arrayBuffer()` consumed the whole download before the 40 MiB check. A bad/oversized response could allocate beyond the intended limit. | Check declared length before reading, stream with a running 40 MiB limit, cancel overflow/failure, and verify SHA-256 before saving. Add a 30-second abort deadline and cancel downloads on component/account teardown. A stale response cannot trigger a new file after logout. This bounds retained response data, not every browser/network allocation. |
+| Medium/privacy: recovery could print reset credentials to console logs | With a configured public app URL but the default console mail backend, a matching recovery request wrote its reset link into logs. Non-SMTP exceptions could also change the otherwise generic response only for a matching account. | Never send reset links through the console backend. Require a validated HTTPS app origin (HTTP loopback only for local development), without credentials, query or fragment. Mail failures retain the generic public response and emit only a fixed diagnostic without address, token or backend exception. SMTP delivery and timing privacy are not established by this change. |
+| Reliability: malformed recovery bodies and non-ASCII cron credentials caused server errors | Recovery accessed object fields before validating body shape; string comparison of non-ASCII authorization headers raised an exception. New regressions failed before the fix. | Validate recovery/reset bodies with DRF serializers; compare cron credentials as encoded bytes. Invalid bodies return 400, incorrect cron credentials return 401, and no secret value is included in responses. Existing CSRF, token expiry and reset single-use checks remain. |
+| Performance: public reviews downloaded every matching review | GET/POST responses serialized an unbounded review list. Large product histories grew response and browser cost without a way to request a page. | Return at most 20 reviews in descending ID order, preserving the array response. Add a validated `before` cursor and next-page header. The UI loads older reviews on demand with loading/error/retry handling; posting refreshes the first page. No older reviews are deleted or hidden from paging. Read-only GETs no longer open a write transaction. |
+| Performance: reminder runs revisited already-notified history | The worker iterated due order IDs and queried their sent markers individually, even when both messages had already been sent. The 80-order regression showed query growth before the fix. | Filter unsent candidates with `Exists` subqueries, retain under-lock rechecks, and fetch at most the requested number of candidate orders. The regression sends the remaining notification with at most 12 queries. Actual attempts remain bounded by `limit`; skipped/locked candidates can wait for a later scheduler run. |
+| Performance/reliability: private backup manifest generation reloaded the export | The command parsed the complete compressed JSON fixture and read the complete compressed file again for hashing. This added avoidable full-file allocations after export. | Count the same included base-manager records inside the backup transaction and hash the file incrementally. Restore tests verify manifest totals/model counts against actual exported JSON, IDs, relations and provenance. This removes the extra full-export reads, not all memory use in Django/its database driver. |
+| Reliability: malformed configured archive checksums raised exceptions | A non-ASCII or missing checksum configuration reached string comparison after opening the archive. | Validate the fixed SHA-256 format first and return sanitized 503/no-store when invalid. The caller still cannot choose the archive filename or download kitchen records through this route. |
+
+### Batch 5 checks and API details
+
+- Final isolated Django suite: 520 tests run, ten skipped. Release/provisioning
+  checks: 23 passed, including archive traversal, checksum failure, no overwrite,
+  authenticated redirects and retained bundle handling. No migration is required.
+- Frontend utilities, predictive, planner, checkout, PayPal, shopping and UX tests,
+  changed-file ESLint and production build passed. The main bundle is about
+  572 kB minified; the existing size warning remains for batch 6. Some parallel
+  Vite SSR tests report development HMR-port contention while their assertions
+  pass; isolating test-server ports belongs to the CI/browser review.
+- Chromium exercised real local public review APIs: 20-item first page, failed
+  next-page request, retry, all 25 older reviews, posting the eligible customer's
+  new review, and paging all 26 records. HTML-like comment text stayed text and
+  created no image/event handler. The 390px view had no overflow/page errors.
+- An actual staff download from a local fictional archive matched the configured
+  checksum. Logout during a delayed second response prevented another download.
+  Separate stream tests reject an oversized declared length before consumption,
+  cancel an oversized unknown-length stream, and cover cancellation/timeout.
+  This is not a real Genpact recovery or deployed-download claim.
+- Recovery tests use mocked/local mail only and verify generic failure responses,
+  no sensitive diagnostic text, rejected unsafe origins, console suppression and
+  invalid-body handling. No customer/owner email or notification was sent.
+- CSV exports retain staff access, private/no-store headers, date/cohort bounds,
+  formula escaping and missing-cost semantics. Tests cover formula-like menu
+  names, embedded CSV quotes/newlines, exports beyond the dashboard's 200 rows,
+  rejection above 5,000 orders and absence of customer contact fields. Calendar
+  export uses generated order/step labels and UTC timestamps rather than copying
+  free-text menu/comments into ICS fields; no arbitrary calendar text was added.
+- Photos remain browser-loaded URLs, not a backend upload/proxy service. New
+  stored links use existing URL/email validation; external links use noreferrer.
+  Review/comment text is rendered through React text nodes. No new server-side
+  image fetching, arbitrary file paths or customer-data download route was added.
+- Private kitchen backup retains its outside-repository path rule, restrictive
+  file modes, exclusion of sessions and environment values, read-only PostgreSQL
+  snapshot and no-overwrite behavior. It includes private records/password hashes
+  for restoration and must not be published. Windows ACLs and a full Supabase
+  project backup require separate operator handling.
+
+`GET /api/products/<id>/reviews/` returns at most 20 rows and optionally the
+`X-Next-Review-Before` header. Pass that positive review ID as `?before=<id>` for
+the next page. Unknown, repeated or invalid cursor parameters return 400. POST
+still creates one eligible customer's review and returns the current first-page
+array/header. Older clients retain the array shape but need the cursor to access
+older pages.
+
 ## Remaining deployment and operational checks
 
 These remain open; local tests do not establish a secure live deployment.
@@ -263,12 +320,21 @@ These remain open; local tests do not establish a secure live deployment.
   Redirect rejection and fallback were verified locally, not against the current
   provider/deployment. AI consent and best-effort redaction do not establish that
   all possible personal details can be detected automatically.
-- Recovery email is currently synchronous with a bounded SMTP timeout. Queueing,
-  delivery failure handling and timing-based account disclosure need dedicated
-  inspection in batch 5. A generic response body alone does not eliminate timing
-  differences. SMTP/production mail and PUBLIC_APP_URL must be verified privately.
+- Recovery email remains synchronous with a bounded SMTP timeout. Error-body
+  consistency and console suppression do not eliminate timing-based account
+  disclosure. Queueing and live SMTP/provider delivery require separate work;
+  SMTP and the validated HTTPS PUBLIC_APP_URL must be verified privately.
+- Reminder deduplication remains per order/event, as documented in the feature
+  guide. Rescheduling after notification does not reset that marker. SMTP calls
+  hold the order lock; provider acceptance followed by a database failure can
+  still duplicate mail on retry. Timestamp-aware outbox/provider idempotency work
+  is a separate workflow change, not an exactly-once claim for this worker.
+- The CSV ceiling bounds orders rather than all line/consumption records or final
+  bytes. Large real cohorts and full private database backups still need measured
+  throughput/memory checks. No production-sized backup or live restore was run.
 - CSP must account for actual PayPal SDK, images and other sources. It is not
   enabled with a guessed policy in this batch; script/DOM review belongs to batch 6.
 
-Next batch: images/external URLs, reviews, reports/CSV, reminders/recovery email,
-backup downloads and maintenance/export boundaries.
+Next batch: customer/admin browser routes, dependencies/CI, Git history and
+deployment headers, including bundles, images, caching, accessibility and measured
+page performance.

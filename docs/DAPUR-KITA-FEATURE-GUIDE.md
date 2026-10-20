@@ -223,6 +223,15 @@ Do not describe all recommendations or scheduling as AI simply because chat exis
 
 ## 10. Email reminders: why several emails arrive
 
+### Recovery email
+
+Password recovery requires a configured mail backend and HTTPS app origin in
+`PUBLIC_APP_URL` (HTTP loopback is allowed for local development). Console mail
+never prints recovery tokens. Delivery failures keep the same public response;
+that response alone does not prove email arrived or prevent timing differences.
+
+### Owner reminders
+
 The scheduler calls a worker. Running every 15 minutes means **checking** every
 15 minutes, not emailing every 15 minutes.
 
@@ -230,6 +239,8 @@ At each run the worker checks recorded preparation and requested delivery times
 from **24 hours before now to 24 hours after now**, inclusive. It attempts at most
 three messages, scanning orders by delivery time and preparation before delivery.
 Each message identifies its order and event.
+Already-notified candidates are filtered in the database before taking order
+locks; each run reads at most its candidate limit and still rechecks under lock.
 
 - Preparation reminders only apply while an order is pending and has a scheduled
   preparation time.

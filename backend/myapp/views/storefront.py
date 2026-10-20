@@ -49,21 +49,35 @@ class ReviewSerializer(serializers.ModelSerializer):
         extra_kwargs = {'rating': {'min_value': 1, 'max_value': 5}}
 
 @api_view(['GET', 'POST'])
-@transaction.atomic
 def reviews(request, pk):
+    before = None
+    if request.query_params:
+        params = request.query_params
+        value = params.get('before','')
+        if (request.method != 'GET' or set(params) != {'before'} or len(params.getlist('before')) != 1
+                or not value.isascii() or not value.isdigit() or not 1 <= len(value) <= 19
+                or not 1 <= int(value) <= 9223372036854775807):
+            raise ValidationError('Use only a valid before review ID for the next page.')
+        before = int(value)
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
         if not request.user.is_authenticated:
             raise PermissionDenied('Please log in to review.')
-        User.objects.select_for_update().get(pk=request.user.pk)
-        if not OrderItem.objects.filter(product=product, order__user=request.user, order__status='delivered').exists():
-            raise PermissionDenied('Reviews are available after your order is delivered.')
-        if Review.objects.filter(product=product, user=request.user).exists():
-            raise ValidationError('You have already reviewed this menu.')
-        serializer = ReviewSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(product=product, user=request.user)
-    return Response(ReviewSerializer(product.reviews.select_related('user').order_by('-created_at'), many=True).data)
+        with transaction.atomic():
+            User.objects.select_for_update().get(pk=request.user.pk)
+            if not OrderItem.objects.filter(product=product, order__user=request.user, order__status='delivered').exists():
+                raise PermissionDenied('Reviews are available after your order is delivered.')
+            if Review.objects.filter(product=product, user=request.user).exists():
+                raise ValidationError('You have already reviewed this menu.')
+            serializer = ReviewSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(product=product, user=request.user)
+    rows = product.reviews.select_related('user').order_by('-pk')
+    if before is not None:rows = rows.filter(pk__lt=before)
+    page = list(rows[:21])
+    response = Response(ReviewSerializer(page[:20],many=True).data)
+    if len(page) > 20:response['X-Next-Review-Before'] = str(page[19].pk)
+    return response
 
 
 @api_view(['GET'])

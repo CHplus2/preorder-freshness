@@ -110,34 +110,35 @@ def check_auth(request):
 @api_view(['POST'])
 def recovery_request(request):
     SessionAuthentication().enforce_csrf(request)
-    from django.conf import settings
-    from django.contrib.auth.tokens import default_token_generator
-    from django.utils.http import urlsafe_base64_encode
-    from django.utils.encoding import force_bytes
-    from django.core.mail import send_mail
-    username = serializers.CharField(max_length=150).run_validation(request.data.get('username'))
-    email = serializers.EmailField(max_length=254).run_validation(request.data.get('email'))
+    incoming = RecoveryInput(data=request.data)
+    incoming.is_valid(raise_exception=True)
+    username,email = incoming.validated_data['username'],incoming.validated_data['email']
     limit(request, 'recovery', username, maximum=5)
     user = User.objects.filter(username=username, email__iexact=email, is_active=True).first()
-    if user and user.has_usable_password() and settings.PUBLIC_APP_URL:
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-        url = f'{settings.PUBLIC_APP_URL.rstrip("/")}/recover#uid={uid}&token={token}'
-        # Fragment avoids putting credentials in ordinary HTTP access logs.
-        send_mail('Reset your kitchen account password',
-            f'Open this link to choose a new password (valid for one hour):\n{url}\nIf you did not request this, ignore this email.',
-            settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
+    if user and user.has_usable_password():
+        from ..services.recovery_email import send_recovery_email
+        send_recovery_email(user)
     return Response({'detail': 'If the account and recovery email match, a reset link will be sent. For an older account without an email, contact the kitchen owner.'})
+
+
+class RecoveryInput(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(max_length=254)
+
+
+class ResetInput(serializers.Serializer):
+    uid = serializers.CharField(max_length=100)
+    token = serializers.CharField(max_length=150)
+    password = serializers.CharField(max_length=128,trim_whitespace=False)
 
 
 @api_view(['POST'])
 def recovery_confirm(request):
     SessionAuthentication().enforce_csrf(request)
     limit(request, 'recovery-confirm')
-    uid = serializers.CharField(max_length=100).run_validation(request.data.get('uid'))
-    token = serializers.CharField(max_length=150).run_validation(request.data.get('token'))
-    password = serializers.CharField(max_length=128, trim_whitespace=False).run_validation(request.data.get('password'))
-    return apply_password_reset(uid, token, password)
+    incoming = ResetInput(data=request.data)
+    incoming.is_valid(raise_exception=True)
+    return apply_password_reset(**incoming.validated_data)
 
 
 @transaction.atomic
