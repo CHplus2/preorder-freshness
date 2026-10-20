@@ -55,12 +55,12 @@ export default function PayPalPayment({orderId,onPaid}){
  const paid=payment?.payment_status==='paid';
  const verified=paid && payment.state==='completed' && !!payment.capture_id;
  return <section className="paypal-payment" aria-label="PayPal Sandbox payment">
-  <header><span className="paypal-sandbox-badge">PayPal Sandbox</span><h2>{verified?'Test payment confirmed':paid?'Payment recorded':payment?.payment_status==='refunded'?'Refund recorded':'Complete your test payment'}</h2></header>
-  <p className="paypal-test-note">Sandbox test transaction. No real money is transferred. Use a PayPal Sandbox buyer account.</p>
+  <header><span className="paypal-sandbox-badge">PayPal Sandbox</span><h2>{verified?'Payment confirmed':paid?'Payment recorded':payment?.payment_status==='refunded'?'Refund recorded':'Complete your payment'}</h2></header>
+  <p className="paypal-test-note">No real money is transferred.{!paid && payment?.payment_status!=='refunded' && ' Use a PayPal Sandbox buyer account.'}</p>
   {loading?<p role="status">Loading payment status…</p>:<>
-   {payment && <dl className="paypal-payment-summary"><div><dt>Preorder</dt><dd>#{orderId}</dd></div><div><dt>Order total</dt><dd>RM {payment.amount}</dd></div><div><dt>Payment</dt><dd>{paid?'Paid · Sandbox':payment.payment_status==='refunded'?'Refund recorded':'Awaiting verified payment'}</dd></div></dl>}
+   {payment && <dl className="paypal-payment-summary"><div><dt>Preorder</dt><dd>#{orderId}</dd></div><div><dt>Order total</dt><dd>RM {payment.amount}</dd></div><div><dt>Payment</dt><dd>{paid?'Paid':payment.payment_status==='refunded'?'Refund recorded':'Awaiting verified payment'}</dd></div></dl>}
    {error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
-   {paid?<>{payment.order_status==='cancelled' && <p role="alert">This preorder was cancelled, but a Sandbox payment was recorded. Contact the kitchen to review a refund. No automatic refund has been issued.</p>}<p role="status">{verified?'The server verified this Sandbox payment. Cooking and delivery progress are tracked separately.':'This payment is recorded as paid, but has no verified Sandbox capture reference. Contact the kitchen about this earlier record.'}</p>{payment.capture_id && <p className="paypal-reference">Capture reference: <code>{payment.capture_id}</code></p>}</>:<>
+   {paid?<>{payment.order_status==='cancelled' && <p role="alert">This preorder was cancelled, but a Sandbox payment was recorded. Contact the kitchen to review a refund. No automatic refund has been issued.</p>}<p role="status">{verified?'Your payment is verified. Track preparation and delivery in My orders.':'This payment is recorded as paid, but has no verified Sandbox capture reference. Contact the kitchen about this earlier record.'}</p>{payment.capture_id && <p className="paypal-reference">Capture reference <code>{payment.capture_id}</code></p>}</>:<>
     {messages[payment?.state] && <p role="status">{messages[payment.state]}</p>}
     {payment?.reason && <p>{payment.reason}</p>}
     {payment && !payment.configured && <p>PayPal Sandbox is currently unavailable. Your preorder remains saved and unpaid.</p>}

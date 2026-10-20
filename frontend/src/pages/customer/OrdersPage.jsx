@@ -1,4 +1,5 @@
 import {Link} from 'react-router-dom';
+import {ChevronRight,ReceiptText} from 'lucide-react';
 import OrderProgress from '../../components/OrderProgress';
 import {orderProgress} from '../../utils/orderProgress';
 import ManualPayment from '../../components/ManualPayment';
@@ -28,7 +29,7 @@ export default function OrdersPage() {
   }, [fetchOrders]);
 
   return (
-    <div className="orders-container">
+    <div className="orders-container customer-orders">
       <div className="customer-orders-heading"><h1 className="orders-title">My Orders</h1><button type="button" disabled={ordersLoading} onClick={fetchOrders}>{ordersLoading?"Refreshing…":"Refresh order status"}</button></div>
 
       {ordersError && <p role="alert">{ordersError} <button disabled={ordersLoading} onClick={fetchOrders}>Retry loading orders</button></p>}
@@ -49,9 +50,8 @@ export default function OrdersPage() {
             </div>
 
             <OrderProgress order={order}/>
-            <p>{order.status==='pending' && order.preparation_plan?.needs_review?'Requested delivery':'Delivery'}: {order.delivery_at ? new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Contact owner to arrange'} · {order.delivery_method}</p>
-            <p>Bulk discount: RM {order.discount_amount} · Delivery fee: RM {order.shipping_fee}</p>
-            <ManualPayment order={order}/>{order.address && <details className="dk-panel"><summary>Delivery address used for this order</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}
+            <dl className="customer-order-details"><div><dt>{order.status==='pending' && order.preparation_plan?.needs_review?'Requested delivery':'Delivery'}</dt><dd>{order.delivery_at ? <>{new Date(order.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'})} (Malaysia)</> : 'Contact owner to arrange'} · {order.delivery_method}</dd></div><div><dt>Delivery fee</dt><dd>RM {order.shipping_fee}</dd></div><div><dt>Bulk discount</dt><dd>RM {order.discount_amount}</dd></div></dl>
+            <ManualPayment order={order}/>{order.address && <details className="dk-panel customer-order-address"><summary>Delivery address</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}
             {/* BODY */}
             <div className="order-body">
               {order.items.map((item) => (
@@ -72,7 +72,7 @@ export default function OrdersPage() {
                 RM {(Number(order.total_amount)+Number(order.shipping_fee)).toFixed(2)}
               </div>
             </div>
-            {order.payment_method==='paypal' && <section className="paypal-order-note"><p><strong>PayPal Sandbox · test transaction</strong></p><p>{order.payment_status==='paid'?'Sandbox payment recorded. No real money was transferred.':'This preorder is saved. Check its payment status before trying again.'}</p><Link to={'/payment/paypal?order='+order.id}>{order.payment_status==='paid'?'View Sandbox payment':'Resume or check PayPal payment'}</Link></section>}
+            {order.payment_method==='paypal' && <section className="paypal-order-note" aria-label="PayPal payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>PayPal</strong><span>Sandbox</span></div><p>{order.payment_status==='paid'?'Payment recorded. No real money was transferred.':order.payment_status==='refunded'?'Refund recorded. This was a Sandbox test payment.':'Test payment — no real money is transferred. Review this saved payment before trying again.'}</p><Link to={'/payment/paypal?order='+order.id}>{order.payment_status==='paid' || order.payment_status==='refunded'?'View payment details':'Continue to payment'}<ChevronRight size={16} aria-hidden="true"/></Link></section>}
             <RescheduleOrder order={order} onSaved={fetchOrders}/>
 
           </div>

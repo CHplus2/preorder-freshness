@@ -14,7 +14,7 @@ try{
  assert.match(options(true),/Cash on delivery/);assert.match(options(true),/Demo credit wallet/);
  const initial=renderToStaticMarkup(createElement(PayPalPayment,{orderId:147}));
  assert.match(initial,/Loading payment status/);assert.match(initial,/No real money is transferred/);
- assert.doesNotMatch(initial,/Test payment confirmed|server verified/);
+ assert.doesNotMatch(initial,/Payment confirmed|Your payment is verified/);
  const recovery={configured:true,has_provider_order:true,state:'created',checked_at:null,checked_via:null,check_error:null};
  const panel=(patch={},paymentStatus='unpaid',busy=false)=>renderToStaticMarkup(createElement(PayPalRecovery,{recovery:{...recovery,...patch},paymentStatus,busy,onCheck:()=>{}}));
  assert.match(panel(),/Check PayPal status/);assert.match(panel(),/does not charge/);assert.doesNotMatch(panel(),/Test payment confirmed/);

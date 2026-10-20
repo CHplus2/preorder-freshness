@@ -42,10 +42,12 @@ is needed: intent state uses `Order.payment_instructions`, and verified receipts
 3. Check the recorded MYR total and approve using a Sandbox buyer account in the
    PayPal window. Django creates/captures the payment; a browser callback cannot
    declare it paid.
-4. A verified completed capture produces **Test payment confirmed** and one
+4. A verified completed capture produces **Payment confirmed**, a visible
+   **PayPal Sandbox** label, the no-real-money notice, and one
    `paypal_sandbox` receipt. Cooking status and inventory remain unchanged.
-5. If the window closes or the result is unclear, use **My orders → Resume or check
-   PayPal payment**. **Check payment status** re-reads the same provider order; it
+5. If the window closes or the result is unclear, use **My orders → Continue to
+   payment** (or **View payment details** for a recorded payment).
+   **Check payment status** re-reads the same provider order; it
    never initiates a capture. **Recover payment session** retries an interrupted
    create with its original idempotency key, without charging.
 
