@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createServer} from 'vite';
-const server=await createServer({server:{middlewareMode:true},appType:'custom'});
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
  const {default:PaymentOptions}=await server.ssrLoadModule('/src/components/PaymentOptions.jsx');
  const {default:PayPalPayment}=await server.ssrLoadModule('/src/components/PayPalPayment.jsx');

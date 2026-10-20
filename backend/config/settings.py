@@ -12,7 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import dj_database_url
-import os 
+import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent.parent / '.env')
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'myapp.middleware.BrowserResponseMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -225,3 +227,12 @@ PAYPAL_SANDBOX_ENABLED = os.getenv('PAYPAL_SANDBOX_ENABLED', 'False').lower() ==
 PAYPAL_SANDBOX_CLIENT_ID = os.getenv('PAYPAL_SANDBOX_CLIENT_ID', '')
 PAYPAL_SANDBOX_CLIENT_SECRET = os.getenv('PAYPAL_SANDBOX_CLIENT_SECRET', '')
 PAYPAL_SANDBOX_WEBHOOK_ID = os.getenv('PAYPAL_SANDBOX_WEBHOOK_ID', '').strip()
+
+
+def immutable_vite_asset(path, url):
+    # Vite emits content hashes; mutable photos, HTML and unversioned files must
+    # keep WhiteNoise's normal short cache rather than an immutable lifetime.
+    return bool(re.fullmatch(r'/static/assets/[^/]+-[A-Za-z0-9_-]{8}\.(?:js|css)', url))
+
+
+WHITENOISE_IMMUTABLE_FILE_TEST = immutable_vite_asset

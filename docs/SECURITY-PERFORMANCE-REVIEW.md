@@ -15,7 +15,7 @@ the deployed service has been audited.
 | 3 | Menu management, recipes, inventory/FEFO, planner, manual schedules and availability: validation, permissions, scheduling bounds, locks and query growth | Completed locally; scale and operational limits below remain |
 | 4 | All FreshCast data modes, forecast/scenario APIs, Groq help and shopping tools: data privacy, untrusted input, resource limits, model loading and response cost | Completed locally; live-model/provider and load limits below remain |
 | 5 | Images/external URLs, reviews, reports/CSV, reminders, recovery mail, backups/downloads and maintenance: injection, outbound access, export scope and large responses | Completed locally; live-mail and scale limits below remain |
-| 6 | Customer/admin React routes, mobile interaction, browser storage, DOM/XSS, third-party scripts, dependencies/CI, Git history and deployment: bundles, images, caching, accessibility and measured page performance | Pending |
+| 6 | Customer/admin React routes, mobile interaction, browser storage, DOM/XSS, third-party scripts, dependencies/CI, Git history and deployment: bundles, images, caching, accessibility and measured page performance | Completed locally; escrow test-tool advisories and live-deployment/scale checks remain |
 
 Each batch investigates concrete findings, fixes reproducible defects where
 possible, runs relevant regressions and records what remains unverified. Sampled
@@ -301,9 +301,10 @@ These remain open; local tests do not establish a secure live deployment.
   here; no live PayPal network request was made in batch 2.
 - PostgreSQL checks used an isolated, TLS-enabled local server. They do not verify
   production Supabase pooler configuration or the whole suite on PostgreSQL.
-- The current default CI test database is SQLite, so PostgreSQL-only tests skip
-  there. Real locking checks require the isolated PostgreSQL test command; adding
-  a dedicated PostgreSQL CI target remains part of the deployment/CI review.
+- The main CI suite uses SQLite. Batch 6 adds a separate disposable TLS-enabled
+  PostgreSQL job for the eight real-locking regressions. The exact job script
+  passes locally with only its declared production dependencies. Its first hosted
+  GitHub Actions run and production Supabase behavior still need verification.
 - Inventory and operational planner lists still load all matching records.
   Constant query count does not bound payload size or in-memory allocation work.
   Larger deployments need API/UI pagination or explicit date windows and measured
@@ -332,9 +333,105 @@ These remain open; local tests do not establish a secure live deployment.
 - The CSV ceiling bounds orders rather than all line/consumption records or final
   bytes. Large real cohorts and full private database backups still need measured
   throughput/memory checks. No production-sized backup or live restore was run.
-- CSP must account for actual PayPal SDK, images and other sources. It is not
-  enabled with a guessed policy in this batch; script/DOM review belongs to batch 6.
+- CSP must account for the actual PayPal SDK frames/connections, images and wallet
+  integration. Batch 6 inspects script/DOM use but does not enable an untested CSP
+  or claim that the live site has one. Provider-enabled browser flows and a
+  report-only policy need a deployment where those providers are accessible.
 
-Next batch: customer/admin browser routes, dependencies/CI, Git history and
-deployment headers, including bundles, images, caching, accessibility and measured
-page performance.
+## Batch 6 findings and changes
+
+| Finding | Impact and evidence | Resolution |
+| --- | --- | --- |
+| Dependency advisories in application packages | The locked frontend reported 12 affected package entries, including Axios, React Router and Vite. PyPI flagged the Django 6.0.3 and DRF 3.17.1 pins. An advisory is not proof that every affected path is reachable in this application; several concern SSR or Node adapters rather than this browser SPA. | Apply compatible frontend lock updates; raise direct minimums to Axios 1.20.0, React Router DOM 7.18.4 and Vite 8.3.4. Update all three Django/DRF dependency declarations to Django 6.0.8 and DRF 3.17.2. Registry checks now report zero known advisories for the frontend lock, pinned production/ML requirements and 32 packages installed in the test runtime. |
+| Unnecessary first-page JavaScript | The initial build eagerly included menu browsing, product detail, cart, orders, checkout, recovery and payment code even for a visitor opening Home. | Load those customer routes on demand, retaining existing loading states and owner/escrow splits. Main JS decreases from 572.04 kB / 180.41 kB gzip to 489.35 kB / 157.95 kB gzip (about 14.5% / 12.5% smaller). No size-warning threshold increase or arbitrary vendor partition hides the warning. |
+| Failed route imports could blank the route area | Cached clients or interrupted downloads can fail to load a route after deployment. This is especially relevant when adding route splitting. | A route error boundary leaves navigation/account controls available and offers reload plus My orders. It advises checking an order/payment before retrying a submission. Chromium intentionally aborts the detail-page chunk, sees recovery, then successfully reloads while preserving browser storage. |
+| Mutable shell and hashed assets had no distinct application cache policy | WhiteNoise's default immutable-name detection does not recognize Vite's eight-character content hashes. A stale shell can also reference old chunks. | Revalidate HTML with `no-cache`, preserve any existing private/no-store directive, and mark only hashed `/static/assets/*.js`/CSS as immutable. Ordinary photos remain short-lived and private APIs remain no-store. Add a Permissions-Policy disabling unused camera, microphone and geolocation; payment/wallet capabilities are not disabled. |
+| Accessibility and image layout defects | Automated browser checks found low-contrast small labels/step numbers in Home, menu, basket and FreshCast. The occasion selector advertised tab semantics without tab keyboard handling. Detail metadata could remain on one line and its photo had no reserved aspect ratio. | Darken the affected text while keeping the existing palette. Use a labelled pressed-button group for the occasion selector. Wrap detail metadata, reserve a square photo area, decode asynchronously and suppress its external-image referrer. The main detail photo is not lazy-loaded. |
+| Malformed sign-in JSON could return 500 | Login read `.get()` directly from the submitted body before validating its shape. Lists/null could fail before credential validation. | Validate through a DRF input serializer; object-field validation, CSRF and existing login limits remain. Non-object regressions return 400 with no-store. |
+| CI skipped database locking checks and omitted two frontend scripts | The SQLite suite deliberately skips eight PostgreSQL concurrency tests. Planner and checkout UI scripts existed but were absent from Application checks. Parallel SSR tests also contended for Vite's HMR port. | Add a dedicated disposable PostgreSQL 16 job with TLS, loopback-only dynamic port, private ephemeral certificates, bounded readiness and cleanup. It overrides any database URL and needs no production secrets. Add planner/checkout checks, read-only workflow permissions and disable HMR in SSR test servers. |
+| Advisory exposure in separate escrow tooling | The local contract-test workspace originally reported nine affected package entries. It is separate from frontend dependencies. | Refresh compatible dependencies and override solc's temporary-file utility to patched `tmp` 0.2.6. Preserve the contract's exact Solidity 0.8.30 compiler and source; all four contract tests pass. Seven Ganache-related entries remain (one critical, five high, one moderate), discussed below. |
+
+### Batch 6 browser and repository checks
+
+- Chromium exercised **34 route/viewport combinations**, using the production
+  Vite output served by Django/WhiteNoise: public pages, detail/recovery/not-found,
+  cart/checkout/orders/account/PayPal, owner operations and FreshCast. FreshCast
+  includes local kitchen views, fixed sample views and a missing-model API state.
+  Desktop is 1440 px; mobile is 390 px. No page errors or document-level horizontal
+  overflow occurred. Real Genpact inference was unavailable; sample output is
+  explicitly labelled, not substituted silently for a failed model request.
+- Axe WCAG 2 A/AA and 2.1 AA checks on eight representative mobile states (Home,
+  menu, detail, recovery, cart, planner and local/sample decisions) report no remaining violations after the contrast fixes. These are
+  automated checks of those fixture states, not an accessibility certification or
+  a complete screen-reader/keyboard audit. Native sign-in-dialog Tab containment,
+  Escape dismissal and focus restoration also passed.
+- A cold local Home request fetches the initial JS plus its shared runtime;
+  checkout, payment and ethers chunks are absent from those requests. No external
+  request occurred in the tested provider-disabled states. Source inspection
+  confirms PayPal SDK insertion remains conditional on authorized, enabled
+  payment state; its Sandbox integration regressions pass. No analytics script,
+  dynamic eval, `dangerouslySetInnerHTML`, document.write or custom innerHTML sink
+  was found in application source. This does not inspect third-party internals
+  or establish that arbitrary future HTML handling would be safe.
+- Actual local middleware responses: shell `no-cache`; hashed JS
+  `max-age=315360000, public, immutable`; ordinary menu photo
+  `max-age=60, public`; session API `private, no-store`. HTML has nosniff and
+  frame-denial headers. Vercel/CDN behavior has not been inspected live.
+- Gitleaks 8.30.0, verified against its release checksum, scanned all locally
+  fetched Git refs/history. Its 26 generic-key matches are SHA-256 values in three
+  `docs/evidence/.../source-hashes.json` files. Each matched value was checked as a
+  64-character hexadecimal checksum; no credential value was printed. Only the
+  example environment file is tracked. This scan cannot prove the absence of
+  all secret formats, remote/deleted refs, ignored files or deployment secrets.
+  The final staged patch also scans with zero matches.
+- The backup-release workflow deliberately retains `contents: write` for release
+  upload. Application checks now request only `contents: read`; no workflow uses
+  `pull_request_target` to execute untrusted PR code with that release credential.
+  GitHub branch protection, collaborator access and environment values are outside
+  the local repository inspection.
+
+### Batch 6 verification
+
+- Django **524 tests run, ten skipped**; eight PostgreSQL regressions run and pass
+  separately against the TLS fixture. The other two skipped cases require the
+  genuine Genpact artifact. The PostgreSQL CI script also passes with only root
+  production requirements installed. No model/schema migration is needed.
+- All frontend utility, predictive, UX, planner, checkout, PayPal and shopping
+  tests pass. The 54 predictive tests no longer emit HMR port-collision warnings.
+  Changed JavaScript lint passes and the production build has no large-chunk
+  warning. All 23 release/provisioning tests and four escrow tests pass.
+- Browser checks cover layout/accessibility, dialog keyboard use, on-demand
+  chunks, failed-chunk recovery and real local cache/security headers. They do
+  not submit an external payment, use Groq/SMTP, or access the production database.
+- Dependency audit results are a point-in-time check, not a guarantee about
+  undisclosed vulnerabilities. The Python check covers production/ML pins and
+  installed runtime packages; the legacy backend requirements file contains
+  additional development dependencies and is not a fully audited lock.
+
+### Remaining escrow tooling and performance limits
+
+The escrow workspace still reports advisories in Ganache's dependency tree
+(`elliptic`, `bn.js`, `secp256k1`, `ws` and parent entries). Tests use only generated
+throwaway accounts and an in-process provider; they do not expose an RPC server
+or use real wallet keys. These packages are not frontend dependencies and are
+excluded from the browser bundle, but should not be described as clean. npm's
+suggested forced fix downgrades Ganache across a major version; that was not
+applied. Replacing the local EVM test runner with a maintained alternative is
+follow-up work. Do not use this Ganache workspace with valuable keys or as a
+public RPC service.
+
+A separate asset-size inspection finds **17 local food photos totalling 20.96 MB**,
+with the largest source JPEG at 4.21 MB (4000 × 3000). Menu cards already load
+lazily, but the menu hero and rendered card sizes still use the source JPEGs.
+Responsive photo variants and modern compression are a high-value follow-up;
+this batch reserves the detail layout but does not claim those source photos
+have been optimized. Mutable images retain short caching so later owner photo
+updates are not hidden by an immutable policy.
+
+The initial JavaScript remains substantial despite the reduction. No throttled
+mobile Core Web Vitals benchmark, real-user timing, production CDN test, full
+screen-reader review, or sustained multi-user load test was performed. Bundle
+bytes and localhost route checks do not establish production LCP/INP/CLS. The
+operational, live-provider and scale limitations above remain open. All six
+planned local review batches are now covered; none changed production records,
+trained a model, or replaced generated-data disclosures.

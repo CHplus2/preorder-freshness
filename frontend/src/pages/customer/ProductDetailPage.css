@@ -23,6 +23,7 @@
 
 .product-detail-image {
   width: 100%;
+  aspect-ratio: 1;
   border-radius: 12px;
   object-fit: cover;
 }
@@ -76,6 +77,7 @@
 /* META */
 .meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   font-size: 0.9rem;
   color: #586854;

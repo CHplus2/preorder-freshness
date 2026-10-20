@@ -40,6 +40,8 @@ function ProductContent({product, id, formatPrice, addToCart}) {
           <img
             src={product.image_url}
             alt={product.name}
+            decoding="async"
+            referrerPolicy="no-referrer"
             className="product-detail-image"
           />
         )}

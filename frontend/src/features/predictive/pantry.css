@@ -134,7 +134,7 @@
 .pantry-sign > span {
   font-size: 9px;
   letter-spacing: 2px;
-  color: #8d7150;
+  color: #745a3b;
   font-weight: 700;
 }
 .admin-shell .pantry-sign h2 {
@@ -148,7 +148,7 @@
   font:
     italic 13px Georgia,
     serif;
-  color: #8d7150;
+  color: #745a3b;
   margin: 6px 0;
 }
 .pantry-window-label {
@@ -206,7 +206,7 @@
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1.7px;
-  color: #8d7150;
+  color: #745a3b;
 }
 .admin-shell .pantry-counter-heading h3 {
   font:

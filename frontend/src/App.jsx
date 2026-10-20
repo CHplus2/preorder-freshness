@@ -1,4 +1,5 @@
 import PageLoading from "./components/PageLoading";
+import RouteErrorBoundary from "./components/RouteErrorBoundary";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
@@ -16,15 +17,15 @@ import RequireAuth from "./hoc/RequireAuth";
 import GroceryLogin from "./components/LoginModal/GroceryLogin";
 import GrocerySignup from "./components/SignupModal/GrocerySignup";
 import DeleteProduct from "./components/DeleteProductModal/DeleteProduct";
-import ProductsPage from "./pages/customer/ProductsPage";
-import ProductsDetailPage from "./pages/customer/ProductDetailPage";
-import CartPage from "./pages/customer/CartPage";
-import OrdersPage from "./pages/customer/OrdersPage";
+const ProductsPage=lazy(()=>import("./pages/customer/ProductsPage"));
+const ProductsDetailPage=lazy(()=>import("./pages/customer/ProductDetailPage"));
+const CartPage=lazy(()=>import("./pages/customer/CartPage"));
+const OrdersPage=lazy(()=>import("./pages/customer/OrdersPage"));
 const AccountPage=lazy(()=>import("./pages/customer/AccountPage"));
-import CheckoutPage from "./pages/customer/CheckoutPage";
-import RecoveryPage from './pages/customer/RecoveryPage';
+const CheckoutPage=lazy(()=>import("./pages/customer/CheckoutPage"));
+const RecoveryPage=lazy(()=>import('./pages/customer/RecoveryPage'));
 import './fyp.css';
-import PaymentPage from "./pages/customer/PaymentPage";
+const PaymentPage=lazy(()=>import("./pages/customer/PaymentPage"));
 const AdminProductsPage=lazy(()=>import("./pages/admin/AdminProductsPage"));
 const AdminInventoryPage=lazy(()=>import("./pages/admin/AdminInventoryPage"));
 const AdminOrdersPage=lazy(()=>import("./pages/admin/AdminOrdersPage"));
@@ -272,7 +273,7 @@ function AppContent() {
         )}
       </AnimatePresence>
 
-      <div className={ownerPage?'admin-shell':''} onInvalidCapture={e=>{let node=e.target.parentElement;while(node){if(node.tagName==='DETAILS')node.open=true;node=node.parentElement}}}>{ownerPage && <aside className="admin-sidebar"><span className="admin-sidebar-label">KITCHEN WORKSPACE</span><nav aria-label="Kitchen management">{ownerLinks.map(([url,label])=><Link key={url} to={url} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}</nav></aside>}<div id="page-content" className={ownerPage?'admin-content':''} tabIndex="-1"><Suspense fallback={<PageLoading />}><AnimatedRoutes/></Suspense></div></div>
+      <div className={ownerPage?'admin-shell':''} onInvalidCapture={e=>{let node=e.target.parentElement;while(node){if(node.tagName==='DETAILS')node.open=true;node=node.parentElement}}}>{ownerPage && <aside className="admin-sidebar"><span className="admin-sidebar-label">KITCHEN WORKSPACE</span><nav aria-label="Kitchen management">{ownerLinks.map(([url,label])=><Link key={url} to={url} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}</nav></aside>}<div id="page-content" className={ownerPage?'admin-content':''} tabIndex="-1"><RouteErrorBoundary route={location.pathname}><Suspense fallback={<PageLoading />}><AnimatedRoutes/></Suspense></RouteErrorBoundary></div></div>
       {!ownerPage && <BusinessFooter/>}
     </>
   )

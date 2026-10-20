@@ -1,8 +1,22 @@
 name: Application checks
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
+  postgres:
+    name: PostgreSQL concurrency checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - run: bash scripts/check_postgres.sh
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       SECRET_KEY: ci-only-not-for-production
       DEBUG: 'False'
@@ -21,6 +35,8 @@ jobs:
       - run: npm --prefix frontend test
       - run: npm --prefix frontend run test:predictive
       - run: npm --prefix frontend run test:ux
+      - run: npm --prefix frontend run test:planner
+      - run: npm --prefix frontend run test:checkout
       - run: npm --prefix frontend run test:paypal
       - run: npm --prefix frontend run test:shopping
       - run: npm --prefix frontend run build
@@ -32,6 +48,7 @@ jobs:
   escrow:
     name: Escrow contract checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

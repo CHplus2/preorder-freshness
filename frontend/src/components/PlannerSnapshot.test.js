@@ -3,7 +3,7 @@ import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createServer} from 'vite';
 
-const server=await createServer({server:{middlewareMode:true},appType:'custom'});
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try {
   const {default:PlannerSnapshot}=await server.ssrLoadModule('/src/components/PlannerSnapshot.jsx');
   const render=props=>renderToStaticMarkup(createElement(PlannerSnapshot,{hasPlan:true,loadedAt:'2026-10-03T01:00:00Z',onRetry:()=>{},...props},createElement('button',null,'Export calendar')));

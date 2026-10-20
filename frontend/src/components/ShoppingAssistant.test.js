@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {createElement as h} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createServer} from 'vite';
-const server=await createServer({server:{middlewareMode:true},appType:'custom'});
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
  const {default:Assistant}=await server.ssrLoadModule('/src/components/ShoppingAssistant.jsx');
  const {MemoryRouter}=await import('react-router-dom');

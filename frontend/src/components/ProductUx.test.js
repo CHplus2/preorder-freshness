@@ -3,7 +3,7 @@ import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {MemoryRouter} from 'react-router-dom';
 import {createServer} from 'vite';
-const server=await createServer({server:{middlewareMode:true},appType:'custom'});
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
  const {default:MenuListingStatus}=await server.ssrLoadModule('/src/components/MenuListingStatus.jsx');
  const status=p=>renderToStaticMarkup(createElement(MenuListingStatus,p));

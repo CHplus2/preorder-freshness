@@ -76,11 +76,18 @@ def signup_view(request):
 )
 
 
+class LoginInput(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(max_length=128, trim_whitespace=False)
+
+
 @api_view(["POST"])
 def login_view(request):
     SessionAuthentication().enforce_csrf(request)
-    username = serializers.CharField(max_length=150).run_validation(request.data.get('username'))
-    password = serializers.CharField(max_length=128, trim_whitespace=False).run_validation(request.data.get('password'))
+    incoming = LoginInput(data=request.data)
+    incoming.is_valid(raise_exception=True)
+    username = incoming.validated_data['username']
+    password = incoming.validated_data['password']
     limit(request, 'login', username)
 
     user = authenticate(request, username=username, password=password)

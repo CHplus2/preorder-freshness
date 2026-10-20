@@ -3,7 +3,7 @@ import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createServer} from 'vite';
 
-const server = await createServer({server:{middlewareMode:true}, appType:'custom'});
+const server = await createServer({server:{middlewareMode:true,hmr:false}, appType:'custom'});
 try {
   const {default: AvailabilityResult} = await server.ssrLoadModule('/src/components/AvailabilityResult.jsx');
   const quote = {selectionKey:'basket-and-date', plan:{preparation_at:'2026-10-01T03:00:00Z', hands_on_minutes:30, procurement_required:false}};

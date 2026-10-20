@@ -2,6 +2,18 @@
   "name": "dapur-kita-testnet-escrow",
   "private": true,
   "type": "module",
-  "scripts": {"test": "node --test escrow.test.mjs", "compile": "node compile.mjs"},
-  "devDependencies": {"ethers": "^6.16.0", "ganache": "^7.9.2", "solc": "0.8.30"}
+  "scripts": {
+    "test": "node --test escrow.test.mjs",
+    "compile": "node compile.mjs"
+  },
+  "devDependencies": {
+    "ethers": "^6.16.0",
+    "ganache": "^7.9.2",
+    "solc": "0.8.30"
+  },
+  "overrides": {
+    "solc": {
+      "tmp": "0.2.6"
+    }
+  }
 }

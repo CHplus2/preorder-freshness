@@ -27,3 +27,16 @@ class PrivateAPIResponseMiddleware:
                 patch_cache_control(response, private=True, no_store=True)
             patch_vary_headers(response, ['Cookie'])
         return response
+
+
+class BrowserResponseMiddleware:
+    """Revalidate the SPA shell while letting content-hashed assets stay cached."""
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        response.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+        if response.get('Content-Type', '').split(';', 1)[0] == 'text/html':
+            response.setdefault('Cache-Control', 'no-cache')
+        return response
