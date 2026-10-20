@@ -22,6 +22,8 @@ export default function OrderWorkflowActions({order,onSaved}){
  };
  return <div className="planner-progress-actions" aria-label={`Progress for order ${order.id}`}>
   {order.status==='pending' && planned && <p>Already scheduled. “Mark preparation started” records work beginning; “Mark food ready” records cooking finished.</p>}
+  {ready && <p>Food is ready. “Out for delivery” records dispatch; “Mark delivered” confirms the customer received it. Dispatch tracking is optional.</p>}
+  {order.status==='shipped' && <p>Out for delivery. Confirm delivery once the customer receives the order.</p>}
   {order.status==='pending' && !planned?<p>Confirm this order’s preparation plan before starting or marking it ready.</p>:<>
    <div className="planner-progress-buttons">
     <button type="button" className="admin-primary" disabled={!!busy} onClick={()=>update(preparing?'cooked':'delivered',preparing?'ready for delivery':'delivered')}>{busy?(preparing?'Saving preparation…':'Saving delivery…'):preparing?'Mark food ready':'Mark delivered'}</button>

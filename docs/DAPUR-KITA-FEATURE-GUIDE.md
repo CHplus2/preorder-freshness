@@ -317,3 +317,63 @@ Automated passes do not guarantee full marks, usability, production uptime, inbo
 delivery, payment-provider correctness or a new contribution to literature. A user
 study, literature comparison and critical discussion must use real collected
 evidence; do not invent participants, improvement percentages or completed tests.
+
+### Delivery requests, optional progress and multi-day preparation
+
+A pending order can already have a confirmed preparation reservation. Its
+optional **Mark preparation started** action records actual progress; it is not
+an acceptance gate for automatically scheduled orders. **Mark food ready**
+records cooking completion and deducts eligible ingredients once. From that
+stage the owner can use optional **Out for delivery**, or proceed to **Mark
+delivered** after receipt. Delivery does not record a payment. Past-due open
+orders remain visible for follow-up rather than being completed by the clock.
+
+An unconfirmed request has `needs_review=true` and no reserved preparation times.
+Changing its requested delivery may still produce an unconfirmed request if
+notice, quantities or recipe/equipment rules prevent an automatic plan. The
+preview now says **Save requested time**, and successful saves explicitly say
+that kitchen confirmation is outstanding. A preview's ten-minute expiry is not
+a promise to deliver within ten minutes. The deadline dropdown is shown only
+for a scheduled change with an actual cutoff, not an unconfirmed request.
+
+In Planner, open **Review delivery requests**, select the request and use
+**Calculate plan → Confirm preparation plan** first. If calculation cannot fit,
+review the error and either agree another delivery or adjust reviewed menu
+settings. The advanced manual arrangement is a separate owner option, not a
+required step for every request. Saving a requested date alone does not allocate
+worker/equipment time or authorize starting that request.
+
+Multi-day preparation already supports separate recipe steps on different days,
+explicitly resumable hands-on preparation and independent batches across days.
+In Menus → edit menu → **Preparation across days**, review **Preparation may span
+up to (days)**, finishing policy, allowed waits between steps and any permitted
+pause/storage settings. Cooking/oven work remains uninterrupted; only suitable
+prep-table/packing work can opt into pausing. Overnight unattended fridge/rest
+is configured separately. Existing accepted order snapshots keep their original
+settings unless the owner explicitly chooses current settings and confirms a
+new plan. A multi-day span alone does not waive freshness, pause or resource
+limits.
+
+Inventory's `DEMO-FC-INV-…-NEAR`/`…-RESERVE` and `FRESHCAST-DEMO-…` strings are
+seeded **batch references**, separate from the database's numeric batch ID. They
+identify the original demo scenario; `NEAR` does not mean permanently fresh.
+Fixed expiry dates naturally become overdue. The seed command intentionally
+does not replenish, redate or overwrite consumed/expired stock on repeat runs.
+Review remaining stock and record actual disposal/waste where appropriate.
+Expired stock is excluded from allocation; a recorded stock value is not itself
+a confirmed waste record, and missing costs make that value incomplete.
+
+The attention summary now separates ingredient name, numeric batch ID and full
+reference. It starts with six batches per priority group, with **Show all** to
+inspect the remainder. Group counts and values always include every batch,
+regardless of how many rows are expanded. Batch references and stored data are
+not renamed, renumbered or removed.
+
+Local verification: 117 scheduling/request/expiry tests plus seven order-progress
+tests pass. Coverage includes a 1,000-minute task split across two working days,
+quote/checkout reserving that multi-day plan, pause storage conflicts, overnight
+limits, unconfirmed delivery updates and single stock deduction through both
+optional and direct completion paths. Frontend utility, UX, planner, checkout
+and build checks pass. Browser fixtures verify the request remains unconfirmed
+after saving and that expanding the expiry summary opens the correct batch.
+Live records are not modified by these checks.

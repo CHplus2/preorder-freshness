@@ -43,15 +43,18 @@ export default function RescheduleOrder({order, onSaved}) {
       const body = confirm ? {confirm:preview.confirm} : {delivery_at:`${delivery}:00+08:00`, reason};
       const response = await axios.post(url, body, {timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
       if (confirm) {
-        deliveryConfirmation(response.data, order.id);
+        const saved = deliveryConfirmation(response.data, order.id).order;
+        const awaitingKitchen = saved.preparation_plan?.needs_review === true;
         setPreview(null);
         setPolicy(null);
         setDelivery(''); setReason('');
-        setMessage('Delivery time updated. Your order total and accepted menu remain unchanged.');
-        setAlert({message:'Delivery time updated.',type:'success'});
+        setMessage(awaitingKitchen
+          ? 'Requested time saved. The kitchen still needs to confirm preparation; no preparation slots are reserved. Your order total and accepted menu remain unchanged.'
+          : 'Delivery time updated. Your order total and accepted menu remain unchanged.');
+        setAlert({message:awaitingKitchen?'Request updated · awaiting kitchen confirmation.':'Delivery time updated.',type:'success'});
         // The mutation is confirmed. A later read failure must not imply it failed.
         try {
-          await onSaved();
+          await onSaved?.();
           setPolicy(deliveryPolicy((await axios.get(url,{timeout:30000})).data));
         } catch {
           setError('Your delivery change was saved, but the latest details could not be loaded. Try again to refresh them.');
@@ -91,14 +94,7 @@ export default function RescheduleOrder({order, onSaved}) {
           </label>
           <details className="delivery-change-rules"><summary>How delivery changes work</summary><p>{policy.initial_delivery?'Choose an agreed date within 90 days, more than 24 hours away and after the menu lead time. Delivery restrictions and menu capacity are checked. Preparation still needs owner confirmation.':policy.unconfirmed_request?'You can change an unconfirmed request while no preparation is reserved. If the new time cannot be scheduled, it still needs kitchen confirmation.':'Changes close 24 hours before preparation starts. The new time must meet this cutoff and kitchen availability.'} Your items, address and price stay the same.</p></details>
           <div className="delivery-change-actions"><button disabled={busy}>Check new time</button><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Cancel</button></div>
-        </> : <div className="delivery-change-review">
-          <h4>Confirm your new time</h4>
-          <dl><div><dt>Current delivery</dt><dd>{when(preview.preview.previous_delivery)}</dd></div><div><dt>New delivery</dt><dd><strong>{when(preview.preview.delivery_at)}</strong></dd></div></dl>
-          <p>Reason: {preview.preview.reason}</p>{preview.preview.needs_review && <p>The requested time will still need kitchen confirmation. No automatic preparation plan has been reserved.</p>}
-          <p className="delivery-change-hint">Confirm within 10 minutes. Availability is checked again when you confirm.</p>
-          <details className="delivery-change-rules"><summary>Deadline for any further changes</summary><p>{preview.preview.change_closes_at?when(preview.preview.change_closes_at):'No preparation-change deadline applies while this request remains unconfirmed.'} This preview does not reserve kitchen capacity.</p></details>
-          <div className="delivery-change-actions"><button type="button" disabled={busy} onClick={e=>submit(e,true)}>Confirm new time</button><button type="button" disabled={busy} onClick={()=>setPreview(null)}>Back</button></div>
-        </div>}
+        </> : <DeliveryChangePreview preview={preview.preview} busy={busy} onConfirm={e=>submit(e,true)} onBack={()=>setPreview(null)}/>}
       </form>}
       {open === 'history' && policy && <div>
         {policy.history.length ? <ol className="delivery-change-history">{policy.history.map(change=><li key={change.id}>
@@ -108,4 +104,17 @@ export default function RescheduleOrder({order, onSaved}) {
       </div>}
     </div>}
   </section>;
+}
+
+export function DeliveryChangePreview({preview,busy,onConfirm,onBack}) {
+  const awaitingKitchen=preview.needs_review===true;
+  return <div className="delivery-change-review">
+    <h4>{awaitingKitchen?'Review your requested time':'Confirm your new delivery time'}</h4>
+    <dl><div><dt>{awaitingKitchen?'Current requested delivery':'Current delivery'}</dt><dd>{when(preview.previous_delivery)}</dd></div><div><dt>{awaitingKitchen?'New requested delivery':'New delivery'}</dt><dd><strong>{when(preview.delivery_at)}</strong></dd></div></dl>
+    <p>Reason: {preview.reason}</p>
+    {awaitingKitchen && <p>This saves your delivery request. The kitchen must still confirm a workable preparation plan; no preparation slots are reserved.</p>}
+    <p className="delivery-change-hint">This preview expires in 10 minutes. The time and kitchen availability are checked again when saved.</p>
+    {!awaitingKitchen && preview.change_closes_at && <details className="delivery-change-rules"><summary>Deadline for any further changes</summary><p>{when(preview.change_closes_at)}. This preview does not reserve kitchen capacity.</p></details>}
+    <div className="delivery-change-actions"><button type="button" disabled={busy} onClick={onConfirm}>{awaitingKitchen?'Save requested time':'Confirm new time'}</button><button type="button" disabled={busy} onClick={onBack}>Back</button></div>
+  </div>;
 }

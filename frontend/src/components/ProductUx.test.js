@@ -11,6 +11,10 @@ try{
  assert.doesNotMatch(status({error:true,count:0,shown:0}),/0 items found/);
  assert.match(status({loading:true,count:0,shown:0}),/Loading menu/);
  assert.match(status({count:1,shown:1}),/1 item found/);
+ const {DeliveryChangePreview}=await server.ssrLoadModule('/src/components/RescheduleOrder.jsx');
+ const deliveryPreview=needs_review=>renderToStaticMarkup(createElement(DeliveryChangePreview,{preview:{needs_review,previous_delivery:'2026-10-20T16:00:00+08:00',delivery_at:'2026-10-21T15:22:00+08:00',reason:'Later request',change_closes_at:needs_review?null:'2026-10-20T12:00:00+08:00'}}));
+ const requested=deliveryPreview(true);assert.match(requested,/Save requested time/);assert.match(requested,/no preparation slots are reserved/);assert.doesNotMatch(requested,/Confirm new time|Deadline for any further changes/);
+ const reserved=deliveryPreview(false);assert.match(reserved,/Confirm new time/);assert.match(reserved,/Deadline for any further changes/);assert.doesNotMatch(reserved,/Save requested time/);
  const {default:PaymentOptions}=await server.ssrLoadModule('/src/components/PaymentOptions.jsx');
  const payment=p=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(PaymentOptions,{value:'cod',onChange:()=>{},...p})));
  const html=payment({manualEnabled:true});

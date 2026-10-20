@@ -18,6 +18,7 @@ export function deliveryPreview(data) {
   if (typeof data?.confirm !== 'string' || !data.confirm.trim()
       || !(preview?.previous_delivery === null || date(preview?.previous_delivery)) || !date(preview?.delivery_at)
       || (preview?.unconfirmed_request !== undefined && typeof preview.unconfirmed_request !== 'boolean')
+      || (preview?.needs_review !== undefined && typeof preview.needs_review !== 'boolean')
       || (!date(preview?.change_closes_at) && !(preview?.unconfirmed_request===true && preview.needs_review===true && preview.change_closes_at===null)) || typeof preview?.reason !== 'string') throw invalidResponse();
   return data;
 }

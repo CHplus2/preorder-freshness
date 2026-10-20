@@ -44,3 +44,5 @@ for(const value of [{...batchSaved,updated_order_ids:[]},{...batchSaved,updated_
  {...batchSaved,updated_order_ids:[3]},{...batchSaved,remaining_missing_dates:-1},
  {...batchSaved,already_applied:'false'}])assert.throws(()=>deliveryDateConfirmation(value,[2]),{code:'INVALID_RESPONSE'});
 console.log('Batch date preview and exact saved-cohort validation passed.');
+
+assert.throws(()=>deliveryPreview({...preview,preview:{...preview.preview,needs_review:'false'}}),{code:'INVALID_RESPONSE'});
