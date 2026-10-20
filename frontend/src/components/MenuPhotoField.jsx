@@ -1,3 +1,4 @@
+import MenuPhoto from './MenuPhoto';
 import { useId, useState } from "react";
 import "./MenuPhotoField.css";
 
@@ -21,7 +22,7 @@ export default function MenuPhotoField({ value, onChange }) {
       <figure className="menu-photo-preview">
         <div className="menu-photo-frame">
           {url && !failed ? (
-            <img key={url} src={url} alt="Menu photo preview"
+            <MenuPhoto sizes="(max-width: 600px) 85vw, 400px" key={url} src={url} alt="Menu photo preview"
               onError={() => setFailedUrl(url)} />
           ) : (
             <p role={failed ? "status" : undefined}>

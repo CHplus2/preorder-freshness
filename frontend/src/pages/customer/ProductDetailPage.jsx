@@ -1,3 +1,4 @@
+import MenuPhoto from '../../components/MenuPhoto';
 import {deliveryDaysText} from '../../utils/deliveryDays';
 import MenuReviews from "../../components/MenuReviews";
 import { useEffect, useState } from "react";
@@ -37,7 +38,7 @@ function ProductContent({product, id, formatPrice, addToCart}) {
       {/* LEFT: IMAGE */}
       <div className="product-detail-left">
         {product.image_url && (
-          <img
+          <MenuPhoto sizes="(max-width: 768px) calc(100vw - 88px), 470px"
             src={product.image_url}
             alt={product.name}
             decoding="async"

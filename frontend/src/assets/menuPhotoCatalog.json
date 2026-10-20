@@ -1,0 +1,87 @@
+{
+  "banana-cake.jpg": {
+    "width": 888,
+    "height": 768,
+    "sha256": "404a9dc325bfbc3c89f764fcda5ea72603fd92e41d3c41710093eae71e9cfeef"
+  },
+  "brownie-squares.jpg": {
+    "width": 2048,
+    "height": 1536,
+    "sha256": "3da3d3fca1af637b3b7fd4fd37924475e396357e5474d465dacc8d5bd862599e"
+  },
+  "chicken-bihun.jpg": {
+    "width": 4000,
+    "height": 3000,
+    "sha256": "d485655578282dadcc5e527ed774f2f924187adbbf978a070a50e504bb2e3a8e"
+  },
+  "coconut-chicken.jpg": {
+    "width": 3648,
+    "height": 1680,
+    "sha256": "0fb9a823c9b98229a3c1f3b24dd991106746a613159b71ab9993517a1597fca0"
+  },
+  "cookies.jpg": {
+    "width": 479,
+    "height": 458,
+    "sha256": "5a069f9612149c259aae83f49ca7ceae0e02769ea720410be9de64fa93d79770"
+  },
+  "fried-rice-egg.jpg": {
+    "width": 3120,
+    "height": 4160,
+    "sha256": "cf83d8abdee369a8d13707d53162cb3ce9007e0383b92492f0dc5dfbc7c28ab6"
+  },
+  "fried-rice.jpg": {
+    "width": 3000,
+    "height": 4000,
+    "sha256": "31a0a59ea337db07838c4bcec5d43787ba81161571c125d80b3e7cb830035704"
+  },
+  "ginger-chicken.jpg": {
+    "width": 3865,
+    "height": 2598,
+    "sha256": "047a1f717e593b446ff5cf01f269af1aa6a5f9d6a41994b2cc1d5893233a627e"
+  },
+  "kuey-teow.jpg": {
+    "width": 1600,
+    "height": 1200,
+    "sha256": "588aaaec32ffd88db1d55b77ea6b213a5e8dfb098eeb60eaa7842df5f425861c"
+  },
+  "mee-goreng.jpg": {
+    "width": 1000,
+    "height": 750,
+    "sha256": "db1aef5df7bec501e12a8dc0b8cdc5cfdfbed0873bd0dd484971334c5c6b15d6"
+  },
+  "nasi-lemak.jpg": {
+    "width": 1216,
+    "height": 911,
+    "sha256": "1a9f2ce4369b205a347bbc5d43d7b48c34f6939f22a574a8f509a32a3f1b70bd"
+  },
+  "pepper-chicken.jpg": {
+    "width": 3000,
+    "height": 3000,
+    "sha256": "60c9e75c2b4b42d785d2895e9576abe632601d5b954fc7ac4de66b2043b4b255"
+  },
+  "sambal-chicken.jpg": {
+    "width": 3264,
+    "height": 2448,
+    "sha256": "af9fb55692ce7d5b138b5c7b71126f6bd59bda4b7bbc7f3201bd2fa2b7c72392"
+  },
+  "soy-chicken.jpg": {
+    "width": 1024,
+    "height": 683,
+    "sha256": "522cb832353cedd532231fecb58a7c45b01149abd63d73f9d34df7898e5b0811"
+  },
+  "turmeric-chicken.jpg": {
+    "width": 1000,
+    "height": 750,
+    "sha256": "7212d8a8d27048d388ab001ca7c0c07ce8c0ebe37de9566c2ad315f5f5f8243f"
+  },
+  "vegetarian-bihun.jpg": {
+    "width": 4160,
+    "height": 1856,
+    "sha256": "c2ce8b10ff3eeb14b8d79a9c4470a411be189d885b1a2d5b25d30e753cb8ed0d"
+  },
+  "walnut-brownies.jpg": {
+    "width": 3997,
+    "height": 2138,
+    "sha256": "a7bc03347ff0e8d3fae60b754ea6a84b7a40845e3f477c256b3e1fa7d3afb126"
+  }
+}

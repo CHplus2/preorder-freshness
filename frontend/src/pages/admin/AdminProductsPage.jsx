@@ -1,3 +1,4 @@
+import MenuPhoto from '../../components/MenuPhoto';
 import {useSearchParams} from 'react-router-dom';
 import './MenuSellingStatus.css';
 import DialogFeedback from '../../components/DialogFeedback';
@@ -160,7 +161,7 @@ export default function AdminProductsPage() {
               <tr key={p.id}>
                 <td data-label="Image">
                   {p.image_url ? (
-                    <img 
+                    <MenuPhoto sizes="60px" loading="lazy"
                       src={p.image_url} 
                       alt={p.name} 
                       className="table-img" 

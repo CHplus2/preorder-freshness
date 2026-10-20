@@ -14,7 +14,12 @@
     "test:checkout": "node src/components/AvailabilityResult.test.js",
     "test:predictive": "node --test src/features/predictive/api.test.js src/features/predictive/decisionMath.test.js src/features/predictive/decisionBrief.test.js src/features/predictive/replayEvidence.test.js src/features/predictive/riskTradeoff.test.js src/features/predictive/riskLens.test.js src/features/predictive/rescueOutcome.test.js src/features/predictive/localApi.test.js src/features/predictive/kitchenDecision.test.js src/features/predictive/ingredientPresentation.test.js src/features/predictive/stockFlow.test.js",
     "test:paypal": "node src/utils/paypalResponse.test.js && node src/components/PayPalPayment.test.js",
-    "test:shopping": "node src/utils/shoppingResponse.test.js && node src/components/ShoppingAssistant.test.js"
+    "test:shopping": "node src/utils/shoppingResponse.test.js && node src/components/ShoppingAssistant.test.js",
+    "images": "node scripts/prepare-menu-photos.mjs",
+    "images:update": "node scripts/prepare-menu-photos.mjs --update-catalog",
+    "prebuild": "npm run images",
+    "predev": "npm run images",
+    "test:images": "node --test scripts/menu-photos.test.mjs"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^9.1.1",
@@ -35,6 +40,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
+    "sharp": "0.35.5",
     "vite": "^8.3.4"
   }
 }

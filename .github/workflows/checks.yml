@@ -39,6 +39,7 @@ jobs:
       - run: npm --prefix frontend run test:checkout
       - run: npm --prefix frontend run test:paypal
       - run: npm --prefix frontend run test:shopping
+      - run: npm --prefix frontend run test:images
       - run: npm --prefix frontend run build
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run

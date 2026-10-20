@@ -128,3 +128,22 @@ This project extends a pre-existing preorder application; it was not built entir
 - [Preserved application documentation index and background](docs/DAPUR-KITA-FYP-README.md)
 
 Detailed implementation reports remain in `docs/`; this README is the entry point for reviewers and developers.
+
+### Responsive menu photos
+
+`npm --prefix frontend run dev` and `npm --prefix frontend run build` generate
+responsive WebP files from the licensed originals before Vite starts. Use Node.js
+24 and `npm ci --prefix frontend` (include optional dependencies for Sharp's
+platform binary). Generated files under `public/menu-images/responsive/` are
+ignored by Git; builds reproduce them. No image server or external image download
+is needed. Known bundled photos use these sizes in the menu, basket, detail and
+owner screens; external owner photo URLs are left alone. A failed optimized image
+falls back to its original URL.
+
+When intentionally replacing or adding a bundled JPEG, review its licence and
+update `docs/DAPUR-KITA-MENU-PHOTOS.json` and the public credits page, then run
+`npm --prefix frontend run images:update` and commit the updated photo catalog.
+The normal build verifies source checksums rather than silently accepting an
+unreviewed replacement. `npm --prefix frontend run test:images` checks encoded
+sizes, aspect ratios, metadata stripping and URL selection. Original JPEGs and
+attribution remain available; generated WebP copies retain the photo's licence.

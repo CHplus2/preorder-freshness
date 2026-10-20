@@ -16,6 +16,7 @@ the deployed service has been audited.
 | 4 | All FreshCast data modes, forecast/scenario APIs, Groq help and shopping tools: data privacy, untrusted input, resource limits, model loading and response cost | Completed locally; live-model/provider and load limits below remain |
 | 5 | Images/external URLs, reviews, reports/CSV, reminders, recovery mail, backups/downloads and maintenance: injection, outbound access, export scope and large responses | Completed locally; live-mail and scale limits below remain |
 | 6 | Customer/admin React routes, mobile interaction, browser storage, DOM/XSS, third-party scripts, dependencies/CI, Git history and deployment: bundles, images, caching, accessibility and measured page performance | Completed locally; escrow test-tool advisories and live-deployment/scale checks remain |
+| 7 | Responsive bundled photos, attribution, image fallbacks and replacement of vulnerable escrow test tooling | Completed locally; both npm workspaces now audit clean; live deployment and scale limits remain |
 
 Each batch investigates concrete findings, fixes reproducible defects where
 possible, runs relevant regressions and records what remains unverified. Sampled
@@ -410,22 +411,20 @@ These remain open; local tests do not establish a secure live deployment.
 
 ### Remaining escrow tooling and performance limits
 
-The escrow workspace still reports advisories in Ganache's dependency tree
+At the end of batch 6 the escrow workspace reported advisories in Ganache's dependency tree
 (`elliptic`, `bn.js`, `secp256k1`, `ws` and parent entries). Tests use only generated
 throwaway accounts and an in-process provider; they do not expose an RPC server
 or use real wallet keys. These packages are not frontend dependencies and are
 excluded from the browser bundle, but should not be described as clean. npm's
 suggested forced fix downgrades Ganache across a major version; that was not
-applied. Replacing the local EVM test runner with a maintained alternative is
-follow-up work. Do not use this Ganache workspace with valuable keys or as a
+applied. Batch 7 below replaces the local EVM test runner and resolves these entries. Do not use this Ganache workspace with valuable keys or as a
 public RPC service.
 
 A separate asset-size inspection finds **17 local food photos totalling 20.96 MB**,
 with the largest source JPEG at 4.21 MB (4000 × 3000). Menu cards already load
 lazily, but the menu hero and rendered card sizes still use the source JPEGs.
-Responsive photo variants and modern compression are a high-value follow-up;
-this batch reserves the detail layout but does not claim those source photos
-have been optimized. Mutable images retain short caching so later owner photo
+Batch 6 reserves the detail layout; batch 7 below adds responsive variants and
+compression. Original JPEG files remain unchanged. Mutable images retain short caching so later owner photo
 updates are not hidden by an immutable policy.
 
 The initial JavaScript remains substantial despite the reduction. No throttled
@@ -435,3 +434,91 @@ bytes and localhost route checks do not establish production LCP/INP/CLS. The
 operational, live-provider and scale limitations above remain open. All six
 planned local review batches are now covered; none changed production records,
 trained a model, or replaced generated-data disclosures.
+
+
+## Batch 7: responsive photos and escrow test tools
+
+### Changes and measured image bytes
+
+- Add a shared `MenuPhoto` component to the menu hero/cards, Home's featured
+  meals, basket, detail page, admin catalogue and menu-photo preview. It emits
+  a normal `img`, preserving existing CSS and empty-photo handling. Known bundled
+  photos get WebP `srcset`/`sizes`; native dimensions reserve space. Lazy loading
+  remains on cards/thumbnails; the main detail and hero photos remain eager.
+- The URL selector recognizes exact local paths, the current origin and the
+  published canonical asset origin, and only the 17 known filenames. Other
+  external URLs, query/fragment URLs and unknown paths retain their original
+  identity. No arbitrary image-fetching backend or remote optimizer is added.
+  A failed derivative falls back once to the original; only a failed original
+  invokes the existing unavailable-photo UI.
+- A pinned Sharp build step creates 360/720/1200-pixel WebP copies at quality 78,
+  without enlarging smaller sources. It handles EXIF orientation and strips
+  metadata. A catalog records source dimensions/checksums, and the build rejects
+  unexpected source changes. Processing concurrency is bounded. Node 24 clean
+  install and encoding checks pass on Linux; Windows/macOS were not exercised.
+- The 17 originals total **20,958,095 bytes**. All **50** generated variants
+  together total **2,506,096 bytes**. Selecting one variant per photo totals
+  **274,806 bytes** at a 360-pixel target, **764,586 bytes** at a 720-pixel target,
+  and **1,501,450 bytes** at a 1200-pixel target. These are encoded asset sizes,
+  not latency or visual-quality scores; browsers choose according to layout,
+  pixel ratio and already-loaded candidates.
+- Actual cold local menu checks at **390 px / DPR 2** and **1440 px / DPR 1**
+  fetch **58,390 bytes** of the two displayed photo assets. Their original JPEGs
+  total **1,368,950 bytes**: approximately **95.7% fewer image bytes** for that
+  fixture. The browser reuses those selected assets for the matching menu cards.
+  External/other catalogue photos and different layouts can produce different
+  totals; no production Core Web Vitals improvement is asserted.
+- Preserve original JPEG bytes, authors, source/licence links and illustrative
+  photo disclosures. The public credits page and photo manifest now describe
+  resized/compressed WebP copies; those copies retain the respective photo
+  licences. The credits page also selects responsive sizes. Generated copies are
+  Git-ignored and reproduced by `predev`/`prebuild`; sources and generation code
+  remain in GitHub. Mutable photo URLs keep the normal short cache policy.
+- The populated basket state revealed four low-contrast text occurrences in its
+  price and summary labels. Darken the two shared colours; this additional state
+  was absent from batch 6's empty-basket fixture.
+
+### Escrow tooling
+
+Replace Ganache with **Hardhat 3.20.0 / EDR**, using fresh in-process simulated
+networks for each test. The configured local chain ID 1 only checks mainnet
+refusal; it does not connect to mainnet. No RPC server, remote network URL or
+wallet key is configured. Keep the contract, Solidity **0.8.30**, Shanghai EVM and
+200 optimizer runs unchanged. Receipt-based revert checks, roles, deadlines,
+duplicate settlement and withdrawal assertions remain in force. Network handles
+close after each test.
+
+Update the compiler's transitive temporary-file override to **tmp 0.2.7** after
+the current registry flags another advisory in 0.2.6. Both the complete frontend
+and escrow `npm audit` reports now show **zero known advisories**, including dev
+packages. This is a point-in-time dependency result, not a smart-contract audit.
+The test runner/compiler remain separate from the browser payment implementation.
+
+### Batch 7 verification and reproduction
+
+- All frontend utility, predictive, UX, planner, checkout, PayPal, shopping and new
+  photo tests pass; production build and changed-source lint pass. Initial JS is
+  **492.41 kB / 159.68 kB gzip**, still below the original large-chunk warning.
+  The small shared selector/catalog adds about 3 kB of minified JavaScript over
+  batch 6 while removing much larger image downloads in the checked views.
+- Two image tests decode every emitted variant to verify format, declared width,
+  aspect ratio and absence of EXIF, and check URL/base-path handling and smaller
+  source caps. Source checksums verify originals are unchanged. A clean frontend
+  `npm ci` followed by these native encoder tests passes.
+- All four contract tests pass, including after a clean `npm ci --ignore-scripts`
+  install matching CI. Ganache is absent from the resulting lock and dependency
+  tree. No real blockchain transaction or PayPal request was submitted.
+- All 23 release/provisioning tests pass. No backend/model/schema or production
+  database record is changed. The earlier PostgreSQL coverage is unchanged.
+- Chromium covers desktop/mobile variant selection, decoded images, document
+  width, missing-variant recovery, unmodified external photo URLs and public
+  credits. Representative route/accessibility checks are repeated with a filled
+  fictional basket; remaining live-provider/deployment and scale limits from
+  earlier batches still apply.
+
+Reproduce with Node 24: `npm ci --prefix frontend`,
+`npm --prefix frontend run test:images`, and
+`npm --prefix frontend run build`. The existing application scripts exercise the
+rest of the frontend. Run `npm ci --prefix escrow --ignore-scripts` and
+`npm --prefix escrow test` for the isolated contract checks. CI now includes the
+photo tests. README explains deliberate photo replacement and catalog updates.

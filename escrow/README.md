@@ -4,9 +4,17 @@ This is an **unaudited academic prototype using valueless test ETH**, separate f
 
 ## Run the contract tests
 
-From `escrow`, run `npm ci`, `npm test`, then `npm run compile`. Tests execute on an in-memory Ganache chain with chain ID 31337; they never transfer real money. Compiler output is written to ignored `artifacts/`.
+From `escrow`, run `npm ci`, `npm test`, then `npm run compile`. Tests execute on an in-process Hardhat EDR chain with chain ID 31337; they never transfer real money. Compiler output is written to ignored `artifacts/`.
 
-The tests explicitly use Ganache's supported JavaScript µWS fallback on current Node releases. Its informational performance message is expected; no native transport binary is required for these in-memory checks. Contract execution, role checks and revert assertions remain enabled. Negative transaction tests wait for the mined receipt as well as checking submission, because submission alone can return a transaction that later reverts. The test provider disables RPC caching so synchronously mined state changes and advanced deadlines are observed immediately.
+Tests create a fresh simulated network for each case; no HTTP RPC server or remote
+chain is used. Node.js 24 is used in CI. The mainnet-refusal case uses a separate
+local chain configured with ID 1; it does not connect to Ethereum mainnet.
+Negative transaction tests wait for the mined receipt as well as checking
+submission. The provider disables RPC caching so newly mined state and advanced
+deadlines are observed immediately. Solidity remains pinned to 0.8.30 with
+Shanghai/200 optimizer runs; the compiler's temporary-file dependency is patched
+without changing that compiler or the contract. Native EDR binaries are supplied
+through npm's platform-specific optional dependencies, including for CI.
 
 The application CI installs both the Django requirements and the existing pinned ML lock, since the held-out backtest tests import NumPy and pandas. Escrow runs in a separate CI job so an unrelated application failure does not prevent contract checks from running.
 

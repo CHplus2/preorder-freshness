@@ -2,18 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BrowserProvider,ContractFactory,id,parseEther} from 'ethers';
 import {artifact} from './compile.mjs';
-// Ganache 7 has no native µWS binary for current Node releases. Select its
-// supported JavaScript transport explicitly; this does not bypass EVM checks.
-process.env.UWS_USE_FALLBACK='1';
-const {default:ganache}=await import('ganache');
+import {network} from 'hardhat';
 async function setup(chainId=31337){
- const rpc=ganache.provider({chain:{chainId},logging:{quiet:true}});
- // Ganache mines synchronously: cached estimates/block reads can describe the
- // state before the previous transaction. Keep this test provider uncached.
+ const connection=await network.create(chainId===1?'mainnetRefusal':'local');
+ const rpc=connection.provider;
+ // Fresh in-process chains; observe mined state and advanced deadlines without
+ // reusing ethers' RPC cache.
  const provider=new BrowserProvider(rpc,undefined,{cacheTimeout:-1,pollingInterval:10});
+ assert.equal((await provider.getNetwork()).chainId,BigInt(chainId));
  const [buyer,seller,arbiter,stranger]=await Promise.all([0,1,2,3].map(i=>provider.getSigner(i)));
  const factory=new ContractFactory(artifact.abi,artifact.evm.bytecode.object,buyer);
- return {rpc,provider,buyer,seller,arbiter,stranger,factory};
+ return {rpc,provider,buyer,seller,arbiter,stranger,factory,close:()=>connection.close()};
 }
 async function rejectsTransaction(send){
  // Submission can succeed even when execution reverts. Check the mined
@@ -61,10 +60,10 @@ test('escrow lifecycle, roles, deadlines and double withdrawal protection',async
  assert.equal(await c.credits(x.buyer.address),amount*3n);
  await(await c.withdraw()).wait();
  assert.equal(await c.credits(x.buyer.address),0n);
- } finally {await x.rpc.disconnect();}
+ } finally {await x.close();}
 });
 test('contract refuses mainnet deployment',async()=>{
- const x=await setup(1);try{await assert.rejects(async()=>{const c=await x.factory.deploy();await c.waitForDeployment();},error=>error.code==='CALL_EXCEPTION');}finally{await x.rpc.disconnect();}
+ const x=await setup(1);try{await assert.rejects(async()=>{const c=await x.factory.deploy();await c.waitForDeployment();},error=>error.code==='CALL_EXCEPTION' && error.reason==='Test networks only');}finally{await x.close();}
 });
 test('funding rejects invalid participants, amounts and deadlines without holding coins',async()=>{
  const x=await setup();
@@ -87,7 +86,7 @@ test('funding rejects invalid participants, amounts and deadlines without holdin
    assert.equal((await c.deals(key)).state,0n);
   }
   assert.equal(await x.provider.getBalance(await c.getAddress()),0n);
- } finally {await x.rpc.disconnect();}
+ } finally {await x.close();}
 });
 test('seller refund and arbiter release credit the correct recipient exactly once',async()=>{
  const x=await setup();
@@ -107,5 +106,5 @@ test('seller refund and arbiter release credit the correct recipient exactly onc
   assert.equal((await c.deals(b)).state,4n);
   await rejectsTransaction(()=>c.connect(x.arbiter).resolve(b,false));
   await rejectsTransaction(()=>c.refund(b));
- } finally {await x.rpc.disconnect();}
+ } finally {await x.close();}
 });

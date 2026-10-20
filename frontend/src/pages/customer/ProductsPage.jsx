@@ -1,3 +1,4 @@
+import MenuPhoto from '../../components/MenuPhoto';
 import MenuListingStatus from '../../components/MenuListingStatus';
 import axios from 'axios';
 import GuidedMenu from '../../components/GuidedMenu';
@@ -44,7 +45,7 @@ export default function ProductsPage() {
       <OrderJourney current="menu"/>
       <section className="menu-welcome" aria-labelledby="menu-welcome-title">
         <div className="menu-welcome-copy"><span className="menu-kitchen-label"><UtensilsCrossed size={15} aria-hidden="true"/>{store.name} · The menu</span><h1 id="menu-welcome-title">Good food.<br/><em>Better planned.</em></h1><p>Find your favourites, build a basket, and choose a delivery time that works for your plans.</p><div className="menu-welcome-links"><a href="#menu-browse">Explore the menu <ArrowDown size={16} aria-hidden="true"/></a><span><MapPin size={14} aria-hidden="true"/>{store.service_area || 'Home kitchen & preorders'}</span></div></div>
-        <div className="menu-welcome-art" aria-hidden="true"><span className="menu-art-ring"/><img className="menu-hero-meal" src={`${import.meta.env.BASE_URL}menu-images/nasi-lemak.jpg`} alt=""/><div className="menu-hero-bake"><img src={`${import.meta.env.BASE_URL}menu-images/walnut-brownies.jpg`} alt=""/><span>A little something sweet</span></div><span className="menu-art-note">Made for<br/><em>your plans.</em></span></div>
+        <div className="menu-welcome-art" aria-hidden="true"><span className="menu-art-ring"/><MenuPhoto sizes="(max-width: 600px) 250px, 400px" className="menu-hero-meal" src={`${import.meta.env.BASE_URL}menu-images/nasi-lemak.jpg`} alt=""/><div className="menu-hero-bake"><MenuPhoto sizes="(max-width: 600px) 100px, 150px" src={`${import.meta.env.BASE_URL}menu-images/walnut-brownies.jpg`} alt=""/><span>A little something sweet</span></div><span className="menu-art-note">Made for<br/><em>your plans.</em></span></div>
       </section>
       <GuidedMenu/>
       <section id="menu-browse" className="menu-toolbar" aria-label="Browse the menu">
