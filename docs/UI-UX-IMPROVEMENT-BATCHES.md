@@ -39,17 +39,55 @@ capacity. Advance notice is measured before preparation, not simply delivery.
 The privacy boundary remounts pages when signing in/changing accounts; no private
 basket state is carried between accounts.
 
+## Batch 2 — Owner orders and Planner
+
+Implemented on 20 October 2026:
+
+- Orders opens with active orders sorted by delivery, rather than completed
+  history. Shortcuts show open orders, pending confirmation, ready/on-the-way,
+  past-due and all customer orders. Search stays visible; less-used filters are
+  grouped under More filters. Completed/cancelled records remain accessible.
+- Generated history retains its separate view. Clearing filters preserves that
+  source. Selecting a completed status switches to All orders, so the default
+  active-work scope does not silently hide completed records.
+- Preparation links open and focus the specific order in Planner. Query-string
+  navigation updates the Orders view, including links to a completed order.
+  The past-due preparation follow-up link opens the matching order queue.
+- Update status names the existing edit action more clearly. Preparation,
+  payment records and accepted recipes remain separate actions.
+- Loading or failed order refreshes hide cached record mutation controls. Retry
+  restores the queue from a successful read; a failed request is not an empty
+  order list.
+- Planner shows a counted Kitchen follow-up panel. Details and maintenance tools
+  open on request; a successful cooking-step check appears after actionable
+  exceptions within that panel. Missing accepted recipes remain visibly flagged
+  before shopping.
+- The date bar and compact workload summary lead the selected day's work. The
+  monthly calendar opens with Choose from calendar. Daily updates use shorter
+  explanations while retaining the ingredient-deduction and payment distinctions.
+- The review panel's catalogue lookup is mounted only when expanded, avoiding an
+  extra catalogue request during normal daily planning.
+
+Verification: order-queue utility tests, Planner rendering/guard tests, existing
+frontend utility/UX regressions, changed-file ESLint and a production build pass.
+Local Chromium journeys exercise shortcut/search combinations, generated history,
+completed-order links, missing-date review, failed-refresh recovery, the specific
+order-to-Planner link, an actual plan preview/confirmation, calendar/view changes
+and an actual delivery update that leaves payment unpaid. Eight page/viewport
+checks at 1440, 768, 390 and 320 pixels report no automated WCAG A/AA violations
+or document overflow. Desktop and phone screenshots were also inspected.
+
+These checks use fictional records in an isolated SQLite database. This batch
+changes frontend presentation/filtering/navigation, not production records,
+server scheduling/payment/stock rules, forecast models or API schemas.
+
 ## Next batches
 
-1. **Owner orders and Planner:** review how a home owner sees today's workload,
-   requests needing confirmation, ready/delivered actions and exceptions. Keep
-   routine work prominent and planning explanations secondary. Check mobile
-   reachability, status/action wording and error recovery with actual workflows.
-2. **Inventory and FreshCast:** review stock and expiry priorities, evidence
+1. **Inventory and FreshCast:** review stock and expiry priorities, evidence
    density, actions and comparison consistency across kitchen, Genpact and sample
    sources. Preserve differences required by available evidence and actual
    operational capabilities; do not turn illustrative scenarios into promises.
-3. **Shared pages and navigation:** review home, account, support, forms and
+2. **Shared pages and navigation:** review home, account, support, forms and
    customer order progress for typography, keyboard use, contrast, focus,
    loading/empty/error states and responsive spacing.
 

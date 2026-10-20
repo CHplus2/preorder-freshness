@@ -27,7 +27,8 @@ try {
   assert.match(oldRecords,/1 delivery date needs review/);
   assert.match(oldRecords,/1 past-due order needs follow-up/);
   assert.doesNotMatch(oldRecords,/upcoming order needs|Plan upcoming orders/);
-  assert.match(oldRecords,/source=local/);
+  assert.match(oldRecords,/href="\/admin\/orders\?queue=overdue"/);
+  assert.ok(oldRecords.indexOf('1 delivery date needs review')<oldRecords.indexOf('Cooking steps ready'));
   assert.ok(oldRecords.includes('href="/admin/orders?review=missing-delivery"'));
   assert.match(oldRecords,/These records are not completed sales/);
   const upcoming=setup([{id:28,status:'pending',delivery_at:'2026-10-24T18:00:00+08:00',preparation_plan:{needs_review:true}}],[{id:20,name:'Active rice'}]);
@@ -38,6 +39,12 @@ try {
   const corrupted=setup([{id:32,status:'pending',created_at:'2026-10-17T10:00:00+08:00',delivery_at:'2026-10-24T18:00:00+08:00',preparation_plan:{tasks:[{start:'2026-10-16T14:00:00+08:00',end:'2026-10-16T16:00:00+08:00'}]}}]);
   assert.match(corrupted,/starts before this order was placed/);
   assert.match(corrupted,/1 upcoming order needs preparation review/);
+  const {default:PlannerReadiness}=await server.ssrLoadModule('/src/components/PlannerReadiness.jsx');
+  const compact=renderToStaticMarkup(createElement(PlannerReadiness,{orders:[{id:1,status:'pending',delivery_at:null}],menus:[{id:1}],now:Date.parse('2026-10-17T12:00:00+08:00')}));
+  assert.match(compact,/1 order needs review · 1 menu needs cooking steps/);
+  assert.match(compact,/aria-expanded="false"/);assert.doesNotMatch(compact,/Suggest delivery dates|planner-setup-row/);
+  const readyCompact=renderToStaticMarkup(createElement(PlannerReadiness,{orders:[],menus:[]}));
+  assert.match(readyCompact,/Kitchen setup ready/);assert.doesNotMatch(readyCompact,/order needs review/);
   const {default:PlanTimingNotice}=await server.ssrLoadModule('/src/components/PlanTimingNotice.jsx');
   const demo=renderToStaticMarkup(createElement(PlanTimingNotice,{order:{preparation_plan:{fictional_timing:{allowances:[{menu:'Nasi Ayam',maximum_early_finish_minutes:120}]}}}}));
   assert.match(demo,/Demo record/);assert.match(demo,/not verified food holding/);assert.match(demo,/2h 0m/);

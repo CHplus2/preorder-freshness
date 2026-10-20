@@ -13,11 +13,12 @@ export default function PlannerSetup({menus,orders,onReview,onSaved,now}) {
  const classifications={current:0,mixed:0,archived:0,unlinked:0};
  for(const order of groups.missingDelivery)classifications[orderMenuState(order,catalogue)]++;
  const labels={current:'current menus',mixed:'current and archived menus',archived:'archived menus only',unlinked:'menu links need review'};
- return <section className="planner-setup" aria-label="Planning readiness">
-  <div className={`planner-setup-row ${menus.length?'':'planner-setup-ready'}`}><div>
+ const menuSetup=<div className={`planner-setup-row ${menus.length?'':'planner-setup-ready'}`}><div>
    <h2>{menus.length?`${menus.length} active ${menus.length===1?'menu needs':'menus need'} preparation steps`:'Cooking steps ready'}</h2>
    <p>{menus.length?'Add cooking steps and timings for these active menus.':'All active menus have preparation steps.'}</p>
-  </div><Link className="text-link" to="/admin/products?review=preparation">{menus.length?'Add missing steps':'Review preparation steps'}</Link></div>
+  </div><Link className="text-link" to="/admin/products?review=preparation">{menus.length?'Add missing steps':'Review preparation steps'}</Link></div>;
+ return <section className="planner-setup" aria-label="Planning readiness">
+  {menus.length>0 && menuSetup}
   {requests.length>0 && <div className="planner-setup-row"><div>
    <h2>{requests.length} delivery {requests.length===1?'request needs':'requests need'} kitchen confirmation</h2>
    <p>These requested times are not confirmed. No preparation slots are reserved. Confirm a workable plan or arrange another delivery time.</p>
@@ -39,11 +40,12 @@ export default function PlannerSetup({menus,orders,onReview,onSaved,now}) {
   {groups.overdue.length>0 && <div className="planner-setup-row"><div>
    <h2>{groups.overdue.length} past-due {groups.overdue.length===1?'order needs':'orders need'} follow-up</h2>
    <p>Check whether these orders were completed or need a new delivery arrangement. They are not upcoming preparation requests.</p>
-  </div><Link className="text-link" to="/admin/orders">Review past-due orders</Link></div>}
+  </div><Link className="text-link" to="/admin/orders?queue=overdue">Review past-due orders</Link></div>}
   {groups.started.length>0 && <div className="planner-setup-row"><div>
    <h2>{groups.started.length} started {groups.started.length===1?'order needs':'orders need'} record review</h2>
    <p>Preparation has started or stock was deducted. Review its existing records before changing the plan.</p>
   </div><Link className="text-link" to="/admin/orders">Review started orders</Link></div>}
-  <p className="planner-forecast-note">Forecasts use paid, delivered history; missing task plans do not block that history. <Link className="text-link" to="/admin/ai/decisions?source=local">Open FreshCast</Link></p>
+  {menus.length===0 && menuSetup}
+
  </section>;
 }

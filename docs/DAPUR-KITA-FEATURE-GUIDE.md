@@ -124,16 +124,29 @@ determine any split, rather than a generic time-slicing rule.
 
 ## 5. Owner confirmation and manual editing
 
-Open **Planner → Awaiting confirmation**. Its count covers requests across dates,
-not only the currently selected calendar day. Cancelled requests leave this queue.
+Orders starts with open work, sorted by delivery. Use its shortcuts for requests
+needing confirmation, ready/on-the-way orders, past-due work or all customer
+orders. More filters contains status, payment, date and archived-record controls;
+generated daily history stays in its separate view. A preparation link opens the
+specific order in Planner.
+
+Open **Planner → Awaiting confirmation** for requests across dates, not only the
+selected day. Cancelled requests leave this queue. Kitchen follow-up opens the
+counted preparation issues and maintenance tools; Choose from calendar opens the
+monthly date picker without pushing daily work below it by default.
 
 For an unplanned request:
 
 1. Review delivery, recipe, workload and ingredient needs.
-2. Open **Set preparation times**, enter start/end and a reason.
-3. Preview warnings. Review customer arrangements before confirming.
-4. Confirm. The request leaves the queue and its window appears in the calendar.
-5. Move the order to Processing when preparation actually begins.
+2. Use **Calculate preparation plan** to compute step timings without entering an
+   end time. A manual arrangement remains an advanced alternative.
+3. Review the preview and customer arrangements before confirming. A failed
+   calculation needs a workable delivery/recipe arrangement; it is not a booking.
+4. Confirm preparation. The request leaves the queue and its reservations appear
+   in the calendar.
+5. Record food ready after cooking and delivered after receipt. Marking
+   preparation started and dispatch are optional progress updates. Payment is
+   recorded separately.
 
 **Overall window mode** reserves the whole kitchen and worker continuously,
 including any overnight gap. It replaces active individual steps; the old plan

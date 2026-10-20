@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {filterOrders,overdueOrder,orderMenuState} from './orderQueue.js';
+import {filterOrders,overdueOrder,orderMenuState,orderQueueCounts} from './orderQueue.js';
 import {generatedSalesHistory,closedGeneratedHistory} from './orderPresentation.js';
 const filters={search:'',status:'',payment:'',date:'',overdue:false,sort:'newest'};
 const now=Date.parse('2026-09-30T12:00:00+08:00');
@@ -65,4 +65,19 @@ test('generated history has a separate view; open requests and ordinary customer
  assert.equal(filterOrders(rows,{...filters,historyScope:'all'},now).length,5);
  assert.deepEqual(filterOrders(rows,{...filters,review:'missing-delivery'},now).map(o=>o.id),[147]);
  assert.equal(rows[1],generated);assert.equal(generated.status,'delivered');
+});
+
+
+test('owner shortcuts distinguish open, confirmation, dispatch and past-due work from closed history',()=>{
+ const rows=[{...order,id:1,delivery_at:'2026-10-02T12:00:00Z'},
+  {...order,id:2,preparation_plan:{needs_review:true}},
+  {...order,id:3,status:'cooked'}, {...order,id:4,status:'shipped',delivery_at:'2026-10-02T12:00:00Z'},
+  {...order,id:5,status:'delivered'}, {...order,id:6,status:'cancelled'},
+  {...order,id:7,delivery_at:null}, {...order,id:8,status:'delivered',payment_instructions:{freshcast_synthetic_history:{version:'1'}}}];
+ assert.deepEqual(orderQueueCounts(rows,now),{open:5,requests:1,ready:2,overdue:2,all:7});
+ for(const [queue,expected] of [['open',[7,4,3,2,1]],['requests',[2]],['ready',[4,3]],['overdue',[3,2]],['all',[7,6,5,4,3,2,1]]])
+  assert.deepEqual(filterOrders(rows,{...filters,queue},now).map(o=>o.id),expected);
+ assert.deepEqual(filterOrders(rows,{...filters,queue:'open',payment:'paid'},now),[]);
+ assert.equal(filterOrders(rows,{...filters,queue:'open',review:'missing-delivery'},now).length,1);
+ assert.equal(rows[0].id,1);
 });

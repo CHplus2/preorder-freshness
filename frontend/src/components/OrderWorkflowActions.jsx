@@ -21,8 +21,8 @@ export default function OrderWorkflowActions({order,onSaved}){
   finally{setBusy('');}
  };
  return <div className="planner-progress-actions" aria-label={`Progress for order ${order.id}`}>
-  {order.status==='pending' && planned && <p>Already scheduled. “Mark preparation started” records work beginning; “Mark food ready” records cooking finished.</p>}
-  {ready && <p>Food is ready. “Out for delivery” records dispatch; “Mark delivered” confirms the customer received it. Dispatch tracking is optional.</p>}
+  {order.status==='pending' && planned && <p>Already scheduled. Tracking the preparation start is optional.</p>}
+  {ready && <p>Food is ready for handover. Dispatch tracking is optional.</p>}
   {order.status==='shipped' && <p>Out for delivery. Confirm delivery once the customer receives the order.</p>}
   {order.status==='pending' && !planned?<p>Confirm this order’s preparation plan before starting or marking it ready.</p>:<>
    <div className="planner-progress-buttons">
@@ -30,7 +30,7 @@ export default function OrderWorkflowActions({order,onSaved}){
     {order.status==='pending' && <button type="button" disabled={!!busy} onClick={()=>update('processing','preparation started')}>Mark preparation started (optional)</button>}
     {ready && <button type="button" disabled={!!busy} onClick={()=>update('shipped','out for delivery')}>Out for delivery (optional)</button>}
    </div>
-   <p>{preparing?'Mark food ready only after cooking is finished. This deducts ingredients once, using accepted recipes and the earliest eligible expiry. Starting preparation does not deduct stock.':'Mark delivered only after the customer receives the order. Payment records are updated separately.'}</p>
+   <p>{preparing?'Mark ready after cooking. This deducts ingredients once, using accepted recipes and earliest eligible expiry. Starting preparation does not deduct stock.':'Mark delivered only after the customer receives the order. Payment records are updated separately.'}</p>
   </>}
   {error && <p role="alert">{error}</p>}
  </div>;

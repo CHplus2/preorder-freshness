@@ -1,5 +1,7 @@
 import {Link,useSearchParams} from 'react-router-dom';
 import './OrderCardSpacing.css';
+import './OwnerWorkspace.css';
+import OwnerOrderShortcuts from '../../components/OwnerOrderShortcuts';
 import DialogFeedback from '../../components/DialogFeedback';
 import PaymentRecords from '../../components/PaymentRecords';
 import AcceptedRecipe from '../../components/AcceptedRecipe';
@@ -8,18 +10,28 @@ import ModalDialog from '../../components/ModalDialog';
 import { useEffect, useRef, useState } from "react";
 import { useUI } from "../../contexts/UIContext";
 import { useOrder } from "../../contexts/OrderContext";
-import {filterOrders,overdueOrder,archivedOnlyOrder,hiddenArchivedHistory,orderMenuState} from '../../utils/orderQueue';
+import {filterOrders,orderQueueCounts,orderQueues,overdueOrder,archivedOnlyOrder,hiddenArchivedHistory,orderMenuState} from '../../utils/orderQueue';
 import useOrderCatalogue from '../../hooks/useOrderCatalogue';
 import GeneratedHistoryCard from '../../components/GeneratedHistoryCard';
 import {closedGeneratedHistory,generatedSalesHistory,orderStatusLabel,orderDate} from '../../utils/orderPresentation';
 
 
 export default function AdminOrdersPage() {
-  const emptyFilters={search:'',status:'',payment:'',date:'',overdue:false,sort:'newest',includeArchived:false,historyScope:'orders'};
+  const [params]=useSearchParams();
+  return <OwnerOrders key={params.toString()}/>;
+}
+
+function OwnerOrders() {
+  const emptyFilters={search:'',status:'',payment:'',date:'',overdue:false,queue:'open',sort:'delivery',includeArchived:false,historyScope:'orders'};
   const [params,setParams]=useSearchParams();
   const review=['missing-delivery','archived-menus'].includes(params.get('review'))?params.get('review'):'';
   const changeReview=value=>{setFilters(emptyFilters);setParams(value?{review:value}:{});};
-  const [filters,setFilters]=useState({...emptyFilters,search:/^[1-9]\d*$/.test(params.get('order') || '')?'#ORD-'+params.get('order').padStart(5,'0'):''});
+  const [filters,setFilters]=useState(()=>{
+    const historyScope=['generated','all'].includes(params.get('source'))?params.get('source'):'orders';
+    const orderReference=/^[1-9]\d*$/.test(params.get('order') || '')?params.get('order'):null;
+    const queue=orderReference || historyScope!=='orders' || review==='archived-menus'?'all':orderQueues.some(([key])=>key===params.get('queue'))?params.get('queue'):'open';
+    return {...emptyFilters,historyScope,queue,includeArchived:historyScope==='generated',sort:historyScope==='generated'?'newest':'delivery',search:orderReference?'#ORD-'+orderReference.padStart(5,'0'):''};
+  });
   const [now,setNow]=useState(()=>Date.now());
   useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
   const [editingOrder, setEditingOrder] = useState(null);
@@ -30,12 +42,13 @@ export default function AdminOrdersPage() {
   const { formatOrderNumber } = useUI();
   const { adminOrders, fetchAdminOrders, updateOrder, adminOrdersLoading, adminOrdersError } = useOrder();
   const {catalogue,error:catalogueError,retry:retryCatalogue}=useOrderCatalogue(adminOrders);
+  const queueCounts=orderQueueCounts(adminOrders.filter(order=>!hiddenArchivedHistory(order,catalogue)),now);
   const visibleOrders=filterOrders(adminOrders,{...filters,review},now,catalogue);
   const archivedHistoryCount=adminOrders.filter(order=>hiddenArchivedHistory(order,catalogue)).length;
   const generatedCount=adminOrders.filter(closedGeneratedHistory).length;
   const historyView=filters.historyScope==='generated';
   const resultKind=historyView?'history record':filters.historyScope==='all'?'record':'order';
-  const clearFilters=()=>{setFilters({...emptyFilters,historyScope:filters.historyScope,includeArchived:historyView});setParams({});};
+  const clearFilters=()=>{const queue=filters.historyScope==='orders'?'open':'all';setFilters({...emptyFilters,queue,sort:historyView?'newest':'delivery',historyScope:filters.historyScope,includeArchived:historyView});setParams({source:filters.historyScope,queue});};
 
   useEffect(() => {
     fetchAdminOrders();
@@ -62,34 +75,36 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <div className="orders-container">
-      <h1 className="orders-title">{review==='missing-delivery'?'Review missing delivery dates':review==='archived-menus'?'Orders containing only archived menus':filters.historyScope==='generated'?'Generated sales history':'Orders'}</h1>
+    <main className="orders-container owner-orders-page">
+      <div className="admin-page-heading"><div><span className="admin-kicker">KITCHEN OPERATIONS</span><h1 className="orders-title">{review==='missing-delivery'?'Review missing delivery dates':review==='archived-menus'?'Orders containing only archived menus':filters.historyScope==='generated'?'Generated sales history':'Orders'}</h1><p>Confirm requests, follow preparation and keep deliveries moving.</p></div><Link className="owner-workspace-link" to="/admin/planner">Open Planner</Link></div>
       {review==='missing-delivery' && <p className="order-review-explanation">Set an agreed future date to keep a request open, or review closing an obsolete request. Setting a date does not mark an order paid or delivered.</p>}
       {review==='archived-menus' && <p className="order-review-explanation">Every item in these orders refers to an archived menu. Open orders still need a decision; archiving a menu does not cancel a booking.</p>}
-      {generatedCount>0 && <div className="admin-tabs order-record-tabs" role="group" aria-label="Order record source">{[['orders',`Orders (${adminOrders.length-generatedCount})`],['generated',`Generated history (${generatedCount})`],['all','All records']].map(([value,label])=><button key={value} aria-pressed={filters.historyScope===value} onClick={()=>{setFilters({...emptyFilters,historyScope:value,includeArchived:value==='generated'});setParams({});}}>{label}</button>)}</div>}
+      {generatedCount>0 && <div className="admin-tabs order-record-tabs" role="group" aria-label="Order record source">{[['orders',`Orders (${adminOrders.length-generatedCount})`],['generated',`Generated history (${generatedCount})`],['all','All records']].map(([value,label])=><button key={value} aria-pressed={filters.historyScope===value} onClick={()=>{setFilters({...emptyFilters,historyScope:value,includeArchived:value==='generated',queue:value==='orders'?'open':'all'});setParams({source:value,queue:value==='orders'?'open':'all'});}}>{label}</button>)}</div>}
       {filters.historyScope==='generated' && <p className="order-source-note">Generated daily sales summaries used by FreshCast. These are fictional history, separate from customer orders.</p>}
-      <div className="fyp-form inline" aria-label="Filter orders">
+      {!adminOrdersLoading && !adminOrdersError && !historyView && filters.historyScope==='orders' && <OwnerOrderShortcuts counts={queueCounts} value={filters.queue} onChange={queue=>{setFilters({...emptyFilters,queue});if(params.size)setParams({queue});}}/>}
+      <div className="owner-order-search"><label>{historyView?'Search history or menu':'Search order, customer or menu'}<input type="search" value={filters.search} placeholder="Order number or menu name" onChange={e=>setFilters({...filters,search:e.target.value})}/></label><button type="button" disabled={adminOrdersLoading} onClick={fetchAdminOrders}>{adminOrdersLoading?'Refreshing…':'Refresh'}</button></div>
+      <details className="owner-order-filters"><summary>More filters{(filters.status || filters.payment || filters.date || review || filters.overdue)?' · active':''}</summary><div className="fyp-form inline" aria-label="Filter orders">
         {!historyView && <label>Review records<select value={review} onChange={e=>changeReview(e.target.value)}><option value="">Order queue</option><option value="missing-delivery">Open orders missing delivery dates</option><option value="archived-menus" disabled={!catalogue}>Archived menus only</option></select></label>}
-        <label>{historyView?'Search history or menu':'Search order, customer or menu'}<input type="search" value={filters.search} onChange={e=>setFilters({...filters,search:e.target.value})}/></label>
-        {!historyView && <><label>Order status<select value={filters.status} onChange={e=>setFilters({...filters,status:e.target.value})}><option value="">All statuses</option>{['pending','processing','cooked','shipped','delivered','cancelled'].map(s=><option key={s} value={s}>{orderStatusLabel(s)}</option>)}</select></label>
+        {!historyView && <><label>Order status<select value={filters.status} onChange={e=>setFilters({...filters,status:e.target.value,queue:['delivered','cancelled'].includes(e.target.value)?'all':filters.queue})}><option value="">All statuses</option>{['pending','processing','cooked','shipped','delivered','cancelled'].map(s=><option key={s} value={s}>{orderStatusLabel(s)}</option>)}</select></label>
         <label>Payment<select value={filters.payment} onChange={e=>setFilters({...filters,payment:e.target.value})}><option value="">All payments</option>{['unpaid','paid','refunded'].map(s=><option key={s} value={s}>{s}</option>)}</select></label></>}
         <label>{historyView?'Sales date (Malaysia)':'Delivery date (Malaysia)'}<input type="date" value={filters.date} onChange={e=>setFilters({...filters,date:e.target.value})}/></label>
         <label>Sort by<select value={filters.sort} onChange={e=>setFilters({...filters,sort:e.target.value})}><option value="newest">{historyView?'Newest record':'Newest order'}</option><option value="delivery">{historyView?'Earliest sales date':'Earliest delivery'}</option></select></label>
       </div>
-      <div className="admin-toolbar">{!historyView && <label className="owner-overdue-filter"><input type="checkbox" checked={filters.overdue} onChange={e=>setFilters({...filters,overdue:e.target.checked})}/> Overdue deliveries only</label>}<button onClick={clearFilters}>Clear filters</button><button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Refresh {historyView?'history':'orders'}</button></div>
+      <div className="admin-toolbar">{!historyView && <label className="owner-overdue-filter"><input type="checkbox" checked={filters.overdue} onChange={e=>setFilters({...filters,overdue:e.target.checked})}/> Overdue deliveries only</label>}<button onClick={clearFilters}>Clear filters</button></div>
       {!historyView && (archivedHistoryCount>0 || !catalogue) && <div className="order-history-scope"><label className="owner-overdue-filter"><input type="checkbox" checked={filters.includeArchived || review==='archived-menus'} disabled={review==='archived-menus' || !catalogue} onChange={e=>setFilters({...filters,includeArchived:e.target.checked})}/> Include completed or cancelled archived-menu history</label>
         <p>{catalogue ? `${archivedHistoryCount} archived-menu history records available. Open requests stay visible.` : catalogueError ? 'Menu status is unavailable; archived history has not been filtered.' : 'Checking menu status…'}</p>
         {catalogueError && <p role="alert">Menu status could not be loaded: {catalogueError} <button type="button" onClick={retryCatalogue}>Retry menu status</button></p>}
       </div>}
+      </details>
       {!adminOrdersLoading && !adminOrdersError && <p className="order-results-summary" role="status">{visibleOrders.length} {resultKind}{visibleOrders.length===1?'':'s'} shown{filters.historyScope==='orders' && generatedCount>0?` · ${generatedCount} generated history records in a separate view`:''}{!historyView && adminOrders.some(o=>overdueOrder(o,now))?` · ${adminOrders.filter(o=>overdueOrder(o,now)).length} overdue deliveries`:''}</p>}
 
       {adminOrdersError && <p role="alert">{adminOrdersError} <button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Retry loading orders</button></p>}
       {adminOrdersLoading && <p role="status">Loading orders…</p>}
-      {adminOrdersError ? null : adminOrders.length > 0 ? (
+      {adminOrdersError || adminOrdersLoading ? null : adminOrders.length > 0 ? (
         <>
-          {!visibleOrders.length && <p>No records match these filters. Adjust the filters or choose another record view.</p>}
+          {!visibleOrders.length && <div className="admin-empty"><h2>{filters.queue==='open' && !filters.search && !review?'No open orders to show':'No records match these filters'}</h2><p>Completed and cancelled orders remain available in All orders.</p><button type="button" onClick={()=>{setFilters({...emptyFilters,queue:'all'});if(params.size)setParams({queue:'all'});}}>View all orders</button></div>}
           {visibleOrders.map(order => closedGeneratedHistory(order) ? <GeneratedHistoryCard key={order.id} order={order} reference={formatOrderNumber(order.id)}/> : (
-            <div key={order.id} className="order-card">
+            <article key={order.id} className="order-card" aria-label={"Order "+formatOrderNumber(order.id)}>
 
               {/* HEADER */}
               <div className="order-header">
@@ -129,8 +144,9 @@ export default function AdminOrdersPage() {
 
               {/* FOOTER */}
               <div className="order-footer owner-order-footer"><div className="owner-order-actions">
+                {['pending','processing'].includes(order.status) && <Link className="owner-workspace-link" to={'/admin/planner?view=orders&order='+order.id}>{order.preparation_plan?.needs_review?'Review preparation':'Open preparation plan'}</Link>}
                 <button className="edit-btn" onClick={() => startEdit(order)}>
-                  Edit order
+                  Update status
                 </button>
                 {review==='missing-delivery' && order.status==='pending' && !order.inventory_deducted && <button onClick={()=>startEdit(order,'cancelled')}>Review closing request</button>}
                 <button onClick={()=>setPaymentOrder(paymentOrder?.id===order.id?null:order)}>Payment records</button>
@@ -144,7 +160,7 @@ export default function AdminOrdersPage() {
               <AcceptedRecipe order={order}/>
               <RescheduleOrder order={order} onSaved={fetchAdminOrders}/>
 
-            </div>
+            </article>
           ))}
 
           {editingOrder && (
@@ -174,7 +190,7 @@ export default function AdminOrdersPage() {
                   </p> : <p>No delivery address recorded for this order. Confirm the address with the customer before dispatch.</p>}
                 </div>
 
-                {editingOrder.preparation_plan?.needs_review && <p className="owner-order-note"><Link to="/admin/planner">Open Planner</Link>. Set and confirm preparation times in Planner first. You can then move the order to Processing when work starts.</p>}
+                {editingOrder.preparation_plan?.needs_review && <p className="owner-order-note"><Link to={'/admin/planner?view=orders&order='+editingOrder.id}>Open this order in Planner</Link>. Confirm its preparation plan before starting or marking food ready. Recording preparation started is optional.</p>}
                 <section aria-label="Delivery time">
                   <h3>Delivery time</h3>
                   <p>{editingOrder.delivery_at ? new Date(editingOrder.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'No delivery time recorded'} · Malaysia time</p>
@@ -212,6 +228,6 @@ export default function AdminOrdersPage() {
       ) : (
         !adminOrdersLoading && <p className="orders-empty">You have no orders yet.</p>
       )}
-    </div>
+    </main>
   );
 }
