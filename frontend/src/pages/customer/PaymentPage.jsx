@@ -1,4 +1,5 @@
 import PayPalPage from "./PayPalPage";
+import {demoAddressId} from "../../utils/checkoutPresentation";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useUI } from "../../contexts/UIContext";
@@ -14,7 +15,7 @@ export default function PaymentPage(){
 
 function DemoWalletPage() {
     const { setAlert } = useUI();
-    const { cart, cartLoading, cartError, refreshCart, finalTotal, wallet, walletLoading, walletError, refreshWallet, createWallet, topupWallet } = useCart();
+    const { cart, cartLoading, cartError, cartUpdating, pricingReady, pricingError, refreshPricing, refreshCart, finalTotal, wallet, walletLoading, walletError, refreshWallet, createWallet, topupWallet } = useCart();
     const { placeOrder } = useOrder();
 
     const { method } = useParams();
@@ -24,7 +25,7 @@ function DemoWalletPage() {
     const walletOperation=useRef(false);
     const [paymentError,setPaymentError]=useState("");
     const location = useLocation();
-    const addressId = location.state?.addressId || Number(localStorage.getItem("addressId"));
+    const addressId = demoAddressId(location.state?.addressId);
 
     const navigate = useNavigate();
 
@@ -36,7 +37,7 @@ function DemoWalletPage() {
     }, [addressId, method, setAlert, navigate])
 
     const handlePay = async () => {
-        if(paying)return;
+        if(paying || cartLoading || cartUpdating || cartError || !pricingReady || !cart.length || walletError || !wallet || Number(wallet.balance)<finalTotal)return;
         setPaymentError("");
         setPaying(true);
         try {
@@ -83,7 +84,7 @@ function DemoWalletPage() {
                 <p className="payment-sub">These credits are for demonstration and have no monetary value.</p>
                 <details><summary>If preparation needs review</summary><p>The kitchen receives an unpaid request with cash on delivery. No demo credits are deducted.</p></details>
 
-                <div className="payment-summary">
+                {!cartLoading && !cartError && pricingReady && cart.length>0 && <div className="payment-summary">
                 <p><strong>Total:</strong> {finalTotal.toFixed(2)} demo credits</p>
 
                 {wallet && (
@@ -91,9 +92,9 @@ function DemoWalletPage() {
                     <strong>Your Balance:</strong> {Number(wallet.balance).toFixed(2)} demo credits
                     </p>
                 )}
-                </div>
+                </div>}
 
-                {cartLoading || walletLoading ? (
+                {cartLoading || cartUpdating || walletLoading ? (
                 <p className="loading-text" role="status">Loading your basket and wallet…</p>
                 ) : cartError ? (
                 <div role="alert"><p>{cartError}</p><button className="secondary-btn" onClick={refreshCart}>Retry basket</button></div>
@@ -101,6 +102,8 @@ function DemoWalletPage() {
                 <p>Your basket is empty. <Link to="/menu">Browse the menu</Link></p>
                 ) : walletError ? (
                 <div role="alert"><p>{walletError}</p><button className="secondary-btn" onClick={refreshWallet}>Retry wallet</button></div>
+                ) : !pricingReady ? (
+                <div role={pricingError?'alert':'status'}><p>{pricingError?'Kitchen pricing could not be loaded.':'Loading kitchen pricing…'}</p>{pricingError && <button onClick={refreshPricing}>Retry pricing</button>}</div>
                 ) : !wallet ? (
                 <button className="primary-btn" disabled={walletBusy} onClick={()=>changeWallet(createWallet)}>
                     {walletBusy?'Creating…':'Create demo wallet'}

@@ -230,12 +230,61 @@ Recovery was also checked through Vite's development StrictMode runtime.
 Authentication APIs, account isolation, scheduling, payment and forecast rules
 are unchanged. This batch does not retrain or evaluate forecasting models.
 
+## Batch 6 — Basket, checkout and payment recovery
+
+- Basket edits share a pending-operation guard. Quantity, removal and checkout
+  controls wait for the authoritative basket refresh; overlapping reads are
+  cancelled. Failed or malformed basket reads show a retry rather than cached
+  checkout actions or a false empty-basket message. Uncertain additions direct
+  the customer to check their basket before repeating an addition.
+- Discounts use integer cents and the same half-even rounding as the server.
+  A RM 10.05 basket with a 10% discount now previews RM 1.00 off, matching the
+  accepted order. Delivery still uses the existing pre-discount RM 50 threshold.
+  Missing/invalid kitchen pricing blocks checkout with a retry action instead
+  of showing an assumed discount or payable total.
+- Delivery-address reads, edits and saves have separate states. A failed read
+  cannot become a blank saved address. Save failures preserve the draft and
+  receive keyboard focus; pending saves disable fields and cancellation. Saved
+  addresses have an explicit confirmation and an account-management link.
+- Checkout preserves the selected delivery choice, offers basket editing beside
+  the totals and focuses submission errors with a My orders recovery link.
+  Uncertain order retries retain the existing idempotency reference. Payment
+  choices are disabled during submission; unavailable PayPal configuration is
+  retryable and a selected unavailable method cannot be submitted.
+- A delivery request needing kitchen review replaces payment choices with
+  “Payment after kitchen confirmation.” It remains an unpaid request without
+  reserved cooking tasks. This exposes the server's existing behavior clearly;
+  it does not relax recipe, notice, capacity or scheduling rules.
+- The mobile purchase bar has a shorter PayPal action. The custom date/time
+  control stays within the checkout grid at 320 pixels. PayPal status pages have
+  a primary My orders action; Sandbox labels and payment-verification rules are
+  retained. Demo-wallet totals also wait for valid basket/pricing data, and
+  navigation can use the address in router state when local storage is blocked.
+
+Verification: checkout/pricing utility and rendering regressions, existing
+frontend utility, UX and PayPal tests, changed-source ESLint and a production
+build. Chromium journeys use isolated fictional SQLite records for basket
+changes, failed-read recovery, address save/recovery, a scheduled COD order and
+an unconfirmed delivery request. The accepted COD total matches the preview,
+with no payment claimed. A simulated interrupted submission reuses its request
+reference on retry. No production records, emails or real payments are changed.
+PayPal paid/uncertain screen checks use explicit browser response fixtures;
+no external provider transaction is run by this batch.
+Thirty-one responsive accessibility checks cover basket, checkout, address forms,
+custom requests, payment recovery and demo-wallet screens at 1440, 768, 390 and
+320 pixels. No automated WCAG A/AA violations or document overflow were reported.
+Desktop and phone screenshots were inspected; the 320-pixel custom date/time
+grid overflow found during review was fixed before publication.
+
+A final cross-page consistency pass follows this batch. The entire site audit is
+not yet complete. Forecasting algorithms and model artifacts are unchanged;
+this batch does not retrain or evaluate models.
+
 ## Next batch
 
-**Basket, checkout and payments:** review delivery choices, totals, payment status,
-validation recovery and mobile purchase actions as one customer journey. A final
-cross-page consistency pass follows that review; the entire site audit is not yet
-complete.
+**Cross-page consistency:** check shared navigation, typography, mobile action
+bars, empty/error states and remaining differences between customer and owner
+screens after the completed page-specific batches.
 
 ## Verification and boundaries
 

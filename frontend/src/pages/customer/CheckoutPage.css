@@ -38,3 +38,23 @@
  .checkout-submit-dock>.checkout-submit{font-size:12px;flex:1;width:auto;min-height:48px;margin:0;padding:12px}
  .checkout-container .checkout-title{font-size:36px}
 }
+.checkout-fields,.checkout-payment-methods{border:0;margin:0;padding:0;min-width:0}
+.checkout-payment-methods>legend{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.checkout-section.checkout-address .checkout-section-heading{flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:18px}
+.checkout-address .checkout-section-heading button{font-size:13px;margin-left:auto}
+.checkout-address .checkout-error{margin:0 0 20px;font-size:14px;line-height:1.65}
+.checkout-address .checkout-error p{margin:0 0 12px}
+.checkout-address .saved-address{font-size:14px;line-height:1.65}
+.checkout-address .saved-address .checkout-back{margin-top:10px}
+.checkout-payment-deferred{padding:18px;border:1px solid #b9cdae;border-radius:10px;background:#eff5e9;color:#315139;font-size:14px;line-height:1.65}
+.checkout-payment-deferred strong{display:block;font-size:16px}
+.checkout-payment-deferred p{margin:10px 0 0}
+.checkout-summary>.checkout-hint{margin:12px 0 18px}
+.checkout-summary>.checkout-hint a,.checkout-error a{color:#285a3e;text-underline-offset:4px}
+.checkout-submit-dock>.checkout-submit{line-height:1.5}
+@media(max-width:480px){.checkout-container .checkout-address{padding:20px}.checkout-address .checkout-section-heading h2{font-size:18px}.checkout-address .checkout-actions button{min-width:0}.checkout-submit-dock>.checkout-submit{font-size:13px}}
+
+/* Native date/time controls must not widen a narrow checkout grid. */
+.checkout-main,.checkout-form{grid-template-columns:minmax(0,1fr)}
+.checkout-form>section{min-width:0}
+.checkout-container .delivery-custom-request input{max-width:100%;box-sizing:border-box}

@@ -7,14 +7,14 @@ import {useUI} from '../contexts/UIContext';
 import './CustomerOrdering.css';
 
 export default function ProductOrderPanel({product}) {
- const {cart,cartLoading,addToCart}=useCart();
+ const {cart,cartLoading,cartUpdating,cartError,addToCart}=useCart();
  const {isAuthenticated}=useAuth();const {formatPrice}=useUI();
  const [quantity,setQuantity]=useState(1),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const pending=useRef(false);
  const existing=cart.find(row=>row.product.id===product.id)?.quantity || 0;
  const maximum=Math.max(0,10000-existing),chosen=Math.min(quantity,Math.max(1,maximum));
  const available=product.selling_status==='active';
- const disabled=!available || maximum===0 || busy || isAuthenticated===null || isAuthenticated && cartLoading;
+ const disabled=!available || maximum===0 || busy || isAuthenticated===null || isAuthenticated && (cartLoading || cartUpdating || cartError);
  const add=async event=>{
   event.preventDefault();if(disabled || pending.current)return;
   pending.current=true;setBusy(true);setMessage('');

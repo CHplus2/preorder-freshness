@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import {createElement as h} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {MemoryRouter} from 'react-router-dom';
+import {createServer} from 'vite';
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+try{
+ const {default:CartPage}=await server.ssrLoadModule('/src/pages/customer/CartPage.jsx');
+ const {default:CheckoutAddress}=await server.ssrLoadModule('/src/components/CheckoutAddress.jsx');
+ const {default:PaymentOptions}=await server.ssrLoadModule('/src/components/PaymentOptions.jsx');
+ const {CartContext}=await server.ssrLoadModule('/src/contexts/CartContext.js');
+ const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
+ const {StoreContext}=await server.ssrLoadModule('/src/contexts/StorefrontContext.js');
+ const row={id:1,quantity:1,product:{id:2,name:'Meal',price:'10.05',selling_status:'active',delivery_weekdays:[]}};
+ const base={cart:[row],cartLoading:false,cartUpdating:false,cartError:'',pricingReady:true,pricingError:'',total:10.05,discount:1,SHIPPING_FEE:5,finalTotal:14.05};
+ const cart=patch=>renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store:{name:'Kitchen'}}},h(UIContext.Provider,{value:{formatPrice:value=>'RM '+Number(value).toFixed(2)}},h(CartContext.Provider,{value:{...base,...patch}},h(CartPage))))));
+ const failed=cart({cartError:'Read failed'});assert.match(failed,/Retry basket/);assert.doesNotMatch(failed,/Continue to checkout|Order summary|Your choices|Your basket is empty/);
+ const updating=cart({cartUpdating:true});assert.match(updating,/Updating basket and totals/);assert.match(updating,/<button[^>]*disabled[^>]*>Continue to checkout/);
+ const pricing=cart({pricingReady:false,pricingError:'Pricing unavailable'});assert.match(pricing,/Retry pricing/);assert.doesNotMatch(pricing,/RM 14.05|Bulk discount/);
+ assert.match(cart({cart:[]}),/Your basket is empty/);assert.match(cart({}),/RM 14.05/);
+ const address=patch=>renderToStaticMarkup(h(MemoryRouter,null,h(CheckoutAddress,{value:{address:null,draft:{country:'Malaysia'},editing:false,addressLoading:false,saving:false,error:'',...patch}})));
+ const addressError=address({error:'Invalid response'});assert.match(addressError,/Retry saved address/);assert.doesNotMatch(addressError,/Save delivery address|Add delivery address/);
+ const saving=address({editing:true,saving:true});assert.match(saving,/<fieldset[^>]*disabled/);assert.match(saving,/Saving…/);
+ const options=renderToStaticMarkup(h(MemoryRouter,null,h(PaymentOptions,{value:'cod',onChange:()=>{},disabled:true})));
+ assert.match(options,/<fieldset[^>]*disabled/);assert.match(options,/<legend>Payment method/);
+ console.log('Checkout UX: stale basket actions hidden, update/pricing guards, address read recovery and disabled payment groups passed.');
+}finally{await server.close();}

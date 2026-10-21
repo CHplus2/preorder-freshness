@@ -1,5 +1,5 @@
 import {CartContext} from './CartContext';
-import {responseList} from '../utils/apiResponse';
+import {basketRows,basketTotals,pricingConfigured} from '../utils/checkoutPresentation';
 import {apiError,readApiError} from '../utils/apiError';
 import { useEffect, useState, useCallback, useRef } from "react";
 import {mutationAttempt} from '../utils/checkoutStorage';
@@ -11,7 +11,9 @@ import axios from "axios";
 import { useStorefront } from "./StorefrontContext";
 
 export default function CartProvider({ children }) {
-  const { store: promotion } = useStorefront();
+  const { store: promotion,error:pricingError } = useStorefront();
+  const pricingReady=pricingConfigured(promotion) && !pricingError;
+  const refreshPricing=useCallback(()=>window.dispatchEvent(new Event('storefront-updated')),[]);
   const [wallet, setWallet] = useState(null);
   const [walletLoading, setWalletLoading] = useState(true);
   const [walletError, setWalletError] = useState('');
@@ -20,14 +22,11 @@ export default function CartProvider({ children }) {
 
   const [cart,setCart]=useState([]);
   const { isAuthenticated, accountKey, isSessionCurrent } = useAuth();
-  const topupPending=useRef(false);
+  const topupPending=useRef(false),cartRead=useRef(null),cartMutation=useRef(false);
+  const [cartUpdating,setCartUpdating]=useState(false);
   const { setAlert, setShowLogin } = useUI();
 
-  const total = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const SHIPPING_FEE = total >= 50 ? 0 : 5;
-  const portions = cart.reduce((n,i)=>n+i.quantity,0);
-  const discount = promotion && portions >= promotion.bulk_minimum ? Math.round(total * promotion.bulk_discount_percent) / 100 : 0;
-  const finalTotal = total - discount + SHIPPING_FEE;
+  const {total,discount,shipping:SHIPPING_FEE,finalTotal}=basketTotals(cart,promotion);
 
   const refreshCart = useCallback(async () => {
     if(!isSessionCurrent())return;
@@ -37,27 +36,27 @@ export default function CartProvider({ children }) {
       return;
     }
 
-    setCartLoading(true); setCartError('');
+    cartRead.current?.abort();
+    const controller=new AbortController();cartRead.current=controller;
+    setCartLoading(true);setCartError('');
     try {
-      const res = await axios.get("/api/cart/", { withCredentials: true, timeout:30000 });
-      const data = res.data;
+      const {data}=await axios.get('/api/cart/',{withCredentials:true,timeout:30000,signal:controller.signal});
+      const rows=basketRows(data);
+      if(!controller.signal.aborted && isSessionCurrent()){setCart(rows);return true;}
+    }catch(error){if(!controller.signal.aborted && isSessionCurrent())setCartError(readApiError(error,'Your basket could not be loaded.'));}
+    finally{if(!controller.signal.aborted && isSessionCurrent())setCartLoading(false);}
+    return false;
+  },[isAuthenticated,isSessionCurrent]);
 
-      if(isSessionCurrent())setCart(responseList(data));
-
-    } catch (err) {
-      if(!isSessionCurrent())return;
-      setCartError(apiError(err));
-      setAlert({message:apiError(err),type:"error"});
-      console.error("refreshCart:", err.response?.data || err.message);
-    } finally {
-      if(isSessionCurrent())setCartLoading(false);
-    }
-  }, [isAuthenticated, isSessionCurrent, setAlert]);
+  useEffect(()=>{
+    let active=true;
+    queueMicrotask(()=>{if(active && isAuthenticated!==null)refreshCart();});
+    return()=>{active=false;cartRead.current?.abort();};
+  },[isAuthenticated,refreshCart]);
 
   useEffect(() => {
     if(!isAuthenticated)return;
     const controller=new AbortController();
-    axios.get('/api/cart/',{withCredentials:true,signal:controller.signal}).then(({data})=>{setCart(responseList(data));setCartError('');}).catch(err=>{if(!axios.isCancel(err))setCartError(apiError(err));}).finally(()=>{if(!controller.signal.aborted)setCartLoading(false);});
     axios.get('/api/wallet/',{withCredentials:true,signal:controller.signal,timeout:30000}).then(({data})=>{setWallet(walletData(data));setWalletError('');}).catch(err=>{if(!axios.isCancel(err)){if(err.response?.status===404){setWallet(null);setWalletError('');}else setWalletError(readApiError(err,'Could not load your wallet.'));}}).finally(()=>{if(!controller.signal.aborted)setWalletLoading(false);});
     return()=>controller.abort();
   }, [isAuthenticated]);
@@ -122,72 +121,54 @@ export default function CartProvider({ children }) {
   const addToCart = async (productId, quantity = 1) => {
     if(!isSessionCurrent())return false;
     if (isAuthenticated) {
+      if(cartMutation.current || cartLoading || cartError)return false;
+      cartMutation.current=true;setCartUpdating(true);
       try {
-        await axios.post("/api/cart/",
-          { product_id: productId, quantity },
-          {
-            withCredentials: true,
-            headers: { "X-CSRFToken": getCookie("csrftoken") }
-          }
-        );
-
+        await axios.post('/api/cart/', {product_id:productId,quantity}, {
+          withCredentials:true,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}
+        });
         if(!isSessionCurrent())return false;
-        setAlert({ message: "Item added to cart", type: "success" });
-        refreshCart();
+        setAlert({message:'Item added to cart',type:'success'});
+        await refreshCart();
         return true;
-
-      } catch (err) {
+      }catch(error){
         if(!isSessionCurrent())return false;
-        const detail = err.response?.data?.detail;
-        setAlert({ message: typeof detail === 'string' && detail.includes('CSRF') ? 'Your session could not be verified. Refresh the page and sign in again.' : detail || 'Could not add this item. Check your connection and try again.', type: 'error' });
-        console.error("addToCart:", err.response?.data || err.message);
-      }
+        const uncertain=!error.response || error.response.status>=500;
+        setAlert({type:'error',message:uncertain?'The basket addition could not be confirmed. Check your basket before trying again.':apiError(error,'Could not add this item.')});
+        if(uncertain)await refreshCart();
+      }finally{cartMutation.current=false;if(isSessionCurrent())setCartUpdating(false);}
     } else{
       setShowLogin(true);
     }
     return false;
   };
 
-  const removeFromCart = async (cartItemId) => {
-    if(!isSessionCurrent())return;
-    try {
-      await axios.delete(`/api/cart/${cartItemId}/`, {
-        withCredentials: true,
-        headers: { "X-CSRFToken": getCookie("csrftoken") },
-      })
-
-      if(isSessionCurrent())refreshCart();
-    } catch (err) {
-      if(!isSessionCurrent())return;
-      setAlert({ message: apiError(err, "Failed to remove item from cart"), type: "error" });
-      console.error("removeFromCart:", err.response?.data || err.message);
-    }
+  const changeCart=async(cartItemId,quantity)=>{
+    if(cartMutation.current || !isSessionCurrent() || cartError || cartLoading)return false;
+    cartMutation.current=true;setCartUpdating(true);
+    try{
+      const headers={'X-CSRFToken':getCookie('csrftoken')};
+      if(quantity===0)await axios.delete(`/api/cart/${cartItemId}/`,{withCredentials:true,timeout:30000,headers});
+      else await axios.patch(`/api/cart/${cartItemId}/`,{quantity},{withCredentials:true,timeout:30000,headers});
+      if(!isSessionCurrent())return false;
+      await refreshCart();return true;
+    }catch(error){
+      if(isSessionCurrent()){
+        setAlert({type:'error',message:!error.response || error.response.status>=500?'The basket change could not be confirmed. Refresh your basket before trying again.':apiError(error)});
+        await refreshCart();
+      }
+      return false;
+    }finally{cartMutation.current=false;if(isSessionCurrent())setCartUpdating(false);}
   };
-
-  const updateQuantity = async (cartItemId, quantity) => {
-    if(!isSessionCurrent())return;
-    if (quantity <= 0) return removeFromCart(cartItemId);
-
-    try {
-      await axios.patch(`/api/cart/${cartItemId}/`, { quantity }, {
-        withCredentials: true,
-        headers: { "X-CSRFToken": getCookie("csrftoken") }
-      });
-
-      if(isSessionCurrent())refreshCart();
-    } catch (err) {
-      if(!isSessionCurrent())return;
-      setAlert({ message: apiError(err, "Failed to update cart item quantity"), type: "error" });
-      console.error("updateQuantity:", err.response?.data || err.message);
-    }
-  };
+  const removeFromCart=id=>changeCart(id,0);
+  const updateQuantity=(id,quantity)=>changeCart(id,Math.max(0,quantity));
 
   return (
     <CartContext.Provider
       value={{
-        discount, promotion,
+        discount, promotion, pricingReady, pricingError, refreshPricing,
         cart,
-        cartLoading, cartError,
+        cartLoading, cartError, cartUpdating,
         total,
         finalTotal,
         SHIPPING_FEE,

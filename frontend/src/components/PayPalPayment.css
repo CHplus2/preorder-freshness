@@ -22,3 +22,5 @@
 .paypal-payment .paypal-test-note{font-size:13px;color:#586d7c;margin:10px 0 20px}
 .paypal-payment .paypal-reference{display:grid;gap:8px;margin-top:20px}
 .paypal-payment .paypal-reference code{display:block;width:fit-content;max-width:100%;padding:8px 11px;border:1px solid #dce4e8;border-radius:6px;background:#f1f5f7;color:#2d4655;font-size:13px;overflow-wrap:anywhere}
+.paypal-page-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.paypal-page-actions .dk-primary{font-size:14px;min-height:44px;padding:10px 16px;text-decoration:none}

@@ -9,11 +9,11 @@ import {useUI} from '../contexts/UIContext';
 
 export default function MenuFoodCard({product:p}){
  const [busy,setBusy]=useState(false),[imageFailed,setImageFailed]=useState(false);
- const {cart,cartLoading,addToCart,updateQuantity}=useCart();
+ const {cart,cartLoading,cartUpdating,cartError,addToCart,updateQuantity}=useCart();
  const {isAuthenticated}=useAuth();
  const {formatPrice}=useUI();
  const item=cart.find(row=>row.product.id===p.id);
- const disabled=busy || isAuthenticated===null || (isAuthenticated && cartLoading);
+ const disabled=busy || isAuthenticated===null || (isAuthenticated && (cartLoading || cartUpdating || cartError));
  const change=async action=>{if(disabled)return;setBusy(true);try{await action();}finally{setBusy(false);}};
  return <article className="menu-food-card" aria-labelledby={`menu-food-${p.id}`}>
   <Link to={`/products/${p.id}`} className="menu-food-link" aria-label={`View ${p.name}`}>
