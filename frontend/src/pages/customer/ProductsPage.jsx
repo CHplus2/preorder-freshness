@@ -48,7 +48,7 @@ export default function ProductsPage() {
       <MenuKitchenHeader store={store}/>
       <section id="menu-browse" className="menu-toolbar" aria-label="Browse the menu">
         <div className="menu-search"><Search size={19} aria-hidden="true"/><input ref={searchInput} type="search" aria-label="Search the menu" placeholder="Find your next favourite…" value={searchTerm} onChange={e=>changeFilters(e.target.value,selectedCategory)}/>{searchTerm && <button type="button" aria-label="Clear menu search" onClick={()=>{changeFilters('',selectedCategory);searchInput.current?.focus();}}><X size={17}/></button>}</div>
-        <button type="button" className="menu-date-shortcut" onClick={openMenuFinder}><CalendarDays size={17} aria-hidden="true"/>Find by delivery date</button>
+        <button type="button" className="menu-date-shortcut" onClick={openMenuFinder}><CalendarDays size={17} aria-hidden="true"/>Suggestions for a date</button>
         <div className="menu-category-tabs" role="group" aria-label="Menu categories"><button type="button" aria-pressed={selectedCategory===''} onClick={()=>changeFilters(searchTerm,'')}>All food</button>{(Array.isArray(categories)?categories:[]).map(c=><button type="button" key={c.id} aria-pressed={String(selectedCategory)===String(c.id)} onClick={()=>changeFilters(searchTerm,String(c.id))}>{c.name}</button>)}</div>
       </section>
 

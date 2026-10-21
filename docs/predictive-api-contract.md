@@ -544,15 +544,33 @@ planning, and forecast quantities must not be blindly added to them.
 
 ## Planner handoff: existing kitchen endpoints
 
-The existing staff endpoint `POST /api/admin/orders/<id>/preparation-plan/`
-previews a pending order using accepted settings by default;
-`adopt_current: true` explicitly selects current recipe/preparation settings.
-It returns `preview` and a signed, owner/order-bound `confirm` token valid for
-ten minutes. Confirmation repeats the adoption choice and sends the token.
-It returns `order` and `already_applied`; repeating an applied confirmation
-returns the current order without writing another amendment or reservation.
-New availability/term changes require a fresh preview. This does not change
-payment or delivery time and does not accept a forecast as an order.
+The staff endpoint `POST /api/admin/orders/<id>/preparation-plan/` previews a
+pending, unstarted, undeducted, non-refunded order using accepted settings by
+default. `adopt_current: true` explicitly selects current recipe/preparation
+settings. Optional `delivery_at` proposes a delivery change, with a required
+`reason` documenting the agreed arrangement. Unchanged deliveries retain the
+original notice basis; changed deliveries require fresh menu notice. Optional
+`order_version` (the order's `updated_at`) rejects stale UI records with 409.
+
+`find_next: true` and optional `search_from` instead search at most seven days,
+checking hourly delivery times from 09:00 to 21:00 Malaysia time. The existing
+order is excluded from its own equipment reservations and daily menu quota.
+The shared scheduler enforces recipes, working hours, notice, preparation span,
+handling limits, closures and other bookings. Impossible menu quantities or
+weekday combinations stop early. No feasible time returns `{preview: null,
+search: {from_date, through_date, reason}}` without a confirmation or mutation.
+A found time returns the normal preview with search dates.
+
+Success returns `preview` (including delivery, start, end, tasks and any adopted
+recipes) and a signed owner/order-bound `confirm` token valid for ten minutes.
+Confirmation sends only that token; the server uses its accepted choices and
+rechecks order version and kitchen availability. Delivery and preparation are
+saved atomically, with an amendment visible in delivery history when the date
+changes. The UI requires the owner to acknowledge customer agreement for a new
+time. Repeating an applied token returns the current order with
+`already_applied: true`, without another amendment or reservation. This never
+changes payment, order totals, progress or inventory quantities. No forecast is
+accepted as an order. Planning reads use `Cache-Control: private, no-store`.
 
 The separate delivery-change endpoint can reserve a feasible replacement plan
 when its preview is confirmed. An infeasible unconfirmed request can instead

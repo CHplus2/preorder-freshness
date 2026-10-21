@@ -343,3 +343,25 @@ names and details are not pushed below an oversized photo.
 No production database records, scheduling rules, payment behavior, forecast
 models or API schemas are changed by this batch. Local verification does not
 establish production deployment readiness or replace user testing.
+
+
+## Delivery and preparation together — 21 October 2026
+
+Orders and Planner now share a delivery-and-preparation panel. Owners enter only
+the delivery date/time, or use a bounded next-available-time search, then review
+the computed start, finish and optional task breakdown. One confirmation saves
+the date and preparation reservation together. Changed dates require customer
+agreement in the confirmation panel. No automatic processing/payment/stock
+change is inferred. The customer rescheduling flow remains separate.
+
+The panel stays inline in Orders, including its status dialog, to remove the
+Orders → delivery change → Planner → calculation loop. Recipe adoption and
+manual timing remain advanced choices; accepted terms are the default. Stale
+order versions and changed availability require refresh/review rather than
+silently replacing another plan. The menu recommendation entry is now **Get
+suggestions for a date**, and explains that it returns up to three menus without
+changing catalogue filters.
+
+Validation: owner endpoint regressions cover atomic rescheduling, idempotency,
+search bounds, own-order exclusion, dates/notice, stale state and staff-only
+access. Desktop/mobile browser checks use an isolated fictional database.

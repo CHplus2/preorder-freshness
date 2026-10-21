@@ -9,7 +9,7 @@ import {useAuth} from '../contexts/AuthContext';
 
 const when = value => value ? new Date(value).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Not recorded';
 
-export default function RescheduleOrder({order, onSaved}) {
+export default function RescheduleOrder({order, onSaved, historyOnly=false}) {
   const {setAlert} = useUI();
   const {isAdmin} = useAuth() || {};
   const firstDate = Boolean(isAdmin && !order.delivery_at);
@@ -74,7 +74,7 @@ export default function RescheduleOrder({order, onSaved}) {
   };
   return <section className="delivery-change">
     <div className="delivery-change-actions">
-      {order.status === 'pending' && order.payment_status !== 'refunded' && <button type="button" aria-expanded={open === 'change'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('change')}>{firstDate?'Set delivery date':unconfirmedDeliveryRequest(order)?'Change requested time':'Change delivery time'}</button>}
+      {!historyOnly && order.status === 'pending' && order.payment_status !== 'refunded' && <button type="button" aria-expanded={open === 'change'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('change')}>{firstDate?'Set delivery date':unconfirmedDeliveryRequest(order)?'Change requested time':'Change delivery time'}</button>}
       <button type="button" className="delivery-history-toggle" aria-expanded={open === 'history'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('history')}>Delivery history</button>
     </div>
     {open && <div id={panelId} className="delivery-change-panel">

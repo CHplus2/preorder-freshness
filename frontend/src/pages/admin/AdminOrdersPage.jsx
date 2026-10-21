@@ -6,6 +6,7 @@ import DialogFeedback from '../../components/DialogFeedback';
 import PaymentRecords from '../../components/PaymentRecords';
 import AcceptedRecipe from '../../components/AcceptedRecipe';
 import RescheduleOrder from '../../components/RescheduleOrder';
+import PlanReview from '../../components/PlanReview';
 import ModalDialog from '../../components/ModalDialog';
 import { useEffect, useRef, useState } from "react";
 import { useUI } from "../../contexts/UIContext";
@@ -37,6 +38,7 @@ function OwnerOrders() {
   const [editingOrder, setEditingOrder] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const [paymentOrder, setPaymentOrder] = useState(null);
+  const [planningOrder, setPlanningOrder] = useState(null);
   const [saving, setSaving] = useState(false);
   const submitting = useRef(false);
   const { formatOrderNumber } = useUI();
@@ -129,9 +131,9 @@ function OwnerOrders() {
 
               <dl className="order-key-dates"><div><dt>Delivery</dt><dd>{orderDate(order.delivery_at)}</dd></div><div><dt>Preparation starts</dt><dd>{order.preparation_at?orderDate(order.preparation_at):'Needs a plan'}</dd></div></dl>
               {generatedSalesHistory(order) && <p className="owner-order-note">Demo data · Generated history record requiring review; not a customer transaction.</p>}
-              {review==='missing-delivery' && catalogue && <p className="owner-order-note">{orderMenuState(order,catalogue)==='unlinked'?'Some menu references are missing from the catalogue. An old name in an order is a historical snapshot; it does not prove the menu is still available.':orderMenuState(order,catalogue)==='archived'?'This request contains only archived menus. Review whether it is still needed.':orderMenuState(order,catalogue)==='mixed'?'This request mixes current and archived menus. Review the items before arranging a new date.':'Menu references are available. Use Set delivery date to review a future request.'}</p>}
+              {review==='missing-delivery' && catalogue && <p className="owner-order-note">{orderMenuState(order,catalogue)==='unlinked'?'Some menu references are missing from the catalogue. An old name in an order is a historical snapshot; it does not prove the menu is still available.':orderMenuState(order,catalogue)==='archived'?'This request contains only archived menus. Review whether it is still needed.':orderMenuState(order,catalogue)==='mixed'?'This request mixes current and archived menus. Review the items before arranging a new date.':'Menu references are available. Use Plan delivery & preparation to confirm a future time and cooking plan.'}</p>}
               {overdueOrder(order,now) && <p className="admin-follow-up"><strong>Delivery follow-up</strong><span>The requested time has passed. Confirm delivery with the customer, then update the order status.</span></p>}
-              {order.status==='pending' && order.preparation_plan?.needs_review && <div className="owner-order-note"><strong>Delivery time awaiting your confirmation</strong><p>Review the recipe, kitchen workload and handling limits. Contact the customer if another time is needed. Set and confirm preparation times in Planner before starting or marking this order ready.</p><details><summary>Automatic planning notes</summary><p>{order.preparation_plan.review_reason}</p></details></div>}
+              {order.status==='pending' && order.preparation_plan?.needs_review && <div className="owner-order-note"><strong>Delivery & preparation need confirmation</strong><p>Use Plan delivery & preparation below to find a workable time and confirm the cooking steps together.</p><details><summary>Automatic planning notes</summary><p>{order.preparation_plan.review_reason}</p></details></div>}
               {/* BODY */}
               <div className="order-body">
                 {order.items.map((item) => (
@@ -144,7 +146,8 @@ function OwnerOrders() {
 
               {/* FOOTER */}
               <div className="order-footer owner-order-footer"><div className="owner-order-actions">
-                {['pending','processing'].includes(order.status) && <Link className="owner-workspace-link" to={'/admin/planner?view=orders&order='+order.id}>{order.preparation_plan?.needs_review?'Review preparation':'Open preparation plan'}</Link>}
+                {order.status==='pending' && <button type="button" className="owner-workspace-link" aria-expanded={planningOrder===order.id} aria-controls={'order-planning-'+order.id} onClick={()=>setPlanningOrder(planningOrder===order.id?null:order.id)}>{planningOrder===order.id?'Close planning':order.preparation_at?'Update delivery & preparation':'Plan delivery & preparation'}</button>}
+                {order.status==='processing' && <Link className="owner-workspace-link" to={'/admin/planner?view=orders&order='+order.id}>View preparation plan</Link>}
                 <button className="edit-btn" onClick={() => startEdit(order)}>
                   Update status
                 </button>
@@ -158,7 +161,8 @@ function OwnerOrders() {
               {order.items.some(i=>i.recipe_source?.startsWith('legacy')) && <p className="owner-order-note">Review this older order’s recipe in Planner before preparation.</p>}
               {paymentOrder?.id===order.id && <PaymentRecords order={order} onSaved={fetchAdminOrders}/>}
               <AcceptedRecipe order={order}/>
-              <RescheduleOrder order={order} onSaved={fetchAdminOrders}/>
+              {planningOrder===order.id && <div id={'order-planning-'+order.id}><PlanReview key={order.id+'-'+order.updated_at} order={order} onSaved={fetchAdminOrders}/></div>}
+              <RescheduleOrder historyOnly order={order} onSaved={fetchAdminOrders}/>
 
             </article>
           ))}
@@ -190,14 +194,14 @@ function OwnerOrders() {
                   </p> : <p>No delivery address recorded for this order. Confirm the address with the customer before dispatch.</p>}
                 </div>
 
-                {editingOrder.preparation_plan?.needs_review && <p className="owner-order-note"><Link to={'/admin/planner?view=orders&order='+editingOrder.id}>Open this order in Planner</Link>. Confirm its preparation plan before starting or marking food ready. Recording preparation started is optional.</p>}
+                {editingOrder.preparation_plan?.needs_review && <p className="owner-order-note">Confirm delivery and preparation below before starting or marking food ready. Recording preparation started is optional.</p>}
                 <section aria-label="Delivery time">
                   <h3>Delivery time</h3>
                   <p>{editingOrder.delivery_at ? new Date(editingOrder.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'No delivery time recorded'} · Malaysia time</p>
-                  <RescheduleOrder key={editingOrder.id} order={editingOrder} onSaved={async () => {
+                  {editingOrder.status==='pending' && <PlanReview key={editingOrder.id+'-'+editingOrder.updated_at} order={editingOrder} onSaved={async () => {
                     setEditingOrder(null);
                     await fetchAdminOrders();
-                  }}/>
+                  }}/>}
                 </section>
                 {/* Status Select */}
                 <label htmlFor="status-select">Order Status:</label>

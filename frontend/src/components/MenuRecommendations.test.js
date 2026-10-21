@@ -10,9 +10,9 @@ try{
  const {default:Guide}=await server.ssrLoadModule('/src/components/GuidedMenu.jsx');
  const {AuthContext}=await server.ssrLoadModule('/src/contexts/AuthContext.js'),{CartContext}=await server.ssrLoadModule('/src/contexts/CartContext.js'),{UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js'),{ProductContext}=await server.ssrLoadModule('/src/contexts/ProductContext.js');
  const render=component=>renderToStaticMarkup(h(MemoryRouter,null,h(AuthContext.Provider,{value:{isAuthenticated:false}},h(CartContext.Provider,{value:{cart:[]}},h(ProductContext.Provider,{value:{categories:[]}},h(UIContext.Provider,{value:{formatPrice:value=>'RM '+Number(value).toFixed(2)}},component))))));
- const initial=render(h(Recommendations));assert.match(initial,/Recommended for you/);assert.match(initial,/Refine for my date/);assert.match(initial,/Finding a few suggestions/);assert.doesNotMatch(initial,/No suggestions are available/);
+ const initial=render(h(Recommendations));assert.match(initial,/Recommended for you/);assert.match(initial,/Get suggestions for a date/);assert.match(initial,/Finding a few suggestions/);assert.doesNotMatch(initial,/No suggestions are available/);
  const card=render(h(Card,{menu:{id:4,name:'Rice meal',image_url:'',reasons:['Popular recently']},priceLabel:'RM 12.00 each'},h('button',null,'Add 1')));assert.match(card,/Photo coming soon/);assert.match(card,/\/products\/4/);assert.match(card,/Popular recently/);assert.match(card,/RM 12.00 each/);
- const guide=render(h(Guide));assert.match(guide,/Find food for your date/);assert.match(guide,/Refine your recommendations/);assert.match(guide,/Find my options/);assert.doesNotMatch(guide,/class="guide-results"/);
+ const guide=render(h(Guide));assert.match(guide,/Menu suggestions for your date/);assert.match(guide,/Get up to three menu suggestions/);assert.match(guide,/Find my options/);assert.doesNotMatch(guide,/class="guide-results"/);
  const {default:Catalogue}=await server.ssrLoadModule('/src/components/MenuCatalogue.jsx');
  const menus=Array.from({length:12},(_,index)=>({id:index+1,name:`Browse meal ${index+1}`,price:12,lead_hours:24,daily_capacity:50,delivery_weekdays:[]}));
  const catalogue=render(h(Catalogue,{menus,recommendations:h('div',null,'SUPPORTING_SUGGESTIONS')}));

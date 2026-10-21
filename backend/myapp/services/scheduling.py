@@ -197,24 +197,25 @@ class AvailabilitySnapshot:
     product_ids: frozenset
     booked: dict
     busy: tuple
+    exclude_order_id: int | None = None
 
 
-def availability_snapshot(items, day, store):
+def availability_snapshot(items, day, store, exclude_order_id=None):
     """Request-local read snapshot for advisory hourly checks, never checkout."""
     items = list(items)
     ids = frozenset(item.product_id for item in items)
     first_ready = timezone.make_aware(datetime.combine(day, time(9)))-timedelta(minutes=store.delivery_buffer_minutes)
     last_ready = timezone.make_aware(datetime.combine(day, time(21)))-timedelta(minutes=store.delivery_buffer_minutes)
     horizon = first_ready-timedelta(days=max(item.product.max_preparation_days for item in items))
-    booked = dict(capacity_bookings(ids).filter(order__delivery_at__date=day)
+    booked = dict(capacity_bookings(ids).filter(order__delivery_at__date=day).exclude(order_id=exclude_order_id)
         .values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
     busy = [dict(start=a, end=b, resource='all', worker=True) for a,b in
         KitchenBlock.objects.filter(start_at__lt=last_ready, end_at__gt=horizon).values_list('start_at', 'end_at')]
     orders = Order.objects.filter(status__in=['pending','processing'], inventory_deducted=False,
-        preparation_at__lt=last_ready, delivery_at__gt=horizon).only(
+        preparation_at__lt=last_ready, delivery_at__gt=horizon).exclude(pk=exclude_order_id).only(
             'preparation_at','preparation_end_at','delivery_at','preparation_plan')
     busy.extend(booked_tasks(orders, store))
-    return AvailabilitySnapshot(day, ids, booked, tuple(busy))
+    return AvailabilitySnapshot(day, ids, booked, tuple(busy), exclude_order_id)
 
 
 def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, notice_from=None, allow_manual_review=False, availability=None, allow_request_exceptions=False):
@@ -227,7 +228,7 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
             if getattr(item.product, 'selling_status', 'active') != 'active':
                 raise ValidationError(f'{item.product.name} is not accepting new orders. Remove it from your basket before continuing.')
     local = timezone.localtime(delivery_at)
-    if availability is not None and (exclude_order_id is not None or availability.day != local.date()
+    if availability is not None and (availability.exclude_order_id != exclude_order_id or availability.day != local.date()
             or availability.product_ids != frozenset(i.product_id for i in items)):
         raise ValueError('Advisory availability snapshot does not match this basket and date.')
     for item in items:

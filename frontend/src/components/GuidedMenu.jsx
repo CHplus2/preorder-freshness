@@ -37,7 +37,7 @@ export default function GuidedMenu(){
   try{if(await addToCart(menu.id,menu.portions))void recommendationEvent(data.session,'added',menu.id);}
   finally{pending.current=false;setAdding(null);}
  };
- return <details id="menu-finder" className="dk-panel guided-menu" onToggle={event=>setExpanded(event.currentTarget.open)}><summary>Find food for your date</summary><p>Refine your recommendations by date, group size and budget. We’ll show up to three menus with kitchen times.</p>
+ return <details id="menu-finder" className="dk-panel guided-menu" onToggle={event=>setExpanded(event.currentTarget.open)}><summary>Menu suggestions for your date</summary><p>Get up to three menu suggestions for your delivery date, group size and budget. Your menu browsing filters stay unchanged.</p>
   <p id={helpId} className="guide-input-help">Choose a date within the next 90 days and 1–100 portions. The optional food budget is for all requested portions.</p>
   <form className="fyp-form inline" onSubmit={search} aria-describedby={helpId}>
    <label>Delivery date<input type="date" required min={bounds.first} max={bounds.last} disabled={adding!==null} value={form.date} onChange={event=>updateForm({...form,date:event.target.value})}/></label>

@@ -2,8 +2,8 @@
 
 The storefront provides two entry points to one explainable recommendation
 approach. A visible **Recommended for you** row offers up to three photo cards,
-prices, reasons and an Add 1 action. **Refine for my date** opens the existing date
-finder. That finder returns the same card layout with a requested portion total
+prices, reasons and an Add 1 action. **Get suggestions for a date** opens the existing date
+finder, labelled **Menu suggestions for your date**. It explicitly leaves catalogue filters unchanged. That finder returns the same card layout with a requested portion total
 and separate suggested delivery times for each menu.
 
 The layout follows the food-first direction of the supplied Swiggy/Talabat

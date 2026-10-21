@@ -15,6 +15,11 @@ class StepTimeInput(serializers.Serializer):
 class PlanReviewInput(serializers.Serializer):
     adopt_current = serializers.BooleanField(default=False)
     confirm = serializers.CharField(max_length=300000, required=False, trim_whitespace=False)
+    delivery_at = serializers.DateTimeField(required=False)
+    reason = serializers.CharField(max_length=300, required=False, trim_whitespace=True)
+    find_next = serializers.BooleanField(default=False)
+    search_from = serializers.DateField(required=False)
+    order_version = serializers.DateTimeField(required=False)
 
 
 class ManualPlanInput(serializers.Serializer):
@@ -178,6 +183,8 @@ def review_order_plan(request, pk):
     from ..services.scheduling import schedule_order, plan_snapshot
     from ..serializers import OrderSerializer
     from ..models import OrderAmendment
+    from django.utils import timezone
+    from ..services.order_plan_search import next_order_plan
     incoming = PlanReviewInput(data=request.data)
     incoming.is_valid(raise_exception=True)
     token = incoming.validated_data.get('confirm')
@@ -195,16 +202,24 @@ def review_order_plan(request, pk):
             raise serializers.ValidationError('This preview belongs to another order or owner. Calculate a new plan.')
         if order.amendments.filter(after__automatic_request_id=previous['request_id']).exists():
             return Response({'order': OrderSerializer(order).data, 'already_applied': True})
+        if 'delivery_at' not in previous:
+            raise serializers.ValidationError('Calculate a fresh plan with the updated delivery controls.')
     if order.status != 'pending' or order.inventory_deducted:
         raise serializers.ValidationError('Only orders that have not started preparation can be replanned.')
-    if not order.delivery_at:
-        raise serializers.ValidationError('This order has no delivery date. Resolve its delivery arrangement first.')
+    if order.payment_status == 'refunded':
+        raise serializers.ValidationError('A refunded order cannot be replanned.')
+    values = incoming.validated_data
+    version = serializers.DateTimeField().run_validation(previous['order_version']) if previous else values.get('order_version')
+    if version and version != order.updated_at:
+        return Response({'detail': 'This order changed. Refresh it before calculating another plan.'}, status=409)
     items = list(order.items.select_related('product'))
+    if not items:
+        raise serializers.ValidationError('This order has no menu items to plan.')
     if any(not item.product for item in items):
         raise serializers.ValidationError('An ordered menu was removed. Resolve its recipe before planning.')
     from ..services.commitments import scheduled_item, preparation_snapshot
     from ..models import OrderIngredient, Product
-    adopt_current = incoming.validated_data['adopt_current']
+    adopt_current = previous['adopt_current'] if previous else values['adopt_current']
     list(Product.objects.select_for_update().filter(pk__in=[i.product_id for i in items]).order_by('pk'))
     # Reload after locks so an editor and this approval cannot cross.
     items = list(order.items.select_related('product').prefetch_related('accepted_ingredients'))
@@ -212,8 +227,26 @@ def review_order_plan(request, pk):
     missing = [item.product.name for item in scheduled if not item.product.preparation_tasks]
     if missing:
         raise serializers.ValidationError('Add preparation steps in Menus first: '+', '.join(missing)+'.')
-    plan = schedule_order(scheduled, order.delivery_at, store, exclude_order_id=order.pk, notice_from=order.created_at)
+    now = timezone.now()
+    target = serializers.DateTimeField().run_validation(previous['delivery_at']) if previous else values.get('delivery_at', order.delivery_at)
+    if target is not None:
+        target = timezone.localtime(target)
+    reason = previous.get('reason', '') if previous else values.get('reason', '')
+    search = None
+    if not previous and values['find_next']:
+        target, plan, search = next_order_plan(scheduled, order, store, values.get('search_from'), now)
+        if target is None:
+            return Response({'search': search, 'preview': None})
+    else:
+        if target is None:
+            raise serializers.ValidationError('Choose an agreed delivery time or find the next available time below.')
+        plan = schedule_order(scheduled, target, store, now=now, exclude_order_id=order.pk,
+            notice_from=order.created_at if target == order.delivery_at else now)
+    delivery_changed = target != order.delivery_at
+    if delivery_changed and not reason:
+        raise serializers.ValidationError('Record the delivery arrangement agreed with the customer before reviewing a new time.')
     snapshot = dict(order=order.pk,start=plan['start'].isoformat(),end=plan['end'].isoformat(),plan=plan_snapshot(plan))
+    snapshot.update(delivery_at=timezone.localtime(target).isoformat(), reason=reason)
     if not adopt_current and order.preparation_plan.get('fictional_timing'):
         snapshot['plan']['fictional_timing'] = order.preparation_plan['fictional_timing']
     snapshot['adopt_current'] = adopt_current
@@ -230,7 +263,9 @@ def review_order_plan(request, pk):
     if previous is not None:
         if previous != snapshot:
             return Response({'detail':'Availability or menu timings changed. Preview again to review the updated plan.'},status=409)
-        before = {'plan': order.preparation_plan, 'items': [
+        before = {'delivery_at': order.delivery_at.isoformat() if order.delivery_at else None,
+            'preparation_at': order.preparation_at.isoformat() if order.preparation_at else None,
+            'plan': order.preparation_plan, 'items': [
             {'id': i.pk, 'recipe_source': i.recipe_source, 'preparation': i.preparation_snapshot,
              'packaging': str(i.packaging_unit_cost) if i.packaging_unit_cost is not None else None,
              'ingredients': [{'material': r.material_name, 'raw_material': r.raw_material_id,
@@ -246,12 +281,15 @@ def review_order_plan(request, pk):
                 item.recipe_source = 'owner_amended'
                 item.packaging_unit_cost = row['packaging']
                 item.save(update_fields=['preparation_snapshot', 'recipe_source', 'packaging_unit_cost'])
+        order.delivery_at=target
         order.preparation_at=plan['start'];order.preparation_end_at=plan['end'];order.preparation_plan=snapshot['plan']
-        order.save(update_fields=['preparation_at','preparation_end_at','preparation_plan','updated_at'])
+        order.save(update_fields=['delivery_at','preparation_at','preparation_end_at','preparation_plan','updated_at'])
+        if delivery_changed:
+            snapshot.update(kind='delivery_change', actor_role='owner')
         OrderAmendment.objects.create(order=order, actor=request.user, before=before,
             after=dict(snapshot, automatic_request_id=snapshot['request_id']))
         return Response({'order':OrderSerializer(order).data, 'already_applied': False})
-    return Response({'preview':snapshot,'confirm':signing.dumps(snapshot,salt='kitchen-plan-review',compress=True)})
+    return Response({'preview':snapshot,'confirm':signing.dumps(snapshot,salt='kitchen-plan-review',compress=True), 'search': search})
 
 
 @api_view(['GET'])

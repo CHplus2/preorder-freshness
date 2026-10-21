@@ -32,7 +32,7 @@ export default function ManualPlan({order,onSaved}){
    const first=mode==='steps'?(individual?Math.min(...stepStarts.map(v=>Date.parse(v+':00+08:00'))):Date.parse(shifted.start)):Date.parse(start+':00+08:00');
    const last=mode==='steps'?(individual?Math.max(...stepStarts.map((v,i)=>Date.parse(v+':00+08:00')+Date.parse(tasks[i].end)-Date.parse(tasks[i].start))):Date.parse(shifted.end)):Date.parse(end+':00+08:00');
    if(!Number.isFinite(first) || !Number.isFinite(last)){setError('Enter a complete date and time for preparation. All times are Malaysia time.');return;}
-   if(hasPassed(first)){setError('Preparation must start in the future. Use Calculate new plan above if this saved start has already passed.');return;}
+   if(hasPassed(first)){setError('Preparation must start in the future. Use Preview preparation plan above if this saved start has already passed.');return;}
    if(last<=first){setError('Preparation must finish after it starts.');return;}
    if(last>=Date.parse(order.delivery_at)){setError('This arrangement finishes at or after delivery. Choose an earlier start or agree a later delivery; time for delivery is also required.');return;}
   }
