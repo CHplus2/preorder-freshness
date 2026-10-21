@@ -29,3 +29,27 @@
 .menu-storefront .guide-results .menu-recommendation-times button{margin:0}
 @media(max-width:1000px){.menu-storefront .guide-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.menu-storefront .guide-results{grid-template-columns:minmax(0,1fr)}}
+
+/* Supporting suggestions follow the first two rows of the actual catalogue. */
+.menu-recommendations-inset{grid-column:1/-1;min-width:0}
+.menu-recommendations-inset .menu-recommendations{margin:4px 0;padding:20px 0;border-block:1px solid #dce3d6}
+.menu-recommendations-inset .menu-recommendations h2{font-size:21px;margin-bottom:7px}
+.menu-recommendation-card--compact .menu-recommendation-identity{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:12px;padding:14px 14px 0}
+.menu-recommendation-card--compact .menu-recommendation-photo{width:76px;height:76px;aspect-ratio:1;border-radius:8px}
+.menu-recommendation-card--compact .menu-recommendation-copy{min-width:0}
+.menu-recommendation-card--compact h3{font-size:14px;line-height:1.45;margin:0 0 7px}
+.menu-recommendation-card--compact .menu-recommendation-price{font:650 14px/1.5 system-ui,sans-serif;color:#294d35;margin:0}
+.menu-recommendation-card--compact .menu-recommendation-body{padding:12px 14px 14px;gap:10px}
+.menu-recommendation-card--compact .menu-recommendation-reasons{font-size:12px;margin:0}
+.menu-recommendation-card--compact .menu-recommendation-photo>span{font-size:0;padding:8px;gap:0}
+.menu-recommendations-inset .menu-recommendations-controls{margin-top:12px}
+.menu-recommendations-inset .menu-recommendations-kicker{display:none}
+@media(max-width:600px){.menu-recommendations-inset .menu-recommendations{padding:16px 0}.menu-recommendations-inset .menu-recommendations-heading{gap:12px}.menu-recommendations-inset .menu-recommendations h2{font-size:20px}.menu-recommendations-inset .menu-recommendations-note{font-size:12px}.menu-recommendation-card--compact .menu-recommendation-identity{grid-template-columns:64px minmax(0,1fr);gap:10px;padding:12px 12px 0}.menu-recommendation-card--compact .menu-recommendation-photo{width:64px;height:64px}.menu-recommendation-card--compact .menu-recommendation-body{padding:10px 12px 12px}}
+.menu-storefront .guided-menu .guide-input-help{font-size:12px;line-height:1.65;color:#566a50;margin-top:12px}
+.menu-storefront .guide-empty{padding:18px;border:1px solid #cbd8c4;border-radius:10px;background:#f4f7ef;margin:16px 0}
+.menu-storefront .guide-empty h3{font:600 16px/1.5 system-ui,sans-serif;color:#304e35;margin:0 0 8px}
+.menu-storefront .guide-empty p{font-size:13px;line-height:1.65;margin:0 0 14px;color:#4f6649}
+.menu-storefront .guide-empty button{min-height:44px;box-shadow:none;font-size:13px;margin:0}
+.menu-storefront .guide-request-summary{font-size:13px;line-height:1.7;padding-bottom:14px;border-bottom:1px solid #dce3d6;overflow-wrap:anywhere}
+.menu-storefront .guide-request-summary strong{font-weight:650}
+.menu-storefront .guide-error{background:#fff;border:1px solid #dfd6cf;border-left:3px solid #a45143;padding:14px;border-radius:6px;font-size:14px;line-height:1.6;color:#85382e}

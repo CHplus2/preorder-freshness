@@ -78,3 +78,26 @@ class MenuSuggestionTests(TestCase):
         self.assertEqual(data['basis'],'popularity')
         self.assertEqual(data['results'][0]['id'],self.menus[2].pk)
         self.assertEqual(RecommendationSession.objects.get(pk=data['session']).variant,'popularity')
+
+    def test_date_guide_distinguishes_empty_category_filters_and_kitchen_times(self):
+        from unittest.mock import patch
+        date=str(timezone.localdate()+timedelta(days=3))
+        bakes=Category.objects.create(name='Bakes')
+        unavailable=self.client.post('/api/menu/guide/',{'date':date,'portions':2,'category':bakes.pk},format='json')
+        self.assertEqual(unavailable.status_code,200)
+        self.assertEqual(unavailable.data['empty_reason'],'category_unavailable')
+        matches=self.client.post('/api/menu/guide/',{'date':date,'budget':'0.01'},format='json')
+        self.assertEqual(matches.data['empty_reason'],'no_menu_match')
+        with patch('myapp.views.discovery.slots',return_value=[]):
+            times=self.client.post('/api/menu/guide/',{'date':date},format='json')
+        self.assertEqual(times.data['empty_reason'],'no_kitchen_times')
+
+    def test_date_guide_rejects_invalid_ranges(self):
+        date=str(timezone.localdate()+timedelta(days=3))
+        bodies=[{'date':'bad'}, {'date':str(timezone.localdate()-timedelta(days=1))},
+                {'date':str(timezone.localdate()+timedelta(days=91))},
+                {'date':date,'portions':0}, {'date':date,'portions':101}, {'date':date,'portions':1.5},
+                {'date':date,'budget':'-1'}, {'date':date,'budget':'0.001'}, {'date':date,'budget':'100000000.00'}]
+        for body in bodies:
+            with self.subTest(body=body):
+                self.assertEqual(self.client.post('/api/menu/guide/',body,format='json').status_code,400)

@@ -9,9 +9,19 @@ and separate suggested delivery times for each menu.
 The layout follows the food-first direction of the supplied Swiggy/Talabat
 references: recognizable food photos, a small choice set, clear prices and
 reachable actions. The form is optional, following progressive disclosure.
-Desktop shows the three cards together. Phones use a horizontally scrolling row
-with previous/next controls and a visible next card. Date-specific results stack
-on phones so their prices, reasons and time choices remain readable.
+Search, category controls and the primary catalogue appear first. Supporting
+recommendations follow the first two complete menu rows: eight menus on desktop,
+six on tablet and four on phones, or the entire catalogue when it is smaller.
+They are hidden during active catalogue searches/category filtering so unrelated
+suggestions do not distract from those results. The underlying catalogue order
+and pagination are unchanged.
+
+Recommendation cards use 64–76 pixel thumbnails instead of large hero photos,
+with responsive image sizes matching those thumbnails. Quick suggestions show
+one reason, price and an Add action. Date-specific cards retain the fuller
+reasons and time choices. Desktop shows three supporting cards together. Phones
+use a horizontally scrolling row with previous/next controls and a visible next
+card. Date-specific results stack on phones for readable time choices.
 
 ## Recommendation behavior
 
@@ -44,10 +54,18 @@ bulk discounts and delivery fees. Allergen suitability is not inferred.
 | Endpoint | Access | Behavior |
 | --- | --- | --- |
 | `POST /api/menu/suggestions/` | Public, rate limited | Empty JSON input. Returns `{session, basis, results}`; basis is `history`, `popularity` or `menu`. Up to three rows contain `id`, `name`, `image_url`, `price` and `reasons`. No delivery slots are asserted. Creates a recommendation request record. |
-| `POST /api/menu/guide/` | Public, rate limited | Required date, portions 1–100, optional total food budget and category. Existing session/results/message contract; rows include portion totals and suggested slots. |
+| `POST /api/menu/guide/` | Public, rate limited | Required date within 90 days, portions 1–100, optional total food budget and category. Existing session/results/message contract; rows include portion totals and suggested slots. Optional `empty_reason`: `category_unavailable`, `no_menu_match` or `no_kitchen_times` (null on success). |
 | `POST /api/recommendation/events/` | Public, session bound | Existing impression/click/added events, allowed product identities and duplicate-event checks. |
 | `GET /api/admin/recommendation-metrics/` | Staff | Existing rolling engagement/outcome report. Both storefront surfaces contribute to its combined figures. |
 | `GET /api/recommendation/` | Signed-in customer | Existing legacy recommendation response remains available. |
+
+The finder shows a summary of the submitted date, portions, category and budget.
+Empty results explain whether the selected category has no eligible menus,
+preferences did not match, or no automatic kitchen times were found. **Search
+all categories** preserves the date, portions and budget and repeats the search.
+The form presents date/portion limits and native validation; valid preferences
+may still return the same menus when the same choices satisfy them. The system
+does not recategorise menus or silently ignore the customer's selected category.
 
 No database migration is required. Request context distinguishes `menu_cards`
 (`instant-menu-v1`) from `date_guide` (`date-guide-v1`). The existing experiment
@@ -82,3 +100,11 @@ response validation, shared card rendering and optional refinement. Isolated
 Chromium journeys exercise guest/history states, card adds, guided adds, request
 invalidation, closed-finder exposure, retry and genuine empty results at desktop,
 tablet and phone widths. No production records or provider payments are changed.
+
+The menu-first revision was checked with 30 backend tests, frontend utility/UX
+regressions and a production build. Ten responsive accessibility states cover
+menu ordering, the compact row, empty Bakes recovery and date results at 1440,
+768, 390 and 320 pixels. No automated WCAG A/AA violations, document overflow or
+page errors were reported. The browser check confirms that clearing the category
+preserves other inputs, active catalogue filters hide unrelated recommendations,
+and invalid date/portion/budget ranges do not send a request.

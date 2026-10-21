@@ -73,6 +73,7 @@ def guided_menu(request):
     products = Product.objects.filter(selling_status='active').select_related('category').prefetch_related('ingredients__raw_material').order_by('id')
     if data.get('category'):
         products = products.filter(category_id=data['category'])
+    category_available = not data.get('category') or products.filter(ingredients__isnull=False).exists()
     if data.get('budget'):
         products = products.filter(price__lte=data['budget']/data['portions'])
     # Both discovery surfaces use the same ranking; dates additionally constrain it.
@@ -99,6 +100,7 @@ def guided_menu(request):
             'version': 'date-guide-v1', 'surface': 'date_guide', 'experiment': settings.RECOMMENDATION_EXPERIMENT},
         products=[r['id'] for r in results])
     return Response({'session': str(session.pk), 'results': results,
+        'empty_reason': None if results else 'category_unavailable' if not category_available else 'no_kitchen_times' if candidates else 'no_menu_match',
         'checked_limit': 30, 'message': 'Hourly suggestions use kitchen capacity, not current stock. The owner may need to purchase ingredients. Food totals exclude discounts and delivery; checkout rechecks the whole basket.'})
 
 

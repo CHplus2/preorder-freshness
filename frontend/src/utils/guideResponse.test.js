@@ -4,7 +4,7 @@ const row={id:1,name:'Rice',portions:2,food_total:'24.00',reasons:['Within budge
 const response={session:'test-session',message:'Suggestions only',results:[row]};
 assert.equal(guideResponse(response),response);
 assert.deepEqual(guideResponse({...response,results:[]}).results,[]);
-for(const bad of [null,{}, {...response,results:null}, ...[
+for(const bad of [null,{}, {...response,results:null}, {...response,empty_reason:'invented'}, ...[
   {food_total:null},{food_total:''},{food_total:'invalid'},{portions:0},{reasons:[null]},
   {slots:[]},{slots:[{delivery_at:'invalid'}]}
 ].map(change=>({...response,results:[{...row,...change}]}))]) {

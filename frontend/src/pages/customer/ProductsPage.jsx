@@ -14,7 +14,7 @@ import {Search,X,CalendarDays} from 'lucide-react';
 import {useStorefront} from '../../contexts/StorefrontContext';
 import {Link} from 'react-router-dom';
 import BasketBar from '../../components/BasketBar';
-import MenuFoodCard from '../../components/MenuFoodCard';
+import MenuCatalogue from '../../components/MenuCatalogue';
 import "./ProductsPage.css";
 
 export default function ProductsPage() {
@@ -46,7 +46,6 @@ export default function ProductsPage() {
     <main className="products-page menu-storefront">
       <PageMeta title="The menu" description="Explore this kitchen’s current food menu, prices and preorder notice. Choose a favourite and schedule your delivery."/>
       <MenuKitchenHeader store={store}/>
-      <MenuRecommendations/>
       <section id="menu-browse" className="menu-toolbar" aria-label="Browse the menu">
         <div className="menu-search"><Search size={19} aria-hidden="true"/><input ref={searchInput} type="search" aria-label="Search the menu" placeholder="Find your next favourite…" value={searchTerm} onChange={e=>changeFilters(e.target.value,selectedCategory)}/>{searchTerm && <button type="button" aria-label="Clear menu search" onClick={()=>{changeFilters('',selectedCategory);searchInput.current?.focus();}}><X size={17}/></button>}</div>
         <button type="button" className="menu-date-shortcut" onClick={openMenuFinder}><CalendarDays size={17} aria-hidden="true"/>Find by delivery date</button>
@@ -58,7 +57,7 @@ export default function ProductsPage() {
       <div className="products-container" aria-busy={loading}>
         {loading && !filteredProducts.length && Array.from({length:6},(_,i)=><div className="menu-skeleton" aria-hidden="true" key={i}><div/><span/><span/></div>)}
         {filteredProducts.length > 0 ? (
-          filteredProducts.map(p=><MenuFoodCard key={p.id} product={p}/>)
+          <MenuCatalogue menus={filteredProducts} recommendations={!searchTerm && !selectedCategory?<MenuRecommendations/>:null}/>
         ) : !loading && !error ? (
           <div className="menu-empty-result"><h2>{searchTerm || selectedCategory?'No meals match these filters':'No menus available right now'}</h2><p>{searchTerm || selectedCategory?'Try another name or category.':'Check back soon or ask the kitchen about preorders.'}</p>{searchTerm || selectedCategory?<button type="button" onClick={()=>changeFilters('','')}>Show all food</button>:<Link to="/contact">Contact the kitchen</Link>}</div>
         ) : null}
