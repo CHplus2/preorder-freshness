@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { RefreshCw } from "lucide-react";
 import { loadLocalDecisionPlan } from "./localApi";
 import KitchenDecisionJourney, { MenuEvidence } from "./KitchenDecisionJourney";
 import RestaurantStations from "./RestaurantStations";
@@ -12,7 +11,7 @@ import { IngredientDrawing } from "./PantryScene";
 import StockFlowEvidence from "./StockFlowEvidence";
 import KitchenStockStory, {EvidenceNotes} from "./KitchenStockStory";
 import {kitchenCase, caseQuantity, stockQuantity} from "./kitchenPresentation";
-import {SourceNotice, SourceSelector, BuildIdentity} from './FreshCastChrome';
+import {FreshCastHeading, SourceNotice, SourceSelector, BuildIdentity} from './FreshCastChrome';
 import {stockViewSelection} from './decisionNavigation';
 import EvidenceTabs from './EvidenceTabs';
 
@@ -85,21 +84,7 @@ export default function LocalKitchen({ view }) {
   }
   return (
     <main className="pd pd-visual">
-      <header className="pd-header">
-        <div>
-          <span className="pd-eyebrow">FRESHCAST · YOUR KITCHEN</span>
-          <h1>Less waste. A better kitchen plan.</h1>
-          <p>Your confirmed preorders, accepted recipes and dated stock.</p>
-        </div>
-        <button
-          onClick={() => {
-            setComparison(null);
-            setRetry((n) => n + 1);
-          }}
-        >
-          <RefreshCw size={16} /> Refresh data
-        </button>
-      </header>
+      <FreshCastHeading view={view} loading={current.status==='loading'} onRefresh={()=>{setComparison(null);setRetry(n=>n+1)}}/>
       <SourceNotice source="local" synthetic={demoBatchCount>0 || plan?.decision_support.synthetic_history_items>0}/>
       <div className="pd-controls">
         <SourceSelector value="local" onChange={value => choose('source',value)}/>
@@ -186,7 +171,7 @@ function OrderEvidence({ plan }) {
       <h2>What might customers order?</h2>
       <p>Choose a menu to explore its forecast for {plan.window.start_date}–{plan.window.end_date}.</p>
       {menus.length>0 && <label className="local-menu-select">Menu<select aria-label="Menu" value={String(selected.product_id)} onChange={event=>{const next=new URLSearchParams(params);next.set('menu',event.target.value);setParams(next,{replace:true});}}>{menus.map(menu=><option key={menu.product_id} value={menu.product_id}>{menu.product_name}</option>)}</select></label>}
-      {selected?.daily_predictions?.length>0 && <figure className="local-demand-strip"><figcaption>Expected portions by delivery day · forecast estimates</figcaption><div>{selected.daily_predictions.map((value,index)=>{
+      {selected?.daily_predictions?.length>0 && <figure className="local-demand-strip"><figcaption>Expected portions by delivery day · forecast estimates</figcaption><div role="group" aria-label="Forecast portions by delivery day" tabIndex={0}>{selected.daily_predictions.map((value,index)=>{
         const day=new Date(Date.parse(`${plan.window.start_date}T12:00:00Z`)+index*86400000);
         const date=day.toISOString().slice(0,10);
         return <div key={date} title={`${date}: ${portionQty(value)} estimated portions`}><strong>{portionQty(value)}</strong><span className="local-day-bar" style={{height:`${12+64*value/Math.max(1,...selected.daily_predictions)}px`}}/><time dateTime={date}>{day.toLocaleDateString('en-MY',{day:'numeric',month:'short',timeZone:'UTC'})}</time></div>;

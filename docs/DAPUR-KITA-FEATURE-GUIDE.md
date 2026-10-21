@@ -184,6 +184,14 @@ and need review. A missing historical record must not be reported as known data.
 
 ## 7. Inventory, freshness and cooking
 
+Inventory groups stock attention by held, past-expiry, today's expiry, upcoming
+expiry and dates needing review. One priority pane opens at a time; Show all
+reveals the rest of that group's batches. Held batches are separate from
+expiry-only totals. Search batches, Ingredient and Recorded status filter the
+full list; Reset filters restores all records. Use Add stock batch when receiving
+ingredients and Refresh records after external stock changes. A failed refresh
+blocks batch edit/add entry points until the records reload.
+
 Raw materials define units; recipes specify quantity per portion. Stock is recorded
 as received batches. Keep recipe units and cost units consistent: RM12/kg equals
 RM0.012/g, not RM12/g.

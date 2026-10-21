@@ -33,7 +33,11 @@ try {
  assert.match(render({...risk,forecast_expiring_unused:0}),/zero projected waste can coexist with a shortage/);
  assert.match(render({...risk,stock_flow:undefined}),/Stock dated later carries forward/);
  const {default:KitchenForecastReplay}=await server.ssrLoadModule('/src/features/predictive/KitchenForecastReplay.jsx');
- const {ZeroWasteNotice,DecisionSteps,SourceNotice,BuildIdentity,SourceSelector}=await server.ssrLoadModule('/src/features/predictive/FreshCastChrome.jsx');
+ const {FreshCastHeading,ZeroWasteNotice,DecisionSteps,SourceNotice,BuildIdentity,SourceSelector}=await server.ssrLoadModule('/src/features/predictive/FreshCastChrome.jsx');
+ for(const [view,title] of [['decisions','Decision assistant'],['inventory','Stock &amp; expiry'],['forecast','Demand forecast']]) {
+  const heading=renderToStaticMarkup(createElement(FreshCastHeading,{view,loading:true}));
+  assert.ok(heading.includes(title));assert.match(heading,/disabled/);assert.match(heading,/Refreshing/);
+ }
  const zero=renderToStaticMarkup(createElement(ZeroWasteNotice,{waste:0,carried:332.123,unit:'g'}));
  assert.match(zero,/332.123 g/);assert.match(zero,/later-expiring stock/);assert.match(zero,/does not guarantee/);
  assert.equal(renderToStaticMarkup(createElement(ZeroWasteNotice,{waste:null,unit:'g'})),'');

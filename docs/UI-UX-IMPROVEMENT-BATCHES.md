@@ -81,18 +81,57 @@ These checks use fictional records in an isolated SQLite database. This batch
 changes frontend presentation/filtering/navigation, not production records,
 server scheduling/payment/stock rules, forecast models or API schemas.
 
-## Next batches
+## Batch 3 — Inventory priorities and shared FreshCast navigation
 
-1. **Inventory and FreshCast:** review stock and expiry priorities, evidence
-   density, actions and comparison consistency across kitchen, Genpact and sample
-   sources. Preserve differences required by available evidence and actual
-   operational capabilities; do not turn illustrative scenarios into promises.
-2. **Shared pages and navigation:** review home, account, support, forms and
-   customer order progress for typography, keyboard use, contrast, focus,
-   loading/empty/error states and responsive spacing.
+Implemented on 21 October 2026:
 
-These are sequenced review areas, not claims that every remaining page has already
-been audited or that every listed change is necessary.
+- Inventory shows one stock-attention priority at a time, with visible group
+  counts, three initial batch previews and Show all. Held, past-expiry, today's
+  expiry, upcoming expiry and missing-date groups stay mutually exclusive.
+  Remaining quantity, recorded value, incomplete costs and batch identity stay
+  visible in the selected group's evidence.
+- Held batches are excluded from the expiry-only summary counts and have their
+  own table filter/status. Invalid calendar dates need review instead of rolling
+  forward into a valid shelf-life category. Date checks use the Malaysia day.
+- Removed duplicate top-level batch/ingredient totals; those counts remain with
+  their lists. Search and filters have labels, reset and clearer empty states.
+  Add ingredient, Add stock batch and Refresh records name the primary actions.
+- Inventory reads are validated before replacing displayed records. A malformed
+  initial response is a read failure, not zero stock. Failed refreshes retain an
+  explicit warning and disable batch mutation entry points until records reload.
+- Kitchen, Genpact and sample sources use the same FreshCast page headings and
+  compact illustrated navigation across decisions, inventory evidence and demand
+  analytics. Active navigation, source labels, provenance notices and context
+  links remain available.
+- All decision sources retain the five steps. Phones use a horizontal step bar
+  that brings the active step into view without scrolling the whole page.
+- Fixed a recommendation-label contrast issue and made the horizontally scrolling
+  daily forecast chart keyboard-focusable.
+
+The sources deliberately retain different controls and evidence: kitchen windows
+use delivery-dated records, recipes and batch expiry; Genpact uses external center
+and week selections with simulated operations; sample mode is explicitly a fixed
+model-free example. Chart types and action capabilities follow those distinctions.
+The original room illustrations, rescue tutorial and detailed evidence tools are
+retained. No forecasting, allocation or scenario equations are changed.
+
+Verification uses frontend utility/rendering regressions, changed-file ESLint,
+a production build and local Chromium journeys. Kitchen requests use real APIs
+against an isolated fictional SQLite fixture. Genpact success layouts use explicit
+browser-only contract fixtures because the trained runtime is not part of the
+local UI fixture. Those checks do not validate a trained Genpact model or accuracy.
+External API failure is separately checked to stay an error without a sample
+fallback. Thirty page/viewport checks cover Inventory plus three FreshCast views
+for all three sources at 1440, 390 and 320 pixels. No automated WCAG A/AA
+violations, page errors or document overflow were found after fixes. Screenshots
+were also inspected. No production records or model artifacts are changed.
+
+## Next batch
+
+**Shared pages and navigation:** review home, account, support, forms and customer
+order progress for typography, keyboard use, contrast, focus, loading/empty/error
+states and responsive spacing. This is the next review area, not a claim that
+all remaining pages have already been audited.
 
 ## Verification and boundaries
 

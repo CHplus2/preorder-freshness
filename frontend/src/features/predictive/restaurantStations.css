@@ -140,3 +140,6 @@
   font: inherit;
 }
 .pd .fc-restaurant-stations a.fc-station::after { display: none; }
+/* Compact shared navigation keeps evidence within reach on every source. */
+.pd nav.fc-restaurant-stations{padding:12px 14px;margin:16px 0 20px;background:#f5f2e9}.pd .fc-stations-heading .pantry-kicker{font-size:10px;letter-spacing:1.4px}.pd .fc-stations-lane{margin:10px 0 0;gap:10px}.pd .fc-restaurant-stations a.fc-station{grid-template-columns:48px minmax(0,1fr);padding:10px;gap:10px;box-shadow:none;min-width:0}.pd .fc-station-art{width:48px;height:48px}.pd .fc-station-name{font-size:10px;margin-bottom:3px}.pd .fc-station strong{font-size:13px;line-height:1.5}.pd .fc-station small{font-size:11px;line-height:1.5}.pd .fc-station.active{border-color:#446c55}.pd .fc-station:focus-visible{outline:3px solid #477b4f;outline-offset:3px}
+@media(max-width:650px){.pd .fc-stations-lane{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.pd .fc-restaurant-stations a.fc-station{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:5px;padding:8px 5px;min-height:90px}.pd .fc-station-art{width:40px;height:34px}.pd .fc-station-name,.pd .fc-station small{display:none}.pd .fc-station strong{font-size:11px;line-height:1.5}.pd nav.fc-restaurant-stations{padding:10px;margin:14px 0}.pd .fc-stations-heading{display:none}}

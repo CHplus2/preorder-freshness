@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getCookie } from "../../utils/cookieUtils";
 import { loadOptions, loadDashboard, rankRisks } from "./api";
@@ -9,7 +9,7 @@ import DecisionAssistant from "./DecisionAssistant";
 import RestaurantStations from "./RestaurantStations";
 import LocalKitchen from "./LocalKitchen";
 import { DemandExplorer, InventoryExplorer } from "./EvidenceExperiences";
-import {SourceNotice, SourceSelector, BuildIdentity} from './FreshCastChrome';
+import {FreshCastHeading, SourceNotice, SourceSelector, BuildIdentity} from './FreshCastChrome';
 import EvidenceTabs from './EvidenceTabs';
 const qty = (n) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
@@ -513,18 +513,7 @@ function GenpactDashboardContent({ view }) {
   const metrics = options?.metrics.metrics;
   return (
     <main className="pd pd-visual">
-      <header className="pd-header">
-        <div>
-          <span className="pd-eyebrow">
-            FRESHCAST · KITCHEN DECISION ASSISTANT
-          </span>
-          <h1>Less waste. A better kitchen plan.</h1>
-          <p>Spot a problem. Explore your options. Choose your next move.</p>
-        </div>
-        <button onClick={() => setRetry((n) => n + 1)}>
-          <RefreshCw size={16} /> Refresh data
-        </button>
-      </header>
+      <FreshCastHeading view={view} loading={current.status==='loading'} onRefresh={()=>setRetry(n=>n+1)}/>
       <SourceNotice source={mode}/>
         <div className="pd-controls">
           <SourceSelector value={mode} onChange={value => choose('source',value)}/>

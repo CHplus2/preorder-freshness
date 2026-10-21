@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {expiryStatus,inventoryAttention} from './inventoryAttention.js';
+import {expiryStatus,inventoryAttention,inventoryCategory,inventoryRecords,materialRecords} from './inventoryAttention.js';
 import {malaysiaDate} from './planner.js';
 const today='2026-10-01';
 const batch={id:1,quantity:'2.500',unit_cost:'4.000000',expiry_date:today};
@@ -28,4 +28,20 @@ test('priority ranges do not overlap and rows sort without mutating input',()=>{
  assert.equal(groups.find(g=>g.key==='unknown').rows.length,1);
  assert.equal(groups.find(g=>g.key==='today').rows.length,1);
  assert.equal(rows[0].id,4);
+});
+
+
+test('invalid calendar dates need review rather than rolling forward into usable shelf life',()=>{
+ for(const expiry of ['2026-02-30','2026-04-31','2026-13-01','2026-00-01','not-a-date'])assert.equal(expiryStatus(expiry,today),'unknown');
+ assert.equal(expiryStatus('2024-02-29','2024-02-28'),'expiring');
+ assert.equal(inventoryCategory({...batch,quarantined:true},today),'held');
+ assert.equal(inventoryCategory({...batch,quarantined:false},today),'expiring');
+});
+test('inventory reads keep malformed data out of stock counts and preserve genuine zero quantities',()=>{
+ const row={...batch,raw_material:2,raw_material_name:'Rice',unit:'g',quarantined:false};
+ assert.deepEqual(inventoryRecords([row]),[row]);assert.deepEqual(inventoryRecords([]),[]);
+ assert.equal(inventoryRecords([{...row,quantity:'0.000'}])[0].quantity,'0.000');
+ assert.deepEqual(materialRecords([{id:2,name:'Rice',unit:'g'}]),[{id:2,name:'Rice',unit:'g'}]);
+ for(const value of [{results:null},[{...row,quantity:null}],[{...row,quantity:-1}],[{...row,quantity:'abc'}],[{...row,quarantined:'false'}],[{...row,expiry_date:123}],[{...row,raw_material:0}]])assert.throws(()=>inventoryRecords(value),error=>error.code==='INVALID_RESPONSE');
+ assert.throws(()=>materialRecords([{id:2,unit:'g'}]),error=>error.code==='INVALID_RESPONSE');
 });

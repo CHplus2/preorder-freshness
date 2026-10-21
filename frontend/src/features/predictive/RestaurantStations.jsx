@@ -110,7 +110,6 @@ export default function RestaurantStations({
   params,
   baseline,
   status,
-  isFixture,
   isLocal = false,
 }) {
   const available = status === "ready" && baseline;
@@ -149,8 +148,8 @@ export default function RestaurantStations({
   return (
     <nav className="fc-restaurant-stations" aria-label="Restaurant stations">
       <div className="fc-stations-heading">
-        <span className="pantry-kicker">EXPLORE YOUR LITTLE KITCHEN</span>
-        <p>Inspect the stock. Understand demand. Work through a decision.</p>
+        <span className="pantry-kicker">FRESHCAST WORKSPACE</span>
+
       </div>
       <div className="fc-stations-lane">
         {stations.map((s) => (
@@ -169,19 +168,9 @@ export default function RestaurantStations({
               <strong>{s.label}</strong>
               <small>{s.detail}</small>
             </div>
-            <span className="fc-station-door" aria-hidden="true">
-              Enter →
-            </span>
           </NavLink>
         ))}
       </div>
-      <p className="fc-stations-caption">
-        Illustrated navigation ·{" "}
-        {isLocal ? "local sales forecasts and confirmed-order stock evidence" : isFixture
-          ? "sample data, no model run"
-          : "API demand with simulated stock and costs"}
-        . No live restaurant activity is shown.
-      </p>
     </nav>
   );
 }

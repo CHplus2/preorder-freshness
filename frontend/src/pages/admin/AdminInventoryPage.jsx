@@ -1,10 +1,11 @@
+import './InventoryWorkspace.css';
 import InventoryAttention from '../../components/InventoryAttention';
 import InventoryFeedback from '../../components/InventoryFeedback';
-import {expiryStatus} from '../../utils/inventoryAttention';
+import {inventoryCategory,inventoryRecords,materialRecords} from '../../utils/inventoryAttention';
 import {malaysiaDate} from '../../utils/planner';
 import ModalDialog from '../../components/ModalDialog';
 import PageLoading from "../../components/PageLoading";
-import {apiError} from '../../utils/apiError';
+import {apiError,readApiError} from '../../utils/apiError';
 import ExpiryFields from "../../components/ExpiryFields";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
@@ -78,8 +79,9 @@ export default function AdminInventoryPage() {
         axios.get(`${API_URL}/raw-materials/`, getAuthConfig()),
         axios.get(`${API_URL}/inventory-items/`, getAuthConfig()),
       ]);
-      setRawMaterials(materials.data);
-      setInventoryItems(inventory.data);
+      const nextMaterials=materialRecords(materials.data),nextInventory=inventoryRecords(inventory.data);
+      setRawMaterials(nextMaterials);
+      setInventoryItems(nextInventory);
     } catch {
       setRefreshError("Records could not be refreshed. Displayed quantities may be out of date. Refresh records before making another stock change.");
     } finally {
@@ -101,7 +103,7 @@ export default function AdminInventoryPage() {
         getAuthConfig()
       );
 
-      setRawMaterials(response.data);
+      setRawMaterials(materialRecords(response.data));
       setRefreshError("");
     } catch {
       setRefreshError("Your change was saved, but raw materials could not be refreshed. Refresh records to see the latest list.");
@@ -115,7 +117,7 @@ export default function AdminInventoryPage() {
         getAuthConfig()
       );
 
-      setInventoryItems(response.data);
+      setInventoryItems(inventoryRecords(response.data));
       setRefreshError("");
     } catch {
       setRefreshError("Your change was saved, but inventory could not be refreshed. Refresh records to see the latest quantities.");
@@ -128,10 +130,11 @@ export default function AdminInventoryPage() {
       axios.get(API_URL + "/raw-materials/", { ...getAuthConfig(), signal: controller.signal }),
       axios.get(API_URL + "/inventory-items/", { ...getAuthConfig(), signal: controller.signal })
     ]).then(([materials, inventory]) => {
-      setRawMaterials(materials.data);
-      setInventoryItems(inventory.data);
+      const nextMaterials=materialRecords(materials.data),nextInventory=inventoryRecords(inventory.data);
+      setRawMaterials(nextMaterials);
+      setInventoryItems(nextInventory);
     }).catch(err => {
-      if (!axios.isCancel(err)) setInitialError(apiError(err));
+      if (!axios.isCancel(err)) setInitialError(readApiError(err,'Could not load inventory records.'));
     }).finally(() => {
       if (!controller.signal.aborted) setInitialLoading(false);
     });
@@ -182,7 +185,7 @@ export default function AdminInventoryPage() {
 
       const matchesFreshness =
         freshnessFilter
-          ? expiryStatus(item.expiry_date,today) ===
+          ? inventoryCategory(item,today) ===
             freshnessFilter
           : true;
 
@@ -351,52 +354,51 @@ export default function AdminInventoryPage() {
   };
 
   if (initialLoading) return <PageLoading label="Loading inventory..." />;
-  if (initialError) return <div className="admin-inventory-container"><FreshCastWorkflowContext/>
+  if (initialError) return <main className="admin-inventory-container inventory-workspace"><FreshCastWorkflowContext/>
     <h1>Inventory</h1><p role="alert">{initialError}</p>
     <button type="button" onClick={() => {setInitialLoading(true);setInitialError("");setRetry(n => n + 1)}}>Try again</button>
-  </div>;
+  </main>;
 
   return (
-    <div className="admin-inventory-container"><FreshCastWorkflowContext/>
+    <main className="admin-inventory-container inventory-workspace"><FreshCastWorkflowContext/>
 
       <div className="admin-header">
         <div>
-          <h1>Inventory Management</h1>
-          {inventoryItems.some(item=>item.batch_code?.startsWith('DEMO-FC-INV-')) && <p role="status"><strong>Fictional inventory scenario.</strong> DEMO-FC-INV batches use assumed quantities and dates. They affect demo menu availability and stock planning; they are not verified goods received.</p>}
+          <span className="admin-kicker">KITCHEN OPERATIONS</span><h1>Inventory</h1>
+          {inventoryItems.some(item=>item.batch_code?.startsWith('DEMO-FC-INV-')) && <p role="status"><strong>Demo stock included.</strong> These batches use fictional quantities and dates for availability and planning.</p>}
           <p>
-            Manage raw materials, inventory batches and
-            freshness.
+            Review expiry priorities and record received stock.
           </p>
         </div>
 
-        <div className="inventory-header-actions">
+        <div className="inventory-header-actions"><button type="button" disabled={refreshing} onClick={refreshRecords}>{refreshing?'Refreshing…':'Refresh records'}</button>
           <button
-            className="secondary-btn"
+            className="secondary-btn" disabled={refreshing || !!refreshError}
             onClick={() =>
               setNewRawMaterial({
                 ...emptyRawMaterial,
               })
             }
           >
-            + Raw Material
+            Add ingredient
           </button>
 
           <button
-            className="add-inventory-btn"
+            className="add-inventory-btn" disabled={refreshing || !!refreshError}
             onClick={() =>
               setNewInventoryItem({
                 ...emptyInventoryItem,
               })
             }
           >
-            + Add Inventory
+            Add stock batch
           </button>
         </div>
       </div>
 
       <InventoryFeedback message={refreshError}>
         <button type="button" disabled={refreshing} onClick={refreshRecords}>
-          {refreshing ? "Refreshing..." : "Refresh records"}
+          {refreshing ? "Refreshing..." : "Retry refresh"}
         </button>
       </InventoryFeedback>
 
@@ -410,39 +412,25 @@ export default function AdminInventoryPage() {
       {/* Summary */}
       <div className="inventory-summary">
 
-        <div className="summary-card">
-          <span>Total Batches</span>
-          <strong>{inventoryItems.length}</strong>
-        </div>
-
-        <div className="summary-card">
-          <span>Raw Materials</span>
-          <strong>{rawMaterials.length}</strong>
-        </div>
-
         <div className="summary-card warning">
-          <span>Expiring Soon</span>
+          <span>Expiry within 3 days</span>
           <strong>
             {
               inventoryItems.filter(
                 (item) => Number(item.quantity)>0 &&
-                  expiryStatus(
-                    item.expiry_date,today
-                  ) === "expiring"
+                  inventoryCategory(item,today) === "expiring"
               ).length
             }
           </strong>
         </div>
 
         <div className="summary-card danger">
-          <span>Expired</span>
+          <span>Past recorded expiry</span>
           <strong>
             {
               inventoryItems.filter(
                 (item) => Number(item.quantity)>0 &&
-                  expiryStatus(
-                    item.expiry_date,today
-                  ) === "expired"
+                  inventoryCategory(item,today) === "expired"
               ).length
             }
           </strong>
@@ -450,21 +438,22 @@ export default function AdminInventoryPage() {
 
       </div>
 
-      <InventoryAttention items={inventoryItems} today={today} onReview={id=>setEditingInventoryItem({...inventoryItems.find(item=>item.id===id)})}/>
+      <InventoryAttention disabled={refreshing || !!refreshError} items={inventoryItems} today={today} onReview={id=>setEditingInventoryItem({...inventoryItems.find(item=>item.id===id)})}/>
 
+      <h2 className="inventory-batch-heading">All stock batches · {inventoryItems.length}</h2>
       {/* Filters */}
       <div className="inventory-controls">
 
-        <input
-          type="text"
-          placeholder="Search material, batch or location..."
+        <label>Search batches<input
+          type="search"
+          placeholder="Ingredient, batch or location"
           value={searchQuery}
           onChange={(e) =>
             setSearchQuery(e.target.value)
           }
-        />
+        /></label>
 
-        <select
+        <label>Ingredient<select
           value={selectedRawMaterial}
           onChange={(e) =>
             setSelectedRawMaterial(e.target.value)
@@ -482,9 +471,9 @@ export default function AdminInventoryPage() {
               {material.name}
             </option>
           ))}
-        </select>
+        </select></label>
 
-        <select
+        <label>Recorded status<select
           value={freshnessFilter}
           onChange={(e) =>
             setFreshnessFilter(e.target.value)
@@ -500,9 +489,11 @@ export default function AdminInventoryPage() {
           <option value="expired">
             Expired
           </option>
-        </select>
+          <option value="held">On hold</option><option value="unknown">Date needs review</option>
+        </select></label>
 
       </div>
+      <p className="inventory-list-status" role="status">{filteredInventory.length} of {inventoryItems.length} batches shown{(searchQuery || selectedRawMaterial || freshnessFilter)?' · filters applied':''}. {(searchQuery || selectedRawMaterial || freshnessFilter) && <button type="button" onClick={()=>{setSearchQuery('');setSelectedRawMaterial('');setFreshnessFilter('')}}>Reset filters</button>}</p>
 
       {/* Inventory table */}
       <div className="admin-table-scroll responsive-records"><table className="admin-table inventory-table">
@@ -527,12 +518,10 @@ export default function AdminInventoryPage() {
             filteredInventory.map((item) => {
 
               const freshness =
-                expiryStatus(
-                  item.expiry_date,today
-                );
+                inventoryCategory(item,today);
 
               return (
-                <tr key={item.id}>
+                <tr key={item.id} aria-label={`Batch ${item.batch_code || item.id}`}>
 
                   <td data-label="Raw material">
                     <strong>
@@ -570,7 +559,8 @@ export default function AdminInventoryPage() {
                       {freshness === "expiring" &&
                         "Expiring Soon"}
 
-                      {freshness === "unknown" && "Date missing"}
+                      {freshness === "held" && "On hold"}
+                      {freshness === "unknown" && "Date needs review"}
                       {freshness === "expired" &&
                         "Expired"}
                     </span>
@@ -578,7 +568,7 @@ export default function AdminInventoryPage() {
 
                   <td className="table-actions" data-label="Actions">
 
-                    <button
+                    <button disabled={refreshing || !!refreshError}
                       onClick={() =>
                         setEditingInventoryItem({
                           ...item,
@@ -589,7 +579,7 @@ export default function AdminInventoryPage() {
                     </button>
 
                     <button
-                      className="danger"
+                      className="danger" disabled={refreshing || !!refreshError}
                       onClick={() =>
                         handleDeleteInventory(
                           item.id
@@ -609,7 +599,7 @@ export default function AdminInventoryPage() {
 
             <tr>
               <td colSpan="8">
-                No inventory items found.
+                {inventoryItems.length?'No batches match these filters. Reset the filters to review all stock.':'No stock batches recorded. Add a batch when ingredients are received.'}
               </td>
             </tr>
 
@@ -624,7 +614,7 @@ export default function AdminInventoryPage() {
 
         <div className="section-header">
           <div>
-            <h2>Raw Materials</h2>
+            <h2>Ingredient directory · {rawMaterials.length}</h2>
             <p>
               Master list of ingredients used by your
               products.
@@ -1182,6 +1172,6 @@ export default function AdminInventoryPage() {
 </ModalDialog>
       )}
 
-    </div>
+    </main>
   );
 }

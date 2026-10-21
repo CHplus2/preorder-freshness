@@ -1,12 +1,21 @@
 /* global __FRESHCAST_REVISION__: readonly */
 import {decisionSteps} from './decisionNavigation';
 import {stockQuantity} from './kitchenPresentation';
-import {useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
+import {RefreshCw} from 'lucide-react';
 import RescueDemo from './RescueDemo';
 import './freshCastChrome.css';
 
+export function FreshCastHeading({view,onRefresh,loading=false}) {
+ const titles={decisions:'Decision assistant',inventory:'Stock & expiry',forecast:'Demand forecast'};
+ const descriptions={decisions:'Spot expiry risks, compare options and choose your next action.',inventory:'Inspect ingredients and see how dated stock covers demand.',forecast:'Review expected demand and the evidence behind it.'};
+ return <header className="pd-header fc-page-heading"><div><span className="pd-eyebrow">FRESHCAST</span><h1>{titles[view] || titles.decisions}</h1><p>{descriptions[view] || descriptions.decisions}</p></div><button type="button" disabled={loading} onClick={onRefresh}><RefreshCw size={16} aria-hidden="true"/>{loading?'Refreshing…':'Refresh data'}</button></header>;
+}
+
 export function DecisionSteps({step, onChange, disabled = false}) {
-  return <ol className="fc-steps" aria-label="Decision journey">{decisionSteps.map((label, index) =>
+ const list=useRef(null);
+ useEffect(()=>{const row=list.current,button=row?.querySelector('[aria-current="step"]');if(row && button && row.scrollWidth>row.clientWidth)row.scrollLeft+=button.getBoundingClientRect().left-row.getBoundingClientRect().left-(row.clientWidth-button.offsetWidth)/2;},[step,disabled]);
+  return <ol ref={list} className="fc-steps" aria-label="Decision journey">{decisionSteps.map((label, index) =>
     <li key={label}><button disabled={disabled} aria-current={!disabled && index === step ? 'step' : undefined} onClick={() => onChange?.(index)}><span>{index + 1}</span>{label}</button></li>,
   )}</ol>;
 }
