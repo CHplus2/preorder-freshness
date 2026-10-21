@@ -2,15 +2,51 @@ import {useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
 import {apiError,readApiError} from '../../utils/apiError';
+import {accountDetails} from '../../utils/customerExperience';
 import {getCookie} from '../../utils/cookieUtils';
+import {useCart} from '../../contexts/CartContext';
 import './CheckoutPage.css';
-const empty={recipient_name:'',phone:'',line1:'',line2:'',city:'',state:'',postal_code:'',country:'Malaysia'};
+import './CustomerExperience.css';
+
 const states=['Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Penang','Perak','Perlis','Sabah','Sarawak','Selangor','Terengganu','Kuala Lumpur','Labuan','Putrajaya'];
-function AccountSection({title,url,initial,children}){
- const [value,setValue]=useState(null),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[revision,setRevision]=useState(0);
- useEffect(()=>{const c=new AbortController();axios.get(url,{signal:c.signal}).then(r=>setValue(r.data || initial)).catch(e=>{if(!axios.isCancel(e))setError(readApiError(e));});return()=>c.abort();},[url,initial,revision]);
- const save=async e=>{e.preventDefault();if(busy)return;setBusy(true);setError('');setMessage('');try{const r=await axios({url,method:url==='/api/account/'?'patch':'put',data:value,headers:{'X-CSRFToken':getCookie('csrftoken')}});setValue(r.data);setMessage('Saved.');}catch(e){setError(apiError(e));}finally{setBusy(false);}};
- return <section className="checkout-section"><h2>{title}</h2>{error && <p role="alert">{error}</p>}{!value ? <><p role="status">{error?'Could not load these details.':'Loading...'}</p>{error && <button onClick={()=>{setError('');setRevision(n=>n+1);}}>Try again</button>}</>:<form className="address-form" onSubmit={save}>{children(value,setValue)}<div className="checkout-actions"><button className="checkout-submit" disabled={busy}>{busy?'Saving...':`Save ${title.toLowerCase()}`}</button><span role="status">{message}</span></div></form>}</section>;
+function AccountSection({title,url,address=false,children}){
+  const [value,setValue]=useState(null),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[revision,setRevision]=useState(0);
+  useEffect(()=>{
+    const controller=new AbortController();
+    axios.get(url,{signal:controller.signal,timeout:30000})
+      .then(({data})=>setValue(accountDetails(data,address,true)))
+      .catch(error=>{if(!axios.isCancel(error))setError(readApiError(error));});
+    return()=>controller.abort();
+  },[url,address,revision]);
+  const edit=next=>{setValue(next);setMessage('');};
+  const save=async event=>{
+    event.preventDefault();if(busy)return;
+    setBusy(true);setError('');setMessage('');
+    try{
+      const {data}=await axios({url,method:address?'put':'patch',data:value,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+      setValue(accountDetails(data,address));setMessage(`${title} saved.`);
+    }catch(error){
+      setError(!error.response || error.response.status>=500 || error.code==='INVALID_RESPONSE'
+        ?'We could not confirm the save. Your entries are still here. Reload this page to check the saved details before trying again.'
+        :apiError(error));
+    }finally{setBusy(false);}
+  };
+  return <section className="checkout-section" aria-labelledby={address?'address-heading':'profile-heading'}>
+    <h2 id={address?'address-heading':'profile-heading'}>{title}</h2>
+    <p className="account-section-intro">{address?'Your default for future checkouts. Orders already placed keep their original address.':'The name saved with your account. Your sign-in username stays the same.'}</p>
+    {error && <p className="customer-notice" role="alert">{error}</p>}
+    {!value?<><p role="status">{error?'These details are unavailable.':'Loading your details…'}</p>{error && <button type="button" onClick={()=>{setError('');setRevision(n=>n+1);}}>Try loading again</button>}</>:<form onSubmit={save}>
+      <fieldset disabled={busy} className="account-fields">{children(value,edit)}</fieldset>
+      <div className="checkout-actions"><button className="checkout-submit" disabled={busy}>{busy?'Saving…':`Save ${title.toLowerCase()}`}</button><span role="status">{message}</span></div>
+    </form>}
+  </section>;
 }
-const profile={first_name:'',last_name:''};
-export default function AccountPage(){return <main className="checkout-container account-settings"><h1 className="checkout-title">Account settings</h1><p className="checkout-intro">Manage your name and the delivery address used for future orders.</p><AccountSection title="Profile" url="/api/account/" initial={profile}>{(value,setValue)=><div className="address-fields"><label>Username<input value={value.username || ''} readOnly/></label>{['first_name','last_name'].map((key,i)=><label key={key}>{i?'Last name':'First name'}<input maxLength={150} autoComplete={i?'family-name':'given-name'} value={value[key]} onChange={e=>setValue({...value,[key]:e.target.value})}/></label>)}</div>}</AccountSection><AccountSection title="Delivery address" url="/api/address/" initial={empty}>{(value,setValue)=><><p>Changing your saved address will not change orders already placed. Confirm the address at checkout before ordering.</p><div className="address-fields">{[['recipient_name','Recipient name','name'],['phone','Phone number','tel'],['line1','Street address','address-line1'],['line2','Apartment, floor or unit (optional)','address-line2'],['city','City','address-level2'],['postal_code','Postcode','postal-code']].map(([key,label,auto])=><label key={key}>{label}<input type={key==='phone'?'tel':'text'} autoComplete={auto} required={key!=='line2'} pattern={key==='postal_code'?'[0-9]{5}':undefined} maxLength={key==='postal_code'?5:key==='phone'?20:150} value={value[key] || ''} onChange={e=>setValue({...value,[key]:e.target.value})}/></label>)}<label>State / territory<select required value={value.state} onChange={e=>setValue({...value,state:e.target.value})}><option value="">Choose a state</option>{states.map(s=><option key={s}>{s}</option>)}</select></label><label>Country<input value="Malaysia" readOnly/></label></div></>}</AccountSection><Link className="checkout-back" to="/checkout">Continue to checkout</Link></main>;}
+export default function AccountPage(){
+  const {cart,cartError,cartLoading}=useCart();
+  return <main className="checkout-container account-settings">
+    <header className="customer-page-heading"><span className="dk-eyebrow">YOUR ACCOUNT</span><h1>Account settings</h1><p>Keep your name and delivery details ready for your next order.</p><nav className="customer-shortcuts" aria-label="Account shortcuts"><Link to="/orders">My orders</Link><Link to="/menu">Browse the menu</Link>{!cartLoading && !cartError && cart.length>0 && <Link to="/checkout">Continue to checkout</Link>}</nav></header>
+    <div className="account-sections"><AccountSection title="Profile" url="/api/account/">{(value,edit)=><div className="address-fields"><label className="field-wide">Username<input autoComplete="username" value={value.username} readOnly/></label>{['first_name','last_name'].map((key,i)=><label key={key}>{i?'Last name':'First name'}<input maxLength={150} autoComplete={i?'family-name':'given-name'} value={value[key]} onChange={e=>edit({...value,[key]:e.target.value})}/></label>)}</div>}</AccountSection>
+    <AccountSection title="Delivery address" url="/api/address/" address>{(value,edit)=><div className="address-fields">{[['recipient_name','Recipient name','name'],['phone','Phone number','tel'],['line1','Street address','address-line1'],['line2','Apartment, floor or unit (optional)','address-line2'],['city','City','address-level2'],['postal_code','Postcode','postal-code']].map(([key,label,auto])=><label key={key} className={key==='line1' || key==='line2'?'field-wide':undefined}>{label}<input type={key==='phone'?'tel':'text'} autoComplete={auto} required={key!=='line2'} pattern={key==='postal_code'?'[0-9]{5}':undefined} inputMode={key==='postal_code'?'numeric':undefined} maxLength={key==='postal_code'?5:key==='phone'?20:150} value={value[key]} onChange={e=>edit({...value,[key]:e.target.value})}/></label>)}<label>State / territory<select required value={value.state} onChange={e=>edit({...value,state:e.target.value})}><option value="">Choose a state</option>{states.map(state=><option key={state}>{state}</option>)}</select></label><label>Country<input value={value.country} readOnly/></label></div>}</AccountSection></div>
+    <p className="account-help">Need to change an order already placed? <Link to="/orders">Open My orders</Link> to review its delivery details or contact the kitchen.</p>
+  </main>;
+}

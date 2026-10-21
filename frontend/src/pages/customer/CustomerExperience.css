@@ -1,0 +1,96 @@
+/* Customer utility pages share calm hierarchy without changing owner screens. */
+.customer-page-heading{margin:12px 0 28px;color:#29472f}
+.customer-page-heading h1{font:400 clamp(32px,4vw,44px)/1.15 Georgia,serif;letter-spacing:-1px;margin:10px 0 12px}
+.customer-page-heading p{font-size:15px;line-height:1.6;margin:8px 0 0;color:#52634f}
+.customer-shortcuts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.customer-shortcuts a,.customer-order-help{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:10px 14px;border:1px solid #c7d2c4;border-radius:8px;text-decoration:none;color:#31543b;font-size:14px;line-height:1.5;background:#fff}
+.customer-shortcuts a:hover,.customer-order-help:hover{background:#edf3e8}
+.customer-notice{padding:16px;border:1px solid #d0b297;border-radius:9px;background:#fff7ed;color:#714524;font-size:14px;line-height:1.6}
+.customer-notice p{margin:0 0 12px;color:inherit}
+.customer-empty{padding:32px 24px;border:1px solid #d5dece;border-radius:12px;background:#fff}
+.customer-empty h2{font:400 27px/1.25 Georgia,serif;color:#29472f;margin:0 0 14px}
+.customer-empty p{color:#52634f;margin:0 0 24px;line-height:1.6}
+.customer-order-filters{display:flex;flex-wrap:wrap;gap:8px}
+.customer-order-filters button{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:10px 14px;border:1px solid #c5d0bf;background:#fff;color:#344e37;border-radius:24px;font-size:14px;margin:0}
+.customer-order-filters button[aria-pressed=true]{background:#285a3e;border-color:#285a3e;color:#fff}
+.customer-order-filters button span{font-size:12px;font-weight:600}
+.customer-order-count{color:#586854;font-size:13px;line-height:1.6;margin:18px 0}
+.customer-orders .customer-order-help{margin-top:22px;font-size:13px}
+.customer-orders .order-id{font-family:system-ui,sans-serif;letter-spacing:0}
+.customer-orders .customer-show-more{display:block;margin:24px auto;min-height:44px}
+.account-settings{max-width:1040px}
+.account-sections{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(0,1.4fr);gap:24px;align-items:start}
+.account-sections .checkout-section{min-width:0}
+.account-sections h2{font:600 20px/1.4 system-ui,sans-serif;letter-spacing:0;margin:0;color:#29472f}
+.account-section-intro{font-size:14px;line-height:1.65;color:#586854;margin:12px 0 20px}
+.account-fields{border:0;padding:0;margin:0;min-width:0}
+.account-fields .address-fields{margin-top:0}
+.account-fields input[readonly]{background:#f1f4ed;color:#52634f}
+.account-sections .checkout-actions{align-items:center;font-size:14px;color:#285a3e}
+.account-help{margin:26px 0 0;color:#586854;font-size:14px;line-height:1.7}
+.account-help a{color:#285a3e}
+.home-experience .business-hero{min-height:0;padding:42px 0;gap:52px}
+.home-experience .business-hero h1{font-size:clamp(44px,5.1vw,68px);margin:18px 0}
+.home-experience .business-hero-visual{height:385px}
+.home-experience .visual-orbit{width:280px;height:280px}
+.home-experience .visual-word{font-size:66px}
+.home-experience .visual-note{padding:12px 18px;bottom:26px;font-size:14px}
+.home-experience .business-hero p:not(.business-lead){font-size:15px;line-height:1.65;max-width:54ch}
+.home-experience .home-menu{padding:40px 0 48px}
+.home-menu .section-heading{margin-bottom:24px}
+.home-menu h2{font-size:clamp(30px,3vw,40px)}
+.home-menu .home-food-photo{position:relative;height:210px;background:#edf0e6;display:grid;place-items:center;color:#52684c;overflow:hidden}
+.home-menu .home-food-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.home-menu .home-food-photo img[hidden]{display:none}
+.home-menu .featured-food>div:last-child{padding:18px}
+.home-menu .featured-food span{color:#5b6a54;letter-spacing:.6px}
+.home-menu .featured-food h3{font:600 18px/1.4 system-ui,sans-serif;letter-spacing:0;margin:8px 0 12px}
+.home-menu .featured-food p{color:#2d4b32;margin:0 0 8px;font-weight:600}
+.home-menu .featured-food small{font-size:12px;line-height:1.5;color:#586854}
+.contact-experience .business-page-heading{padding:44px 0 32px;max-width:760px}
+.contact-experience .business-page-heading h1{font-size:clamp(36px,5vw,58px);letter-spacing:-1.5px}
+.contact-experience .business-lead{font-size:18px!important}
+.contact-experience .contact-layout{gap:48px;align-items:start}
+.contact-experience .contact-layout h2{font-size:28px;margin:0 0 22px}
+.contact-experience .enquiry-card label{font-size:14px}
+.contact-experience .enquiry-card textarea{min-height:140px}
+.contact-experience .enquiry-card p{font-size:14px;line-height:1.65}
+.contact-experience .contact-detail{overflow-wrap:anywhere}
+.customer-shortcuts a:focus-visible,.customer-order-help:focus-visible,.home-menu .featured-food:focus-visible{outline:3px solid #567b40;outline-offset:4px}
+@media(max-width:800px){
+ .account-sections{grid-template-columns:1fr}
+ .home-experience .business-hero{gap:24px}
+ .home-experience .business-hero-visual{height:320px}
+ .contact-experience .contact-layout{grid-template-columns:1fr;gap:32px}
+ .contact-experience .enquiry-card{grid-row:1}
+}
+@media(max-width:600px){
+ .customer-page-heading h1{font-size:34px}
+ .customer-orders .customer-orders-heading{align-items:start;margin-bottom:22px}
+ .customer-order-filters{gap:6px}
+ .customer-order-filters button{padding:10px 12px;font-size:13px;gap:8px}
+ .home-experience .business-hero{display:block;padding:30px 0}
+ .home-experience .business-hero h1{font-size:46px;line-height:1.04;letter-spacing:-1.5px}
+ .home-experience .business-hero-visual{display:none}
+ .home-experience .business-lead{font-size:18px!important}
+ .home-experience .business-proof{padding:16px 0;gap:12px;flex-wrap:wrap}
+ .home-experience .business-proof span{font-size:12px}
+ .home-experience .home-menu{padding:28px 0 32px}
+ .home-menu .section-heading{align-items:start;gap:16px;flex-wrap:wrap}
+ .home-menu .featured-foods{grid-template-columns:1fr;gap:12px}
+ .home-menu .featured-food{display:grid;grid-template-columns:105px minmax(0,1fr);min-height:140px}
+ .home-menu .home-food-photo{height:100%;min-height:140px}
+ .home-menu .featured-food>div:last-child{padding:14px}
+ .home-menu .featured-food h3{font-size:16px;margin:6px 0 10px}
+ .home-menu .featured-food span{font-size:10px}
+ .contact-experience .business-page-heading{padding:30px 0 24px}
+ .contact-experience .enquiry-card{padding:20px}
+ .account-sections .checkout-section{padding:20px}
+}
+.account-settings .customer-shortcuts{justify-content:flex-start;padding:0;border:0;background:none;backdrop-filter:none;box-shadow:none}
+@media(max-width:600px){
+ .customer-orders .order-progress ol{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+ .customer-orders .order-progress li{flex-direction:column;align-items:flex-start;gap:8px;font-size:11px;overflow-wrap:anywhere}
+ .customer-orders .order-progress .progress-dot{width:25px;height:25px}
+ .customer-orders .order-progress small{font-size:10px}
+}

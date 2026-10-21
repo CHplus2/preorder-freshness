@@ -20,7 +20,7 @@ export function PageMeta({title,description}){
 export function PrimaryLink({to='/menu',children='Explore the menu'}){return <Link className="dk-primary" to={to}>{children}<ArrowUpRight size={17}/></Link>}
 const questions=[
  ['How far ahead can I preorder?','Up to 90 days. Each menu has its own advance notice and daily capacity. Your basket shows the preparation and delivery buffer before you choose a date.'],
- ['Is my delivery time guaranteed?','It is your requested delivery time. The owner reviews preparation and delivery arrangements. Ask the kitchen before ordering if your event has a strict deadline.'],
+ ['Is my delivery time guaranteed?','An available slot is checked again when you place your order. A custom delivery request remains unconfirmed until the kitchen accepts it. Check My orders for its status. Ask the kitchen about a strict event deadline.'],
  ['Can I request express delivery?','Choose an express request at checkout. Menu lead times still apply. The owner must confirm the courier and agree any extra charge with you.'],
  ['What does ingredient freshness tell me?','It describes current ingredients using recorded expiry dates and storage guidance. It cannot detect contamination or guarantee safety. A future order may use new batches.'],
  ['What if I have an allergy or special request?','Contact the owner before placing your order. Ingredient records do not establish an allergen-free kitchen.'],

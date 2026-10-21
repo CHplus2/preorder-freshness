@@ -2,7 +2,7 @@ import PageLoading from "./components/PageLoading";
 import RouteErrorBoundary from "./components/RouteErrorBoundary";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { User, Menu, X, ShoppingBag } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { useUI } from "./contexts/UIContext";
@@ -202,6 +202,7 @@ function AppContent() {
   const {cart}=useCart();
   const location=useLocation();
   const [mobileOpen,setMobileOpen]=useState(false);
+  const mobileToggle=useRef(null),mobileNavigation=useRef(null),accountMenu=useRef(null),accountToggle=useRef(null);
   const ownerPage=location.pathname.startsWith('/admin/');
   const publicLinks=[['/','Home'],['/story','Our story'],['/menu','Menu'],['/how-it-works','How it works'],['/contact','Contact']];
   const ownerLinks=[['/admin/planner','Planner'],['/admin/products','Menus'],['/admin/inventory','Inventory'],['/admin/orders','Orders'],['/admin/reports','Sales'],['/admin/ai/decisions','FreshCast'],['/admin/settings','Settings'],['/admin/customers','Customers'],['/','View storefront']];
@@ -211,6 +212,20 @@ function AppContent() {
   const { showLogin, setShowLogin, showSignup, dropdownOpen, setDropdownOpen, alert, setAlert } = useUI();
   const { isAuthenticated, isAdmin, logout } = useAuth();
   const { productIdToDelete } = useProduct();
+
+  useEffect(()=>{
+    const dismiss=event=>{
+      if(event.key!=='Escape' || event.defaultPrevented || event.target.closest?.('[role="dialog"]'))return;
+      if(dropdownOpen){setDropdownOpen(false);accountToggle.current?.focus();}
+      else if(mobileOpen){setMobileOpen(false);mobileToggle.current?.focus();}
+    };
+    const outside=event=>{
+      if(dropdownOpen && !accountMenu.current?.contains(event.target))setDropdownOpen(false);
+      if(mobileOpen && !mobileToggle.current?.contains(event.target) && !mobileNavigation.current?.contains(event.target))setMobileOpen(false);
+    };
+    document.addEventListener('keydown',dismiss);document.addEventListener('pointerdown',outside);
+    return()=>{document.removeEventListener('keydown',dismiss);document.removeEventListener('pointerdown',outside);};
+  },[mobileOpen,dropdownOpen,setDropdownOpen]);
 
   useEffect(() => {
     if (!alert.message || alert.type === "error") return;
@@ -233,11 +248,11 @@ function AppContent() {
         <div className="business-header-actions">
           {isAuthenticated && !ownerPage && <Link to="/cart" className="basket-link" aria-label={`Basket, ${cart.reduce((n,i)=>n+i.quantity,0)} items`}><ShoppingBag size={19}/><span>{cart.reduce((n,i)=>n+i.quantity,0)}</span></Link>}
           {isAuthenticated===false && <button className="login-btn" onClick={()=>setShowLogin(true)}>Sign in</button>}
-          {isAuthenticated && <div className="user-dropdown"><button className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} onClick={()=>setDropdownOpen(!dropdownOpen)}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content"><Link to="/account" onClick={()=>setDropdownOpen(false)}>Account settings</Link><Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to="/admin/planner" onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}<button className="logout-btn" onClick={logout}>Sign out</button></div>}</div>}
-          {!ownerPage && <button className="mobile-menu-toggle" aria-label={mobileOpen?'Close navigation':'Open navigation'} aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={()=>setMobileOpen(!mobileOpen)}>{mobileOpen?<X size={23}/>:<Menu size={23}/>}</button>}
+          {isAuthenticated && <div className="user-dropdown" ref={accountMenu}><button ref={accountToggle} className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} aria-controls="account-navigation" onClick={()=>{setMobileOpen(false);setDropdownOpen(!dropdownOpen);}}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content" id="account-navigation"><Link to="/account" onClick={()=>setDropdownOpen(false)}>Account settings</Link><Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to="/admin/planner" onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}<button className="logout-btn" onClick={logout}>Sign out</button></div>}</div>}
+          {!ownerPage && <button ref={mobileToggle} className="mobile-menu-toggle" aria-label={mobileOpen?'Close navigation':'Open navigation'} aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={()=>{setDropdownOpen(false);setMobileOpen(!mobileOpen);}}>{mobileOpen?<X size={23}/>:<Menu size={23}/>}</button>}
         </div>
       </header>
-      {mobileOpen && !ownerPage && <nav className="mobile-navigation" id="mobile-navigation" aria-label="Mobile navigation">{navigation.map(([url,label])=><Link key={url} to={url} onClick={closeMenu} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}{isAuthenticated && <Link to="/orders" onClick={closeMenu}>My orders</Link>}{isAdmin && <Link to="/admin/planner" onClick={closeMenu}>Kitchen dashboard</Link>}</nav>}
+      {mobileOpen && !ownerPage && <nav ref={mobileNavigation} className="mobile-navigation" id="mobile-navigation" aria-label="Mobile navigation">{navigation.map(([url,label])=><Link key={url} to={url} onClick={closeMenu} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}{isAuthenticated && <Link to="/orders" onClick={closeMenu}>My orders</Link>}{isAdmin && <Link to="/admin/planner" onClick={closeMenu}>Kitchen dashboard</Link>}</nav>}
 
       <AnimatePresence>
         {showSignup && (

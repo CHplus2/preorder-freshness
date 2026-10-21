@@ -126,12 +126,61 @@ for all three sources at 1440, 390 and 320 pixels. No automated WCAG A/AA
 violations, page errors or document overflow were found after fixes. Screenshots
 were also inspected. No production records or model artifacts are changed.
 
+## Batch 4 — Home, customer orders, account and contact
+
+Implemented on 21 October 2026:
+
+- Home brings the current menu immediately after a shorter introduction. Phone
+  cards pair a small photo with the meal name, price and notice. Decorative hero
+  artwork stays on desktop; kitchen information and occasion discovery follow
+  the food. Missing photos retain a neutral fallback.
+- The public menu preview validates its read and distinguishes loading, a genuine
+  empty menu and a failed request with retry. It no longer relies on shared
+  product state or reports a request failure as a menu still being prepared.
+  Group-offer copy uses only a valid configured percentage and item threshold.
+- My orders separates Current, History and All orders, starts with current work
+  when present, and renders ten records at a time with Show more. Completed and
+  cancelled records remain available. Unknown statuses remain in Current.
+- Loading/failed order refreshes hide cached cards and payment/delivery controls.
+  Order cards retain requested-time warnings, payment status, original address,
+  Sandbox disclosure, review links and delivery changes. Malaysia delivery times
+  omit seconds and invalid/missing values prompt contact rather than show dates.
+- Phone order progress keeps all five stages in a compact row. Order titles,
+  filter counts and per-order contact actions have a clearer visual hierarchy.
+- Account has separate profile/address sections and useful order/menu shortcuts;
+  checkout appears only with a successfully loaded nonempty basket. New customers
+  get a blank address form from the API's legitimate empty response. Invalid
+  records do not become editable blank forms or successful save confirmations.
+- Account saves disable their fields while running, retain drafts on errors and
+  distinguish an unverified save from success. Editing removes the prior Saved
+  message. An existing order retains its address snapshot when the default changes.
+- Contact uses a compact heading and puts the enquiry first on phones. An order
+  link prefills its reference into an explicit messaging-app draft. The customer
+  still sends it in their own app. Unconfigured contact channels remain clear;
+  no email or WhatsApp message is sent by this batch.
+- Shared mobile/account disclosures close on Escape and return focus to their
+  toggle. Outside clicks dismiss them, and opening one closes the other.
+- How it works and FAQs distinguish available slots checked on order submission
+  from custom requests awaiting kitchen confirmation.
+
+Verification: frontend utility and customer rendering regressions, changed-file
+ESLint, a production build and Chromium journeys against an isolated fictional
+SQLite database. Journeys cover actual profile/address saves, failed and malformed
+reads, uncertain saves preserving typed entries, history pagination, order refresh
+failure/retry, and order-specific contact drafts. Twenty page/viewport scans cover
+home, contact, how-it-works, account and customer orders at 1440, 768, 390 and 320
+pixels, with no automated WCAG A/AA violations, document overflow or page errors.
+Desktop and phone screenshots were inspected as well.
+
+These are customer presentation and navigation changes. Production records,
+scheduling rules, payments, forecasting and API schemas are unchanged. Local
+checks do not establish production deployment readiness or replace user testing.
+
 ## Next batch
 
-**Shared pages and navigation:** review home, account, support, forms and customer
-order progress for typography, keyboard use, contrast, focus, loading/empty/error
-states and responsive spacing. This is the next review area, not a claim that
-all remaining pages have already been audited.
+**Sign-in and remaining forms:** review authentication dialogs, notifications,
+validation recovery and keyboard focus across the remaining customer forms.
+This is the next review area, not a claim that every page has been audited.
 
 ## Verification and boundaries
 
