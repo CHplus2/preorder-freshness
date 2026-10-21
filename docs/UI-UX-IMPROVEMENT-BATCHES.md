@@ -280,11 +280,54 @@ A final cross-page consistency pass follows this batch. The entire site audit is
 not yet complete. Forecasting algorithms and model artifacts are unchanged;
 this batch does not retrain or evaluate models.
 
-## Next batch
+## Batch 7 — Shared navigation and page-state consistency
 
-**Cross-page consistency:** check shared navigation, typography, mobile action
-bars, empty/error states and remaining differences between customer and owner
-screens after the completed page-specific batches.
+- Every route has a fallback browser title and description. Orders, checkout,
+  account, payment and kitchen screens no longer inherit the previously opened
+  page's title. More specific titles, such as a meal's name, remain intact.
+- Meal details retain the Menu section highlight. Demand analytics, Stock and
+  expiry, and Decisions all retain the FreshCast kitchen highlight. Phone
+  navigation uses the same selected-section cue as desktop, and the horizontally
+  scrolling kitchen navigation reveals its current section on load and resize.
+- Client-side navigation moves keyboard focus to page content and preserves the
+  skip link. Changing filters within one route does not move focus. Initial
+  account dialogs retain their existing focus behavior.
+- Missing pages, failed page-code loads, signed-out pages and staff-only access
+  use one readable heading, explanation and action layout. Dismissing the initial
+  sign-in dialog leaves a working Sign in action. Failed code loads keep the
+  site navigation and a reload action without erasing browser data.
+- Long configured kitchen names fit the phone header. The basket indicator
+  distinguishes an updating or unavailable basket from a recorded quantity.
+  Existing purchase bars, kitchen-help placement and customer/owner typography
+  remain appropriate to their respective workflows.
+- Customers now distinguishes loading, successful empty reads, invalid/failed
+  reads and uncertain activation changes. Failed reads hide cached mutation
+  controls; failed changes require a refresh before another action. Activation
+  buttons name their customer, pending updates block overlapping actions and
+  table headers identify their row/column. Staff accounts remain read-only here.
+
+Verification: utility, checkout, PayPal and UX/rendering regressions, changed-source
+ESLint and a production build. Forty-eight cross-page responsive checks cover
+customer and owner screens, all three sample-source FreshCast views, access and
+recovery states, and long-brand/basket-failure states at 1440, 768, 390 and 320
+pixels. No automated WCAG A/AA violations, page errors or document overflow were
+reported. Screenshots were inspected. A separate deliberate page-chunk failure
+checks reload recovery and the keyboard skip link. A fictional local customer's
+activation was toggled off and back on to verify the pending-action guard and
+successful server-response handling; its final access remains active.
+
+Browser verification uses fictional isolated SQLite accounts and explicit error
+fixtures. No production database changes, external messages or provider payments
+are part of this batch. Authentication/authorization APIs, model artifacts,
+forecast calculations and scheduling rules are unchanged. No model training or
+accuracy evaluation was performed.
+
+## Review status
+
+The seven planned UI/UX batches are complete. This records local verification,
+not a claim that every possible interaction or production deployment has been
+validated. Further work can follow concrete issues found during showcase and
+customer/owner use.
 
 ## Verification and boundaries
 

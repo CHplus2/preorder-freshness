@@ -1,0 +1,8 @@
+.page-state{width:100%;max-width:820px;min-height:360px;margin:0 auto;padding:48px 32px;color:#294632;box-sizing:border-box}
+.page-state h1{font:600 clamp(26px,3vw,34px)/1.25 system-ui,sans-serif;letter-spacing:-.6px;margin:0 0 18px;color:#294632}
+.page-state>p{font:400 15px/1.7 system-ui,sans-serif;color:#526650;max-width:640px;margin:0 0 26px;overflow-wrap:anywhere}
+.page-state-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.page-state-actions :is(a,button){display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border:1px solid #bdcdbb;border-radius:8px;background:#fff;color:#2b5238;text-decoration:none;font:600 14px/1.5 system-ui,sans-serif;white-space:normal}
+.page-state-actions :is(a,button):first-child{background:#285a3e;border-color:#285a3e;color:#fff}
+.page-state-actions :is(a,button):hover{filter:brightness(.96);transform:none;box-shadow:none}
+@media(max-width:600px){.page-state{padding:32px 20px;min-height:300px}.page-state-actions{align-items:stretch}.page-state-actions :is(a,button){flex:1 1 160px}}

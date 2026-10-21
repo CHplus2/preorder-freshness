@@ -57,3 +57,9 @@ button:disabled{cursor:not-allowed;opacity:.6}button:focus-visible,a:focus-visib
 
 .business-app .text-link,.business-page .text-link,.dk-actions .text-link,.occasion-section .text-link{border-bottom:0;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
 .setup-checklist a{ text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px; }
+
+/* Navigation selection uses the same cue on phones and desktop. */
+.mobile-navigation a[aria-current=page]{background:#e8f0e4;color:#244c35;font-weight:650;border-radius:8px}
+.business-header .basket-link{min-height:44px;min-width:44px;justify-content:center}
+.business-header .brand{min-width:0;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@media(max-width:560px){.business-header .brand{flex:1}.business-header-actions{flex-shrink:0}}
