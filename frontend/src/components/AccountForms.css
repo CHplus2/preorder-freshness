@@ -1,0 +1,35 @@
+.account-dialog .account-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#172d2359;backdrop-filter:blur(4px);padding:16px;box-sizing:border-box;overflow-y:auto}
+.account-dialog .account-form-card{position:relative;width:min(100%,440px);box-sizing:border-box;padding:32px;border:1px solid #d8e1d4;border-radius:16px;box-shadow:0 20px 70px #172c232b;background:#fffefb;max-height:calc(100dvh - 32px);overflow-y:auto;text-align:left}
+.account-dialog .account-form-card::before{display:none}
+.account-form-card .dk-eyebrow{font-size:10px;letter-spacing:1.6px;margin:0 40px 14px 0}
+.account-dialog .account-form-card h2{font:400 32px/1.18 Georgia,serif;letter-spacing:-.6px;text-align:left;margin:0 32px 12px 0;color:#29472f}
+.account-dialog .account-form-card p{text-align:left;margin:0;color:#52634f;font-size:14px;line-height:1.6}
+.account-dialog .account-form-card .account-form-intro{margin-bottom:24px}
+.account-close{position:absolute;top:18px;right:16px;display:grid;place-items:center;min-width:44px;min-height:44px;border:1px solid #d9e2d4;background:#fff;color:#34533e;border-radius:50%;padding:8px;margin:0;box-shadow:none}
+.account-form-fields{padding:0;margin:0;border:0;min-width:0;display:grid;gap:18px}
+.account-form-fields label,.password-field>label{display:grid;gap:8px;font-size:14px;line-height:1.5;font-weight:600;color:#304a35}
+.account-form-fields input,.password-control input{box-sizing:border-box;min-height:48px;min-width:0;width:100%;padding:12px;border-radius:8px;border:1px solid #aabbac;background:#fff;color:#263f2d;font:400 16px/1.4 system-ui,sans-serif;margin:0}
+.password-field{min-width:0;display:grid;gap:8px}
+.password-control{position:relative;min-width:0}
+.password-control input{padding-right:86px}
+.password-control .password-toggle{position:absolute;inset:3px 3px 3px auto;display:flex;align-items:center;justify-content:center;gap:5px;min-height:42px;min-width:76px;padding:8px;background:#f0f4eb;color:#31523a;border:0;border-radius:5px;font:500 12px/1.4 system-ui,sans-serif;box-shadow:none;margin:0;transform:none}
+.account-form-fields:disabled input{background:#f0f3ed;color:#5c6d5b}
+.account-primary{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;padding:13px 20px;margin:24px 0 0;border:1px solid #285a3e;border-radius:8px;background:#285a3e;color:#fff;font:600 15px/1.5 system-ui,sans-serif;box-shadow:none;transform:none}
+.account-primary:disabled{background:#e5ebe0;color:#52634f;border-color:#c7d2c0;cursor:wait;opacity:1}
+.account-dialog .account-form-card .account-form-hint{font-size:12px;line-height:1.6;margin-top:-10px}
+.account-recovery-link{display:inline-flex;align-items:center;min-height:44px;font-size:14px;color:#315a3c;text-underline-offset:3px;margin:10px 0 0}
+.account-form-switch{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:16px;padding-top:18px;border-top:1px solid #e0e6db;font-size:14px;color:#52634f}
+.account-form-switch button{border:0;background:none;color:#285a3e;min-height:44px;padding:8px 0;font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:4px;box-shadow:none;margin:0}
+.account-form-error{padding:14px;margin:0 0 20px;background:#fff1eb;border:1px solid #d3a892;border-radius:8px;color:#803d26;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.account-form-error:focus{outline:2px solid #9a6143;outline-offset:3px}
+.account-form-fields input:focus-visible,.password-control input:focus-visible,.password-toggle:focus-visible,.account-close:focus-visible,.account-primary:focus-visible,.account-form-switch button:focus-visible{outline:3px solid #567c46;outline-offset:3px;box-shadow:none}
+.recovery-page{width:min(100%,700px);box-sizing:border-box;margin:28px auto;padding:24px;color:#29472f}
+.recovery-page h1{font:400 clamp(32px,4vw,42px)/1.2 Georgia,serif;letter-spacing:-.8px;margin:10px 0 16px}
+.recovery-page>p{color:#52634f;font-size:15px;line-height:1.7;margin:0 0 24px}
+.recovery-card{padding:28px;border:1px solid #d7e0d1;border-radius:12px;background:#fff;margin-bottom:24px}
+.recovery-card .account-form-hint{color:#586854;font-size:13px;line-height:1.6;margin:0}
+.recovery-message{padding:18px;border:1px solid #b2c8a7;border-radius:8px;background:#eef5e8;color:#2b5034;line-height:1.6;font-size:14px;margin:0 0 22px}
+.recovery-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.recovery-actions button,.recovery-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border:1px solid #c7d2c0;border-radius:8px;color:#31583c;background:#fff;font-size:14px;text-decoration:none}
+@media(max-width:480px){.account-dialog .account-form-card{padding:24px 20px}.account-form-card .dk-eyebrow{font-size:9px}.account-dialog .account-form-card h2{font-size:29px}.recovery-page{margin:14px auto;padding:20px 16px}.recovery-card{padding:22px 18px}}
+@media(max-height:650px){.account-dialog .account-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;align-items:flex-start}.account-dialog .account-form-card{padding-top:24px}}

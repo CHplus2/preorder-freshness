@@ -1,3 +1,5 @@
+.modal-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:2000; background:#172d2370; backdrop-filter:blur(4px); padding:16px; box-sizing:border-box; }
+.modal-content { position:relative; width:100%; max-width:400px; padding:28px; border-radius:16px; border:1px solid #dce3d4; background:#fff; color:#304830; box-shadow:0 10px 40px #172d2329; }
 .account-dialog { border: 0; padding: 0; margin: 0; width: 100%; height: 100%; max-width: none; max-height: none; background: transparent; color: inherit; }
 .account-dialog::backdrop { background: transparent; }
 .account-dialog .modal-content { max-height: calc(100dvh - 2rem); overflow-y: auto; }

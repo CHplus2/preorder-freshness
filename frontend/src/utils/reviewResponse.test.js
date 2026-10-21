@@ -5,3 +5,7 @@ assert.deepEqual(reviewPage([row],'4'),{rows:[row],before:'4'});
 assert.deepEqual(reviewPage([]),{rows:[],before:null});
 for(const [rows,cursor] of [[{},null],[[{...row,rating:6}],null],[[row],'3'],[[],'1'],[Array(21).fill(row),null],[[{...row,comment:{html:'unsafe'}}],null]])assert.throws(()=>reviewPage(rows,cursor));
 console.log('Review pagination: bounded arrays, next cursor matching, empty pages and invalid data passed.');
+const {reviewAccess}=await import('./reviewResponse.js');
+assert.deepEqual(reviewAccess({eligible:false,reason:'Sign in to review.'}),{eligible:false,reason:'Sign in to review.'});
+assert.equal(reviewAccess({eligible:true,reason:''}).eligible,true);
+for(const value of [null,{},[],{eligible:'yes',reason:''},{eligible:true,reason:null}])assert.throws(()=>reviewAccess(value),{code:'INVALID_RESPONSE'});

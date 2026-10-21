@@ -1,8 +1,9 @@
+import AppNotification from './components/AppNotification';
 import PageLoading from "./components/PageLoading";
 import RouteErrorBoundary from "./components/RouteErrorBoundary";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef, lazy, Suspense } from "react";
+import { useEffect, useState, useRef, useCallback, lazy, Suspense } from "react";
 import { User, Menu, X, ShoppingBag } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { useUI } from "./contexts/UIContext";
@@ -210,12 +211,13 @@ function AppContent() {
   const closeMenu=()=>setMobileOpen(false);
   useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[location.pathname]);
   const { showLogin, setShowLogin, showSignup, dropdownOpen, setDropdownOpen, alert, setAlert } = useUI();
+  const dismissNotification=useCallback(()=>setAlert({message:'',type:''}),[setAlert]);
   const { isAuthenticated, isAdmin, logout } = useAuth();
   const { productIdToDelete } = useProduct();
 
   useEffect(()=>{
     const dismiss=event=>{
-      if(event.key!=='Escape' || event.defaultPrevented || event.target.closest?.('[role="dialog"]'))return;
+      if(event.key!=='Escape' || event.defaultPrevented || event.target.closest?.('dialog,[role="dialog"]'))return;
       if(dropdownOpen){setDropdownOpen(false);accountToggle.current?.focus();}
       else if(mobileOpen){setMobileOpen(false);mobileToggle.current?.focus();}
     };
@@ -227,15 +229,6 @@ function AppContent() {
     return()=>{document.removeEventListener('keydown',dismiss);document.removeEventListener('pointerdown',outside);};
   },[mobileOpen,dropdownOpen,setDropdownOpen]);
 
-  useEffect(() => {
-    if (!alert.message || alert.type === "error") return;
-
-    const timer = setTimeout(() => {
-      setAlert({ message: "", type: "" });
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [alert, setAlert]);
 
   return (
     <>
@@ -261,7 +254,7 @@ function AppContent() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {showLogin && (
+        {showLogin && !showSignup && (
           <GroceryLogin />
         )}
       </AnimatePresence>
@@ -273,19 +266,8 @@ function AppContent() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {alert?.message && (
-          <motion.div
-            role={alert.type === "error" ? "alert" : "status"}
-            className={`alert ${alert.type}`}
-            initial={{ opacity: 0, y:30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 30 }}
-          >
-            <div>
-              {alert.message}
-            </div><button aria-label="Dismiss notification" onClick={()=>setAlert({message:"",type:""})}><X size={18}/></button>
-          </motion.div>
-        )}
+        {alert?.message && <AppNotification key={alert.message+alert.type} alert={alert} onDismiss={dismissNotification}/>}
+
       </AnimatePresence>
 
       <div className={ownerPage?'admin-shell':''} onInvalidCapture={e=>{let node=e.target.parentElement;while(node){if(node.tagName==='DETAILS')node.open=true;node=node.parentElement}}}>{ownerPage && <aside className="admin-sidebar"><span className="admin-sidebar-label">KITCHEN WORKSPACE</span><nav aria-label="Kitchen management">{ownerLinks.map(([url,label])=><Link key={url} to={url} aria-current={location.pathname===url?'page':undefined}>{label}</Link>)}</nav></aside>}<div id="page-content" className={ownerPage?'admin-content':''} tabIndex="-1"><RouteErrorBoundary route={location.pathname}><Suspense fallback={<PageLoading />}><AnimatedRoutes/></Suspense></RouteErrorBoundary></div></div>

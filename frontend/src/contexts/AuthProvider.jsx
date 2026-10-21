@@ -1,5 +1,5 @@
 import {AuthContext} from './AuthContext';
-import {apiError} from '../utils/apiError';
+import {accountRequestError} from '../utils/accountForms';
 import {Fragment,useEffect,useState,useCallback,useMemo,useRef} from 'react';
 import {getCookie} from '../utils/cookieUtils';
 import {authSession,syncBrowserScope,announceSessionChange,SESSION_SIGNAL} from '../utils/sessionScope';
@@ -11,6 +11,8 @@ export default function AuthProvider({children}){
  const [version,setVersion]=useState(0);
  const scope=useRef(0),identity=useRef(null),authRequest=useRef(0),controller=useRef(null);
  const accountChangeBusy=useRef(false);
+ const [authError,setAuthError]=useState(''),[authPending,setAuthPending]=useState(false);
+ const clearAuthError=useCallback(()=>setAuthError(''),[]);
  const {setAlert,setDropdownOpen,setShowSignup,setShowLogin}=useUI();
  const cancelAuthChecks=useCallback(()=>{++authRequest.current;controller.current?.abort()},[]);
  const invalidate=useCallback(()=>{
@@ -45,15 +47,15 @@ export default function AuthProvider({children}){
  },[checkAuth,invalidate,cancelAuthChecks]);
  const signIn=async(url,account)=>{
   if(accountChangeBusy.current)return 'An account change is already running.';
-  accountChangeBusy.current=true;
+  accountChangeBusy.current=true;setAuthPending(true);setAuthError('');
   try{
    await axios.post(url,account,{withCredentials:true,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    invalidate();announceSessionChange();
    const next=await checkAuth();
-   if(!next?.isAuthenticated){setAlert({type:'error',message:'The sign-in result could not be verified. Refresh before continuing.'});return 'Could not verify this session.'}
+   if(!next?.isAuthenticated){const message='The account session could not be verified. Refresh this page and sign in before continuing.';setAuthError(message);return message;}
    setAlert({message:'',type:''});setShowLogin(false);setShowSignup(false);return null;
-  }catch(error){const message=apiError(error,'Could not sign in.');setAlert({type:'error',message});return message}
-  finally{accountChangeBusy.current=false}
+  }catch(error){const message=accountRequestError(error,url==='/api/signup/'?'signup':'signin');setAuthError(message);return message}
+  finally{accountChangeBusy.current=false;setAuthPending(false)}
  };
  const logout=async()=>{
   if(accountChangeBusy.current)return;
@@ -62,13 +64,13 @@ export default function AuthProvider({children}){
    await axios.post('/api/logout/',{},{withCredentials:true,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    invalidate();commit({authenticated:false});announceSessionChange();
    setAlert({message:'',type:''});setDropdownOpen(false);
-  }catch(error){setAlert({type:'error',message:apiError(error,'Could not sign out.')})}
+  }catch(error){setAlert({type:'error',message:accountRequestError(error,'logout')})}
   finally{accountChangeBusy.current=false}
  };
  // Every account/role boundary remounts private providers and pages. Requests
  // captured by an old tree cannot refill a new account's basket/order/wallet.
  const isSessionCurrent=useMemo(()=>()=>scope.current===version,[version]);
- return <AuthContext.Provider value={{...session,isSessionCurrent,checkAuth,login:account=>signIn('/api/login/',account),signup:account=>signIn('/api/signup/',account),logout}}>
+ return <AuthContext.Provider value={{...session,isSessionCurrent,checkAuth,authError,clearAuthError,authPending,login:account=>signIn('/api/login/',account),signup:account=>signIn('/api/signup/',account),logout}}>
   <Fragment key={version}>{children}</Fragment>
  </AuthContext.Provider>;
 }

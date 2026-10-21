@@ -5,3 +5,8 @@ export function reviewPage(rows,before){
  if(before!=null && (!/^[1-9]\d{0,18}$/.test(before) || String(rows.at(-1)?.id)!==before))throw invalidResponse();
  return {rows,before:before??null};
 }
+
+export function reviewAccess(data){
+ if(typeof data?.eligible!=='boolean' || typeof data.reason!=='string')throw invalidResponse();
+ return data;
+}

@@ -176,11 +176,66 @@ These are customer presentation and navigation changes. Production records,
 scheduling rules, payments, forecasting and API schemas are unchanged. Local
 checks do not establish production deployment readiness or replace user testing.
 
+## Batch 5 — Account forms, recovery, reviews and notifications
+
+Implemented on 21 October 2026:
+
+- Sign-in and registration share one account form and a consistent light dialog
+  style. Removed duplicate legacy form CSS while retaining the shared owner-modal
+  shell. Password controls support Show/Hide without changing the entered value.
+- Registration explains username/password rules and optional recovery email.
+  Existing sign-in passwords do not receive the new-password minimum-length rule.
+  Fields and mode switching are disabled during an account request; closing remains
+  possible. Server authentication and password policies remain authoritative.
+- Account errors appear once inside the dialog, receive keyboard focus and retain
+  the draft after rejected requests. Session-verification errors survive account
+  isolation remounts. Only one account dialog is shown if a protected page requests
+  sign-in while registration is already open.
+- Dialogs start at the username field, keep Tab/Shift+Tab within available controls,
+  and restore opener focus on dismissal. Shared keyboard containment includes
+  disclosure summaries in owner forms. Background navigation ignores Escape from
+  a foreground native dialog.
+- Recovery waits for the initial session check before consuming a reset fragment;
+  reading it is side-effect free under development StrictMode. Credentials stay in
+  memory and the fragment is removed from the address bar after mounting. A new
+  fragment on the same page opens its corresponding reset form. Incomplete links
+  can restart recovery. Success bodies are validated before reporting completion.
+- Recovery, sign-in, registration and sign-out errors explain their own uncertain
+  outcomes instead of displaying unrelated order-submission instructions. Recovery
+  requests retain the server's generic, non-enumerating acknowledgement.
+- Customer reviews have a compact list, refresh action, rating labels, character
+  count and public-information guidance. A blank/whitespace review is rejected
+  before posting. Failed/uncertain posting preserves the words and directs the
+  customer to refresh before retrying. Invalid access/read payloads are errors,
+  not an empty list or permission to post. Existing delivered-order eligibility,
+  one-review rules and pagination remain enforced by the server.
+- Notifications sit below the header rather than over bottom basket/help controls.
+  Errors persist until dismissed. Other messages dismiss after eight seconds,
+  pausing while hovered or keyboard-focused. Dismissal works by keyboard and
+  notifications do not take focus when they appear. Reduced-motion preferences
+  disable notification entrance/exit animation.
+
+Verification: utility and UX/rendering regressions, changed-source ESLint and a
+production build. Chromium journeys use isolated fictional SQLite records for
+actual account creation, sign-in, password reset, review pagination/posting and
+basket actions. Email-request UI uses an explicit no-email response fixture;
+no real emails, messages, payments or production record changes are made.
+Twenty-four responsive accessibility checks cover account/recovery forms and the eligible
+review form at 1440, 768, 390 and 320 pixels, plus notification states on phones.
+No automated WCAG A/AA violations or document overflow were found. Screenshots
+were inspected, notification pause/resume/dismissal was exercised, and owner
+menu/inventory dialogs passed desktop/phone keyboard and layout smoke checks.
+Recovery was also checked through Vite's development StrictMode runtime.
+
+Authentication APIs, account isolation, scheduling, payment and forecast rules
+are unchanged. This batch does not retrain or evaluate forecasting models.
+
 ## Next batch
 
-**Sign-in and remaining forms:** review authentication dialogs, notifications,
-validation recovery and keyboard focus across the remaining customer forms.
-This is the next review area, not a claim that every page has been audited.
+**Basket, checkout and payments:** review delivery choices, totals, payment status,
+validation recovery and mobile purchase actions as one customer journey. A final
+cross-page consistency pass follows that review; the entire site audit is not yet
+complete.
 
 ## Verification and boundaries
 

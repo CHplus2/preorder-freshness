@@ -1,0 +1,25 @@
+.customer-menu-reviews{margin:44px 0;color:#29472f}
+.customer-menu-reviews .reviews-heading{display:flex;align-items:start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px}
+.customer-menu-reviews h2{font:400 30px/1.2 Georgia,serif;letter-spacing:-.6px;margin:0 0 12px}
+.customer-menu-reviews .reviews-heading p,.review-access p{font-size:14px;line-height:1.65;color:#586854;margin:0}
+.customer-menu-reviews button{min-height:44px;font-size:14px;margin:0}
+.customer-review-list{display:grid;gap:14px;margin:20px 0}
+.customer-review-list article{padding:20px;border:1px solid #d9e2d3;background:#fff;border-radius:10px}
+.customer-review-list article header{display:flex;justify-content:space-between;align-items:start;gap:16px;font-size:14px;line-height:1.6}
+.customer-review-list article strong{overflow-wrap:anywhere;min-width:0}
+.customer-review-list article span{flex-shrink:0;padding:3px 9px;background:#edf3e7;border-radius:6px;color:#315537}
+.customer-review-list article p{font-size:14px;line-height:1.7;margin:12px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;color:#43583e}
+.customer-menu-reviews .customer-review-form{margin:28px 0 0;max-width:660px;padding:24px;border:1px solid #d5e0cc;border-radius:12px;background:#f5f8ef}
+.customer-review-form h3{font:600 20px/1.4 system-ui,sans-serif;margin:0 0 12px;letter-spacing:0}
+.customer-review-form>p,.customer-review-form fieldset>p{font-size:13px;line-height:1.65;color:#586854}
+.customer-review-form fieldset{margin:16px 0 20px;padding:0;border:0;min-width:0}
+.customer-review-form label{margin:0 0 18px}
+.customer-review-form select{max-width:180px;font-size:16px}
+.customer-review-form textarea{min-height:130px;resize:vertical;width:100%;font-size:16px}
+.customer-menu-reviews .review-submit{background:#285a3e;border:1px solid #285a3e;color:#fff;min-width:140px;box-shadow:none}
+.customer-menu-reviews .review-notice{padding:16px;border:1px solid #d0a88f;background:#fff3ec;border-radius:8px;color:#7d3c25;font-size:14px;line-height:1.65;margin:18px 0}
+.review-notice p{color:inherit;margin:0 0 12px}
+.review-notice:focus{outline:2px solid #9a6143;outline-offset:3px}
+.review-success{padding:16px;border:1px solid #b2c8a7;border-radius:8px;background:#eef5e8;color:#2b5034;font-size:14px;line-height:1.65}
+.review-access{margin-top:24px}.review-access button{margin-top:14px}
+@media(max-width:480px){.customer-menu-reviews .customer-review-form{padding:20px 16px}.customer-review-list article{padding:18px}}
