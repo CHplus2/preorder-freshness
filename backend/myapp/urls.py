@@ -9,7 +9,7 @@ from .views.rescheduling import reschedule_order
 from .views.delivery_date_batch import missing_delivery_dates
 from .views.payments import payments
 from .views.outcomes import contribution_report, contribution_export, batch_trace
-from .views.discovery import guided_menu, basket_slots, recommendation_event, recommendation_metrics
+from .views.discovery import guided_menu, menu_suggestions, basket_slots, recommendation_event, recommendation_metrics
 from .views.auth import recovery_request, recovery_confirm
 from .views.costs import expenses, void_expense, record_waste, cost_report
 from .views.reminders import reminder_status, run_reminders
@@ -50,6 +50,7 @@ urlpatterns = [
     path('auth/recovery/confirm/', recovery_confirm),
     path('menu/guide/', guided_menu),
     path('orders/slots/', basket_slots),
+    path('menu/suggestions/', menu_suggestions),
     path('recommendation/events/', recommendation_event),
     path('admin/recommendation-metrics/', recommendation_metrics),
     path('admin/contribution/', contribution_report),

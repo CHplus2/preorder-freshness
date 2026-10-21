@@ -1,3 +1,5 @@
+import MenuRecommendations from '../../components/MenuRecommendations';
+import {openMenuFinder} from '../../utils/menuSuggestions';
 import MenuKitchenHeader from '../../components/MenuKitchenHeader';
 import {menuPage} from '../../utils/menuPresentation';
 import MenuListingStatus from '../../components/MenuListingStatus';
@@ -44,9 +46,10 @@ export default function ProductsPage() {
     <main className="products-page menu-storefront">
       <PageMeta title="The menu" description="Explore this kitchen’s current food menu, prices and preorder notice. Choose a favourite and schedule your delivery."/>
       <MenuKitchenHeader store={store}/>
+      <MenuRecommendations/>
       <section id="menu-browse" className="menu-toolbar" aria-label="Browse the menu">
         <div className="menu-search"><Search size={19} aria-hidden="true"/><input ref={searchInput} type="search" aria-label="Search the menu" placeholder="Find your next favourite…" value={searchTerm} onChange={e=>changeFilters(e.target.value,selectedCategory)}/>{searchTerm && <button type="button" aria-label="Clear menu search" onClick={()=>{changeFilters('',selectedCategory);searchInput.current?.focus();}}><X size={17}/></button>}</div>
-        <button type="button" className="menu-date-shortcut" onClick={()=>{const finder=document.getElementById('menu-finder');if(finder){finder.open=true;finder.scrollIntoView({block:'start'});finder.querySelector('input')?.focus({preventScroll:true});}}}><CalendarDays size={17} aria-hidden="true"/>Find by delivery date</button>
+        <button type="button" className="menu-date-shortcut" onClick={openMenuFinder}><CalendarDays size={17} aria-hidden="true"/>Find by delivery date</button>
         <div className="menu-category-tabs" role="group" aria-label="Menu categories"><button type="button" aria-pressed={selectedCategory===''} onClick={()=>changeFilters(searchTerm,'')}>All food</button>{(Array.isArray(categories)?categories:[]).map(c=><button type="button" key={c.id} aria-pressed={String(selectedCategory)===String(c.id)} onClick={()=>changeFilters(searchTerm,String(c.id))}>{c.name}</button>)}</div>
       </section>
 

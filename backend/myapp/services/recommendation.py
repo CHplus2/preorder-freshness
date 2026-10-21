@@ -128,3 +128,19 @@ def recommend_for_user(user, limit=20, exclude_bought=True):
             'product_img': product.image_url, 'product_price': product.price,
             'score': score, 'reasons': reasons or ['Explore something from our kitchen']})
     return sorted(results, key=lambda item: (-item['score'], item['product_id']))[:limit]
+
+
+def rank_menu_choices(products, user, personalised=True):
+    """Shared explainable ranking for instant discovery and dated guidance."""
+    categories, counts = set(), {}
+    if user.is_authenticated and personalised:
+        categories, _ = get_user_top_categories(user)
+        counts = get_user_product_counts(user)
+    popularity = get_global_product_popularity()
+    rows = []
+    for product in products:
+        if not product.ingredients.all():
+            continue
+        score, reasons = get_score(product, categories, counts, popularity)
+        rows.append((score, product, reasons))
+    return sorted(rows, key=lambda row: (-row[0], -popularity.get(row[1].pk, 0), row[1].pk))

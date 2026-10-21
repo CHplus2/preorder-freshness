@@ -1,0 +1,31 @@
+.menu-recommendations{margin:8px 0 30px;padding:22px 0 26px;border-bottom:1px solid #dce3d6;scroll-margin-top:110px;min-width:0}
+.menu-recommendations-heading{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.menu-recommendations-kicker{display:block;font:650 10px/1.5 system-ui,sans-serif;letter-spacing:1.3px;color:#61705b;margin-bottom:7px}
+.menu-recommendations h2{font:600 25px/1.3 system-ui,sans-serif;letter-spacing:-.5px;margin:0 0 9px;color:#294c35}
+.menu-recommendations-heading p{font-size:13px;line-height:1.6;color:#566850;margin:0}
+.menu-recommendations .menu-recommendations-refine{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;min-height:44px;padding:10px 14px;background:#fff;color:#315a3d;border:1px solid #bdceba;border-radius:8px;font-size:13px;box-shadow:none;transform:none}
+.menu-recommendations-controls{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px;gap:12px;color:#5c6e56;font-size:12px}
+.menu-recommendations-controls>div{display:flex;gap:8px}.menu-recommendations-controls button{width:44px;height:44px;padding:0;display:grid;place-items:center;background:#fff;color:#31563c;border:1px solid #b8cbb8;border-radius:50%;box-shadow:none;transform:none}
+.menu-recommendations-row{display:flex;align-items:stretch;gap:18px;overflow-x:auto;padding:3px 3px 14px;scroll-snap-type:x proximity;scroll-padding:3px;min-width:0}
+.menu-recommendation-card{flex:0 0 calc((100% - 36px)/3);min-width:0;background:#fff;border:1px solid #d4dfcf;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;scroll-snap-align:start;color:#2b4a34;box-sizing:border-box}
+.menu-recommendation-identity{display:block;color:inherit;text-decoration:none}
+.menu-recommendation-photo{position:relative;aspect-ratio:2/1;background:#eef1e7;overflow:hidden;display:grid;place-items:center}
+.menu-recommendation-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.menu-recommendation-photo>span{display:grid;justify-items:center;gap:8px;color:#5a7054;font-size:12px;text-align:center;padding:16px}
+.menu-recommendation-card h3{font:650 16px/1.45 system-ui,sans-serif;letter-spacing:0;margin:16px 18px 0;color:#2b4a34;overflow-wrap:anywhere}
+.menu-recommendation-body{padding:10px 18px 18px;display:flex;flex-direction:column;flex:1;gap:12px;min-width:0}
+.menu-recommendation-body .menu-recommendation-price{font:650 15px/1.5 system-ui,sans-serif;color:#294d35;margin:0}
+.menu-recommendation-reasons{font:400 12px/1.65 system-ui,sans-serif;color:#53694e;margin:0 0 4px;padding-left:18px;overflow-wrap:anywhere}
+.menu-recommendation-reasons li+li{margin-top:4px}
+.menu-recommendation-body .menu-recommendation-add{margin-top:auto;min-height:44px;width:100%;padding:10px 14px;border:1px solid #285a3e;border-radius:8px;background:#285a3e;color:#fff;box-shadow:none;transform:none;font:600 13px/1.5 system-ui,sans-serif}
+.menu-recommendations-status{padding:18px;margin:18px 0 0;border:1px solid #d2ddcd;border-radius:10px;background:#fff;font-size:14px;line-height:1.6;color:#4d6347}
+.menu-recommendations-status p{margin:0 0 14px}.menu-recommendations-note{font:400 12px/1.65 system-ui,sans-serif;color:#586c51;margin:10px 0 0}
+.menu-recommendation-times{margin-top:auto;display:grid;gap:8px}.menu-recommendation-times p{font:400 12px/1.6 system-ui,sans-serif;margin:0;color:#51684b}
+.menu-recommendation-times>div{display:flex;flex-wrap:wrap;gap:8px}.menu-recommendation-times button{font:600 12px/1.5 system-ui,sans-serif;margin:0;min-height:44px;white-space:normal}
+@media(max-width:900px){.menu-recommendation-card{flex-basis:calc((100% - 18px)/2.2)}}
+@media(max-width:600px){.menu-recommendations{margin-top:0;padding-top:14px}.menu-recommendations-heading{align-items:flex-start;gap:14px;flex-direction:column}.menu-recommendations h2{font-size:22px}.menu-recommendations-heading p{font-size:12px}.menu-recommendations-row{gap:12px}.menu-recommendation-card{flex-basis:85%}.menu-recommendation-photo{aspect-ratio:1.9}.menu-recommendations-controls{margin-top:12px}.menu-recommendations .menu-recommendations-refine{font-size:12px}}
+.menu-storefront .guide-results{align-items:stretch;gap:18px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.menu-storefront .guide-results .menu-recommendation-card{padding:0;border:1px solid #d4dfcf;border-radius:12px}
+.menu-storefront .guide-results .menu-recommendation-times button{margin:0}
+@media(max-width:1000px){.menu-storefront .guide-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.menu-storefront .guide-results{grid-template-columns:minmax(0,1fr)}}

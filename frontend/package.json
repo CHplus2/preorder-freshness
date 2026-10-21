@@ -19,7 +19,8 @@
     "images:update": "node scripts/prepare-menu-photos.mjs --update-catalog",
     "prebuild": "npm run images",
     "predev": "npm run images",
-    "test:images": "node --test scripts/menu-photos.test.mjs"
+    "test:images": "node --test scripts/menu-photos.test.mjs",
+    "test:recommendations": "node src/utils/menuSuggestions.test.js && node src/utils/guideResponse.test.js && node src/components/MenuRecommendations.test.js"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^9.1.1",

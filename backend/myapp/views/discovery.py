@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from ..models import Product, Storefront, CartItem, RecommendationSession, RecommendationEvent
 from ..services.discovery import slots, slot_search, next_basket_slots, candidate_item, owner_key
-from ..services.recommendation import get_score, get_user_top_categories, get_user_product_counts, get_global_product_popularity
+from ..services.recommendation import rank_menu_choices
 from ..services.auth_limits import limit
 
 
@@ -31,6 +31,34 @@ class BasketSlotsInput(serializers.Serializer):
         return data
 
 
+def recommendation_variant(request):
+    if not settings.RECOMMENDATION_EXPERIMENT:
+        return 'personalised'
+    variant = request.session.get('discovery_variant') or secrets.choice(['popularity', 'personalised'])
+    request.session['discovery_variant'] = variant
+    return variant
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def menu_suggestions(request):
+    """Small, date-free discovery set; it makes no stock or capacity promise."""
+    limit(request, 'menu-suggestions')
+    key = owner_key(request)
+    variant = recommendation_variant(request)
+    products = Product.objects.filter(selling_status='active').select_related('category').prefetch_related('ingredients').order_by('id')
+    ranked = rank_menu_choices(products, request.user, personalised=variant == 'personalised')[:3]
+    results = [{'id': p.pk, 'name': p.name, 'image_url': p.image_url, 'price': str(p.price),
+                'reasons': reasons or ['Explore this menu from our kitchen']} for _, p, reasons in ranked]
+    reasons = [reason for row in results for reason in row['reasons']]
+    basis = ('history' if any(reason.startswith('You ') for reason in reasons)
+             else 'popularity' if 'Popular recently' in reasons else 'menu')
+    session = RecommendationSession.objects.create(id=uuid.uuid4(), owner_key=key, variant=variant,
+        context={'version': 'instant-menu-v1', 'surface': 'menu_cards', 'experiment': settings.RECOMMENDATION_EXPERIMENT},
+        products=[row['id'] for row in results])
+    return Response({'session': str(session.pk), 'basis': basis, 'results': results})
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def guided_menu(request):
@@ -41,30 +69,16 @@ def guided_menu(request):
     if not timezone.localdate() <= data['date'] <= timezone.localdate()+timedelta(days=90):
         raise serializers.ValidationError('Choose a date within the next 90 days.')
     key = owner_key(request)
-    variant = 'personalised'
-    if settings.RECOMMENDATION_EXPERIMENT:
-        variant = request.session.get('discovery_variant') or secrets.choice(['popularity', 'personalised'])
-        request.session['discovery_variant'] = variant
-    categories, counts = set(), {}
-    if request.user.is_authenticated and variant == 'personalised':
-        categories, _ = get_user_top_categories(request.user)
-        counts = get_user_product_counts(request.user)
-    popularity = get_global_product_popularity()
+    variant = recommendation_variant(request)
     products = Product.objects.filter(selling_status='active').select_related('category').prefetch_related('ingredients__raw_material').order_by('id')
     if data.get('category'):
         products = products.filter(category_id=data['category'])
     if data.get('budget'):
         products = products.filter(price__lte=data['budget']/data['portions'])
-    # Bound scheduler work. Rank first so the window is not just oldest menus.
-    candidates = []
-    for p in products:
-        if p.delivery_weekdays and data["date"].weekday() not in p.delivery_weekdays:
-            continue
-        if not p.ingredients.all():
-            continue
-        score, reasons = get_score(p, categories, counts, popularity)
-        candidates.append((score, p, reasons))
-    candidates.sort(key=lambda row: (-row[0], -popularity.get(row[1].pk, 0), row[1].pk))
+    # Both discovery surfaces use the same ranking; dates additionally constrain it.
+    candidates = rank_menu_choices(
+        (p for p in products if not p.delivery_weekdays or data['date'].weekday() in p.delivery_weekdays),
+        request.user, personalised=variant == 'personalised')
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     results = []
     for score, p, reasons in candidates[:30]:
@@ -82,7 +96,7 @@ def guided_menu(request):
     session = RecommendationSession.objects.create(id=uuid.uuid4(), owner_key=key, variant=variant,
         context={'date': data['date'].isoformat(), 'portions': data['portions'],
             'budget': str(data.get('budget', '')), 'category': data.get('category'),
-            'version': 'date-guide-v1', 'experiment': settings.RECOMMENDATION_EXPERIMENT},
+            'version': 'date-guide-v1', 'surface': 'date_guide', 'experiment': settings.RECOMMENDATION_EXPERIMENT},
         products=[r['id'] for r in results])
     return Response({'session': str(session.pk), 'results': results,
         'checked_limit': 30, 'message': 'Hourly suggestions use kitchen capacity, not current stock. The owner may need to purchase ingredients. Food totals exclude discounts and delivery; checkout rechecks the whole basket.'})
@@ -149,4 +163,4 @@ def recommendation_metrics(request):
             'added_sessions': added, 'ordered_sessions': ordered, 'paid_sessions': paid, 'paid_percent': round(100*paid/exposed, 1)})
     return Response({'days': 28, 'rows': rows, 'experiment_enabled': settings.RECOMMENDATION_EXPERIMENT,
         'window_start': since.isoformat(), 'window_end': generated_at.isoformat(), 'generated_at': generated_at.isoformat(),
-        'definition': 'Denominator: recommendation requests with rendered results (one exposure per request). Purchase attribution: matching recommended product within 24 hours, same browser session key. Paid excludes cancelled/refunded orders. Repeat visitors may create multiple sessions. These are observed outcomes, not proof of causal conversion lift.'})
+        'definition': 'Denominator: recommendation requests with rendered results (one exposure per request). Purchase attribution: submitted recommendation session with a matching product within 24 hours, same browser session key. The storefront submits the most recently selected recommendation session. Cards and date guidance are combined. Paid excludes cancelled/refunded orders. Repeat visitors may create multiple sessions. These are observed outcomes, not proof of causal conversion lift.'})
