@@ -59,3 +59,11 @@ Mainnet would require a separate reviewed settlement design and independent
 contract security audit; changing the network ID or hiding test labels is not a
 production launch. No public-chain contract deployment or real-fund transaction was performed.
 No forecasting model, order, payment or inventory database record was changed.
+
+
+## Subsequent order integration
+
+The separate order-bound flow was implemented after this review. Its server-side
+receipt checks and checkout/ledger behavior are documented in
+[Escrow order integration](ESCROW-ORDER-INTEGRATION.md). The standalone page stays
+separate, and the mainnet/physical-delivery limitations above remain applicable.

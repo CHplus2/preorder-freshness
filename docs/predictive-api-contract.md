@@ -598,3 +598,12 @@ in `unavailable_reason`. These are successful constraint responses, distinct fro
 network/database failures. The UI can continue an empty bounded search from the
 day after `searched_through`; it never treats a service failure as no availability.
 See [delivery-time choices](DELIVERY-TIME-PICKER.md) for verified customer behavior.
+
+
+## Order-bound escrow payment handoff
+
+Sepolia escrow checkout is now available when explicitly configured.
+`GET /api/payments/escrow/config/` exposes availability; authenticated
+`GET/POST /api/orders/<id>/escrow/` creates fixed invoices and verifies chain
+evidence before recording payment events. No forecast or browser transaction
+claim alone becomes a paid order. See [implemented contract and setup](ESCROW-ORDER-INTEGRATION.md).

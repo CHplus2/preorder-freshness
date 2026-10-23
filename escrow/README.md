@@ -1,6 +1,6 @@
 # Sepolia escrow demonstration
 
-This is an **unaudited academic prototype using valueless test ETH**, separate from real food orders and MYR payments. Neither the backend nor a successful test transaction marks a customer order paid. No contract has been deployed by this repository.
+This is an **unaudited academic prototype using valueless test ETH**, separate from real food orders and MYR payments. The standalone wallet page cannot pay an order. The separate order-bound checkout flow can record a server-verified Sepolia receipt against an order; see [order integration](../docs/ESCROW-ORDER-INTEGRATION.md). No contract has been deployed by this repository.
 
 ## Run the contract tests
 
