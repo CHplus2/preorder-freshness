@@ -5,6 +5,11 @@ import {MemoryRouter} from 'react-router-dom';
 import {createServer} from 'vite';
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
+ const {default:SellingDetails}=await server.ssrLoadModule('/src/components/SellingDetails.jsx');
+ const offer=renderToStaticMarkup(createElement(SellingDetails,{details:{unit:'box',size_label:'Small',serves_min:3,serves_max:4,contents:'3 original <script>alert(1)</script>',no_substitutions:true}}));
+ assert.match(offer,/Per box/);assert.match(offer,/Serves 3–4/);assert.match(offer,/Fixed contents/);
+ assert.doesNotMatch(offer,/<script>/);assert.match(offer,/&lt;script&gt;/);
+ assert.equal(renderToStaticMarkup(createElement(SellingDetails,{details:{}})),'');
  const {default:MenuKitchenHeader}=await server.ssrLoadModule('/src/components/MenuKitchenHeader.jsx');
  const kitchenHeader=store=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(MenuKitchenHeader,{store:{name:'Local home kitchen',...store}})));
  assert.match(kitchenHeader({}),/What sounds good/);assert.doesNotMatch(kitchenHeader({}),/% off|Free delivery|15.minutes/);

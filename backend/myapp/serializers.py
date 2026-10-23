@@ -19,7 +19,39 @@ class RecipeSerializer(serializers.ModelSerializer):
         extra_kwargs = {'quantity_required': {'min_value': Decimal('0.001')}}
 
 
+class SellingDetailsSerializer(serializers.Serializer):
+    unit = serializers.ChoiceField(choices=['item', 'portion', 'box', 'pack', 'set', 'tray', 'jar', 'bottle'], default='item')
+    size_label = serializers.CharField(max_length=60, allow_blank=True, default='')
+    serves_min = serializers.IntegerField(min_value=1, max_value=1000, allow_null=True, default=None)
+    serves_max = serializers.IntegerField(min_value=1, max_value=1000, allow_null=True, default=None)
+    contents = serializers.CharField(max_length=500, allow_blank=True, default='')
+    no_substitutions = serializers.BooleanField(default=False)
+
+    def to_internal_value(self, data):
+        if isinstance(data, dict) and set(data) - set(self.fields):
+            raise serializers.ValidationError({'non_field_errors': ['Unknown selling-detail fields.']})
+        return super().to_internal_value(data)
+
+    def validate(self, attrs):
+        first, last = attrs.get('serves_min'), attrs.get('serves_max')
+        if (first is None) != (last is None) or first is not None and first > last:
+            raise serializers.ValidationError('Enter both serving estimates, with the minimum no greater than the maximum.')
+        if attrs.get('no_substitutions') and not attrs.get('contents'):
+            raise serializers.ValidationError('Describe the fixed contents before disabling substitutions.')
+        return attrs
+
+
 class ProductSerializer(serializers.ModelSerializer):
+    selling_details = serializers.JSONField(required=False)
+
+    def validate_selling_details(self, value):
+        # An entire offer document is replaced, including on PATCH. Never merge
+        # an old serving range or substitution promise into a new offer.
+        if value == {}:
+            return {}
+        details = SellingDetailsSerializer(data=value)
+        details.is_valid(raise_exception=True)
+        return details.validated_data
     order_cutoff_time = serializers.TimeField(allow_null=True, required=False,
         input_formats=['%H:%M', '%H:%M:%S'])
 
@@ -172,9 +204,16 @@ class AddressSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    selling_details = serializers.SerializerMethodField()
+
+    def get_selling_details(self, obj):
+        # Earlier orders stay unspecified; current product edits cannot invent
+        # selling terms that were never accepted by these customers.
+        return obj.preparation_snapshot.get('selling_details', {})
+
     class Meta:
         model = OrderItem
-        fields = ['id', 'order', 'product', 'product_name', 'unit_price', 'quantity', 'subtotal', 'recipe_source']
+        fields = ['id', 'order', 'product', 'product_name', 'unit_price', 'quantity', 'subtotal', 'recipe_source', 'selling_details']
 
 
 class OrderSerializer(serializers.ModelSerializer):

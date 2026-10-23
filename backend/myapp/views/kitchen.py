@@ -262,7 +262,7 @@ def review_order_plan(request, pk):
         'ingredients': [{'raw_material': r.raw_material_id, 'name': r.raw_material.name,
             'unit': r.raw_material.unit, 'quantity': str(r.quantity_required)}
             for r in i.product.ingredients.select_related('raw_material')],
-        'preparation': preparation_snapshot(i.product),
+        'preparation': preparation_snapshot(i.product, accepted=i.preparation_snapshot),
         'packaging': str(i.product.packaging_cost) if i.product.packaging_cost is not None else None}
         for i in items] if adopt_current else []
     snapshot['order_version'] = order.updated_at.isoformat()

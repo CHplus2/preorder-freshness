@@ -113,7 +113,7 @@ def shop_suggestions(request):
             if draft.get('budget') is not None and Decimal(total['total'])>draft['budget']:continue
             current=next((row['quantity'] for row in candidate if row['product_id']==product.pk),0)
             if current>product.daily_capacity:continue
-            results.append(dict(id=product.pk,name=product.name,price=str(product.price),quantity=draft['portions'],
+            results.append(dict(id=product.pk,name=product.name,price=str(product.price),selling_details=product.selling_details,quantity=draft['portions'],
                 addition_subtotal=str(product.price*draft['portions']),basket_after=total,
                 delivery_day_allowed=menu_day_allowed(product, draft['date']) and orders_open(product, draft['date'], timezone.now())))
             if len(results)==3:break
@@ -167,7 +167,7 @@ def shop_cart(request):
     result={'product_id':product.pk,'menu':product.name,'quantity':quantity,
         'quantity_before':next((r['quantity'] for r in rows if r['product_id']==product.pk),0),
         'quantity_after':next(r['quantity'] for r in updated if r['product_id']==product.pk),
-        'unit_price':str(product.price),'basket_before':totals(rows,store) if rows else None,'basket_after':totals(updated,store)}
+        'selling_details':product.selling_details, 'unit_price':str(product.price),'basket_before':totals(rows,store) if rows else None,'basket_after':totals(updated,store)}
     if token is None:
         budget=serializer.validated_data.get('budget')
         if budget is not None and Decimal(result['basket_after']['total'])>budget:

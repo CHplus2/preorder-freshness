@@ -1,3 +1,5 @@
+import SellingDetails from '../../components/SellingDetails';
+import {quantityLabel} from '../../utils/sellingDetails';
 import OrderFulfilment from '../../components/OrderFulfilment';
 import {isPickup,handoverLabel} from '../../utils/fulfilment';
 import {Link,useSearchParams} from 'react-router-dom';
@@ -140,8 +142,8 @@ function OwnerOrders() {
               <div className="order-body">
                 {order.items.map((item) => (
                   <div key={item.id} className="order-item">
-                    <span className="item-name">{item.product_name}</span>
-                    <span className="item-qty">x{item.quantity}</span>
+                    <div className="item-name">{item.product_name}<SellingDetails details={item.selling_details}/></div>
+                    <span className="item-qty">{quantityLabel(item.selling_details,item.quantity)}</span>
                   </div>
                 ))}
               </div>

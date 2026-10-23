@@ -75,7 +75,7 @@ class MenuCardSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'image_url', 'category', 'category_name',
+        fields = ['id', 'name', 'price', 'image_url', 'category', 'category_name', 'selling_details',
                   'lead_hours', 'daily_capacity', 'social_url', 'delivery_weekdays',
                   'delivery_dates', 'order_cutoff_time', 'order_cutoff_days_before']
 

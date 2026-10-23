@@ -1,5 +1,6 @@
 """Accepted menu terms shared by scheduling, shopping and cooking."""
 from types import SimpleNamespace
+from copy import deepcopy
 
 PREPARATION_FIELDS = ('lead_hours', 'preparation_minutes', 'preparation_tasks',
     'max_preparation_days', 'batch_size', 'additional_batch_minutes',
@@ -7,10 +8,11 @@ PREPARATION_FIELDS = ('lead_hours', 'preparation_minutes', 'preparation_tasks',
     'delivery_dates', 'order_cutoff_time', 'order_cutoff_days_before')
 
 
-def preparation_snapshot(product):
+def preparation_snapshot(product, accepted=None):
     result = {key: getattr(product, key) for key in PREPARATION_FIELDS}
     if result['order_cutoff_time'] is not None:
         result['order_cutoff_time'] = result['order_cutoff_time'].isoformat()
+    result['selling_details'] = deepcopy(accepted.get('selling_details', {}) if accepted is not None else getattr(product, 'selling_details', {}))
     return result
 
 

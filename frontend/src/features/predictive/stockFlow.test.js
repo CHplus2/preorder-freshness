@@ -54,7 +54,7 @@ try {
  assert.match(tabs,/role="tablist"/);assert.equal((tabs.match(/aria-selected="true"/g)||[]).length,1);
  assert.match(tabs,/First evidence/);assert.doesNotMatch(tabs,/Lazy evidence/);
  const scores=Object.fromEntries(['mean_28','mean_7','same_weekday'].map(key=>[key,{mae:1.12,wape_percent:46.22,daily_actual:[2],daily_predictions:[1]}]));
- const menu={product_id:1,product_name:'Mee Goreng Telur',method:'mean_28',synthetic_history_items:70,
+ const menu={product_id:1,product_name:'Mee Goreng Telur',selling_details:{unit:'portion'},method:'mean_28',synthetic_history_items:70,
    forecast_portions:16.21,additional_forecast_portions:13.89,history_days:112,price_myr:10,confidence:'evaluated',recipe_complete:true,
    evaluation:{train_days:84,validation_days:14,test_days:14,test:scores,
      planning_horizon_test:{horizon_days:7,test:Object.fromEntries(Object.keys(scores).map(key=>[key,{windows:8,mae:2,wape_percent:60,window_total_mae:5}]))}}};

@@ -1,3 +1,4 @@
+import {validSellingDetails} from './sellingDetails.js';
 import {responseList,invalidResponse} from './apiResponse.js';
 import {accountDetails} from './customerExperience.js';
 
@@ -5,7 +6,7 @@ const positive=value=>Number.isSafeInteger(value) && value>0;
 const money=value=>(typeof value==='number' || typeof value==='string') && /^\d+(?:\.\d{1,2})?$/.test(String(value));
 export function basketRows(data){
  const rows=responseList(data);
- if(rows.some(row=>!positive(row.id) || !positive(row.quantity) || row.quantity>10000 || !positive(row.product?.id)
+ if(rows.some(row=>!validSellingDetails(row.product?.selling_details) || !positive(row.id) || !positive(row.quantity) || row.quantity>10000 || !positive(row.product?.id)
   || typeof row.product.name!=='string' || !row.product.name.trim() || !money(row.product.price)
   || !['active','paused','archived'].includes(row.product.selling_status))
   || new Set(rows.map(row=>row.id)).size!==rows.length)throw invalidResponse();

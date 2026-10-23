@@ -15,6 +15,7 @@ class Category(models.Model):
 
 # ============ PRODUCT / MENU ============
 class Product(models.Model):
+    selling_details = models.JSONField(default=dict, db_default={}, blank=True)
     delivery_weekdays = models.JSONField(default=list, blank=True)  # Empty means every day; Monday=0.
     delivery_dates = models.JSONField(default=list, blank=True)  # Empty means no specific-date restriction.
     order_cutoff_time = models.TimeField(null=True, blank=True)

@@ -1,3 +1,5 @@
+import SellingDetails from '../../components/SellingDetails';
+import {unitLabel} from '../../utils/sellingDetails';
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { IngredientDrawing } from "./PantryScene";
@@ -621,7 +623,7 @@ export function MenuEvidence({ support, risk, compact = false }) {
   const visibleMenus=compact ? (selectedMenu ? [selectedMenu] : []) : menus;
   return (
     <div className={compact ? 'local-menu-evidence compact' : 'local-menu-evidence'}>
-      <p>Forecast portions cover the full selected window. Ingredient planning uses only additional demand that meets delivery days, lead time and capacity, after recorded orders are accounted for. Fractions are estimates, not instructions to prepare part of a meal.</p>
+      <p>Forecast quantities count menu selling units, such as meals or boxes, across the full selected window. Serving estimates do not multiply these quantities. Ingredient planning uses only additional demand that meets delivery days, lead time and capacity, after recorded orders are accounted for. Fractions are estimates, not instructions to prepare part of a meal.</p>
       {compact && menus.length>1 && <label className="local-menu-select">Menu to inspect<select aria-label="Menu to inspect" value={selectedMenu.product_id} onChange={e=>setMenuId(e.target.value)}>{menus.map(m=><option key={m.product_id} value={m.product_id}>{m.product_name}</option>)}</select></label>}
       <div
         className="local-menu-tickets"
@@ -630,22 +632,22 @@ export function MenuEvidence({ support, risk, compact = false }) {
         {visibleMenus.map((m) => (
           <article key={m.product_id}>
             {!compact && <IngredientDrawing name={m.product_name} />}
-            <h3>{m.product_name}</h3>
+            <h3>{m.product_name}</h3><SellingDetails details={m.selling_details} compact/>
             <strong>
               {m.forecast_portions === null
                 ? "History needed"
-                : `${qty(m.forecast_portions)} forecast portions · full window`}
+                : `${qty(m.forecast_portions)} forecast ${unitLabel(m.selling_details,m.forecast_portions)} · full window`}
             </strong>
             <span>
               {m.additional_forecast_portions === null
                 ? "Additional demand unavailable"
-                : `${qty(m.additional_forecast_portions)} additional portions eligible to plan`}
+                : `${qty(m.additional_forecast_portions)} additional ${unitLabel(m.selling_details,m.additional_forecast_portions)} eligible to plan`}
             </span>
             {!compact && <small>
               {m.history_days}-day history window{m.selling_days != null ? ` · ${m.selling_days} selling days` : ''} · {m.synthetic_history_items>0?'synthetic scenario evidence':m.confidence}
             </small>}
             {m.demand_adjustments && m.forecast_portions!==null && <details><summary>Why the planning count differs</summary>
-              <p>{qty(m.forecast_portions)} forecast portions across the full window.</p>
+              <p>{qty(m.forecast_portions)} forecast {unitLabel(m.selling_details,m.forecast_portions)} across the full window.</p>
               <ul>{[
                 ['delivery_day_excluded','outside offered dates or delivery weekdays'],
                 ['order_cutoff_excluded','after the menu order cutoff'],
@@ -653,9 +655,9 @@ export function MenuEvidence({ support, risk, compact = false }) {
                 ['capacity_excluded','above daily capacity'],
                 ['recorded_orders_offset','already represented by recorded orders'],
               ].filter(([key])=>m.demand_adjustments[key]>0).map(([key,label])=><li key={key}>− {qty(m.demand_adjustments[key])} portions {label}</li>)}</ul>
-              <p>= {qty(m.additional_forecast_portions)} additional portions eligible for ingredient planning. The estimate is not a confirmed booking or a reserved preparation schedule.</p>
+              <p>= {qty(m.additional_forecast_portions)} additional {unitLabel(m.selling_details,m.additional_forecast_portions)} eligible for ingredient planning. The estimate is not a confirmed booking or a reserved preparation schedule.</p>
               {m.demand_adjustments.recorded_orders_offset>0 && <p>The order adjustment can include unpaid requests to avoid counting demand twice. Only eligible confirmed orders reserve stock.</p>}
-            {m.sensitivity_error_portions_per_day != null && <details><summary>Technical demand scenario assumption</summary><p>Demand is shifted by ±{qty(m.sensitivity_error_portions_per_day)} portions per day for the lower/higher-demand comparison. This is not a probability range or a recommended production buffer.</p></details>}</details>}
+            {m.sensitivity_error_portions_per_day != null && <details><summary>Technical demand scenario assumption</summary><p>Demand is shifted by ±{qty(m.sensitivity_error_portions_per_day)} selling units per day for the lower/higher-demand comparison. This is not a probability range or a recommended production buffer.</p></details>}</details>}
             {m.forecast_portions === null && <Link to="/admin/orders">Review completed sales history</Link>}
             <Link to="/admin/products?review=recipes">
               {m.recipe_complete ? "Review recipe" : "Recipe needs review"}
@@ -674,7 +676,7 @@ export function MenuEvidence({ support, risk, compact = false }) {
             <thead>
               <tr>
                 <th>Menu</th>
-                <th>Expected portions</th>
+                <th>Expected selling units</th>
                 <th>Additional eligible for planning</th>
                 <th>Method</th>
                 <th>Test MAE/day</th>
@@ -767,7 +769,7 @@ function MarketingComparison({ plan, risk, onWorksheet }) {
           </select>
         </label>
         {[
-          ["Extra portions", portions, setPortions],
+          ["Extra selling units", portions, setPortions],
           ["Discount percent", discount, setDiscount],
           ["Campaign cost (MYR)", cost, setCost],
         ].map(([label, value, set]) => (
@@ -812,7 +814,7 @@ function MarketingComparison({ plan, risk, onWorksheet }) {
             break-even:{" "}
             {result.breakEven === null
               ? "Unavailable; check menu costs and margin"
-              : `${result.breakEven} extra portions`}
+              : `${result.breakEven} extra selling units`}
             . Excludes labour, delivery, overhead and potential cannibalisation.
             Remaining ingredients, capacity and safe preparation are not
             verified.

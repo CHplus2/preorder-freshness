@@ -1,3 +1,5 @@
+import SellingDetailsEditor from '../../components/SellingDetailsEditor';
+import {unitLabel} from '../../utils/sellingDetails';
 import MenuPhoto from '../../components/MenuPhoto';
 import {useSearchParams} from 'react-router-dom';
 import './MenuSellingStatus.css';
@@ -149,7 +151,7 @@ export default function AdminProductsPage() {
             <th>Image</th>
             <th>Name</th>
             <th>Price</th>
-            <th>Available portions</th>
+            <th>Available units</th>
             <th>Category</th>
             <th>Preparation</th>
             <th>Actions</th>
@@ -172,8 +174,8 @@ export default function AdminProductsPage() {
                   )}
                 </td>
                 <td data-label="Name"><strong>{p.name}</strong><span className="menu-state-label">{p.selling_status==='archived'?'Archived':p.selling_status==='paused'?'Paused':'Accepting orders'}</span></td>
-              <td data-label="Price">RM {p.price}</td>
-              <td data-label="Available portions">{p.stock}</td>
+              <td data-label="Price">RM {p.price} / {unitLabel(p.selling_details)}</td>
+              <td data-label="Available units">{p.stock}</td>
               <td data-label="Category">{p.category_name}</td>
               <td data-label="Preparation"><span className="status-badge">{p.preparation_tasks?.length ? `${p.preparation_tasks.length} steps` : "Needs setup"}</span></td>
               <td data-label="Actions">
@@ -198,24 +200,25 @@ export default function AdminProductsPage() {
 
       {/* Edit Product Modal */}
       {updatedProduct && (
-      <ModalDialog label="Update Product" onDismiss={() => setUpdatedProduct(null)}>
+      <ModalDialog label="Edit menu" onDismiss={() => setUpdatedProduct(null)}>
 <div className="modal-overlay" onClick={() => setUpdatedProduct(null)}>
         <div className="modal-content form-modal" onClick={(e) => e.stopPropagation()}>
-          <h2>Update Product</h2>
+          <h2>Edit menu</h2>
           <DialogFeedback/>
 
-          <label htmlFor="adminproductspage-field-1">Product Name</label>
+          <label htmlFor="adminproductspage-field-1">Menu name</label>
           <input id="adminproductspage-field-1"
             value={updatedProduct.name}
             onChange={(e) => setUpdatedProduct({ ...updatedProduct, name: e.target.value })}
           />
-          <label htmlFor="adminproductspage-field-2">Price</label>
+          <label htmlFor="adminproductspage-field-2">Price per selling unit (RM)</label>
           <input id="adminproductspage-field-2"
             type="number"
             value={updatedProduct.price}
             onChange={(e) => setUpdatedProduct({ ...updatedProduct, price: e.target.value })}
           />
 
+          <SellingDetailsEditor value={updatedProduct} onChange={setUpdatedProduct}/>
           <RecipeEditor value={updatedProduct} onChange={setUpdatedProduct}/>
           <label htmlFor="adminproductspage-field-3">Description</label>
           <textarea id="adminproductspage-field-3"
@@ -262,7 +265,7 @@ export default function AdminProductsPage() {
             }
           />
 
-          <label htmlFor="adminproductspage-field-6">Price</label>
+          <label htmlFor="adminproductspage-field-6">Price per selling unit (RM)</label>
           <input id="adminproductspage-field-6"
             type="number"
             value={newProduct.price}
@@ -273,6 +276,7 @@ export default function AdminProductsPage() {
 
 
 
+          <SellingDetailsEditor value={newProduct} onChange={setNewProduct}/>
           <RecipeEditor value={newProduct} onChange={setNewProduct}/>
           <label htmlFor="adminproductspage-field-7">Description</label>
           <textarea id="adminproductspage-field-7"

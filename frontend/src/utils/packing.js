@@ -1,3 +1,4 @@
+import {emptySellingDetails} from './sellingDetails.js';
 import {malaysiaDate,scheduledDelivery} from './planner.js';
 
 export function packingList(orders, date) {
@@ -7,8 +8,8 @@ export function packingList(orders, date) {
   const menus = new Map();
   for (const order of scheduled) for (const item of order.items) {
     // Keep renamed or deleted menus separate; totals are for packing, not shared cooking batches.
-    const key = JSON.stringify([item.product ?? `deleted-${item.id}`, item.product_name]);
-    const row = menus.get(key) || {key, name:item.product_name, quantity:0};
+    const key = JSON.stringify([item.product ?? `deleted-${item.id}`, item.product_name,Object.entries({...emptySellingDetails(),...item.selling_details}).sort(([a],[b])=>a.localeCompare(b))]);
+    const row = menus.get(key) || {key, name:item.product_name, selling_details:item.selling_details, quantity:0};
     row.quantity += Number(item.quantity);
     menus.set(key,row);
   }

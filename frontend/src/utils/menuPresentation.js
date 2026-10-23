@@ -1,8 +1,9 @@
+import {validSellingDetails} from './sellingDetails.js';
 import {invalidResponse} from './apiResponse.js';
 import {validDeliveryDate} from './preorderWindows.js';
 
 const money=value=>(typeof value==='number' || typeof value==='string' && value.trim()!=='') && Number.isFinite(Number(value)) && Number(value)>=0;
-const card=value=>value && Number.isInteger(value.id) && value.id>0 && typeof value.name==='string' && value.name.trim()
+const card=value=>value && validSellingDetails(value.selling_details) && Number.isInteger(value.id) && value.id>0 && typeof value.name==='string' && value.name.trim()
  && money(value.price) && Number.isInteger(value.lead_hours) && value.lead_hours>=0
  && Number.isInteger(value.daily_capacity) && value.daily_capacity>=0
  && Array.isArray(value.delivery_weekdays) && value.delivery_weekdays.every(d=>Number.isInteger(d) && d>=0 && d<=6)

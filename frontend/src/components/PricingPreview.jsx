@@ -25,17 +25,17 @@ export default function PricingPreview({menus,unavailableReason=''}) {
         setForm({...form,product:e.target.value,price:menu?.price ?? ''});setResult(null);setError('');
       }}><option value="">Choose a menu</option>{menus.map(m=><option key={m.id} value={m.id}>{m.name}{m.selling_status==='archived'?' · Archived':m.selling_status==='paused'?' · Paused':''}</option>)}</select></label>
       {[
-        ['portions','Portions',1,10000,1],['price','Scenario price per portion (RM)',0.01,99999999.99,0.01],
+        ['portions','Quantity (selling units)',1,10000,1],['price','Scenario price per selling unit (RM)',0.01,99999999.99,0.01],
         ['discount_percent','Scenario discount (%)',0,50,0.1],
         ['ingredient_increase_percent','Ingredient cost increase (%)',0,500,0.1],
-        ['additional_cost_per_portion','Other cost per portion (RM, both scenarios)',0,99999999.99,0.01],
+        ['additional_cost_per_portion','Other cost per selling unit (RM, both scenarios)',0,99999999.99,0.01],
       ].map(([key,label,min,max,step])=><label key={key}>{label}<input type="number" required disabled={busy} min={min} max={max} step={step} value={form[key]} onChange={e=>change(key,e.target.value)}/></label>)}
       <button disabled={busy}>{busy?'Calculating…':'Compare scenario'}</button>
     </form>}
     {error && <p role="alert">{error}</p>}
-    {result && <div aria-live="polite"><h4>{result.menu} · {result.portions} portions</h4>
+    {result && <div aria-live="polite"><h4>{result.menu} · {result.portions} selling units</h4>
       <p>{result.definition}</p>
-      <p>Current bulk minimum: {result.current_bulk_minimum} portions. Scenario ingredient increase: {result.assumptions.ingredient_increase_percent}%. Additional cost per portion in both comparisons: {money(result.assumptions.additional_cost_per_portion)}.</p>
+      <p>Current bulk minimum: {result.current_bulk_minimum} selling units. Scenario ingredient increase: {result.assumptions.ingredient_increase_percent}%. Additional cost per selling unit in both comparisons: {money(result.assumptions.additional_cost_per_portion)}.</p>
       {result.missing.length>0 && <p>Contribution unavailable. Complete: {result.missing.join('; ')}.</p>}
       <div className="guide-results">{[['baseline','Current offer'],['proposed','Your scenario']].map(([key,title])=>{
         const row=result[key];
@@ -43,7 +43,7 @@ export default function PricingPreview({menus,unavailableReason=''}) {
           <p>Food revenue after discount: {money(row.food_revenue)}</p>
           <p>Ingredient estimate: {money(row.ingredient_cost)} · packaging: {money(row.packaging_cost)} · other costs: {money(row.additional_cost)}</p>
           <p><strong>Estimated contribution: {money(row.contribution)}</strong>{row.margin_percent!==null && ` (${row.margin_percent}%)`}</p>
-          <p>Per portion: {money(row.per_portion)}. Estimated price to cover entered costs at this discount: {money(row.break_even_price)}.</p>
+          <p>Per selling unit: {money(row.per_portion)}. Estimated price to cover entered costs at this discount: {money(row.break_even_price)}.</p>
           {row.below_cost && <p role="status">This offer is below the entered costs.</p>}
         </article>;
       })}</div>

@@ -663,3 +663,29 @@ Sepolia escrow checkout is now available when explicitly configured.
 `GET/POST /api/orders/<id>/escrow/` creates fixed invoices and verifies chain
 evidence before recording payment events. No forecast or browser transaction
 claim alone becomes a paid order. See [implemented contract and setup](ESCROW-ORDER-INTEGRATION.md).
+
+
+### Optional selling units and accepted contents (home-food batch 3)
+
+Product list/detail and catalogue cards add `selling_details`, a JSON object with
+`unit` (item, portion, box, pack, set, tray, jar or bottle), optional `size_label`
+(60 chars), `contents` (500 chars), `no_substitutions` (boolean), and paired nullable
+`serves_min`/`serves_max` integers (1–1000, min ≤ max). Fixed/no-substitution offers
+require contents. Unknown keys/non-objects are rejected. `{}` clears details;
+supplying a document replaces it, including on PATCH. Omission preserves it.
+Writes retain staff permissions. New/old menus default to unspecified `{}`.
+
+`POST /api/menu/suggestions/`, `POST /api/menu/guide/`, shopping assistant suggestion
+rows and signed addition previews include current `selling_details`. Catalogue
+update timestamps still invalidate stale signed shopping confirmations. Kitchen
+`decision_support.menus[]` includes current selling details as display context.
+`OrderSerializer.items[].selling_details` reads only the originally accepted
+preparation snapshot, including when a product is deleted; legacy orders return
+`{}`. Adopting current preparation/recipe settings preserves accepted selling
+terms. No new customer substitution or order-unit amendment endpoint is added.
+
+All quantity/price/recipe arithmetic counts selling units. Compatibility field
+names containing `portions` are retained. Serving estimates and piece counts
+inside a box do not multiply billable quantities, inventory use or forecasts.
+Changing the physical yield of one unit requires a separate menu/history identity.
+See [selling-unit setup and migration 0021](HOME-FOOD-SELLING-UNITS.md).

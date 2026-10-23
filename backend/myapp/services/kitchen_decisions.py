@@ -200,7 +200,7 @@ def decision_support(plan, *, today=None, snapshot=None):
         recipe = list(product.ingredients.all())
         valid_recipe = bool(recipe) and all(i.quantity_required > 0 for i in recipe)
         known_cost = valid_recipe and product.packaging_cost is not None and all(i.raw_material.estimated_unit_cost is not None for i in recipe)
-        result.update(product_id=product.pk, product_name=product.name,
+        result.update(product_id=product.pk, product_name=product.name, selling_details=product.selling_details,
             price_myr=float(product.price), variable_cost_myr=float(product.packaging_cost + sum(
                 (i.quantity_required*i.raw_material.estimated_unit_cost for i in recipe), 0)) if known_cost else None,
             recipe_complete=valid_recipe, total_recorded_portions=sum(values),

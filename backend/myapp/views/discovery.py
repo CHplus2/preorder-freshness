@@ -52,7 +52,7 @@ def menu_suggestions(request):
     variant = recommendation_variant(request)
     products = Product.objects.filter(selling_status='active').select_related('category').prefetch_related('ingredients').order_by('id')
     ranked = rank_menu_choices(products, request.user, personalised=variant == 'personalised')[:3]
-    results = [{'id': p.pk, 'name': p.name, 'image_url': p.image_url, 'price': str(p.price),
+    results = [{'id': p.pk, 'name': p.name, 'image_url': p.image_url, 'price': str(p.price), 'selling_details': p.selling_details,
                 'reasons': reasons or ['Explore this menu from our kitchen']} for _, p, reasons in ranked]
     reasons = [reason for row in results for reason in row['reasons']]
     basis = ('history' if any(reason.startswith('You ') for reason in reasons)
@@ -93,9 +93,9 @@ def guided_menu(request):
         if not available:
             continue
         results.append({'id': p.pk, 'name': p.name, 'image_url': p.image_url,
-            'price': str(p.price), 'food_total': str(p.price*data['portions']),
+            'price': str(p.price), 'selling_details': p.selling_details, 'food_total': str(p.price*data['portions']),
             'portions': data['portions'], 'slots': available,
-            'reasons': [f'Kitchen time available for {data["portions"]} portions'] +
+            'reasons': [f'Kitchen time available for {data["portions"]} selling units'] +
                 ([f'Within your RM {data["budget"]} food budget'] if data.get('budget') else []) + reasons})
         if len(results) == 3:
             break
