@@ -20,6 +20,7 @@ import {useUI} from '../../contexts/UIContext';
 import {useCart} from '../../contexts/CartContext';
 import {useOrder} from '../../contexts/OrderContext';
 import {getCookie} from '../../utils/cookieUtils';
+import {basketAvailabilityKey} from '../../utils/deliverySlots';
 import './CheckoutPage.css';
 const errorText=apiError;
 export default function CheckoutPage(){
@@ -38,7 +39,7 @@ export default function CheckoutPage(){
  useEffect(()=>{refreshCart();},[refreshCart]);
 
  const weekdayIssue=deliveryDayIssue(cart,form.delivery_at);
- const quoteKey=JSON.stringify([form.delivery_at,cart.map(i=>[i.id,i.quantity,i.product.updated_at,i.product.delivery_weekdays,i.product.lead_hours,i.product.daily_capacity,i.product.max_early_minutes,i.product.max_preparation_days,i.product.preparation_tasks]),promotion?.delivery_buffer_minutes]);
+ const quoteKey=JSON.stringify([form.delivery_at,basketAvailabilityKey(cart),promotion?.delivery_buffer_minutes]);
  const {quote,checking,error:quoteError,retryable,retry:retryQuote}=useDeliveryQuote({deliveryAt:form.delivery_at,selectionKey:quoteKey,
   enabled:cart.length>0 && !cartLoading && !cartUpdating && !cartError && !cart.some(i=>i.product.selling_status && i.product.selling_status!=='active'),issue:weekdayIssue});
  const chooseTime=value=>{

@@ -116,6 +116,42 @@ class KitchenDecisionTests(TestCase):
             Order.objects.filter(pk=order.pk).update(created_at=delivered-timedelta(days=2))
             OrderItem.objects.create(order=order,product=self.menu,product_name=self.menu.name,quantity=quantity,unit_price=10,subtotal=quantity*10)
 
+    def test_specific_sale_date_constrains_additional_forecast_not_raw_history(self):
+        self.history()
+        self.batch(1500)
+        offered = str(self.today+timedelta(days=3))
+        self.menu.delivery_dates = [offered]
+        self.menu.save()
+        response = self.client.get('/api/admin/predictive/local-decisions/?horizon_days=7')
+        self.assertEqual(response.status_code, 200, response.data)
+        menu = response.data['decision_support']['menus'][0]
+        self.assertEqual(menu['forecast_portions'], 14)
+        self.assertEqual(menu['additional_forecast_portions'], 2)
+        self.assertEqual(menu['demand_adjustments']['delivery_day_excluded'], 12)
+        daily = response.data['decision_support']['ingredient_risks'][0]['forecast_requirement']
+        self.assertEqual(daily, 200)
+
+    def test_cutoff_stops_new_forecast_demand_without_erasing_confirmed_orders(self):
+        from datetime import time
+        self.history()
+        order = self.order(portions=2)
+        self.batch(1500)
+        self.menu.order_cutoff_time = time(17)
+        self.menu.order_cutoff_days_before = 90
+        self.menu.save()
+        response = self.client.get('/api/admin/predictive/local-decisions/?horizon_days=7')
+        self.assertEqual(response.status_code, 200, response.data)
+        support = response.data['decision_support']
+        menu = support['menus'][0]
+        self.assertEqual(menu['forecast_portions'], 14)
+        self.assertEqual(menu['additional_forecast_portions'], 0)
+        self.assertEqual(menu['demand_adjustments']['order_cutoff_excluded'], 14)
+        risk = support['ingredient_risks'][0]
+        self.assertEqual(risk['forecast_requirement'], 0)
+        self.assertEqual(risk['stock_flow']['confirmed_allocated'], 200)
+        order.refresh_from_db()
+        self.assertFalse(order.inventory_deducted)
+
     def test_local_recipes_forecast_and_expiry_are_connected_read_only(self):
         self.history()
         self.batch(1500,expiry_days=5)

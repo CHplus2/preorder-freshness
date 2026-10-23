@@ -17,6 +17,7 @@ from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework.response import Response
 from ..models import Product,Storefront,CartItem,RecommendationSession
 from ..services.shopping_assistant import local_extract,ai_extract,needs_owner,search_terms
+from ..services.preorder_windows import delivery_day_allowed as menu_day_allowed, orders_open
 from .help import HelpThrottle
 
 
@@ -109,7 +110,7 @@ def shop_suggestions(request):
             if current>product.daily_capacity:continue
             results.append(dict(id=product.pk,name=product.name,price=str(product.price),quantity=draft['portions'],
                 addition_subtotal=str(product.price*draft['portions']),basket_after=total,
-                delivery_day_allowed=not product.delivery_weekdays or draft['date'].weekday() in product.delivery_weekdays))
+                delivery_day_allowed=menu_day_allowed(product, draft['date']) and orders_open(product, draft['date'], timezone.now())))
             if len(results)==3:break
     return Response({'draft':serial,'mode':mode,'missing':missing,'results':results,'basket_known':request.user.is_authenticated,
         'basket_total':totals(rows,store) if rows else None})

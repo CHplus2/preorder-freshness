@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {basketDeliveryDays,deliveryDayIssue,basketDaysText} from './deliveryDays.js';
+import {cutoffText,cutoffStamp,commonSpecificDates,validDeliveryDate} from './preorderWindows.js';
 const item=(name,days)=>({product:{name,delivery_weekdays:days}});
 assert.deepEqual(basketDeliveryDays([item('Any',[])]),[0,1,2,3,4,5,6]);
 assert.deepEqual(basketDeliveryDays([item('Weekend',[5,6]),item('Saturday',[5])]),[5]);
@@ -8,4 +9,17 @@ assert.match(deliveryDayIssue([item('Saturday',[5])],'2026-10-11T16:00'),/Choose
 assert.match(deliveryDayIssue([item('Monday',[0]),item('Saturday',[5])],''),/no delivery weekday in common/);
 assert.equal(deliveryDayIssue([item('Any',undefined)],'2026-10-11T16:00'),'');
 assert.equal(basketDaysText([item('Weekend',[5,6])]),'Saturday, Sunday');
+const fixed=(name,dates)=>({product:{name,delivery_weekdays:[],delivery_dates:dates}});
+const dated=[fixed('Rojak sale',['2030-01-08']),fixed('Gift pack',['2030-01-09'])];
+assert.deepEqual(commonSpecificDates(dated),[]);
+assert.match(deliveryDayIssue(dated,''),/no offered delivery date in common/);
+assert.match(deliveryDayIssue([dated[0]],'2030-01-09T12:00'),/not offered on this date/);
+assert.equal(deliveryDayIssue([dated[0]],'2030-01-08T12:00'),'');
+const cutoff={name:'Daily bento',delivery_weekdays:[],order_cutoff_time:'17:00:00',order_cutoff_days_before:1};
+assert.equal(cutoffStamp(cutoff,'2030-01-08'),Date.parse('2030-01-07T17:00:00+08:00'));
+assert.match(cutoffText(cutoff),/5:00 pm the day before delivery/);
+assert.match(cutoffText({...cutoff,order_cutoff_days_before:0}),/on the delivery day/);
+assert.equal(deliveryDayIssue([{product:cutoff}],'2030-01-08T12:00',Date.parse('2030-01-07T16:59:59+08:00')),'');
+assert.match(deliveryDayIssue([{product:cutoff}],'2030-01-08T12:00',Date.parse('2030-01-07T17:00:00+08:00')),/Ordering has closed/);
+assert.equal(validDeliveryDate('2030-02-30'),false);
 console.log('Basket delivery weekday compatibility checks passed.');

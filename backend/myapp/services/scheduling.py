@@ -12,6 +12,7 @@ from django.db.models import Sum, Q
 from rest_framework.exceptions import ValidationError
 from ..models import Order, OrderItem, KitchenBlock
 from .work_sessions import PAUSABLE_RESOURCES, resumable_sessions, work_days
+from .preorder_windows import ordering_issue
 
 RESOURCES = {'prep_table', 'stove', 'oven', 'rice_cooker', 'fridge', 'packing_area', 'none'}
 
@@ -232,6 +233,10 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
             or availability.product_ids != frozenset(i.product_id for i in items)):
         raise ValueError('Advisory availability snapshot does not match this basket and date.')
     for item in items:
+        issue = ordering_issue(item.product, local.date(), notice_from or now)
+        if issue:
+            # Trading rules are not bypassed by the unconfirmed-request path.
+            raise ValidationError(issue)
         weekdays = getattr(item.product, "delivery_weekdays", [])
         if weekdays and local.weekday() not in weekdays:
             names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]

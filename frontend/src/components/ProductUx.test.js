@@ -53,6 +53,14 @@ try{
  assert.match(inBasket,/no delivery weekday in common/);
  assert.doesNotMatch(inBasket,/href="\/cart"/);
  assert.match(basket([meal('Saturday',[5])],'2026-10-11T16:00'),/cannot be delivered/);
+ const {default:MenuPreorderRules}=await server.ssrLoadModule('/src/components/MenuPreorderRules.jsx');
+ const rules=product=>renderToStaticMarkup(createElement(MenuPreorderRules,{product}));
+ assert.equal(rules({}),'');
+ const sale={delivery_dates:['2030-01-08'],order_cutoff_time:'17:00:00',order_cutoff_days_before:1};
+ assert.match(rules(sale),/8 Jan 2030/);
+ assert.match(rules(sale),/5:00 pm the day before delivery/);
+ assert.match(orderPanel(sale),/Order before/);
+ assert.match(basket([{product:{name:'Bento',...sale}}]),/Bento: Order before/);
  const {ContributionSummary,OrderContribution}=await server.ssrLoadModule('/src/components/ContributionEvidence.jsx');
  const contributionSummary=report=>renderToStaticMarkup(createElement(ContributionSummary,{report}));
  const contributionBase={known_contribution:'0.00',complete_orders:0,shown:2,order_count:2};

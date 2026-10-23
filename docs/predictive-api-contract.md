@@ -3,6 +3,30 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Optional menu trading windows — 23 October 2026
+
+Product detail/create/update and public `/api/menu/` expose `delivery_dates`
+(up to 90 unique ISO calendar-date strings; empty means no specific-date limit),
+`order_cutoff_time` (nullable `HH:MM:00`, Malaysia time) and
+`order_cutoff_days_before` (integer 0–90, default 1). Only staff can change them.
+Both delivery weekdays and specific dates apply. These checks run in quotes,
+checkout (including review requests), recommendations and owner replanning.
+Daily capacity and cooking advance notice remain independent constraints.
+
+`POST /api/orders/slots/` with `find_next=true` may jump to the next shared offered
+date beyond next week, within the existing 90-day booking limit. It returns
+`unavailable_code: no_common_date` and empty slots when no shared still-open date
+remains; this is a successful availability response, not an API outage. The
+bounded hourly scan starts at that offered date and reserves nothing.
+
+Local decision-support menus' `demand_adjustments` additionally contains
+`order_cutoff_excluded`: raw forecast portions excluded from **additional** demand
+because their ordering deadline has closed. `delivery_day_excluded` now includes
+specific dates as well as weekdays. Confirmed accepted recipe requirements and
+historical evaluations are unchanged. Legacy clients may ignore the new key;
+current clients accept its absence from older responses. Genpact and sample-data
+contracts are unchanged. See [home-food case study](HOME-FOOD-CASE-STUDY.md).
+
 ## Availability and scope
 
 Staff recovery download: `GET /api/admin/predictive/model-backup/` uses the existing

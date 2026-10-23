@@ -1,11 +1,12 @@
 """Bounded owner search for an existing order; no reservation until confirmation."""
 from collections import Counter
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from .scheduling import availability_snapshot, schedule_order
+from .preorder_windows import common_specific_dates, delivery_day_allowed, orders_open
 
 
 def next_order_plan(items, order, store, first, now):
@@ -14,6 +15,15 @@ def next_order_plan(items, order, store, first, now):
     first = max(first or today, today)
     if first > latest:
         raise ValidationError('Choose a search date within the next 90 days.')
+    specific = common_specific_dates(items)
+    if specific is not None:
+        offered = sorted(date.fromisoformat(d) for d in specific if first.isoformat() <= d <= latest.isoformat())
+        offered = [d for d in offered if all(delivery_day_allowed(i.product, d) and orders_open(
+            i.product, d, order.created_at if order.delivery_at and d == timezone.localtime(order.delivery_at).date() else now) for i in items)]
+        if not offered:
+            return None, None, dict(from_date=first.isoformat(), through_date=first.isoformat(),
+                reason='No shared offered date remains in this booking window. Review the accepted menu dates or arrange separate orders.')
+        first = offered[0]
     last = min(first + timedelta(days=6), latest)
     quantities = Counter()
     weekdays = set(range(7))

@@ -76,7 +76,8 @@ class MenuCardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'price', 'image_url', 'category', 'category_name',
-                  'lead_hours', 'daily_capacity', 'social_url', 'delivery_weekdays']
+                  'lead_hours', 'daily_capacity', 'social_url', 'delivery_weekdays',
+                  'delivery_dates', 'order_cutoff_time', 'order_cutoff_days_before']
 
 class MenuList(generics.ListAPIView):
     serializer_class = MenuCardSerializer

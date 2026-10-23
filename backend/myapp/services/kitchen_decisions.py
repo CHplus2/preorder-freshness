@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.db.models import Q
 from ..models import Order, Product
 from .demo_provenance import synthetic_history
+from .preorder_windows import delivery_day_allowed, orders_open
 
 
 METHODS = ('mean_28', 'mean_7', 'same_weekday')
@@ -213,9 +214,12 @@ def decision_support(plan, *, today=None, snapshot=None):
         adjustments = Counter()
         for offset, prediction in enumerate(result['daily_predictions']):
             day = today+timedelta(days=offset)
-            allowed = (not product.delivery_weekdays or day.weekday() in product.delivery_weekdays)
+            allowed = delivery_day_allowed(product, day)
             if not allowed:
                 adjustments['delivery_day_excluded'] += prediction
+                continue
+            if not orders_open(product, day, earliest):
+                adjustments['order_cutoff_excluded'] += prediction
                 continue
             if day < (earliest+timedelta(hours=product.lead_hours)).date():
                 adjustments['lead_time_excluded'] += prediction
@@ -238,7 +242,7 @@ def decision_support(plan, *, today=None, snapshot=None):
                                 'requirement': quantity})
         result['additional_forecast_portions'] = round(additional_total, 2) if values else None
         result['demand_adjustments'] = {key: round(adjustments[key], 2) for key in (
-            'delivery_day_excluded', 'lead_time_excluded', 'capacity_excluded', 'recorded_orders_offset')}
+            'delivery_day_excluded', 'order_cutoff_excluded', 'lead_time_excluded', 'capacity_excluded', 'recorded_orders_offset')}
         # Round only API display values, never FEFO inputs.
         result['daily_predictions'] = [round(v, 3) for v in result['daily_predictions']]
         menus.append(result)
@@ -333,7 +337,7 @@ def decision_support(plan, *, today=None, snapshot=None):
             'Absent days mean zero recorded sales, not verified zero demand. Demo records remain demo evidence.',
             'Known booked portions are subtracted from total forecast before adding speculative ingredient needs.',
             'Forecast allocation uses delivery dates conservatively; the planner must verify earlier preparation, capacity and freshness.',
-            'Lead times, delivery weekdays and daily portion limits constrain additional forecast use.',
+            'Lead times, offered dates, delivery weekdays, order cutoffs and daily portion limits constrain additional forecast use.',
             'Low/high cases vary daily demand by held-out MAE, or the forecast itself for sparse history; they are sensitivity cases, not confidence intervals.',
             'Forecast signals are suppressed when history, recipes or order coverage are incomplete. No sales uplift, savings or safety are guaranteed.'] +
             (['SYNTHETIC HISTORY INCLUDED: evaluation and projections exercise generated patterns; they do not establish real customer accuracy.'] if sum(synthetic_by_menu.values()) else [])}

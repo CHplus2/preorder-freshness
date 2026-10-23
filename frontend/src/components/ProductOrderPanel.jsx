@@ -1,4 +1,5 @@
 import {useRef,useState} from 'react';
+import MenuPreorderRules from './MenuPreorderRules';
 import {Link} from 'react-router-dom';
 import {Minus,Plus,ShoppingBag} from 'lucide-react';
 import {useCart} from '../contexts/CartContext';
@@ -23,6 +24,7 @@ export default function ProductOrderPanel({product}) {
  };
  return <section className="product-order-panel" aria-label="Add this meal to your basket">
   <div className="meal-price-line"><strong>{formatPrice(product.price)}</strong><span>each</span></div>
+  <MenuPreorderRules product={product}/>
   {existing>0 && <p className="meal-in-basket"><ShoppingBag size={15} aria-hidden="true"/>{existing} already in your basket · <Link to="/cart">View basket</Link></p>}
   <form onSubmit={add}><div className="meal-purchase-dock order-action-bar">
    <div className="meal-quantity" role="group" aria-label="Quantity to add"><button type="button" aria-label="Decrease quantity to add" disabled={disabled || chosen<=1} onClick={()=>{setQuantity(n=>Math.max(1,n-1));setMessage('')}}><Minus size={18}/></button><output aria-label="Quantity to add" aria-live="polite">{chosen}</output><button type="button" aria-label="Increase quantity to add" disabled={disabled || chosen>=maximum} onClick={()=>{setQuantity(n=>Math.min(maximum,n+1));setMessage('')}}><Plus size={18}/></button></div>

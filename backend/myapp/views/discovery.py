@@ -12,6 +12,7 @@ from ..models import Product, Storefront, CartItem, RecommendationSession, Recom
 from ..services.discovery import slots, slot_search, next_basket_slots, candidate_item, owner_key
 from ..services.recommendation import rank_menu_choices
 from ..services.auth_limits import limit
+from ..services.preorder_windows import delivery_day_allowed, orders_open
 
 
 class GuideInput(serializers.Serializer):
@@ -78,7 +79,7 @@ def guided_menu(request):
         products = products.filter(price__lte=data['budget']/data['portions'])
     # Both discovery surfaces use the same ranking; dates additionally constrain it.
     candidates = rank_menu_choices(
-        (p for p in products if not p.delivery_weekdays or data['date'].weekday() in p.delivery_weekdays),
+        (p for p in products if delivery_day_allowed(p, data['date']) and orders_open(p, data['date'], timezone.now())),
         request.user, personalised=variant == 'personalised')
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     results = []

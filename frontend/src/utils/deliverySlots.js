@@ -23,5 +23,5 @@ export function followingSearchDay(result) {
 }
 
 export const basketAvailabilityKey=cart=>JSON.stringify(cart.map(i=>[i.id,i.quantity,
- i.product.updated_at,i.product.delivery_weekdays,i.product.lead_hours,i.product.daily_capacity,
+ i.product.updated_at,i.product.delivery_weekdays,i.product.delivery_dates,i.product.order_cutoff_time,i.product.order_cutoff_days_before,i.product.lead_hours,i.product.daily_capacity,
  i.product.max_early_minutes,i.product.max_preparation_days,i.product.preparation_tasks]));

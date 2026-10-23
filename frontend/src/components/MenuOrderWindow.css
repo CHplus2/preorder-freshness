@@ -1,0 +1,19 @@
+.menu-order-window{margin:24px 0;padding:20px;border:1px solid #d9dfd5;border-radius:12px;min-width:0}
+.menu-order-window legend{padding:0 8px;font-weight:600}
+.menu-order-window p{margin:8px 0 16px;line-height:1.6}
+.menu-order-window h4{font-size:1rem;margin:20px 0 8px}.menu-order-window h4 span{font-weight:400}
+.preorder-date-entry,.preorder-cutoff-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:end}
+.menu-order-window label{display:grid;gap:8px;min-width:0}
+.menu-order-window input{min-width:0;max-width:100%;box-sizing:border-box}
+.menu-order-window button{min-height:44px;white-space:normal}
+.menu-order-window .preorder-cutoff-toggle,.admin-shell .menu-order-window .preorder-cutoff-toggle{display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:flex-start;min-height:44px;margin:20px 0 12px;text-align:left}
+.menu-order-window .preorder-cutoff-toggle input{width:18px;height:18px;min-height:18px;padding:0;margin:0;flex:0 0 18px}
+.preorder-date-list{list-style:none;padding:0;margin:16px 0;max-height:240px;overflow:auto}
+.preorder-date-list li{display:flex;gap:12px;align-items:center;justify-content:space-between;border-bottom:1px solid #e0e6dc;padding:4px 0}
+.preorder-rule-preview{padding:12px;border-radius:8px;background:#eff5ec;color:#284b35}
+.preorder-window-note{color:#51624f;font-size:0.875rem;line-height:1.6}
+.preorder-rules{padding:14px 16px;border:1px solid #d9dfd5;border-radius:12px;margin:16px 0;font-size:0.9rem;line-height:1.6;color:#304b36}
+.preorder-rules p{margin:0 0 8px}.preorder-rules p:last-child{margin-bottom:0}
+.preorder-rules-compact{font-size:0.75rem;line-height:1.5;color:#475c43;margin-top:8px}
+.preorder-rules-compact p{margin:4px 0}
+@media(max-width:480px){.menu-order-window{padding:16px}.preorder-date-entry,.preorder-cutoff-fields{grid-template-columns:minmax(0,1fr)}}

@@ -1,11 +1,12 @@
 """Date-aware menu discovery using the same scheduler as checkout."""
 import uuid
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from ..models import InventoryItem, Order, RecommendationSession, RecommendationEvent
+from .preorder_windows import common_specific_dates, delivery_day_allowed, orders_open
 
 
 def owner_key(request):
@@ -80,14 +81,24 @@ def next_basket_slots(items, day, store):
         return dict(empty, unavailable_code='no_common_weekday',
             unavailable_reason='These menus have no delivery weekday in common. Order them separately or change your basket.')
     first = max(day or today, today, timezone.localtime(request_after).date())
+    specific = common_specific_dates(items)
+    if specific is not None:
+        candidates = sorted(date.fromisoformat(d) for d in specific if first.isoformat() <= d <= latest.isoformat())
+        candidates = [d for d in candidates if all(delivery_day_allowed(i.product, d) and orders_open(i.product, d, now) for i in items)]
+        if not candidates:
+            return dict(empty, unavailable_code='no_common_date', unavailable_reason=
+                'These items have no shared offered date still open for ordering within the booking window. Check the menu dates and cutoffs, choose an earlier search date, or order items separately.')
+        # Jump directly to the next seasonal sale, rather than scanning weeks
+        # in which the owner has not offered any dates.
+        first = candidates[0]
     last = min(first+timedelta(days=6), latest)
     if first > latest or request_after >= now+timedelta(days=90):
         return {'slots': [], 'unavailable_reason': 'This basket needs more advance notice than the 90-day booking window allows. Contact the kitchen.',
             'earliest_preparation_at': advance.isoformat(), 'delivery_request_after': request_after.isoformat(),
             'suggested_date': None, 'searched_from': None, 'searched_through': None, 'searched_days': 0}
     for offset in range((last-first).days+1):
-        date = first+timedelta(days=offset)
-        result = slot_search(items, date, store, limit=13, now=now)
+        search_day = first+timedelta(days=offset)
+        result = slot_search(items, search_day, store, limit=13, now=now)
         result.update(searched_from=first.isoformat(), searched_days=offset+1)
         if result['slots']:
             return result

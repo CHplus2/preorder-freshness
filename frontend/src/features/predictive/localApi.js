@@ -181,6 +181,7 @@ export function validateDecisionPlan(data, options = {}) {
         }));
     }
     if(m?.demand_adjustments !== undefined) requireValid(['delivery_day_excluded','lead_time_excluded','capacity_excluded','recorded_orders_offset'].every(k=>number(m.demand_adjustments?.[k])));
+    if(m?.demand_adjustments?.order_cutoff_excluded !== undefined) requireValid(number(m.demand_adjustments.order_cutoff_excluded));
   });
   if(Array.isArray(d?.ingredient_risks)) d.ingredient_risks.forEach(r=>{
     if(r?.stock_flow===undefined)return;

@@ -3,11 +3,15 @@ from types import SimpleNamespace
 
 PREPARATION_FIELDS = ('lead_hours', 'preparation_minutes', 'preparation_tasks',
     'max_preparation_days', 'batch_size', 'additional_batch_minutes',
-    'packing_minutes_per_portion', 'max_early_minutes', 'daily_capacity', 'delivery_weekdays')
+    'packing_minutes_per_portion', 'max_early_minutes', 'daily_capacity', 'delivery_weekdays',
+    'delivery_dates', 'order_cutoff_time', 'order_cutoff_days_before')
 
 
 def preparation_snapshot(product):
-    return {key: getattr(product, key) for key in PREPARATION_FIELDS}
+    result = {key: getattr(product, key) for key in PREPARATION_FIELDS}
+    if result['order_cutoff_time'] is not None:
+        result['order_cutoff_time'] = result['order_cutoff_time'].isoformat()
+    return result
 
 
 def scheduled_item(item):

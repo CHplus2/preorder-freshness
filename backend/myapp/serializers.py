@@ -20,6 +20,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    order_cutoff_time = serializers.TimeField(allow_null=True, required=False,
+        input_formats=['%H:%M', '%H:%M:%S'])
+
     def get_fields(self):
         fields = super().get_fields()
         request = self.context.get('request')
@@ -56,6 +59,28 @@ class ProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Each weekday may appear only once.")
         return sorted(value)
 
+    def validate_delivery_dates(self, value):
+        from datetime import date
+        if not isinstance(value, list) or len(value) > 90:
+            raise serializers.ValidationError('Choose up to 90 specific delivery dates, or leave the list empty for regular ordering.')
+        for day in value:
+            try:
+                valid = isinstance(day, str) and len(day) == 10 and date.fromisoformat(day).isoformat() == day
+            except ValueError:
+                valid = False
+            if not valid:
+                raise serializers.ValidationError('Use valid calendar dates in YYYY-MM-DD format.')
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError('Each delivery date may appear only once.')
+        return sorted(value)
+
+    def validate_order_cutoff_time(self, value):
+        if value is not None and value.utcoffset() is not None:
+            raise serializers.ValidationError('Use a Malaysia clock time without a timezone suffix, such as 17:00.')
+        if value is not None and (value.second or value.microsecond):
+            raise serializers.ValidationError('Use a cutoff in whole minutes, such as 17:00.')
+        return value
+
     def validate_preparation_tasks(self, value):
         from .services.scheduling import validate_tasks
         return validate_tasks(value)
@@ -82,6 +107,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ["id", "created_at", "updated_at"]
         extra_kwargs = {
+            'order_cutoff_days_before': {'min_value': 0, 'max_value': 90},
             'price': {'min_value': Decimal('0.01')},
             'lead_hours': {'min_value': 1, 'max_value': 2160},
             'daily_capacity': {'min_value': 1, 'max_value': 10000},
