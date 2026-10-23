@@ -37,6 +37,7 @@ jobs:
       - run: npm --prefix frontend run test:ux
       - run: npm --prefix frontend run test:planner
       - run: npm --prefix frontend run test:checkout
+      - run: npm --prefix frontend run test:escrow
       - run: npm --prefix frontend run test:paypal
       - run: npm --prefix frontend run test:shopping
       - run: npm --prefix frontend run test:images

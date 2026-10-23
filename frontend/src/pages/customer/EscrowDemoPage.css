@@ -12,5 +12,9 @@
 .escrow-demo .escrow-withdrawal{margin-top:24px;border-top:1px solid #d9e1d3;padding-top:4px}
 .escrow-demo .escrow-limits{margin-top:28px;padding:20px;border:1px solid #d9e1d3;border-radius:12px;line-height:1.7;background:#fff}
 .escrow-demo summary{min-height:32px}
+.escrow-demo .escrow-pending{padding:16px;border:1px solid #d8cda9;border-radius:10px;background:#fffbef;color:#645631;line-height:1.6}
+.escrow-demo .escrow-history{margin-top:24px;padding:20px;border:1px solid #d9e1d3;border-radius:12px;background:white;line-height:1.6}
+.escrow-demo .escrow-history ul{list-style:none;padding:0;display:grid;gap:12px}
+.escrow-demo .escrow-history li{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #e3e9df;font-size:13px}
 .escrow-demo .checkout-grid>*{min-width:0}
 @media(max-width:480px){.escrow-demo .escrow-steps{display:grid;gap:6px;padding:16px}.escrow-demo .checkout-actions>button{flex:1 1 auto}.escrow-demo .escrow-deal{padding:14px}}

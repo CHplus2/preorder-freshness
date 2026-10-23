@@ -47,3 +47,8 @@ test('wallet cancellation and unavailable test funds have actionable messages',(
   assert.match(escrowError({code:'INSUFFICIENT_FUNDS'}),/gas/);
   assert.match(escrowError({code:'CALL_EXCEPTION'}),/Refresh/);
 });
+test('missing or failed ordinary receipts cannot appear as confirmed',async()=>{
+ for(const receipt of [null,{}])await assert.rejects(waitForEscrowTransaction({hash:'submitted',wait:async()=>receipt},()=>{}),error=>error.code==='ESCROW_CONFIRMATION_UNAVAILABLE');
+ await assert.rejects(waitForEscrowTransaction({hash:'submitted',wait:async()=>({status:0})},()=>{}),error=>error.code==='CALL_EXCEPTION' && error.receipt.status===0);
+ assert.match(escrowError({receipt:{status:0}}),/failed on-chain/);
+});

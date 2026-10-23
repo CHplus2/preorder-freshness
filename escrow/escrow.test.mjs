@@ -108,3 +108,31 @@ test('seller refund and arbiter release credit the correct recipient exactly onc
   await rejectsTransaction(()=>c.refund(b));
  } finally {await x.close();}
 });
+test('supported manifest authenticates the actual runtime bytecode',async()=>{
+ const x=await setup();try{
+  const c=await x.factory.deploy();await c.waitForDeployment();
+  const {verifyEscrowCode}=await import('../frontend/src/utils/escrowState.js');
+  verifyEscrowCode(await x.provider.getCode(await c.getAddress()));
+  assert.throws(()=>verifyEscrowCode('0x'),/No escrow contract/);
+  assert.throws(()=>verifyEscrowCode('0x60006000'),/does not match/);
+ }finally{await x.close();}
+});
+test('failed recipient transfers preserve credits and reentrancy cannot withdraw twice',async()=>{
+ const x=await setup();try{
+  const c=await x.factory.deploy();await c.waitForDeployment();
+  const fs=await import('node:fs'),{default:solc}=await import('solc');
+  const source=fs.readFileSync(new URL('./WithdrawalReceiver.sol',import.meta.url),'utf8');
+  const output=JSON.parse(solc.compile(JSON.stringify({language:'Solidity',sources:{'WithdrawalReceiver.sol':{content:source}},settings:{evmVersion:'shanghai',outputSelection:{'*':{'*':['abi','evm.bytecode.object']}}}})));
+  assert.ok(!(output.errors || []).some(e=>e.severity==='error'));
+  const a=output.contracts['WithdrawalReceiver.sol'].WithdrawalReceiver;
+  const receiver=await new ContractFactory(a.abi,a.evm.bytecode.object,x.seller).deploy(await c.getAddress());await receiver.waitForDeployment();
+  const address=await receiver.getAddress(),amount=parseEther('0.001'),key=id('receiver-credit');
+  await(await c.fund(key,address,x.arbiter.address,(await x.provider.getBlock('latest')).timestamp+3600,{value:amount})).wait();
+  await(await receiver.dispatch(key)).wait();await(await c.confirmReceipt(key)).wait();
+  await(await receiver.setMode(1)).wait();await rejectsTransaction(()=>receiver.withdraw());
+  assert.equal(await c.credits(address),amount);assert.equal(await x.provider.getBalance(await c.getAddress()),amount);
+  await(await receiver.setMode(2)).wait();await(await receiver.withdraw()).wait();
+  assert.equal(await c.credits(address),0n);assert.equal(await receiver.receipts(),1n);
+  assert.equal(await x.provider.getBalance(address),amount);assert.equal(await x.provider.getBalance(await c.getAddress()),0n);
+ }finally{await x.close();}
+});

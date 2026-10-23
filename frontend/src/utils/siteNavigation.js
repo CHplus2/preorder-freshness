@@ -18,7 +18,7 @@ const pages={
  '/recover':['Account recovery','Recover access to your kitchen account.'],
  '/payment/paypal':['PayPal payment','Review your saved preorder and its verified Sandbox payment status.'],
  '/payment/wallet':['Demo credit payment','Review a preorder using demonstration credits.'],
- '/escrow-demo':['Testnet escrow demo','An illustrative testnet payment walkthrough.'],
+ '/escrow-demo':['Escrow payment','Wallet-based escrow on the Sepolia test network.'],
  '/admin/planner':['Planner','Review kitchen preparation, delivery work and requests needing attention.'],
  '/admin/products':['Menus','Manage menu availability, recipes and cooking steps.'],
  '/admin/inventory':['Inventory','Review ingredient batches, stock levels and expiry dates.'],

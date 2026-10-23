@@ -69,7 +69,7 @@ function AnimatedRoutes() {
         ))}
         <Route path="/account" element={<RequireAuth><AccountPage/></RequireAuth>}/>
         <Route path="/recover" element={<RecoveryPage/>}/>
-        <Route path="/escrow-demo" element={<Suspense fallback={<PageLoading label="Loading escrow demo…"/>}><EscrowDemoPage/></Suspense>}/>
+        <Route path="/escrow-demo" element={<Suspense fallback={<PageLoading label="Loading escrow payment…"/>}><EscrowDemoPage/></Suspense>}/>
         <Route path="/story" element={<StoryPage/>}/>
         <Route path="/how-it-works" element={<HowItWorksPage/>}/>
         <Route path="/contact" element={<ContactPage/>}/>
