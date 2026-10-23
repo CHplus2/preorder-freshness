@@ -18,17 +18,17 @@ const instructions = [
   'The buyer can withdraw the refunded coins using their own wallet.',
 ];
 
-export default function EscrowDemoPage() {
+export default function EscrowDemoPage({invoice=null,orderId=null,onTransaction,onSubmitted,onFailure,allowFunding=true}) {
   const [history,setHistory]=useState(storedEscrows);
-  const configured=import.meta.env.VITE_TESTNET_ESCROW_ADDRESS || '';
+  const configured=invoice?.contract || import.meta.env.VITE_TESTNET_ESCROW_ADDRESS || '';
   const initial=history.find(row=>!configured || row.contract.toLowerCase()===configured.toLowerCase());
   const [contractAddress, setContractAddress] = useState(configured || initial?.contract || '');
   const [account, setAccount] = useState('');
-  const [dealId, setDealId] = useState(initial?.id || '');
+  const [dealId, setDealId] = useState(invoice?.reference || initial?.id || '');
   const [deal, setDeal] = useState(null);
-  const [seller, setSeller] = useState('');
-  const [arbiter, setArbiter] = useState('');
-  const [amount, setAmount] = useState('0.001');
+  const [seller, setSeller] = useState(invoice?.seller || '');
+  const [arbiter, setArbiter] = useState(invoice?.arbiter || '');
+  const [amount, setAmount] = useState(invoice?formatEther(invoice.amount_wei):'0.001');
   const [credit, setCredit] = useState('0');
   const [chainTime, setChainTime] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -107,14 +107,21 @@ export default function EscrowDemoPage() {
     if(context.version!==version.current || BigInt(chain)!==11155111n || accounts[0]?.toLowerCase()!==context.signer.address.toLowerCase())throw Error('Wallet or network changed. Reconnect before continuing.');
     const tx = await context.contract[method](...args, options);
     let record={contract:context.address,id:key,hash:tx.hash,status:'pending'};
-    remember(record);updatePending(record);
+    remember(record);updatePending(record);setTxHash(record.hash);
     setMessage('Transaction submitted. Waiting for network confirmation…');
+    if(onSubmitted){try{await onSubmitted({hash:record.hash,method})}catch{/* Public reference remains available for a later server check. */}}
     try{
       await waitForEscrowTransaction(tx,hash=>{setTxHash(hash);record={...record,hash};remember(record);updatePending(record)});
       remember({...record,status:'confirmed'});updatePending(null);
     }catch(cause){
-      if(cause.cancelled || cause.receipt?.status===0){remember({...record,status:'failed'});updatePending(null);}
+      if(cause.cancelled || cause.receipt?.status===0){
+        remember({...record,status:'failed'});updatePending(null);
+        if(onFailure){try{await onFailure({hash:cause.replacement?.hash || cause.receipt?.hash || record.hash,method})}catch{/* A manual status check remains available. */}}
+      }
       throw cause;
+    }
+    if(onTransaction){
+      try{await onTransaction({hash:record.hash,method})}catch{setError('Transaction confirmed on-chain. Check the order payment record before retrying.')}
     }
     if (context.version !== version.current) {
       setMessage('Transaction confirmed. Reconnect the active wallet to refresh this escrow.'); return;
@@ -129,6 +136,7 @@ export default function EscrowDemoPage() {
   const actions = escrowActions(deal, account, chainTime);
   const state = Number(deal?.state ?? 0);
   const writeDisabled=busy || Boolean(pending);
+  const Title=invoice?'h2':'h1';
   const refreshMessage=()=>pendingRef.current?'Transaction confirmation is still pending. Refresh again before submitting another action.':'Escrow and withdrawal balance refreshed.';
   const action = (method, args = [dealId]) => perform(context => transact(context, method, args));
   const copyId = async () => {
@@ -136,9 +144,9 @@ export default function EscrowDemoPage() {
     catch { setError('Could not copy automatically. Select the escrow reference and copy it manually.'); }
   };
   return <main className="checkout-container escrow-demo">
-    <Link to="/checkout" className="checkout-back">Back to checkout</Link>
-    <header className="escrow-header"><p className="escrow-badge">Sepolia · Test network</p><h1 className="checkout-title">Escrow payment</h1>
-      <p className="checkout-intro">Funds are held until receipt is confirmed or a refund is agreed. Uses test ETH with no monetary value; this escrow does not pay for a food order.</p></header>
+    <Link to={invoice?'/orders':'/checkout'} className="checkout-back">{invoice?'Back to orders':'Back to checkout'}</Link>
+    <header className="escrow-header"><p className="escrow-badge">Sepolia · Test network</p><Title className="checkout-title">{invoice?`Wallet actions · order #${orderId}`:'Escrow payment'}</Title>
+      <p className="checkout-intro">{invoice?'Fund the amount assigned to this order. The server verifies funding before updating its payment record. Sepolia test ETH has no monetary value.':'Funds are held until receipt is confirmed or a refund is agreed. Uses test ETH with no monetary value; this escrow does not pay for a food order.'}</p></header>
     <ol className="escrow-steps"><li>Buyer funds escrow</li><li>Seller marks dispatch</li><li>Buyer confirms receipt</li><li>Seller withdraws</li></ol>
     {error && <p className="checkout-error" role="alert">{error}</p>}
     {message && <p className="escrow-status" role="status">{message}</p>}
@@ -146,7 +154,7 @@ export default function EscrowDemoPage() {
     {txHash && <p><a href={`https://sepolia.etherscan.io/tx/${txHash}`} target="_blank" rel="noreferrer">View transaction</a></p>}
     <div className="checkout-grid"><div className="checkout-main">
       <section className="checkout-section"><h2>1. Connect your wallet</h2>
-        <fieldset disabled={busy}><label>Escrow contract address<input autoComplete="off" spellCheck={false} placeholder="0x…" value={contractAddress} onChange={event => {
+        <fieldset disabled={busy}><label>Escrow contract address<input autoComplete="off" spellCheck={false} readOnly={Boolean(invoice)} placeholder="0x…" value={contractAddress} onChange={event => {
           setContractAddress(event.target.value.trim()); clearConnection(); setError(''); setMessage(''); setTxHash(''); updatePending(null);
         }}/></label><button className="checkout-submit" onClick={() => perform(async context => {await load(context, dealId); if (context.version === version.current) setMessage(refreshMessage());})}>{account ? 'Reconnect wallet' : 'Connect wallet'}</button></fieldset>
         {account && <p className="escrow-address"><strong>Connected wallet</strong><br/>{account}{deal && state > 0 && <><br/>Role: {actions.role}</>}</p>}
@@ -157,22 +165,24 @@ export default function EscrowDemoPage() {
           event.preventDefault();
           perform(async context => {
             if(pendingRef.current)throw Error('Refresh the pending transaction before creating another escrow.');
-            const value = escrowFunding(seller, arbiter, context.signer.address, amount);
+            if(invoice && context.signer.address.toLowerCase()!==invoice.buyer)throw Error('Connect the buyer wallet assigned to this order before funding.');
+            const paySeller=invoice?.seller || seller,payArbiter=invoice?.arbiter || arbiter;
+            const value = invoice?BigInt(invoice.amount_wei):escrowFunding(paySeller, payArbiter, context.signer.address, amount);
             const block = await context.provider.getBlock('latest');
-            const key = hexlify(randomBytes(32));
+            const key = invoice?.reference || hexlify(randomBytes(32));
             setDealId(key); setDeal(null); setCopied(false);
-            await transact(context, 'fund', [key, seller, arbiter, block.timestamp + 3600], key, {value});
+            await transact(context, 'fund', [key, paySeller, payArbiter, (invoice?.dispatch_by || block.timestamp + 3600)], key, {value});
           });
         }}><fieldset disabled={writeDisabled}>
-          <label>Seller wallet<input required autoComplete="off" spellCheck={false} placeholder="0x…" value={seller} onChange={event => setSeller(event.target.value.trim())}/></label>
-          <label>Arbiter wallet<input required autoComplete="off" spellCheck={false} placeholder="0x…" value={arbiter} onChange={event => setArbiter(event.target.value.trim())}/></label>
-          <label>Amount (ETH)<input required type="number" min="0.000001" max="0.01" step="0.000001" value={amount} onChange={event => setAmount(event.target.value)}/></label>
-          <p className="checkout-hint">Use three distinct wallets. Dispatch is due one hour after the latest chain timestamp. Your wallet displays gas fees before approval.</p>
-          <button className="checkout-submit" disabled={!account}>Fund escrow</button>
+          <label>Seller wallet<input required autoComplete="off" spellCheck={false} readOnly={Boolean(invoice)} placeholder="0x…" value={seller} onChange={event => setSeller(event.target.value.trim())}/></label>
+          <label>Arbiter wallet<input required autoComplete="off" spellCheck={false} readOnly={Boolean(invoice)} placeholder="0x…" value={arbiter} onChange={event => setArbiter(event.target.value.trim())}/></label>
+          <label>Amount (ETH)<input required readOnly={Boolean(invoice)} type="number" min="0.000000000000000001" max="0.01" step="any" value={amount} onChange={event => setAmount(event.target.value)}/></label>
+          <p className="checkout-hint">Use three distinct wallets. {invoice?'Dispatch deadline follows this order’s delivery arrangement.':'Dispatch is due one hour after the latest chain timestamp.'} Your wallet displays gas fees before approval.</p>
+          <button className="checkout-submit" disabled={!account || Boolean(invoice && (state>0 || !allowFunding || account.toLowerCase()!==invoice.buyer))}>Fund escrow</button>
         </fieldset></form>
       </section>
     </div><aside className="checkout-section"><h2>3. Manage your escrow</h2>
-      <fieldset disabled={busy}><label>Escrow reference<input autoComplete="off" spellCheck={false} placeholder="0x…" value={dealId} onChange={event => {setDealId(event.target.value.trim()); setDeal(null); setCopied(false);}}/></label>
+      <fieldset disabled={busy}><label>Escrow reference<input autoComplete="off" spellCheck={false} readOnly={Boolean(invoice)} placeholder="0x…" value={dealId} onChange={event => {setDealId(event.target.value.trim()); setDeal(null); setCopied(false);}}/></label>
         <div className="checkout-actions"><button disabled={!dealId} onClick={() => {
           if (!/^0x[0-9a-fA-F]{64}$/.test(dealId)) {setError('Paste the complete escrow reference: 0x followed by 64 hexadecimal characters.'); return;}
           perform(async context => {await load(context, dealId); if (context.version === version.current) setMessage(refreshMessage());});

@@ -47,6 +47,7 @@ import StorefrontProvider from './contexts/StorefrontProvider';
 import {useStorefront} from './contexts/StorefrontContext';
 import {HomePage,StoryPage,HowItWorksPage,ContactPage} from './pages/customer/BusinessPages';
 import {BusinessFooter,PageMeta} from './components/BusinessLayout';
+const EscrowOrderPayment=lazy(()=>import('./pages/customer/EscrowOrderPayment'));
 const EscrowDemoPage=lazy(()=>import('./pages/customer/EscrowDemoPage'));
 
 function AnimatedRoutes() {
@@ -69,6 +70,7 @@ function AnimatedRoutes() {
         ))}
         <Route path="/account" element={<RequireAuth><AccountPage/></RequireAuth>}/>
         <Route path="/recover" element={<RecoveryPage/>}/>
+        <Route path="/payment/escrow" element={<RequireAuth><Suspense fallback={<PageLoading label="Loading order escrow…"/>}><EscrowOrderPayment/></Suspense></RequireAuth>}/>
         <Route path="/escrow-demo" element={<Suspense fallback={<PageLoading label="Loading escrow payment…"/>}><EscrowDemoPage/></Suspense>}/>
         <Route path="/story" element={<StoryPage/>}/>
         <Route path="/how-it-works" element={<HowItWorksPage/>}/>

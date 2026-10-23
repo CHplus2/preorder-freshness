@@ -5,6 +5,7 @@ import axios from 'axios';
 import {getCookie} from '../utils/cookieUtils';
 import {apiError} from '../utils/apiError';
 import {paypalRecovery,paypalStatus} from '../utils/paypalResponse';
+import {Link} from 'react-router-dom';
 import PayPalRecovery from './PayPalRecovery';
 
 export default function PaymentRecords({order, onSaved}) {
@@ -44,10 +45,11 @@ export default function PaymentRecords({order, onSaved}) {
     {error && <p role="alert">{error} <button type="button" onClick={()=>{setData(null);setError('');setRevision(n=>n+1)}}>Reload records</button></p>}
     {!data?(!error && <p role="status">Loading payment records…</p>):<>
       <p>{data.policy}</p><p>Current status: <strong>{data.payment_status}</strong> · Full amount: RM {data.amount}</p>
-      <ol>{data.events.map(e=><li key={e.id}><strong>{e.kind} · {e.outcome} · RM {e.amount}</strong><br/>{e.reference} · {e.method} · {new Date(e.created_at).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur'})} (Malaysia)<br/>{e.source==='paypal_sandbox'?'Server-verified PayPal Sandbox capture (test funds).':e.source==='legacy_unverified'?'Imported status: original payment evidence and date unverified.':`Recorded by account #${e.actor ?? 'unavailable'}`}{e.note && <p>{e.note}</p>}</li>)}</ol>
+      <ol>{data.events.map(e=><li key={e.id}><strong>{e.kind} · {e.outcome} · RM {e.amount}</strong><br/>{e.reference} · {e.method} · {new Date(e.created_at).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur'})} (Malaysia)<br/>{e.source==='escrow_sepolia'?'Server-verified Sepolia escrow (test funds).':e.source==='paypal_sandbox'?'Server-verified PayPal Sandbox capture (test funds).':e.source==='legacy_unverified'?'Imported status: original payment evidence and date unverified.':`Recorded by account #${e.actor ?? 'unavailable'}`}{e.note && <p>{e.note}</p>}</li>)}</ol>
+      {order.payment_method==='escrow' && <p>Funding and refunds are verified on-chain. Released/refunded credit is withdrawn separately. <Link to={'/payment/escrow?order='+order.id}>Manage escrow & verify payment</Link></p>}
       {order.payment_method==='paypal' && <PayPalRecovery recovery={data.paypal_recovery} paymentStatus={data.payment_status} busy={busy} onCheck={checkPayPal}/>}
       {order.payment_method==='paypal' && data.payment_status==='paid' && <p>Sandbox test funds only. A refund record here does not send a PayPal refund. Complete any test refund in the PayPal Sandbox dashboard first, then record its reference.</p>}
-      {data.payment_status!=='refunded' && !(order.payment_method==='paypal' && data.payment_status==='unpaid') && <form className="fyp-form" onSubmit={save}>
+      {order.payment_method!=='escrow' && data.payment_status!=='refunded' && !(order.payment_method==='paypal' && data.payment_status==='unpaid') && <form className="fyp-form" onSubmit={save}>
         <label>Action<select value={kind} onChange={e=>setKind(e.target.value)}>
           {data.payment_status==='unpaid'?<option value="receipt">Confirm full payment received</option>:<option value="refund">Record full refund</option>}
         </select></label>
