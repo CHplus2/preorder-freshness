@@ -106,6 +106,11 @@ def reschedule_order(request, pk):
     incoming = ChangeInput(data=previous if previous else request.data)
     incoming.is_valid(raise_exception=True)
     target = incoming.validated_data['delivery_at']
+    from ..services.escrow import locked_delivery, EscrowError
+    try:
+        locked_delivery(order,target)
+    except EscrowError as error:
+        raise serializers.ValidationError(error.message)
     if target == order.delivery_at:
         raise serializers.ValidationError('Choose a different delivery time.')
     if previous and previous['version'] != order.updated_at.isoformat():

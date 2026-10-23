@@ -5,7 +5,7 @@
   "functions": {
     "app.py": {
       "maxDuration": 60,
-      "includeFiles": "backend/predictive_ai/{data/*.csv,artifacts/demand_model.cbm,artifacts/metrics.json,artifacts/runtime-bundle.tar.gz}",
+      "includeFiles": "{backend/predictive_ai/data/*.csv,backend/predictive_ai/artifacts/demand_model.cbm,backend/predictive_ai/artifacts/metrics.json,backend/predictive_ai/artifacts/runtime-bundle.tar.gz,frontend/src/contracts/preorderEscrow.json}",
       "excludeFiles": "{frontend/node_modules/**,backend/venv/**,.venv/**,venv/**,backend/backups/**,**/*.sqlite3,screenshots/**,.git/**,tests/**,.freshcast-deploy/**}"
     }
   }

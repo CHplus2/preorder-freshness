@@ -236,3 +236,13 @@ def immutable_vite_asset(path, url):
 
 
 WHITENOISE_IMMUTABLE_FILE_TEST = immutable_vite_asset
+
+# Sepolia escrow checkout. Only public participant addresses go to the browser;
+# the RPC endpoint may contain provider credentials and remains server-side.
+ESCROW_SEPOLIA_ENABLED = os.getenv('ESCROW_SEPOLIA_ENABLED', 'false').lower() == 'true'
+ESCROW_RPC_URL = os.getenv('ESCROW_RPC_URL', '').strip()
+ESCROW_CONTRACT_ADDRESS = os.getenv('ESCROW_CONTRACT_ADDRESS', '').strip()
+ESCROW_SELLER_ADDRESS = os.getenv('ESCROW_SELLER_ADDRESS', '').strip()
+ESCROW_ARBITER_ADDRESS = os.getenv('ESCROW_ARBITER_ADDRESS', '').strip()
+ESCROW_WEI_PER_MYR = os.getenv('ESCROW_WEI_PER_MYR', '')
+ESCROW_MIN_CONFIRMATIONS = os.getenv('ESCROW_MIN_CONFIRMATIONS', '3')

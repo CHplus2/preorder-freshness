@@ -135,7 +135,7 @@ def place_order(request):
     if not cart_items.exists():
         return Response({"detail": "Cart empty"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if payment not in ('cod', 'wallet', 'paypal', 'manual'):
+    if payment not in ('cod', 'wallet', 'paypal', 'manual', 'escrow'):
         raise ValidationError('Choose a supported payment method.')
     # One lock serialises scheduling across different menus in this single kitchen.
     Storefront.objects.get_or_create(pk=1)
@@ -155,6 +155,10 @@ def place_order(request):
         from ..services.paypal import enabled
         if not enabled():
             raise ValidationError('PayPal Sandbox is unavailable. Choose another payment method.')
+    if payment == 'escrow':
+        from ..services.escrow import config
+        if not config():
+            raise ValidationError('Sepolia escrow is unavailable. Choose another payment method.')
     method = request.data.get('delivery_method', 'standard')
     if method not in ('standard', 'express'):
         raise ValidationError('Invalid delivery method.')

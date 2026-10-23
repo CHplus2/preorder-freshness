@@ -1,3 +1,4 @@
+from .views.escrow import escrow_config, escrow_payment
 from .views.paypal import paypal_config, paypal_payment, paypal_owner_check
 from .views.paypal_notifications import paypal_notification
 from .views.shopping_assistant import shop_suggestions, shop_cart
@@ -38,6 +39,8 @@ urlpatterns = [
     path('help/shop/', shop_suggestions),
     path('help/cart/', shop_cart),
     path('payments/paypal/config/', paypal_config),
+    path('payments/escrow/config/', escrow_config),
+    path('orders/<int:pk>/escrow/', escrow_payment),
     path('payments/paypal/webhook/', paypal_notification),
     path('admin/orders/<int:pk>/paypal/check/', paypal_owner_check),
     path('orders/<int:pk>/paypal/', paypal_payment),
