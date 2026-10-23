@@ -15,7 +15,7 @@ export default function PaymentPage(){
 
 function DemoWalletPage() {
     const { setAlert } = useUI();
-    const { cart, cartLoading, cartError, cartUpdating, pricingReady, pricingError, refreshPricing, refreshCart, finalTotal, wallet, walletLoading, walletError, refreshWallet, createWallet, topupWallet } = useCart();
+    const { cart, cartLoading, cartError, cartUpdating, pricingReady, pricingError, refreshPricing, refreshCart, finalTotal, wallet, walletLoading, walletError, refreshWallet, createWallet, topupWallet,fulfilmentMethod='standard' } = useCart();
     const { placeOrder } = useOrder();
 
     const { method } = useParams();
@@ -25,16 +25,17 @@ function DemoWalletPage() {
     const walletOperation=useRef(false);
     const [paymentError,setPaymentError]=useState("");
     const location = useLocation();
-    const addressId = demoAddressId(location.state?.addressId);
+    const pickup=fulfilmentMethod==='pickup';
+    const addressId = pickup?null:demoAddressId(location.state?.addressId);
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (method !== "paypal" && !addressId) {
+        if (method !== "paypal" && !pickup && !addressId) {
             setAlert({ message: "Session expired. Please checkout again", type: "error" })
             navigate("/checkout")
         }
-    }, [addressId, method, setAlert, navigate])
+    }, [addressId, method, pickup, setAlert, navigate])
 
     const handlePay = async () => {
         if(paying || cartLoading || cartUpdating || cartError || !pricingReady || !cart.length || walletError || !wallet || Number(wallet.balance)<finalTotal)return;

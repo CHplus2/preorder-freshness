@@ -4,7 +4,7 @@ import {getCookie} from '../utils/cookieUtils';
 import {readApiError} from '../utils/apiError';
 
 // Advisory only. Checkout still rechecks capacity and payment under server locks.
-export default function useDeliveryQuote({deliveryAt,selectionKey,enabled,issue=''}) {
+export default function useDeliveryQuote({deliveryAt,selectionKey,enabled,issue='',method='standard',area=''}) {
  const [result,setResult]=useState(null),[attempt,setAttempt]=useState(0);
  const complete=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(deliveryAt) && Number.isFinite(Date.parse(deliveryAt+':00+08:00'));
  const canCheck=enabled && complete && !issue;
@@ -15,7 +15,7 @@ export default function useDeliveryQuote({deliveryAt,selectionKey,enabled,issue=
   const timer=setTimeout(async()=>{
    setResult({key:selectionKey,attempt,phase:'checking'});
    try {
-    const {data}=await axios.post('/api/orders/quote/',{delivery_at:deliveryAt+':00+08:00'},
+    const {data}=await axios.post('/api/orders/quote/',{delivery_at:deliveryAt+':00+08:00',delivery_method:method,delivery_area:area},
      {signal:controller.signal,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
     if(controller.signal.aborted)return;
     if(!data || typeof data!=='object' || Array.isArray(data) || (data.needs_review!==true &&
@@ -30,7 +30,7 @@ export default function useDeliveryQuote({deliveryAt,selectionKey,enabled,issue=
    }
   },350);
   return()=>{clearTimeout(timer);controller.abort();};
- },[canCheck,deliveryAt,selectionKey,attempt]);
+ },[canCheck,deliveryAt,selectionKey,attempt,method,area]);
  const current=canCheck && result?.key===selectionKey && result.attempt===attempt;
  return {
   checking:canCheck && (!current || result.phase==='checking'),

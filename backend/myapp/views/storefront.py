@@ -18,7 +18,22 @@ class StoreSerializer(serializers.ModelSerializer):
         closing = attrs.get('kitchen_close_hour', getattr(self.instance, 'kitchen_close_hour', 20))
         if not 0 <= opening < closing <= 23:
             raise serializers.ValidationError('Kitchen hours must open before closing, between 00:00 and 23:00.')
+        for kind in ('delivery', 'pickup'):
+            first = attrs.get(f'{kind}_open_hour', getattr(self.instance, f'{kind}_open_hour', 9 if kind == 'delivery' else 8))
+            last = attrs.get(f'{kind}_close_hour', getattr(self.instance, f'{kind}_close_hour', 21 if kind == 'delivery' else 20))
+            if not 0 <= first < last <= 23:
+                raise serializers.ValidationError(f'{kind.title()} hours must open before closing, between 00:00 and 23:00.')
+        if attrs.get('pickup_enabled', getattr(self.instance, 'pickup_enabled', False)) and not attrs.get('pickup_location', getattr(self.instance, 'pickup_location', '')).strip():
+            raise serializers.ValidationError({'pickup_location': 'Add a collection location before enabling self-collection. It will be visible to customers.'})
         return attrs
+
+    def validate_delivery_areas(self, value):
+        if not isinstance(value, list) or len(value) > 30 or any(not isinstance(v, str) or not v.strip() or len(v.strip()) > 80 for v in value):
+            raise serializers.ValidationError('Use up to 30 delivery area names, each 1–80 characters. An empty list leaves delivery areas unrestricted.')
+        names = [v.strip() for v in value]
+        if len(set(v.casefold() for v in names)) != len(names):
+            raise serializers.ValidationError('List each delivery area only once.')
+        return names
 
     def validate_whatsapp_number(self, value):
         if value and (not value.isdigit() or not 8 <= len(value) <= 15):
@@ -31,15 +46,21 @@ class StoreSerializer(serializers.ModelSerializer):
         extra_kwargs = {'bulk_discount_percent': {'min_value': 0, 'max_value': 50}, 'delivery_buffer_minutes': {'min_value': 1, 'max_value': 1440}, 'bulk_minimum': {'min_value': 1, 'max_value': 10000}}
 
 @api_view(['GET', 'PATCH'])
+@transaction.atomic
 def storefront(request):
     store = Storefront.objects.filter(pk=1).first() or Storefront(pk=1)
     if request.method == 'PATCH':
         if not request.user.is_staff:
             raise PermissionDenied()
+        Storefront.objects.get_or_create(pk=1)
+        store = Storefront.objects.select_for_update().get(pk=1)
         serializer = StoreSerializer(store, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-    return Response(StoreSerializer(store).data)
+    data = dict(StoreSerializer(store).data)
+    if not request.user.is_staff and not store.pickup_enabled:
+        data.update(pickup_location='', pickup_instructions='')
+    return Response(data)
 
 class ReviewSerializer(serializers.ModelSerializer):
     customer = serializers.CharField(source='user.username', read_only=True)

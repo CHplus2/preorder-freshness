@@ -13,9 +13,11 @@ from ..services.discovery import slots, slot_search, next_basket_slots, candidat
 from ..services.recommendation import rank_menu_choices
 from ..services.auth_limits import limit
 from ..services.preorder_windows import delivery_day_allowed, orders_open
+from ..services.fulfilment import request_store
 
 
 class GuideInput(serializers.Serializer):
+    delivery_method = serializers.ChoiceField(choices=['standard', 'express', 'pickup'], required=False)
     date = serializers.DateField()
     portions = serializers.IntegerField(min_value=1, max_value=100, default=1)
     budget = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0.01'), required=False)
@@ -23,6 +25,7 @@ class GuideInput(serializers.Serializer):
 
 
 class BasketSlotsInput(serializers.Serializer):
+    delivery_method = serializers.ChoiceField(choices=['standard', 'express', 'pickup'], required=False)
     date = serializers.DateField(required=False)
     find_next = serializers.BooleanField(default=False)
 
@@ -82,6 +85,7 @@ def guided_menu(request):
         (p for p in products if delivery_day_allowed(p, data['date']) and orders_open(p, data['date'], timezone.now())),
         request.user, personalised=variant == 'personalised')
     store = Storefront.objects.filter(pk=1).first() or Storefront()
+    store, method, _ = request_store(store, data)
     results = []
     for score, p, reasons in candidates[:30]:
         item = candidate_item(p, data['portions'])
@@ -114,9 +118,10 @@ def basket_slots(request):
     if not items:
         raise serializers.ValidationError('Your basket is empty.')
     store = Storefront.objects.filter(pk=1).first() or Storefront()
+    store, method, _ = request_store(store, data.validated_data)
     if data.validated_data['find_next']:
         return Response(next_basket_slots(items, data.validated_data.get('date'), store))
-    return Response(slot_search(items, data.validated_data['date'], store, limit=13))
+    return Response(slot_search(items, data.validated_data['date'], store, limit=24))
 
 
 @api_view(['POST'])

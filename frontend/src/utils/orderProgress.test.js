@@ -8,6 +8,13 @@ test('cancelled and unknown statuses do not invent completed stages',()=>{
  assert.deepEqual(orderProgress('cancelled').stages,[]);assert.equal(orderProgress('cancelled').label,'Cancelled');
  assert.deepEqual(orderProgress('unexpected').stages,[]);
 });
+test('self-collection has a collected outcome and no out-for-delivery stage',()=>{
+ const progress=orderProgress('cooked',false,true);
+ assert.equal(progress.label,'Ready for collection');
+ assert.equal(progress.stages.some(s=>s.key==='shipped'),false);
+ assert.equal(orderProgress('delivered',false,true).label,'Collected');
+ assert.equal(orderProgress('pending',true,true).label,'Collection request sent');
+});
 
 test('unconfirmed requests have no fulfilment stage or booked-time promise',()=>{
  const request={status:'pending',delivery_at:'2026-10-20T16:00:00+08:00',preparation_plan:{needs_review:true,tasks:[]}};

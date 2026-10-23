@@ -9,6 +9,7 @@ import { useAuth } from "./AuthContext";
 import { useUI } from "./UIContext";
 import axios from "axios";
 import { useStorefront } from "./StorefrontContext";
+import {methodsFor} from '../utils/fulfilment';
 
 export default function CartProvider({ children }) {
   const { store: promotion,error:pricingError } = useStorefront();
@@ -22,11 +23,16 @@ export default function CartProvider({ children }) {
 
   const [cart,setCart]=useState([]);
   const { isAuthenticated, accountKey, isSessionCurrent } = useAuth();
+  const [fulfilment,setFulfilment]=useState(()=>{try{return {account:accountKey,...JSON.parse(sessionStorage.getItem('fulfilmentChoice') || '{}')}}catch{return {account:accountKey}}});
+  const options=methodsFor(promotion);
+  const fulfilmentMethod=fulfilment.account===accountKey && options.includes(fulfilment.method)?fulfilment.method:options[0] || 'standard';
+  const deliveryArea=fulfilment.account===accountKey && promotion?.delivery_areas?.includes(fulfilment.area)?fulfilment.area:'';
+  const chooseFulfilment=(method,area='')=>{setFulfilment({account:accountKey,method,area});try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method,area}));sessionStorage.removeItem('preferredDelivery');}catch{/* The current choice remains usable. */}};
   const topupPending=useRef(false),cartRead=useRef(null),cartMutation=useRef(false);
   const [cartUpdating,setCartUpdating]=useState(false);
   const { setAlert, setShowLogin } = useUI();
 
-  const {total,discount,shipping:SHIPPING_FEE,finalTotal}=basketTotals(cart,promotion);
+  const {total,discount,shipping:SHIPPING_FEE,finalTotal}=basketTotals(cart,promotion,fulfilmentMethod);
 
   const refreshCart = useCallback(async () => {
     if(!isSessionCurrent())return;
@@ -166,6 +172,7 @@ export default function CartProvider({ children }) {
   return (
     <CartContext.Provider
       value={{
+        fulfilmentMethod,deliveryArea,chooseFulfilment,
         discount, promotion, pricingReady, pricingError, refreshPricing,
         cart,
         cartLoading, cartError, cartUpdating,

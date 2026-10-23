@@ -1,3 +1,5 @@
+import OrderFulfilment from '../../components/OrderFulfilment';
+import {isPickup,handoverLabel,methodLabel} from '../../utils/fulfilment';
 import {Link} from 'react-router-dom';
 import {ChevronRight,ReceiptText} from 'lucide-react';
 import OrderProgress from '../../components/OrderProgress';
@@ -37,7 +39,7 @@ export default function OrdersPage() {
 
   return (
     <main className="orders-container customer-orders">
-      <div className="customer-orders-heading customer-page-heading"><div><span className="dk-eyebrow">YOUR PREORDERS</span><h1 className="orders-title">My orders</h1><p>Delivery progress and payments, in one place.</p></div><button type="button" disabled={ordersLoading} onClick={fetchOrders}>{ordersLoading?"Refreshing…":"Refresh order status"}</button></div>
+      <div className="customer-orders-heading customer-page-heading"><div><span className="dk-eyebrow">YOUR PREORDERS</span><h1 className="orders-title">My orders</h1><p>Collection, delivery progress and payments, in one place.</p></div><button type="button" disabled={ordersLoading} onClick={fetchOrders}>{ordersLoading?"Refreshing…":"Refresh order status"}</button></div>
 
       {ordersError && <p role="alert">{ordersError} <button disabled={ordersLoading} onClick={fetchOrders}>Retry loading orders</button></p>}
       {ordersLoading && <p role="status">Loading your orders…</p>}
@@ -49,17 +51,17 @@ export default function OrdersPage() {
             {/* HEADER */}
             <div className="order-header">
               <div>
-                <h2 className="order-id">{order.status==='pending' && order.preparation_plan?.needs_review?'Delivery request':'Order'} #{formatOrderNumber(order.id)}</h2>
+                <h2 className="order-id">{order.status==='pending' && order.preparation_plan?.needs_review?`${handoverLabel(order)} request`:'Order'} #{formatOrderNumber(order.id)}</h2>
               </div>
 
               <span className={`status-badge status-${order.status}`}>
-                {orderProgress(order.status,order.preparation_plan?.needs_review).label}
+                {orderProgress(order.status,order.preparation_plan?.needs_review,isPickup(order)).label}
               </span>
             </div>
 
             <OrderProgress order={order}/>
-            <dl className="customer-order-details"><div><dt>{order.status==='pending' && order.preparation_plan?.needs_review?'Requested delivery':'Delivery'}</dt><dd>{customerDelivery(order.delivery_at)} · {order.delivery_method}</dd></div><div><dt>Delivery fee</dt><dd>RM {order.shipping_fee}</dd></div><div><dt>Bulk discount</dt><dd>RM {order.discount_amount}</dd></div></dl>
-            <ManualPayment order={order}/>{order.address && <details className="dk-panel customer-order-address"><summary>Delivery address</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}
+            <dl className="customer-order-details"><div><dt>{order.status==='pending' && order.preparation_plan?.needs_review?`Requested ${handoverLabel(order).toLowerCase()}`:handoverLabel(order)}</dt><dd>{customerDelivery(order.delivery_at)} · {methodLabel(order.delivery_method)}</dd></div><div><dt>{isPickup(order)?'Collection fee':'Delivery fee'}</dt><dd>RM {order.shipping_fee}</dd></div><div><dt>Bulk discount</dt><dd>RM {order.discount_amount}</dd></div></dl>
+            <OrderFulfilment order={order}/><ManualPayment order={order}/>{order.address && <details className="dk-panel customer-order-address"><summary>Delivery address</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}
             {/* BODY */}
             <div className="order-body">
               {order.items.map((item) => (

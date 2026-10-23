@@ -1,3 +1,4 @@
+import {handoverLabel} from '../utils/fulfilment';
 import {useId,useState} from 'react';
 import axios from 'axios';
 import {getCookie} from '../utils/cookieUtils';
@@ -12,6 +13,7 @@ export default function PlanReview({order,onSaved}){
  const [adopt,setAdopt]=useState(false),[agreed,setAgreed]=useState(false);
  const [delivery,setDelivery]=useState(()=>Date.parse(order.delivery_at || '')>openedAt?deliveryInput(order.delivery_at):'');
  const [preview,setPreview]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[search,setSearch]=useState(null),[saved,setSaved]=useState(false);
+ const handover=handoverLabel(order),open=String(order.fulfilment_snapshot?.open_hour ?? 9).padStart(2,'0'),close=String(order.fulfilment_snapshot?.close_hour ?? 21).padStart(2,'0');
  const inputId=useId(),bounds=guideDateBounds(new Date(openedAt));
  const deliveryChanged=preview && Date.parse(preview.preview.delivery_at)!==Date.parse(order.delivery_at || '');
  const reset=()=>{setPreview(null);setAgreed(false);setError('');setSearch(null);setSaved(false)};
@@ -43,13 +45,13 @@ export default function PlanReview({order,onSaved}){
   }finally{setBusy(false)}
  };
  return <section className="plan-review" aria-label={`Delivery and preparation for order ${order.id}`} aria-busy={busy}>
-  <h3>{order.preparation_at?'Update delivery & preparation':'Plan delivery & preparation'}</h3>
-  {!preview && <p>Choose delivery or find a workable time. We calculate the preparation around recipes, kitchen hours and bookings. You do not need to enter an end time.</p>}
+  <h3>{order.preparation_at?`Update ${handover.toLowerCase()} & preparation`:`Plan ${handover.toLowerCase()} & preparation`}</h3>
+  {!preview && <p>Choose {handover.toLowerCase()} or find a workable time. We calculate the preparation around recipes, kitchen hours and bookings. You do not need to enter an end time.</p>}
   {!preview && <p className="plan-delivery-note">{order.preparation_at?'Your saved reservation stays in place until a replacement is confirmed.':'No preparation slots are reserved until you confirm a plan.'} All times are Malaysia time.</p>}
   {saved?<p role="status">Delivery and preparation plan confirmed.</p>:<>
   {!preview && <form onSubmit={event=>{event.preventDefault();request()}}>
    {Date.parse(order.delivery_at || '')<=openedAt && <p>The saved delivery time has passed. Choose a future time or find one below.</p>}
-   <label htmlFor={inputId}>Delivery date and time<input id={inputId} type="datetime-local" min={bounds.first+'T09:00'} max={bounds.last+'T21:00'} required disabled={busy} value={delivery} onChange={event=>{setDelivery(event.target.value);reset()}}/></label>
+   <label htmlFor={inputId}>{handover} date and time<input id={inputId} type="datetime-local" min={bounds.first+'T'+open+':00'} max={bounds.last+'T'+close+':00'} required disabled={busy} value={delivery} onChange={event=>{setDelivery(event.target.value);reset()}}/></label>
    <div className="plan-primary-actions"><button type="submit" className={delivery?'admin-primary':''} disabled={busy}>{busy?'Checking kitchen…':'Preview preparation plan'}</button><button type="button" className={!delivery?'admin-primary':''} disabled={busy} onClick={()=>request(false,true)}>Find next available time</button></div>
    <p className="plan-search-hint">Search checks hourly delivery times over the next seven days from your chosen date, within the 90-day booking window.</p>
    <details className="plan-recipe-options"><summary>Recipe settings</summary><label><input type="checkbox" checked={adopt} disabled={busy} onChange={e=>{setAdopt(e.target.checked);reset()}}/> Use current recipe and preparation settings</label><p>Keep the accepted settings by default. Agree ingredient changes with the customer before using an updated recipe.</p></details>

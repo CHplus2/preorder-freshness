@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from ..models import Product,Storefront,CartItem,RecommendationSession
 from ..services.shopping_assistant import local_extract,ai_extract,needs_owner,search_terms
 from ..services.preorder_windows import delivery_day_allowed as menu_day_allowed, orders_open
+from ..services.fulfilment import fee, default_method
 from .help import HelpThrottle
 
 
@@ -33,12 +34,14 @@ class Draft(serializers.Serializer):
 
 
 class ShopInput(serializers.Serializer):
+    delivery_method=serializers.ChoiceField(choices=['standard','express','pickup'],required=False)
     message=serializers.CharField(max_length=500,allow_blank=True,default='')
     draft=Draft(default=dict)
     use_ai=serializers.BooleanField(default=False)
 
 
 class CartInput(serializers.Serializer):
+    delivery_method=serializers.ChoiceField(choices=['standard','express','pickup'],required=False)
     product_id=serializers.IntegerField(min_value=1)
     quantity=serializers.IntegerField(min_value=1,max_value=1000)
     budget=serializers.DecimalField(max_digits=8,decimal_places=2,min_value=Decimal('0.01'),required=False)
@@ -52,7 +55,7 @@ def totals(items,store):
     subtotal=sum((item['price']*item['quantity'] for item in items),Decimal('0.00'))
     quantity=sum(item['quantity'] for item in items)
     discount=(subtotal*Decimal(store.bulk_discount_percent)/100).quantize(Decimal('0.01')) if quantity>=store.bulk_minimum else Decimal('0.00')
-    shipping=Decimal('0.00') if subtotal>=50 else Decimal('5.00')
+    shipping=fee(subtotal,store,getattr(store,'fulfilment_method',default_method(store)))
     return dict(subtotal=str(subtotal.quantize(Decimal('0.01'))),discount=str(discount),shipping=str(shipping),total=str((subtotal-discount+shipping).quantize(Decimal('0.01'))),quantity=quantity)
 
 
@@ -61,7 +64,8 @@ def state(items):
 
 
 def fingerprint(rows,store):
-    return hashlib.sha256(json.dumps([rows,store.bulk_minimum,store.bulk_discount_percent],default=str,sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json.dumps([rows,store.bulk_minimum,store.bulk_discount_percent,
+        store.delivery_fee_myr,store.free_delivery_minimum_myr,getattr(store,'fulfilment_method',default_method(store))],default=str,sort_keys=True).encode()).hexdigest()
 
 
 def proposed(rows,product,quantity):
@@ -93,6 +97,7 @@ def shop_suggestions(request):
     checked=Draft(data=draft);checked.is_valid(raise_exception=True);draft=checked.validated_data
     serial=Draft(draft).data
     rows=state(basket(request.user));store=Storefront.objects.filter(pk=1).first() or Storefront()
+    store.fulfilment_method=data.get('delivery_method',default_method(store))
     missing=[key for key in ['portions','date'] if key not in draft]
     results=[]
     if not missing:
@@ -141,6 +146,7 @@ def shop_cart(request):
             raise serializers.ValidationError('This basket preview expired or belongs to another customer. Review the addition again.')
         session=get_object_or_404(RecommendationSession.objects.select_for_update(),pk=signed.get('session'),variant='chat',owner_key=owner(request))
         context=session.context
+        store.fulfilment_method=context.get('delivery_method',default_method(store))
         if context.get('applied'):
             current=fingerprint(state(basket(request.user)),store)
             return Response({'added':True,'already_applied':True,'basket_changed':current!=context['after_fingerprint'],'result':context['result']})
@@ -148,6 +154,7 @@ def shop_cart(request):
     else:
         serializer=CartInput(data=request.data);serializer.is_valid(raise_exception=True)
         product_id=serializer.validated_data['product_id'];quantity=serializer.validated_data['quantity']
+        store.fulfilment_method=serializer.validated_data.get('delivery_method',default_method(store))
         context={}
     current=basket(request.user)
     ids={i.product_id for i in current}|{product_id}
@@ -165,7 +172,7 @@ def shop_cart(request):
         budget=serializer.validated_data.get('budget')
         if budget is not None and Decimal(result['basket_after']['total'])>budget:
             raise serializers.ValidationError('The current basket total exceeds your budget. Review quantities or budget before adding.')
-        context=dict(version='chat-cart-v1',actor=request.user.pk,product_id=product.pk,quantity=quantity,
+        context=dict(version='chat-cart-v1',actor=request.user.pk,product_id=product.pk,quantity=quantity,delivery_method=store.fulfilment_method,
             before_fingerprint=before,after_fingerprint=after,result=result,applied=False)
         session=RecommendationSession.objects.create(id=uuid.uuid4(),owner_key=owner(request),variant='chat',context=context,products=[product.pk])
         return Response({'preview':result,'confirm':signing.dumps({'session':str(session.pk),'actor':request.user.pk},salt='shopping-cart',compress=True)})

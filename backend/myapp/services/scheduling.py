@@ -13,6 +13,7 @@ from rest_framework.exceptions import ValidationError
 from ..models import Order, OrderItem, KitchenBlock
 from .work_sessions import PAUSABLE_RESOURCES, resumable_sessions, work_days
 from .preorder_windows import ordering_issue
+from .fulfilment import hours
 
 RESOURCES = {'prep_table', 'stove', 'oven', 'rice_cooker', 'fridge', 'packing_area', 'none'}
 
@@ -94,7 +95,9 @@ def preparation_work(items):
 def order_interval(order, store):
     if not order.preparation_at or not order.delivery_at:
         return None
-    end = order.preparation_end_at or order.delivery_at-timedelta(minutes=store.delivery_buffer_minutes)
+    default_buffer = getattr(store, 'original_delivery_buffer_minutes', store.delivery_buffer_minutes)
+    buffer = order.fulfilment_snapshot.get('buffer_minutes', order.preparation_plan.get('delivery_buffer_minutes', default_buffer))
+    end = order.preparation_end_at or order.delivery_at-timedelta(minutes=buffer)
     return order.preparation_at, max(end, order.preparation_at+timedelta(minutes=1))
 
 
@@ -205,8 +208,9 @@ def availability_snapshot(items, day, store, exclude_order_id=None):
     """Request-local read snapshot for advisory hourly checks, never checkout."""
     items = list(items)
     ids = frozenset(item.product_id for item in items)
-    first_ready = timezone.make_aware(datetime.combine(day, time(9)))-timedelta(minutes=store.delivery_buffer_minutes)
-    last_ready = timezone.make_aware(datetime.combine(day, time(21)))-timedelta(minutes=store.delivery_buffer_minutes)
+    opening, closing = hours(store)
+    first_ready = timezone.make_aware(datetime.combine(day, time(opening)))-timedelta(minutes=store.delivery_buffer_minutes)
+    last_ready = timezone.make_aware(datetime.combine(day, time(closing)))-timedelta(minutes=store.delivery_buffer_minutes)
     horizon = first_ready-timedelta(days=max(item.product.max_preparation_days for item in items))
     booked = dict(capacity_bookings(ids).filter(order__delivery_at__date=day).exclude(order_id=exclude_order_id)
         .values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
@@ -214,7 +218,7 @@ def availability_snapshot(items, day, store, exclude_order_id=None):
         KitchenBlock.objects.filter(start_at__lt=last_ready, end_at__gt=horizon).values_list('start_at', 'end_at')]
     orders = Order.objects.filter(status__in=['pending','processing'], inventory_deducted=False,
         preparation_at__lt=last_ready, delivery_at__gt=horizon).exclude(pk=exclude_order_id).only(
-            'preparation_at','preparation_end_at','delivery_at','preparation_plan')
+            'preparation_at','preparation_end_at','delivery_at','preparation_plan','fulfilment_snapshot')
     busy.extend(booked_tasks(orders, store))
     return AvailabilitySnapshot(day, ids, booked, tuple(busy), exclude_order_id)
 
@@ -242,8 +246,9 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
             names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             allowed = ", ".join(names[day] for day in weekdays)
             raise ValidationError(f"{item.product.name} is delivered on {allowed}. Choose one of these delivery days.")
-    if not time(9) <= local.time() <= time(21):
-        raise ValidationError('Choose delivery between 9am and 9pm Malaysia time.')
+    opening, closing = hours(store)
+    if not time(opening) <= local.time() <= time(closing):
+        raise ValidationError(f'Choose {"collection" if getattr(store, "fulfilment_method", "") == "pickup" else "delivery"} between {opening:02d}:00 and {closing:02d}:00 Malaysia time.')
     if delivery_at <= now or delivery_at > now+timedelta(days=90):
         raise ValidationError('Choose a future delivery within the next 90 days.')
     booked = availability.booked if availability is not None else dict(capacity_bookings([i.product_id for i in items]).filter(order__delivery_at__date=local.date()).exclude(order_id=exclude_order_id).values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
@@ -291,7 +296,7 @@ def automatic_plan(items, delivery_at, store, exclude_order_id, advance, existin
     horizon = ready-timedelta(days=max(i.product.max_preparation_days for i in items))
     if existing_busy is None:
         busy = [dict(start=a, end=b, resource='all', worker=True) for a,b in KitchenBlock.objects.filter(start_at__lt=ready,end_at__gt=horizon).values_list('start_at','end_at')]
-        orders = Order.objects.filter(status__in=['pending','processing'],inventory_deducted=False,preparation_at__lt=ready,delivery_at__gt=horizon).exclude(pk=exclude_order_id).only('preparation_at','preparation_end_at','delivery_at','preparation_plan')
+        orders = Order.objects.filter(status__in=['pending','processing'],inventory_deducted=False,preparation_at__lt=ready,delivery_at__gt=horizon).exclude(pk=exclude_order_id).only('preparation_at','preparation_end_at','delivery_at','preparation_plan','fulfilment_snapshot')
         busy.extend(booked_tasks(orders, store))
     else:
         busy = list(existing_busy)

@@ -25,6 +25,15 @@ test('an address needs valid saved identity and fields; an empty read is distinc
  assert.deepEqual(checkoutAddress({id:7,...emptyAddress,user:2}),{id:7,...emptyAddress});
  for(const data of [null,'',{}, {...emptyAddress,id:0},{...emptyAddress,id:7,phone:null}])assert.throws(()=>checkoutAddress(data),{code:'INVALID_RESPONSE'});
 });
+test('collection has zero delivery cost; configurable delivery pricing matches subtotal thresholds',()=>{
+ const store={bulk_discount_percent:10,bulk_minimum:1,delivery_fee_myr:'7.00',free_delivery_minimum_myr:'60.00'};
+ assert.equal(basketTotals([row('12.00')],store,'pickup').finalTotal,10.8);
+ assert.equal(basketTotals([row('12.00')],store,'pickup').shipping,0);
+ assert.equal(basketTotals([row('59.99')],store).shipping,7);
+ assert.equal(basketTotals([row('60.00')],store).shipping,0);
+ assert.equal(basketTotals([row('60.00')],{...store,free_delivery_minimum_myr:null}).shipping,7);
+ for(const change of [{delivery_fee_myr:'-1'},{free_delivery_minimum_myr:'bad'},{pickup_enabled:true,pickup_location:''},{delivery_open_hour:14,delivery_close_hour:7},{delivery_areas:'Moyan'}])assert.equal(pricingConfigured({...store,...change}),false);
+});
 test('demo payment navigation works without local storage and rejects invalid fallback IDs',()=>{
  const blocked=()=>{throw new Error('Storage blocked');};
  assert.equal(demoAddressId(4,blocked),4);assert.equal(demoAddressId(null,blocked),null);

@@ -1,3 +1,4 @@
+import {isPickup} from '../utils/fulfilment';
 import {useId, useState} from 'react';
 import axios from 'axios';
 import {apiError} from '../utils/apiError';
@@ -12,6 +13,7 @@ const when = value => value ? new Date(value).toLocaleString('en-MY', {timeZone:
 export default function RescheduleOrder({order, onSaved, historyOnly=false}) {
   const {setAlert} = useUI();
   const {isAdmin} = useAuth() || {};
+  const pickup=isPickup(order);
   const firstDate = Boolean(isAdmin && !order.delivery_at);
   const [open, setOpen] = useState(null);
   const panelId = useId();
@@ -74,11 +76,11 @@ export default function RescheduleOrder({order, onSaved, historyOnly=false}) {
   };
   return <section className="delivery-change">
     <div className="delivery-change-actions">
-      {!historyOnly && order.status === 'pending' && order.payment_status !== 'refunded' && <button type="button" aria-expanded={open === 'change'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('change')}>{firstDate?'Set delivery date':unconfirmedDeliveryRequest(order)?'Change requested time':'Change delivery time'}</button>}
-      <button type="button" className="delivery-history-toggle" aria-expanded={open === 'history'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('history')}>Delivery history</button>
+      {!historyOnly && order.status === 'pending' && order.payment_status !== 'refunded' && <button type="button" aria-expanded={open === 'change'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('change')}>{firstDate?'Set delivery date':unconfirmedDeliveryRequest(order)?'Change requested time':pickup?'Change collection time':'Change delivery time'}</button>}
+      <button type="button" className="delivery-history-toggle" aria-expanded={open === 'history'} aria-controls={panelId} disabled={busy} onClick={()=>toggle('history')}>{pickup?'Collection history':'Delivery history'}</button>
     </div>
     {open && <div id={panelId} className="delivery-change-panel">
-      <div className="delivery-change-heading"><h3>{open === 'change' ? firstDate?'Set the first delivery date':'Choose a new delivery time' : 'Delivery history'}</h3><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Close</button></div>
+      <div className="delivery-change-heading"><h3>{open === 'change' ? firstDate?'Set the first delivery date':pickup?'Choose a new collection time':'Choose a new delivery time' : pickup?'Collection history':'Delivery history'}</h3><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Close</button></div>
       {busy && <p role="status">Checking…</p>}
       {error && <p role="alert">{error} {!policy && <button type="button" disabled={busy} onClick={load}>Try again</button>}</p>}
       {message && <p className="delivery-change-success" role="status">{message}</p>}

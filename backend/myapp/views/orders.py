@@ -11,6 +11,7 @@ from ..models import Product, Storefront
 from decimal import Decimal
 from ..models import CartItem, Address, Wallet, WalletTransaction, Order, OrderItem, InventoryItem, InventoryLog, IngredientConsumption, PaymentEvent
 from ..serializers import OrderSerializer, AddressSerializer
+from ..services.fulfilment import request_store, fee, snapshot
 
 # ------------------------------------------
 # ORDER
@@ -120,16 +121,7 @@ def place_order(request):
             if previous.user_id != user.pk:
                 raise ValidationError('This checkout reference is unavailable. Start a new checkout.')
             return Response({'detail': 'Order already placed', 'order_id': previous.pk, 'needs_review': previous.preparation_plan.get('needs_review', False), 'payment_method': previous.payment_method, 'payment_status': previous.payment_status})
-    address_id = serializers.IntegerField(min_value=1).run_validation(request.data.get("address_id"))
     payment = request.data.get("payment")
-
-    if not address_id:
-        return Response({"detail": "address_id required"}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        address = Address.objects.get(id=address_id, user=user)
-    except Address.DoesNotExist:
-        return Response({"detail": "Invalid address"}, status=status.HTTP_404_NOT_FOUND)
 
     cart_items = CartItem.objects.filter(user=user).select_related("product")
     if not cart_items.exists():
@@ -140,6 +132,16 @@ def place_order(request):
     # One lock serialises scheduling across different menus in this single kitchen.
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
+    store, method, area = request_store(store, request.data, require_area=True)
+    address = None
+    if method != 'pickup':
+        address_id = serializers.IntegerField(min_value=1).run_validation(request.data.get('address_id'))
+        try:
+            address = Address.objects.get(id=address_id, user=user)
+        except Address.DoesNotExist:
+            return Response({'detail': 'Invalid address'}, status=status.HTTP_404_NOT_FOUND)
+    if method == 'pickup' and payment == 'escrow':
+        raise ValidationError('Escrow currently supports delivery orders. Choose another payment method for self-collection.')
     if payment == 'manual' and not (store.manual_payment_enabled and (store.bank_transfer_instructions.strip() or store.duitnow_qr_url)):
         raise ValidationError('Manual payment is unavailable. Choose another payment method.')
     # Lock menus so simultaneous bookings cannot exceed their daily capacity.
@@ -159,15 +161,12 @@ def place_order(request):
         from ..services.escrow import config
         if not config():
             raise ValidationError('Sepolia escrow is unavailable. Choose another payment method.')
-    method = request.data.get('delivery_method', 'standard')
-    if method not in ('standard', 'express'):
-        raise ValidationError('Invalid delivery method.')
     # The store/menu locks above protect schedule_order's authoritative capacity
     # check. Review-only requests reserve neither task time nor a daily quota.
     cart_total = sum(item.quantity * item.product.price for item in cart_items)
     portions = sum(item.quantity for item in cart_items)
     discount = (cart_total * Decimal(store.bulk_discount_percent) / 100).quantize(Decimal('0.01')) if portions >= store.bulk_minimum else Decimal('0.00')
-    shipping_fee = Decimal('5.00') if cart_total < 50 else Decimal('0.00')
+    shipping_fee = fee(cart_total, store, method)
     is_paid = 'unpaid'
     if payment == 'wallet':
         wallet = Wallet.objects.select_for_update().filter(user=user).first()
@@ -187,8 +186,9 @@ def place_order(request):
         preparation_end_at=plan['end'],
         preparation_plan=plan_snapshot(plan),
         delivery_method=method,
+        fulfilment_snapshot=snapshot(store, method, area),
         address=address,
-        delivery_address=dict(AddressSerializer(address).data),
+        delivery_address=dict(AddressSerializer(address).data) if address else {},
         total_amount=0,
         status="pending",
         payment_status=is_paid,
@@ -211,7 +211,7 @@ def place_order(request):
         )
         total += subtotal
 
-    shipping_fee = Decimal("5.00") if total < 50 else Decimal("0.00")
+    shipping_fee = fee(total, store, method)
 
     order.discount_amount = discount
     order.total_amount = total - discount
@@ -272,6 +272,7 @@ def preparation_quote(request):
     from ..services.scheduling import schedule_order, plan_snapshot
     delivery = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
     store = Storefront.objects.filter(pk=1).first() or Storefront()
+    store, method, area = request_store(store, request.data, require_area=True)
     items = list(CartItem.objects.filter(user=request.user).select_related('product'))
     plan = schedule_order(items, delivery, store, allow_manual_review=True, allow_request_exceptions=True)
     if plan.get('needs_review'):

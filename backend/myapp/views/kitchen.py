@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from ..models import KitchenBlock, Storefront, Order
 from ..services.scheduling import booked_tasks
+from ..services.fulfilment import order_store
 
 class StepTimeInput(serializers.Serializer):
     index = serializers.IntegerField(min_value=0)
@@ -58,6 +59,7 @@ def manual_order_plan(request, pk):
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
     order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
+    store = order_store(store, order)
     token = request.data.get('confirm')
     previous = None
     if token is not None:
@@ -191,6 +193,7 @@ def review_order_plan(request, pk):
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
     order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
+    store = order_store(store, order)
     previous = None
     if token is not None:
         try:

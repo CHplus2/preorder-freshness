@@ -4,7 +4,7 @@ import BasketSlots from './BasketSlots';
 import {basketAvailabilityKey} from '../utils/deliverySlots';
 import {deliveryDayIssue} from '../utils/deliveryDays';
 
-export default function DeliveryTimePicker({cart,value='',onSelect,disabled=false,allowRequest=false,requestMode=false,onRequestMode,refreshKey='',selectionUnavailable=false}) {
+export default function DeliveryTimePicker({cart,value='',onSelect,disabled=false,allowRequest=false,requestMode=false,onRequestMode,refreshKey='',selectionUnavailable=false,method='standard'}) {
  const [preferredDay,setPreferredDay]=useState(()=>value.slice(0,10));
  const [openedAt]=useState(()=>Date.now());
  const dateId=useId(),customId=useId();
@@ -13,11 +13,11 @@ export default function DeliveryTimePicker({cart,value='',onSelect,disabled=fals
  const incompatible=Boolean(deliveryDayIssue(cart,''));
  const choose=time=>{onRequestMode?.(false);onSelect(time);};
  return <div className="delivery-time-picker">
-  <p className="delivery-picker-intro">Choose from times that fit your whole basket. We check preparation time, kitchen bookings and menu delivery days for you.</p>
+  <p className="delivery-picker-intro">Choose from {method==='pickup'?'collection':'delivery'} times that fit your whole basket. We check preparation time, kitchen bookings and menu delivery days for you.</p>
   <label htmlFor={dateId}>Preferred day <span>(optional)</span></label>
   <input id={dateId} type="date" min={today} max={last.slice(0,10)} value={preferredDay} disabled={disabled} onChange={e=>setPreferredDay(e.target.value)}/>
   <p className="delivery-picker-hint">Leave blank for the next available day. If your preferred day is full, we’ll show the next options.</p>
-  <BasketSlots key={basketAvailabilityKey(cart)+refreshKey} value={preferredDay} autoSearch selectedValue={!requestMode?value:''}
+  <BasketSlots key={basketAvailabilityKey(cart)+refreshKey+method} method={method} value={preferredDay} autoSearch selectedValue={!requestMode?value:''}
    disabled={disabled || incompatible || !cart.length} onSelect={choose}/>
   {value && !requestMode && Number.isFinite(Date.parse(value+':00+08:00')) && <p className={'delivery-selected'+(selectionUnavailable?' delivery-selected-unavailable':'')} role="status">{selectionUnavailable?'Previously selected time':'Selected delivery'} <strong>{new Date(value+':00+08:00').toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',dateStyle:'medium',timeStyle:'short'})}</strong><span>Malaysia time{selectionUnavailable?' · choose another available time':''}</span></p>}
   {allowRequest?<div className="delivery-custom-option">

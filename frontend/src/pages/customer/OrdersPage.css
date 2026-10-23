@@ -152,7 +152,7 @@
 .customer-orders .order-progress{margin:24px 0;padding:22px 0}
 .customer-order-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;margin:0 0 24px}
 .customer-order-details>div:first-child{grid-column:1/-1}
-.customer-order-details dt{font-size:12px;color:#607063;margin-bottom:4px}
+.customer-order-details dt{font-size:12px;color:#4f6051;margin-bottom:4px}
 .customer-order-details dd{margin:0;font-size:14px;line-height:1.7;color:#2c4434;overflow-wrap:anywhere}
 .customer-orders .customer-order-address{margin:0 0 24px;padding:14px 16px;border:1px solid #e0e6dc;border-radius:8px;background:#fafbf8;box-shadow:none}
 .customer-order-address summary{font-size:14px;cursor:pointer;min-height:24px}

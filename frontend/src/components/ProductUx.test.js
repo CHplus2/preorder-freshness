@@ -41,6 +41,18 @@ try{
  assert.match(demo,/Demo credit wallet/);assert.doesNotMatch(demo,/<details[^>]*\sopen/);
  assert.doesNotMatch(payment({manualEnabled:false}),/DuitNow QR/);
  assert.match(payment({value:'wallet'}),/demo wallet selected/);
+ assert.match(payment({pickup:true}),/Cash at collection/);
+ assert.doesNotMatch(payment({pickup:true}),/Cash on delivery/);
+ const {default:FulfilmentChoices}=await server.ssrLoadModule('/src/components/FulfilmentChoices.jsx');
+ const choice=props=>renderToStaticMarkup(createElement(FulfilmentChoices,{store:{pickup_enabled:true,pickup_location:'Fictional counter',pickup_open_hour:7,pickup_close_hour:14,delivery_areas:['Moyan']},onChange:()=>{},...props}));
+ assert.match(choice({value:'pickup'}),/7am–2pm/);
+ assert.match(choice({value:'pickup'}),/no delivery fee/);
+ assert.doesNotMatch(choice({value:'pickup'}),/Choose your area/);
+ assert.match(choice({value:'standard'}),/Choose your area/);
+ assert.match(choice({store:{delivery_enabled:false,pickup_enabled:false}}),/not accepting delivery or collection/);
+ const {default:OrderFulfilment}=await server.ssrLoadModule('/src/components/OrderFulfilment.jsx');
+ const collection=renderToStaticMarkup(createElement(OrderFulfilment,{order:{delivery_method:'pickup',fulfilment_snapshot:{pickup_location:'Accepted location'}}}));
+ assert.match(collection,/Accepted location/);
  const {default:BasketDeliveryDays}=await server.ssrLoadModule('/src/components/BasketDeliveryDays.jsx');
  const basket=(cart,value='')=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(BasketDeliveryDays,{cart,value})));
  const meal=(name,delivery_weekdays)=>({product:{name,delivery_weekdays}});

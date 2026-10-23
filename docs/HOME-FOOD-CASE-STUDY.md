@@ -61,6 +61,12 @@ This batch does not train a model or establish forecast accuracy.
 
 ## Remaining batches
 
+**Batch 2 implemented:** optional collection/delivery methods, separate handover
+hours, location/instructions, delivery areas and fees are now connected to cart,
+checkout and accepted-order planning. See [batch 2 details](HOME-FOOD-FULFILMENT.md).
+It does not book Grab or implement festive shipping. The list below retains the
+original roadmap; batch 3 is next.
+
 2. **Fulfilment:** owner-controlled pickup/delivery, locations/areas, collection
    and delivery windows, fees and buffers. Pickup should not require a shipping
    address or travel buffer. Cooking hours and handover hours are separate.

@@ -23,7 +23,7 @@ export function plannerCalendar(orders, now=new Date()) {
    }
   }
   const delivery=Date.parse(order.delivery_at);
-  add(`${order.id}-delivery`,delivery,delivery+30*60000,`Deliver order ${order.id}`);
+  add(`${order.id}-delivery`,delivery,delivery+30*60000,`${order.delivery_method==='pickup'?'Collection for':'Deliver'} order ${order.id}`);
  }
  lines.push('END:VCALENDAR');
  return {content:lines.join('\r\n')+'\r\n',events,invalidTasks};

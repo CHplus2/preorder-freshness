@@ -7,9 +7,10 @@ export const unconfirmedDeliveryRequest = order => order.status==='pending'
  && Boolean(order.delivery_at) && !order.preparation_at && !order.preparation_end_at
  && !order.preparation_plan?.tasks?.length;
 
-export function orderProgress(status,needsReview=false) {
-  if(status==='pending' && needsReview)return {index:-1,label:'Delivery request sent',stages:[]};
-  const index=orderStages.findIndex(([key])=>key===status);
-  return {index,label:status==='cancelled'?'Cancelled':index<0?'Status unavailable':orderStages[index][1],
-    stages:index<0?[]:orderStages.map(([key,label],i)=>({key,label,state:i<index?'complete':i===index?'current':'upcoming'}))};
+export function orderProgress(status,needsReview=false,pickup=false) {
+  if(status==='pending' && needsReview)return {index:-1,label:pickup?'Collection request sent':'Delivery request sent',stages:[]};
+  const stages=pickup?orderStages.filter(([key])=>key!=='shipped').map(([key,label])=>[key,key==='cooked'?'Ready for collection':key==='delivered'?'Collected':label]):orderStages;
+  const index=stages.findIndex(([key])=>key===status);
+  return {index,label:status==='cancelled'?'Cancelled':index<0?'Status unavailable':stages[index][1],
+    stages:index<0?[]:stages.map(([key,label],i)=>({key,label,state:i<index?'complete':i===index?'current':'upcoming'}))};
 }

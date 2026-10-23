@@ -1,0 +1,19 @@
+.fulfilment-choices{padding:20px;border:1px solid #d6dfd2;border-radius:14px;margin:0 0 24px;min-width:0;background:#fff}
+.fulfilment-choices legend{font-size:1.1rem;font-weight:650;padding:0 8px}
+.fulfilment-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fulfilment-choices .fulfilment-methods label{display:flex;flex-direction:row;align-items:flex-start;gap:10px;padding:14px;border:1px solid #d6dfd2;border-radius:10px;min-width:0;cursor:pointer}
+.fulfilment-methods label.selected{background:#eff5eb;border-color:#39704b}
+.fulfilment-methods label span{display:grid;gap:5px;min-width:0}
+.fulfilment-methods small,.fulfilment-choices small{font-size:.8rem;line-height:1.5;color:#50614c}
+.fulfilment-choices input[type=radio],.fulfilment-choices input[type=checkbox]{width:18px;height:18px;min-height:18px;padding:0;flex:0 0 18px;margin:3px 0 0}
+.fulfilment-hours{font-size:.85rem;color:#50614c;line-height:1.6;margin:14px 0}
+.fulfilment-location{padding:14px;background:#f5f7f0;border-radius:10px;line-height:1.6;overflow-wrap:anywhere}
+.fulfilment-location p{margin:6px 0;white-space:pre-line}
+.fulfilment-choices label{display:grid;gap:8px;font-size:.9rem}.fulfilment-choices select{width:100%;min-width:0;box-sizing:border-box}
+.fulfilment-choices .fulfilment-express{display:flex;flex-direction:row;gap:10px;align-items:center;min-height:44px;margin-top:12px}
+@media(max-width:480px){.fulfilment-choices{padding:16px}.fulfilment-methods{grid-template-columns:minmax(0,1fr)}}
+.fulfilment-settings{min-width:0}.fulfilment-settings legend{padding:0 8px;font-size:1.15rem;font-weight:650}
+.admin-shell .fulfilment-settings .fulfilment-setting-toggle{display:flex;flex-direction:row;align-items:center;gap:12px;min-height:44px;margin:18px 0}
+.fulfilment-setting-toggle input[type=checkbox]{width:18px;height:18px;min-height:18px;padding:0;flex:0 0 18px;margin:0}
+.fulfilment-setting-section{padding:12px 0 20px;border-bottom:1px solid #dce3d6}.fulfilment-setting-section>label{display:grid;gap:8px;margin:16px 0}
+.order-fulfilment{padding:14px 16px;margin:16px 0;border:1px solid #dce3d6;border-radius:10px;line-height:1.6;overflow-wrap:anywhere}.order-fulfilment p{margin:8px 0;white-space:pre-line}

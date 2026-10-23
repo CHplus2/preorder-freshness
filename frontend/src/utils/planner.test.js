@@ -117,3 +117,10 @@ test('saved tasks cannot hide overdue deliveries, pre-order preparation or misse
  assert.deepEqual(groups.started,[]);
  assert.equal(JSON.stringify(rows),before);
 });
+
+test('collection reminders name the collection and retain the accepted handover time',()=>{
+ const calendar=plannerCalendar([{id:2,status:'cooked',delivery_method:'pickup',delivery_at:'2030-01-08T07:00:00+08:00',preparation_plan:{needs_review:false}}]);
+ assert.match(calendar.content,/SUMMARY:Collection for order 2/);
+ assert.match(calendar.content,/DTSTART:20300107T230000Z/);
+ assert.doesNotMatch(calendar.content,/SUMMARY:Deliver/);
+});

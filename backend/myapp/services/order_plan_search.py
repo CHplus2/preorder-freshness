@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 from .scheduling import availability_snapshot, schedule_order
 from .preorder_windows import common_specific_dates, delivery_day_allowed, orders_open
+from .fulfilment import hours
 
 
 def next_order_plan(items, order, store, first, now):
@@ -40,7 +41,8 @@ def next_order_plan(items, order, store, first, now):
         if day.weekday() not in weekdays:
             continue
         availability = availability_snapshot(items, day, store, exclude_order_id=order.pk)
-        for hour in range(9, 22):
+        opening, closing = hours(store)
+        for hour in range(opening, closing+1):
             delivery = timezone.make_aware(datetime.combine(day, time(hour)))
             try:
                 plan = schedule_order(items, delivery, store, now=now, exclude_order_id=order.pk,

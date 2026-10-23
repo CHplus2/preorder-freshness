@@ -7,6 +7,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from ..models import InventoryItem, Order, RecommendationSession, RecommendationEvent
 from .preorder_windows import common_specific_dates, delivery_day_allowed, orders_open
+from .fulfilment import hours
 
 
 def owner_key(request):
@@ -33,7 +34,8 @@ def slot_search(items, day, store, limit=3, now=None):
     snapshot = availability_snapshot(items, day, store)
     found = []
     last_reason = ''
-    for hour in range(9, 22):
+    opening, closing = hours(store)
+    for hour in range(opening, closing+1):
         delivery = timezone.make_aware(datetime.combine(day, time(hour)))
         try:
             plan = schedule_order(items, delivery, store, now=now, availability=snapshot)
@@ -98,7 +100,7 @@ def next_basket_slots(items, day, store):
             'suggested_date': None, 'searched_from': None, 'searched_through': None, 'searched_days': 0}
     for offset in range((last-first).days+1):
         search_day = first+timedelta(days=offset)
-        result = slot_search(items, search_day, store, limit=13, now=now)
+        result = slot_search(items, search_day, store, limit=24, now=now)
         result.update(searched_from=first.isoformat(), searched_days=offset+1)
         if result['slots']:
             return result

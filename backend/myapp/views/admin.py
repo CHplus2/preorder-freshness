@@ -27,6 +27,8 @@ def admin_order_detail(request, pk):
         return Response({"detail": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
 
     new_status = request.data.get("status")
+    if order.delivery_method == 'pickup' and new_status == 'shipped':
+        raise ValidationError('Self-collection orders are marked collected after handover; they do not go out for delivery.')
     new_payment_status = request.data.get("payment_status")
 
     transitions = {

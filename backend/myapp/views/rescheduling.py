@@ -14,6 +14,7 @@ from ..serializers import OrderSerializer
 from ..services.commitments import scheduled_item
 from ..services.scheduling import schedule_order, plan_snapshot
 from ..services.initial_delivery import initial_delivery_plan
+from ..services.fulfilment import order_store
 
 SALT = 'order-delivery-change-v1'
 CUTOFF_HOURS = 24
@@ -68,6 +69,8 @@ def reschedule_order(request, pk):
     if not request.user.is_staff:
         orders = orders.filter(user=request.user)
     order = get_object_or_404(orders, pk=pk)
+    if request.method == 'POST':
+        store = order_store(store, order)
     now = timezone.now()
     initial_delivery = bool(request.user.is_staff and order.delivery_at is None)
     editing_request = unconfirmed_request(order)

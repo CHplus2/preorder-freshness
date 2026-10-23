@@ -1,3 +1,5 @@
+import OrderFulfilment from './OrderFulfilment';
+import {handoverLabel} from '../utils/fulfilment';
 import {Link} from 'react-router-dom';
 import ManualPlan from './ManualPlan';
 import {unconfirmedDeliveryRequest} from '../utils/orderProgress';
@@ -20,8 +22,8 @@ export default function PlannerOrderCard({order,onSaved,now}) {
  return <article id={'planner-order-'+order.id} tabIndex={-1} className="admin-order-summary planner-order-card">
   <header className="planner-order-heading"><h2>{request?'Delivery request':'Order'} #{order.id}</h2><span className={'status-badge status-'+order.status}>{request?'Awaiting confirmation':orderStatusLabel(order.status)}</span></header>
   <ul className="planner-order-menus" aria-label="Ordered menus">{order.items.map((item,index)=><li key={item.id || index}><span>{item.product_name}</span><strong aria-label={item.quantity+' portions'}>×{item.quantity}</strong></li>)}</ul>
-  <dl className="planner-order-dates"><div><dt>{request?'Requested delivery':'Delivery'}</dt><dd>{orderDate(order.delivery_at)}</dd></div><div><dt>Preparation starts</dt><dd>{orderDate(order.preparation_at)}</dd></div></dl>
-  <PlanTimingNotice order={order} now={now}/>
+  <dl className="planner-order-dates"><div><dt>{request?`Requested ${handoverLabel(order).toLowerCase()}`:handoverLabel(order)}</dt><dd>{orderDate(order.delivery_at)}</dd></div><div><dt>Preparation starts</dt><dd>{orderDate(order.preparation_at)}</dd></div></dl>
+  <OrderFulfilment order={order}/><PlanTimingNotice order={order} now={now}/>
   <OrderWorkflowActions order={order} onSaved={onSaved}/>
   {valid && <><dl className="planner-order-stats"><div><dt>Hands-on work</dt><dd>{duration(hands)}</dd></div><div><dt>Equipment & pauses</dt><dd>{duration(passive)}</dd></div><div><dt>Start to finish</dt><dd>{duration(elapsed)}</dd></div></dl><p className="planner-order-caption">The full window includes breaks; unattended steps can overlap.</p></>}
   <PreparationDays plan={order.preparation_plan}/>

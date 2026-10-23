@@ -7,7 +7,7 @@ const validDay=value=>typeof value==='string' && /^\d{4}-\d{2}-\d{2}$/.test(valu
 
 export function basketSlotResult(data) {
  const slots=responseSlots(data);
- if(slots.length>13 || new Set(slots.map(s=>Date.parse(s.delivery_at))).size!==slots.length)throw invalidResponse();
+ if(slots.length>24 || new Set(slots.map(s=>Date.parse(s.delivery_at))).size!==slots.length)throw invalidResponse();
  const date=data.suggested_date,from=data.searched_from,through=data.searched_through;
  if(slots.length && (!validDay(date) || slots.some(s=>deliveryInput(s.delivery_at).slice(0,10)!==date)))throw invalidResponse();
  if((from!=null || through!=null) && (!validDay(from) || !validDay(through) || from>through))throw invalidResponse();

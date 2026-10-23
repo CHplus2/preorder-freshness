@@ -10,6 +10,7 @@ export default function OrderWorkflowActions({order,onSaved}){
  const planned=Number.isFinite(Date.parse(order.delivery_at || '')) && Number.isFinite(Date.parse(order.preparation_at || '')) && Number.isFinite(Date.parse(order.preparation_end_at || '')) && Date.parse(order.preparation_end_at)>Date.parse(order.preparation_at) && Date.parse(order.preparation_end_at)<=Date.parse(order.delivery_at) && !order.preparation_plan?.needs_review;
  const preparing=['pending','processing'].includes(order.status);
  const ready=order.status==='cooked';
+ const pickup=order.delivery_method==='pickup';
  const update=async(target,label)=>{
   if(busy)return;
   setBusy(target);setError('');
@@ -26,11 +27,11 @@ export default function OrderWorkflowActions({order,onSaved}){
   {order.status==='shipped' && <p>Out for delivery. Confirm delivery once the customer receives the order.</p>}
   {order.status==='pending' && !planned?<p>Confirm this order’s preparation plan before starting or marking it ready.</p>:<>
    <div className="planner-progress-buttons">
-    <button type="button" className="admin-primary" disabled={!!busy} onClick={()=>update(preparing?'cooked':'delivered',preparing?'ready for delivery':'delivered')}>{busy?(preparing?'Saving preparation…':'Saving delivery…'):preparing?'Mark food ready':'Mark delivered'}</button>
+    <button type="button" className="admin-primary" disabled={!!busy} onClick={()=>update(preparing?'cooked':'delivered',preparing?'food ready':pickup?'collected':'delivered')}>{busy?'Saving…':preparing?'Mark food ready':pickup?'Mark collected':'Mark delivered'}</button>
     {order.status==='pending' && <button type="button" disabled={!!busy} onClick={()=>update('processing','preparation started')}>Mark preparation started (optional)</button>}
-    {ready && <button type="button" disabled={!!busy} onClick={()=>update('shipped','out for delivery')}>Out for delivery (optional)</button>}
+    {ready && !pickup && <button type="button" disabled={!!busy} onClick={()=>update('shipped','out for delivery')}>Out for delivery (optional)</button>}
    </div>
-   <p>{preparing?'Mark ready after cooking. This deducts ingredients once, using accepted recipes and earliest eligible expiry. Starting preparation does not deduct stock.':'Mark delivered only after the customer receives the order. Payment records are updated separately.'}</p>
+   <p>{preparing?'Mark ready after cooking. This deducts ingredients once, using accepted recipes and earliest eligible expiry. Starting preparation does not deduct stock.':pickup?'Mark collected only after handing the order to the customer. Payment records are updated separately.':'Mark delivered only after the customer receives the order. Payment records are updated separately.'}</p>
   </>}
   {error && <p role="alert">{error}</p>}
  </div>;

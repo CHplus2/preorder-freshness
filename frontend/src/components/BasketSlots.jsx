@@ -11,7 +11,7 @@ export default function BasketSlots({value='',...props}) {
  return <SlotSearch key={day} day={day} {...props}/>;
 }
 
-function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedValue='',autoSearch=false}) {
+function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedValue='',autoSearch=false,method='standard'}) {
  const [result,setResult]=useState(null),[busy,setBusy]=useState(autoSearch && !nextDisabled),[error,setError]=useState('');
  const [lastDay]=useState(()=>new Date(Date.now()+90*86400000+8*3600000).toISOString().slice(0,10));
  const request=useRef(null),pending=useRef(false),searchAnchor=useRef(day);
@@ -20,7 +20,7 @@ function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedV
   const controller=new AbortController();request.current=controller;pending.current=true;searchAnchor.current=searchFrom;
   setBusy(true);setError('');setResult(null);
   try {
-   const {data}=await axios.post('/api/orders/slots/',{...(searchFrom?{date:searchFrom}:{}),find_next:true},
+   const {data}=await axios.post('/api/orders/slots/',{...(searchFrom?{date:searchFrom}:{}),find_next:true,delivery_method:method},
     {signal:controller.signal,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    if(!controller.signal.aborted)setResult(basketSlotResult(data));
   } catch(e) {
@@ -29,7 +29,7 @@ function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedV
    pending.current=false;
    if(!controller.signal.aborted)setBusy(false);
   }
- },[day,nextDisabled]);
+ },[day,nextDisabled,method]);
  useEffect(()=>()=>request.current?.abort(),[]);
  useEffect(()=>{
   if(!autoSearch || nextDisabled)return;
@@ -48,7 +48,7 @@ function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedV
    {result.reason && !['quantity_limit','no_common_weekday','no_common_date'].includes(result.code) && <details><summary>Why these times need review</summary><p>{result.reason}</p></details>}
    {following && following<=lastDay && <button type="button" disabled={busy || nextDisabled} onClick={()=>check(following)}>Check the following week</button>}
   </div>:<>
-   <div role="status" className="basket-found-date"><strong>{day && result.date!==day?'Next available day':'Available delivery times'} · {deliveryDateLabel(result.date)}</strong>
+   <div role="status" className="basket-found-date"><strong>{day && result.date!==day?'Next available day':method==='pickup'?'Available collection times':'Available delivery times'} · {deliveryDateLabel(result.date)}</strong>
     {day && result.date!==day && <p>We found the next workable times after your preferred date.</p>}
     <p>Choose one time. Availability is checked again when you order.</p>
    </div>

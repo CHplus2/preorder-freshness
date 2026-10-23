@@ -1,3 +1,5 @@
+import OrderFulfilment from '../../components/OrderFulfilment';
+import {isPickup,handoverLabel} from '../../utils/fulfilment';
 import {Link,useSearchParams} from 'react-router-dom';
 import './OrderCardSpacing.css';
 import './OwnerWorkspace.css';
@@ -179,8 +181,8 @@ function OwnerOrders() {
 
                 {/* Address Section */}
                 <div className="modal-address-block">
-                  <strong>Shipping Address:</strong>
-                  {editingOrder.address ? <p>
+                  <strong>{isPickup(editingOrder)?'Collection details':'Shipping Address:'}</strong>
+                  {isPickup(editingOrder)?<OrderFulfilment order={editingOrder}/>:editingOrder.address ? <p>
                     {editingOrder.address?.recipient_name}<br />
                     {editingOrder.address?.line1}<br />
                     {editingOrder.address?.line2 && (
@@ -197,7 +199,7 @@ function OwnerOrders() {
 
                 {editingOrder.preparation_plan?.needs_review && <p className="owner-order-note">Confirm delivery and preparation below before starting or marking food ready. Recording preparation started is optional.</p>}
                 <section aria-label="Delivery time">
-                  <h3>Delivery time</h3>
+                  <h3>{handoverLabel(editingOrder)} time</h3>
                   <p>{editingOrder.delivery_at ? new Date(editingOrder.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'No delivery time recorded'} · Malaysia time</p>
                   {editingOrder.status==='pending' && <PlanReview key={editingOrder.id+'-'+editingOrder.updated_at} order={editingOrder} onSaved={async () => {
                     setEditingOrder(null);
@@ -213,9 +215,9 @@ function OwnerOrders() {
                 >
                   <option value="pending">Not started</option>
                   <option value="processing">Preparing (optional update)</option>
-                  <option value="cooked">Ready for delivery — record ingredient use</option>
-                  <option value="shipped">Out for delivery (optional update)</option>
-                  <option value="delivered">Delivered</option>
+                  <option value="cooked">Ready for {isPickup(editingOrder)?'collection':'delivery'} — record ingredient use</option>
+                  {!isPickup(editingOrder) && <option value="shipped">Out for delivery (optional update)</option>}
+                  <option value="delivered">{isPickup(editingOrder)?'Collected':'Delivered'}</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
 

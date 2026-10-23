@@ -277,6 +277,7 @@ class CartItem(models.Model):
 
 # ============ ORDER ============
 class Order(models.Model):
+    fulfilment_snapshot = models.JSONField(default=dict, blank=True)
     checkout_request_id = models.UUIDField(null=True, blank=True, unique=True)
     payment_method = models.CharField(max_length=20, blank=True)
     payment_instructions = models.JSONField(default=dict, blank=True)
@@ -285,7 +286,7 @@ class Order(models.Model):
     delivery_address = models.JSONField(default=dict, blank=True)
     delivery_at = models.DateTimeField(null=True, blank=True)
     preparation_at = models.DateTimeField(null=True, blank=True)
-    delivery_method = models.CharField(max_length=20, choices=[("standard", "Owner delivery"), ("express", "Express request")], default="standard")
+    delivery_method = models.CharField(max_length=20, choices=[("standard", "Owner delivery"), ("express", "Express request"), ("pickup", "Self-collection")], default="standard")
     inventory_deducted = models.BooleanField(default=False)
     STATUS_CHOICES = [
         ("pending", "Pending"),
@@ -439,6 +440,17 @@ class InventoryLog(models.Model):
         )
 
 class Storefront(models.Model):
+    delivery_enabled = models.BooleanField(default=True)
+    pickup_enabled = models.BooleanField(default=False)
+    pickup_location = models.CharField(max_length=250, blank=True)
+    pickup_instructions = models.TextField(max_length=1000, blank=True)
+    delivery_open_hour = models.PositiveSmallIntegerField(default=9)
+    delivery_close_hour = models.PositiveSmallIntegerField(default=21)
+    pickup_open_hour = models.PositiveSmallIntegerField(default=8)
+    pickup_close_hour = models.PositiveSmallIntegerField(default=20)
+    delivery_areas = models.JSONField(default=list, blank=True)
+    delivery_fee_myr = models.DecimalField(max_digits=8, decimal_places=2, default=5, validators=[MinValueValidator(0)])
+    free_delivery_minimum_myr = models.DecimalField(max_digits=8, decimal_places=2, default=50, null=True, blank=True, validators=[MinValueValidator(0)])
     manual_payment_enabled = models.BooleanField(default=False)
     bank_transfer_instructions = models.TextField(blank=True, max_length=1000)
     duitnow_qr_url = models.URLField(blank=True)

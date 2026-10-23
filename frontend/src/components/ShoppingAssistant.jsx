@@ -19,7 +19,7 @@ const dateLabel=(value,language)=>new Date(value+'T12:00:00+08:00').toLocaleDate
 const cleanDraft=draft=>Object.fromEntries(Object.entries(draft).filter(([,v])=>v!==''));
 const draftFields=data=>({portions:data.portions===undefined?'':String(data.portions),date:data.date || '',budget:data.budget || '',search:data.search || ''});
 export default function ShoppingAssistant({language='en',aiAvailable=false,onClose}){
- const t=copy[language];const {isAuthenticated}=useAuth() || {};const {setShowLogin}=useUI();const {cart,cartLoading,cartError,refreshCart}=useCart();const navigate=useNavigate();
+ const t=copy[language];const {isAuthenticated}=useAuth() || {};const {setShowLogin}=useUI();const {cart,cartLoading,cartError,refreshCart,fulfilmentMethod}=useCart();const navigate=useNavigate();
  const [message,setMessage]=useState(''),[lastMessage,setLastMessage]=useState(''),[useAI,setUseAI]=useState(false);
  const [draft,setDraft]=useState(draftFields({})),[result,setResult]=useState(null),[preview,setPreview]=useState(null),[added,setAdded]=useState(null),[selection,setSelection]=useState(null);
  const [busy,setBusy]=useState(''),[error,setError]=useState('');const pending=useRef(false),read=useRef(null),mounted=useRef(true),resultRef=useRef(null),previewRef=useRef(null),addedRef=useRef(null);
@@ -32,7 +32,7 @@ export default function ShoppingAssistant({language='en',aiAvailable=false,onClo
   pending.current=true;setBusy('options');setError('');setPreview(null);setAdded(null);setResult(null);
   const controller=new AbortController();read.current=controller;
   try{
-   const {data}=await axios.post('/api/help/shop/',{message:text.trim(),draft:cleanDraft(draft),use_ai:useAI},{signal:controller.signal,timeout:12000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   const {data}=await axios.post('/api/help/shop/',{...(fulfilmentMethod?{delivery_method:fulfilmentMethod}:{}),message:text.trim(),draft:cleanDraft(draft),use_ai:useAI},{signal:controller.signal,timeout:12000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    const next=shoppingSuggestions(data);if(controller.signal.aborted)return;
    setResult(next);setDraft(draftFields(next.draft));setLastMessage(text.trim());setMessage('');
   }catch(e){if(!axios.isCancel(e) && mounted.current)setError(apiError(e))}
@@ -44,7 +44,7 @@ export default function ShoppingAssistant({language='en',aiAvailable=false,onClo
   pending.current=true;setBusy('preview');setError('');setAdded(null);setPreview(null);
   const controller=new AbortController();read.current=controller;
   try{
-   const {data}=await axios.post('/api/help/cart/',{product_id:row.id,quantity:row.quantity,...(draft.budget?{budget:draft.budget}:{})},{signal:controller.signal,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   const {data}=await axios.post('/api/help/cart/',{product_id:row.id,quantity:row.quantity,...(fulfilmentMethod?{delivery_method:fulfilmentMethod}:{}),...(draft.budget?{budget:draft.budget}:{})},{signal:controller.signal,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    if(!controller.signal.aborted)setPreview(shoppingPreview(data));
   }catch(e){if(!axios.isCancel(e) && mounted.current)setError(apiError(e))}
   finally{pending.current=false;if(mounted.current)setBusy('')}
@@ -77,7 +77,7 @@ export default function ShoppingAssistant({language='en',aiAvailable=false,onClo
   {preview && <section ref={previewRef} className="shopping-confirmation" aria-label={t.review}><h4>{preview.preview.quantity} × {preview.preview.menu}</h4><dl><div><dt>{t.before}</dt><dd>{preview.preview.quantity_before}</dd></div><div><dt>{t.after}</dt><dd>{preview.preview.quantity_after}</dd></div><div><dt>{t.price}</dt><dd>RM {preview.preview.unit_price}</dd></div><div><dt>{t.subtotal}</dt><dd>RM {preview.preview.basket_after.subtotal}</dd></div><div><dt>{t.discount}</dt><dd>− RM {preview.preview.basket_after.discount}</dd></div><div><dt>{t.shipping}</dt><dd>RM {preview.preview.basket_after.shipping}</dd></div><div className="shopping-total"><dt>{t.total}</dt><dd>RM {preview.preview.basket_after.total}</dd></div></dl><p>{t.notice}</p><button type="button" className="kitchen-chat-primary" disabled={!!busy} onClick={confirm}>{busy==='confirm'?t.loading:t.add}</button><button type="button" disabled={!!busy} onClick={()=>setPreview(null)}>{t.cancel}</button></section>}
   {error && <p role="alert">{error}</p>}{!!busy && busy!=='options' && <p role="status">{t.loading}</p>}
   {added && <section ref={addedRef} className="shopping-added"><h4 role="status">{t.added}</h4><p>{added.result.quantity} × {added.result.menu}</p>{added.basket_changed && <p>{t.changed}</p>}<Link to="/cart" onClick={onClose}>{t.basket}</Link><h4>{t.check}</h4><label>{t.date}<input type="date" value={draft.date} onChange={e=>{setDraft(current=>({...current,date:e.target.value}));setSelection(null)}}/></label>
-  {cartError?<p role="alert">{cartError} <button type="button" onClick={refreshCart}>Retry</button></p>:cartLoading?<p role="status">{t.loading}</p>:<BasketSlots key={key} value={draft.date} disabled={!cart.length || !!deliveryDayIssue(cart,draft.date)} nextDisabled={!cart.length || !!deliveryDayIssue(cart,'')} selectedValue={selected} onSelect={value=>setSelection({key,value})}/>}
+  {cartError?<p role="alert">{cartError} <button type="button" onClick={refreshCart}>Retry</button></p>:cartLoading?<p role="status">{t.loading}</p>:<BasketSlots method={fulfilmentMethod} key={key+fulfilmentMethod} value={draft.date} disabled={!cart.length || !!deliveryDayIssue(cart,draft.date)} nextDisabled={!cart.length || !!deliveryDayIssue(cart,'')} selectedValue={selected} onSelect={value=>setSelection({key,value})}/>}
   {selected && <p className="shopping-selected-time" role="status">{t.selected}: <strong>{new Date(selected+':00+08:00').toLocaleString({en:'en-MY',ms:'ms-MY',zh:'zh-CN'}[language],{timeZone:'Asia/Kuala_Lumpur',dateStyle:'medium',timeStyle:'short'})}</strong></p>}<p>{t.payment}</p><button type="button" className="kitchen-chat-primary" disabled={cartLoading || !!cartError || !cart.length} onClick={checkout}>{t.continue}</button><button type="button" onClick={()=>{setAdded(null);setResult(null);setPreview(null);setMessage('');setDraft(current=>({...current,search:''}))}}>{t.another}</button></section>}
  </section>;
 }

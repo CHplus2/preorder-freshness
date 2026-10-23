@@ -5,6 +5,38 @@ Dashboard branch: `feature/ai-dashboard`.
 
 ## Optional menu trading windows — 23 October 2026
 
+### Fulfilment extension (batch 2)
+
+`GET/PATCH /api/storefront/` additionally exposes `delivery_enabled` (default
+true), `pickup_enabled` (default false), `pickup_location`, `pickup_instructions`,
+`delivery_open_hour/close_hour` (9/21), `pickup_open_hour/close_hour` (8/20),
+`delivery_areas` (up to 30 unique area names, default []), `delivery_fee_myr`
+(Decimal string, default `5.00`) and nullable `free_delivery_minimum_myr`
+(default `50.00`). Hours are whole integers 0–23 with open < close. Pickup requires
+a nonblank location before enabling. Settings writes are staff-only and hold
+the store row lock. Inactive pickup location/instructions are hidden from public
+settings; staff and accepted-order snapshots retain them.
+
+Quotes, hourly basket searches and checkout accept `delivery_method`:
+`standard`, `express` or `pickup`. Omitted method defaults to delivery when
+enabled, otherwise pickup. Quotes/checkout also accept `delivery_area` (a declared
+configured area required for delivery when the store restricts areas). Pickup
+ignores addresses and has zero shipping/travel buffer; delivery requires an
+owned address. Discovery remains advisory and never reserves capacity. Hourly
+responses may contain up to **24** distinct slots for owner-configured windows.
+Date recommendations accept the same optional method. Shopping basket estimates
+accept the method and include the matching shipping policy in signed previews.
+
+Orders expose read-only `fulfilment_snapshot`: method, human label, accepted
+open/close hour, buffer minutes, pickup location/instructions and declared area.
+`delivery_at` also represents collection time. The stored `shipping_fee` is
+computed server-side. Replanning/rescheduling retains saved fulfilment terms.
+Collection's user-facing completed state is **Collected**, stored as `delivered`
+for existing analytics; pickup cannot transition to `shipped`. Order-linked
+escrow is delivery-only because its contract requires dispatch. Other enabled
+payment paths support pickup. No forecast/model API or model artifact changes.
+See [fulfilment workflow and release notes](HOME-FOOD-FULFILMENT.md).
+
 Product detail/create/update and public `/api/menu/` expose `delivery_dates`
 (up to 90 unique ISO calendar-date strings; empty means no specific-date limit),
 `order_cutoff_time` (nullable `HH:MM:00`, Malaysia time) and

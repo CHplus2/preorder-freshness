@@ -1,11 +1,12 @@
 import {createPortal} from 'react-dom';
 import {packingList} from '../utils/packing';
+import {methodLabel} from '../utils/fulfilment';
 import './PackingList.css';
 
 const time = value => new Date(value).toLocaleTimeString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit'});
 function Sheet({list,date}) {
   return <div className="packing-sheet"><h2>Packing list · {date}</h2>
-    <p>{list.orders.length} orders · {list.portions} portions · Malaysia delivery date</p>
+    <p>{list.orders.length} orders · {list.portions} portions · Malaysia collection / delivery date</p>
     <p>Scheduled pending, processing and cooked orders only. Unconfirmed requests and dispatched orders are excluded. Refresh before packing; printed copies may become outdated.</p>
     {list.awaitingConfirmation>0 && <p role="status">{list.awaitingConfirmation} delivery {list.awaitingConfirmation===1?'request needs':'requests need'} confirmation for this date and {list.awaitingConfirmation===1?'is':'are'} excluded from packing totals.</p>}
     {list.unscheduled>0 && <p role="alert">{list.unscheduled} active orders have no valid delivery time and are excluded. Review them in All Orders.</p>}
@@ -14,7 +15,8 @@ function Sheet({list,date}) {
       <p>These are packing totals. Follow each order’s accepted recipe and preparation plan when cooking.</p>
       <h3>Check each order before dispatch</h3>
       {list.orders.map(o=><article className="packing-order" key={o.id}><h4>ORD-{String(o.id).padStart(5,'0')} · {time(o.delivery_at)}</h4>
-        <p>{o.status} · {o.delivery_method==='express'?'Express requested':'Owner delivery'} · Payment: {o.payment_status}</p>
+        <p>{o.status} · {methodLabel(o.delivery_method)} · Payment: {o.payment_status}</p>
+        {o.delivery_method==='pickup' && <p>Collect from: {o.fulfilment_snapshot?.pickup_location || 'Confirm location with the kitchen'}</p>}
         <ul>{o.items.map(i=><li key={i.id}><span className="packing-box" aria-hidden="true">□</span> {i.quantity} × {i.product_name}</li>)}</ul>
         <p className="packing-signoff">□ Quantities checked &nbsp; □ Labels checked &nbsp; Checked by: __________</p>
       </article>)}

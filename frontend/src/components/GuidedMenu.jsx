@@ -12,7 +12,7 @@ import {guideDateBounds,guideEmptyMessage} from '../utils/guidePresentation';
 export default function GuidedMenu(){
  const [form,setForm]=useState({date:'',portions:1,budget:'',category:''});
  const [data,setData]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[adding,setAdding]=useState(null),[expanded,setExpanded]=useState(false),[submitted,setSubmitted]=useState(null);
- const {addToCart,cartLoading,cartError,cartUpdating,cart}=useCart(),{categories}=useProduct(),{formatPrice}=useUI();
+ const {addToCart,cartLoading,cartError,cartUpdating,cart,fulfilmentMethod}=useCart(),{categories}=useProduct(),{formatPrice}=useUI();
  const generation=useRef(0),request=useRef(null),pending=useRef(false),errorRef=useRef(null),helpId=useId();
  const bounds=guideDateBounds();
  useEffect(()=>()=>request.current?.abort(),[]);
@@ -24,7 +24,7 @@ export default function GuidedMenu(){
   const version=++generation.current;setBusy(true);setError('');setData(null);
   setSubmitted({...values,categoryLabel:(Array.isArray(categories)?categories:[]).find(category=>String(category.id)===String(values.category))?.name || 'Any category'});
   try{
-   const response=await axios.post('/api/menu/guide/',{date:values.date,portions:Number(values.portions),...(values.budget?{budget:values.budget}:{}),...(values.category?{category:Number(values.category)}:{})},{signal:controller.signal,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   const response=await axios.post('/api/menu/guide/',{date:values.date,portions:Number(values.portions),...(fulfilmentMethod?{delivery_method:fulfilmentMethod}:{}),...(values.budget?{budget:values.budget}:{}),...(values.category?{category:Number(values.category)}:{})},{signal:controller.signal,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    if(version===generation.current && !controller.signal.aborted)setData(guideResponse(response.data));
   }catch(error){if(version===generation.current && !controller.signal.aborted)setError(readApiError(error));}
   finally{if(version===generation.current && !controller.signal.aborted)setBusy(false);}
