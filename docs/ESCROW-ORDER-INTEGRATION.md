@@ -69,6 +69,10 @@ The three participant wallets must be distinct. Never supply private keys or
 seed phrases to this application. `VITE_TESTNET_ESCROW_ADDRESS` alone enables
 only the standalone screen; it does not configure backend order verification.
 
+For local use, first update the activated virtual environment with
+`python -m pip install -r backend/requirements.txt`. Vercel installs the updated
+`pyproject.toml` dependencies during deployment.
+
 Run the read-only deployment check in the configured backend environment:
 
 ```sh
