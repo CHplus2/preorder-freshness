@@ -69,6 +69,7 @@ class MenuImageReference(serializers.CharField):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    can_delete = serializers.SerializerMethodField()
     image_url = MenuImageReference(allow_blank=True, required=False, max_length=200)
     selling_details = serializers.JSONField(required=False)
 
@@ -88,7 +89,14 @@ class ProductSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and not request.user.is_staff:
             fields.pop('packaging_cost', None)
+        if not request or not request.user.is_staff:
+            fields.pop('can_delete', None)
         return fields
+
+    def get_can_delete(self, obj):
+        if hasattr(obj, 'used_in_orders'):
+            return not obj.used_in_orders
+        return not obj.orderitem_set.exists()
 
     ingredients = RecipeSerializer(many=True, required=False)
     stock = serializers.SerializerMethodField()

@@ -67,57 +67,63 @@ export default function ProductProvider({ children }) {
     }, [setAlert]);
 
 
-    const addProduct = async (product) => {
+    const addProduct = async (product, {onError}={}) => {
         try {
             await axios.post("/api/admin/products/add/", product, {
+                timeout: 20000,
                 withCredentials: true,
                 headers: { "X-CSRFToken": getCookie("csrftoken") },
             });
 
-            setAlert({ message: "Product created successfully", type: "success" });
+            setAlert({ message: "Menu created.", type: "success" });
             fetchProducts();
             return true;
 
         } catch (err) {
-            setAlert({ message: apiError(err, "Failed to add new product"), type: "error"});
-            console.error("addProduct:", err.response?.data || err.message);
+            if(onError)onError(err);
+            else setAlert({ message: apiError(err, "Could not create this menu."), type: "error"});
             return false;
         }
     }
 
-    const updateProduct = async (product) => {
+    const updateProduct = async (product, {onError}={}) => {
         try {
             await axios.patch(`/api/admin/products/${product.id}/`, product, {
+                timeout: 20000,
                 withCredentials: true,
                 headers: { "X-CSRFToken": getCookie("csrftoken") }
             })
-            setAlert({ message: "Product updated successfully", type: "success" });
+            setAlert({ message: "Menu updated.", type: "success" });
             fetchProducts();
             return true;
 
         } catch (err) {
-            setAlert({ message: apiError(err, "Failed to save changes"), type: "error"});
-            console.error("updateProduct:", err.response?.data || err.message);
+            if(onError)onError(err);
+            else setAlert({ message: apiError(err, "Could not save this menu."), type: "error"});
             return false;
         } 
     }
 
-    const deleteProduct = async (productId) => {
+    const deleteProduct = async (productId, {onError}={}) => {
         try {
             await axios.delete(`/api/admin/products/${productId}/`, {
+                timeout: 20000,
                 withCredentials: true,
                 headers: { "X-CSRFToken": getCookie("csrftoken"), }
             });
     
             setProductIdToDelete(null);
-            setAlert({ message: "Product deleted successfully", type: "success" });
+            setProducts(previous=>previous.filter(product=>product.id!==productId));
+            setAlert({ message: "Menu deleted.", type: "success" });
 
             fetchProducts();
             refreshCart();
+            return true;
 
         } catch (err) {
-            setAlert({ message: apiError(err, "Failed to delete product"), type: "error" });
-            console.error("deleteProduct:", err.response?.data || err.message);
+            if(onError)onError(err);
+            else setAlert({ message: apiError(err, "Could not delete this menu."), type: "error" });
+            return false;
         }
     }; 
 

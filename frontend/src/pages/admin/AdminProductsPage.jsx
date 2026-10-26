@@ -1,12 +1,8 @@
-import SellingDetailsEditor from '../../components/SellingDetailsEditor';
+import MenuEditor from '../../components/MenuEditor';
 import {unitLabel} from '../../utils/sellingDetails';
 import MenuPhoto from '../../components/MenuPhoto';
 import {useSearchParams} from 'react-router-dom';
 import './MenuSellingStatus.css';
-import DialogFeedback from '../../components/DialogFeedback';
-import ModalDialog from '../../components/ModalDialog';
-import MenuPhotoField from "../../components/MenuPhotoField";
-import RecipeEditor from "../../components/RecipeEditor";
 import { useEffect, useState } from "react";
 import { useUI } from "../../contexts/UIContext";
 import { useProduct } from "../../contexts/ProductContext";
@@ -24,8 +20,6 @@ export default function AdminProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [newProduct, setNewProduct] = useState(false);
   const [updatedProduct, setUpdatedProduct] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [photoBusy,setPhotoBusy]=useState(false);
   const editingProductId=updatedProduct?.id;
   useEffect(()=>{
     if(!editingProductId || !['recipes','preparation','costs'].includes(review))return;
@@ -34,7 +28,7 @@ export default function AdminProductsPage() {
   },[editingProductId,review]);
 
   const { fallback_img, setAlert } = useUI();
-  const { categories, products, fetchProducts, addProduct, updateProduct } = useProduct();
+  const { categories, products, fetchProducts, updateProduct, setProductIdToDelete } = useProduct();
 
   useEffect(()=>{fetchProducts()},[fetchProducts]);
   const emptyForm = {
@@ -44,56 +38,6 @@ export default function AdminProductsPage() {
     description: "",
     category: "",
     image_url: "",
-  };
-
-  useEffect(() => {
-    if (newProduct || updatedProduct) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-    return () => {
-      document.body.style.overflow = "auto";
-    }
-  }, [newProduct, updatedProduct]);
-
-  const validateInput = (product) => {
-    if (!product.name || !product.price || !product.category) {
-      const missing=[!product.name && 'menu name',!product.price && 'price',!product.category && 'category'].filter(Boolean);
-      setAlert({message:`Complete these fields: ${missing.join(', ')}.`,type:"error"});
-      return false;
-    }
-    return true;
-  };
-
-  const handleAddProduct = async () => {
-    if (!validateInput(newProduct)) {
-      return;
-    }
-
-    setLoading(true);
-
-    const saved = await addProduct(newProduct);
-    if (!saved) { setLoading(false); return; }
-    
-    setNewProduct(null);
-    setLoading(false);
-  };
-
-  const handleUpdateProduct = async () => {
-    if (!validateInput(updatedProduct)) {
-      return;
-    }
-
-    setLoading(true); 
-
-    const {selling_status: ignoredStatus, ...edits} = updatedProduct;
-    void ignoredStatus;
-    const saved = await updateProduct(edits);
-    if (!saved) { setLoading(false); return; }
-
-    setUpdatedProduct(null);
-    setLoading(false);
   };
 
   const changeStatus=async(product,selling_status)=>{
@@ -114,7 +58,7 @@ export default function AdminProductsPage() {
     <div className="admin-products-container">
       <div className="admin-header">
         <h1>Menu management</h1>
-        <button className="add-product-btn" onClick={() => setNewProduct(emptyForm)}>
+        <button className="add-product-btn" onClick={() => {setAlert({message:'',type:''});setNewProduct(emptyForm);}}>
           Create menu
         </button>
       </div>
@@ -181,7 +125,8 @@ export default function AdminProductsPage() {
               <td data-label="Preparation"><span className="status-badge">{p.preparation_tasks?.length ? `${p.preparation_tasks.length} steps` : "Needs setup"}</span></td>
               <td data-label="Actions">
                 <div className="menu-state-actions">
-                  <button disabled={statusBusy} onClick={() => setUpdatedProduct({ ...p })}>{reviewTitles[review]?`Edit ${reviewTitles[review].toLowerCase()}`:'Edit & steps'}</button>
+                  <button disabled={statusBusy} onClick={() => {setAlert({message:'',type:''});setUpdatedProduct({ ...p });}}>{reviewTitles[review]?`Edit ${reviewTitles[review].toLowerCase()}`:'Edit & steps'}</button>
+                  <button className="menu-delete-action" disabled={statusBusy} onClick={()=>{setAlert({message:'',type:''});setProductIdToDelete(p.id);}}>Delete</button>
                   {p.selling_status==='archived'?<button disabled={statusBusy} onClick={()=>changeStatus(p,'paused')}>Restore as paused</button>:<>
                     <button disabled={statusBusy} onClick={()=>changeStatus(p,p.selling_status==='active'?'paused':'active')}>{p.selling_status==='active'?'Pause orders':'Resume orders'}</button>
                     <button disabled={statusBusy} onClick={()=>changeStatus(p,'archived')}>Archive</button>
@@ -199,121 +144,8 @@ export default function AdminProductsPage() {
         </tbody>
       </table></div>
 
-      {/* Edit Product Modal */}
-      {updatedProduct && (
-      <ModalDialog label="Edit menu" onDismiss={() => setUpdatedProduct(null)}>
-<div className="modal-overlay" onClick={() => setUpdatedProduct(null)}>
-        <div className="modal-content form-modal" onClick={(e) => e.stopPropagation()}>
-          <h2>Edit menu</h2>
-          <DialogFeedback/>
-
-          <label htmlFor="adminproductspage-field-1">Menu name</label>
-          <input id="adminproductspage-field-1"
-            value={updatedProduct.name}
-            onChange={(e) => setUpdatedProduct({ ...updatedProduct, name: e.target.value })}
-          />
-          <label htmlFor="adminproductspage-field-2">Price per selling unit (RM)</label>
-          <input id="adminproductspage-field-2"
-            type="number"
-            value={updatedProduct.price}
-            onChange={(e) => setUpdatedProduct({ ...updatedProduct, price: e.target.value })}
-          />
-
-          <SellingDetailsEditor value={updatedProduct} onChange={setUpdatedProduct}/>
-          <RecipeEditor value={updatedProduct} onChange={setUpdatedProduct}/>
-          <label htmlFor="adminproductspage-field-3">Description</label>
-          <textarea id="adminproductspage-field-3"
-            value={updatedProduct.description}
-            onChange={(e) => setUpdatedProduct({ ...updatedProduct, description: e.target.value })}
-          />
-          <label htmlFor="adminproductspage-field-4">Category</label>
-          <select id="adminproductspage-field-4"
-            value={updatedProduct.category || ""}
-            onChange={(e) => setUpdatedProduct({ ...updatedProduct, category: Number(e.target.value) })}
-          >
-            <option value="">-- Select Category --</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-
-          <MenuPhotoField value={updatedProduct.image_url || ""} onBusy={setPhotoBusy} onChange={url => setUpdatedProduct(previous=>previous?{ ...previous, image_url: url }:previous)} />
-
-          <div className="modal-actions">  
-            <button onClick={handleUpdateProduct} disabled={loading || photoBusy}>
-              {loading ? "Saving..." : "Save"}
-            </button>
-            <button onClick={() => setUpdatedProduct(null)}>Cancel</button>
-          </div>
-        </div>
-      </div>
-</ModalDialog>
-      )}
-
-      {/* Add Product Modal */}
-      {newProduct && (
-      <ModalDialog label="Create menu" onDismiss={() => setNewProduct(null)}>
-<div className="modal-overlay" onClick={() => setNewProduct(null)}>
-        <div className="modal-content form-modal" onClick={(e) => e.stopPropagation()}>
-          <h2>Create menu</h2>
-          <DialogFeedback/>
-
-          <label htmlFor="adminproductspage-field-5">Name</label>
-          <input id="adminproductspage-field-5"
-            value={newProduct.name}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, name: e.target.value })
-            }
-          />
-
-          <label htmlFor="adminproductspage-field-6">Price per selling unit (RM)</label>
-          <input id="adminproductspage-field-6"
-            type="number"
-            value={newProduct.price}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, price: e.target.value })
-            }
-          />
-
-
-
-          <SellingDetailsEditor value={newProduct} onChange={setNewProduct}/>
-          <RecipeEditor value={newProduct} onChange={setNewProduct}/>
-          <label htmlFor="adminproductspage-field-7">Description</label>
-          <textarea id="adminproductspage-field-7"
-            value={newProduct.description}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, description: e.target.value })
-            }
-          />
-
-          <label htmlFor="adminproductspage-field-8">Category</label>
-          <select id="adminproductspage-field-8"
-            value={newProduct.category}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, category: Number(e.target.value) })
-            }
-          >
-            <option value="">-- Select Category --</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-
-          <MenuPhotoField value={newProduct.image_url || ""} onBusy={setPhotoBusy} onChange={url => setNewProduct(previous=>previous?{ ...previous, image_url: url }:previous)} />
-
-          <div className="modal-actions">
-            <button onClick={handleAddProduct} disabled={loading || photoBusy}>
-              {loading ? "Adding..." : "Add"}
-            </button>
-            <button onClick={() => setNewProduct(null)}>Cancel</button>
-          </div>
-        </div>
-      </div>
-</ModalDialog>
-      )}
+      {updatedProduct && <MenuEditor key={'edit-'+updatedProduct.id} value={updatedProduct} onChange={setUpdatedProduct} onDismiss={()=>setUpdatedProduct(null)}/>}
+      {newProduct && <MenuEditor key="create" value={newProduct} onChange={setNewProduct} onDismiss={()=>setNewProduct(null)}/>}
     </div>
   );
 }

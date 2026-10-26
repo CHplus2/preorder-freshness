@@ -1,0 +1,7 @@
+.menu-editor .menu-form-help { margin: 8px 0 20px; color: #526358; font-size: 14px; line-height: 1.6; }
+.menu-editor .menu-editor-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.menu-editor .menu-form-error { padding: 12px 14px; margin: 0 0 18px; background: #fff3f0; color: #8b3029; border: 1px solid #dfb9b0; border-radius: 8px; font-size: 14px; line-height: 1.6; }
+.menu-editor .menu-form-error:focus { outline: 2px solid #8b3029; outline-offset: 3px; }
+.menu-editor .menu-field-error { color: #8b3029; font-size: 13px; line-height: 1.5; margin: 8px 0 18px; }
+.menu-editor [aria-invalid=true] { border-color: #ab493d; }
+.menu-editor fieldset:disabled { opacity: .8; }

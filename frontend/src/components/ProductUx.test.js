@@ -37,6 +37,14 @@ try{
  assert.doesNotMatch(paused,/>Add 1/);assert.match(orderPanel({},[],null),/<button[^>]*disabled/);
  const shipping=orderPanel({id:4,selling_details:{unit:'box',ordering_mode:'shipping_enquiry',dispatch_from:'2030-12-01',dispatch_through:'2030-12-31'}});
  assert.match(shipping,/Ask about shipping/);assert.match(shipping,/not promised arrival dates/);assert.doesNotMatch(shipping,/<form|Add 1/);
+ const {ProductContext}=await server.ssrLoadModule('/src/contexts/ProductContext.js');
+ const {default:MenuEditor}=await server.ssrLoadModule('/src/components/MenuEditor.jsx');
+ const editor=renderToStaticMarkup(createElement(UIContext.Provider,{value:{setAlert:()=>{}}},createElement(ProductContext.Provider,{value:{categories:[{id:1,name:'Rice meals'}]}},createElement(MenuEditor,{value:{name:'',price:'',category:''},onChange:()=>{},onDismiss:()=>{}}))));
+ assert.match(editor,/<form[^>]*noValidate/);assert.match(editor,/Price per selling unit/);assert.match(editor,/data-menu-field="category"/);assert.doesNotMatch(editor,/dialog-feedback/);
+ const {default:DeleteProduct}=await server.ssrLoadModule('/src/components/DeleteProductModal/DeleteProduct.jsx');
+ const deletion=can_delete=>renderToStaticMarkup(createElement(UIContext.Provider,{value:{setAlert:()=>{}}},createElement(ProductContext.Provider,{value:{products:[{id:8,name:'Fixture menu',can_delete}],productIdToDelete:8}},createElement(DeleteProduct))));
+ assert.match(deletion(true),/Delete menu<\/button>/);assert.match(deletion(true),/cannot be undone/);
+ assert.match(deletion(false),/Archive menu/);assert.doesNotMatch(deletion(false),/Delete menu<\/button>/);
  const {default:MenuListingStatus}=await server.ssrLoadModule('/src/components/MenuListingStatus.jsx');
  const status=p=>renderToStaticMarkup(createElement(MenuListingStatus,p));
  assert.match(status({error:true,count:0,shown:0}),/temporarily unavailable/);

@@ -2,7 +2,10 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission, SAFE_METHODS
 from rest_framework.response import Response
-from ..models import Category, Product
+from ..models import Category, Product, OrderItem, CartItem
+from django.db.models import Exists, OuterRef
+from django.db import transaction, OperationalError
+from django.shortcuts import get_object_or_404
 from ..serializers import CategorySerializer, ProductSerializer
 from ..services.recommendation import recommend_for_user
 
@@ -38,7 +41,8 @@ class CategoryDetail(generics.RetrieveUpdateDestroyAPIView):
 # ------------------------------------------
 
 class ProductListCreate(generics.ListCreateAPIView):
-    queryset = Product.objects.select_related("category").prefetch_related("ingredients").order_by("-created_at")
+    queryset = Product.objects.select_related("category").prefetch_related("ingredients").annotate(
+        used_in_orders=Exists(OrderItem.objects.filter(product_id=OuterRef('pk')))).order_by("-created_at")
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly]
 
@@ -49,9 +53,25 @@ class ProductListCreate(generics.ListCreateAPIView):
 
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.select_related("category").prefetch_related("ingredients")
+    queryset = Product.objects.select_related("category").prefetch_related("ingredients").annotate(
+        used_in_orders=Exists(OrderItem.objects.filter(product_id=OuterRef('pk'))))
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                # Avoid waiting in the opposite order to basket quantity edits.
+                product = get_object_or_404(Product.objects.select_for_update(nowait=True), pk=kwargs['pk'])
+                if product.orderitem_set.exists():
+                    return Response({'code': 'menu_used_in_orders', 'detail': 'This menu is linked to orders. Archive it to remove it from sale while keeping order history and preparation records.'}, status=409)
+                list(CartItem.objects.select_for_update(nowait=True).filter(product=product).order_by('pk'))
+                product.delete()
+        except OperationalError as error:
+            if getattr(error.__cause__, 'pgcode', None) != '55P03':
+                raise
+            return Response({'code': 'menu_busy', 'detail': 'This menu or one of its baskets is being updated. Refresh menus and try deleting it again.'}, status=409)
+        return Response(status=204)
 
 
 # ------------------------------------------

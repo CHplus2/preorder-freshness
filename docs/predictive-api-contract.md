@@ -771,3 +771,15 @@ time edits reject until a reviewed separation fits all active members, so a
 member cannot silently free another order's reservation. See
 [setup, migration and limits](HOME-FOOD-EXTENSIONS.md). Forecast/model methods and
 the existing local planning API remain unchanged.
+
+### Menu removal and form feedback correction
+
+Staff catalogue/detail ProductSerializer responses add read-only `can_delete`;
+public product/card responses omit it. DELETE on either existing product alias
+still requires staff and session CSRF protection. Unused menus can be removed
+with their current recipe/cart lines; raw materials and stock remain. Any order
+reference returns HTTP 409 `menu_used_in_orders`, with an archive instruction.
+Concurrent menu/cart updates return HTTP 409 `menu_busy` instead of waiting in
+the inverse basket/menu lock order. Rejections roll back without partial removal.
+No migration, forecast method or payment endpoint changes. See
+[menu-management behavior and verification](MENU-MANAGEMENT-FEEDBACK.md).
