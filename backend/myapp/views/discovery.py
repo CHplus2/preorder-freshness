@@ -1,3 +1,4 @@
+from ..services.selling import shipping_enquiry
 import secrets
 import uuid
 from datetime import timedelta
@@ -81,8 +82,10 @@ def guided_menu(request):
     if data.get('budget'):
         products = products.filter(price__lte=data['budget']/data['portions'])
     # Both discovery surfaces use the same ranking; dates additionally constrain it.
+    products = list(products)
+    shipping_only = bool(products) and all(shipping_enquiry(p) for p in products)
     candidates = rank_menu_choices(
-        (p for p in products if delivery_day_allowed(p, data['date']) and orders_open(p, data['date'], timezone.now())),
+        (p for p in products if not shipping_enquiry(p) and delivery_day_allowed(p, data['date']) and orders_open(p, data['date'], timezone.now())),
         request.user, personalised=variant == 'personalised')
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     store, method, _ = request_store(store, data)
@@ -105,7 +108,7 @@ def guided_menu(request):
             'version': 'date-guide-v1', 'surface': 'date_guide', 'experiment': settings.RECOMMENDATION_EXPERIMENT},
         products=[r['id'] for r in results])
     return Response({'session': str(session.pk), 'results': results,
-        'empty_reason': None if results else 'category_unavailable' if not category_available else 'no_kitchen_times' if candidates else 'no_menu_match',
+        'empty_reason': None if results else 'shipping_enquiry' if shipping_only else 'category_unavailable' if not category_available else 'no_kitchen_times' if candidates else 'no_menu_match',
         'checked_limit': 30, 'message': 'Hourly suggestions use kitchen capacity, not current stock. The owner may need to purchase ingredients. Food totals exclude discounts and delivery; checkout rechecks the whole basket.'})
 
 

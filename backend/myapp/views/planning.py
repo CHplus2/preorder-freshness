@@ -1,3 +1,4 @@
+from ..services.selling import shipping_enquiry
 from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
@@ -54,7 +55,7 @@ def planning(request):
                 shopping.append({'order': order.id, 'material_id': key, 'material': materials[key].material_name,
                     'quantity': str(need), 'unit': materials[key].unit, 'needed_by': str(day)})
     store = Storefront.objects.filter(pk=1).first() or Storefront()
-    setup = list(Product.objects.filter(selling_status='active', preparation_tasks=[]).values('id', 'name'))
+    setup = [dict(id=p.pk, name=p.name) for p in Product.objects.filter(selling_status='active', preparation_tasks=[]).only('id', 'name', 'selling_details') if not shipping_enquiry(p)]
     availability = dict(open_hour=store.kitchen_open_hour, close_hour=store.kitchen_close_hour, blocks=list(KitchenBlock.objects.values('start_at','end_at','reason')))
     response = Response({'missing_recipes': missing_recipes, 'setup_menus': setup, 'availability': availability, 'allocations': allocations, 'orders': OrderSerializer(orders, many=True).data, 'shopping': shopping, **sales_summary()})
     response['Cache-Control'] = 'private, no-store'

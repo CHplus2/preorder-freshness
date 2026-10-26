@@ -1,6 +1,6 @@
 # Kuching home-food workflows
 
-Review date: 23 October 2026. The five Facebook excerpts supplied by the project
+Review date: 26 October 2026. The five Facebook excerpts supplied by the project
 owner are examples, not interviews or verified requirements from those sellers.
 No seller was contacted. No external contacts, customers or offers were imported.
 
@@ -59,31 +59,37 @@ outside offered dates or after the cutoff. Confirmed requirements remain
 independent. A cutoff adjustment explains the raw-versus-plannable difference.
 This batch does not train a model or establish forecast accuracy.
 
-## Remaining batches
+## Implemented case-study batches
 
-**Batch 2 implemented:** optional collection/delivery methods, separate handover
-hours, location/instructions, delivery areas and fees are now connected to cart,
-checkout and accepted-order planning. See [batch 2 details](HOME-FOOD-FULFILMENT.md).
-It does not book Grab or implement festive shipping. The list below retains the
-original roadmap. Batch 3 adds explicit selling units, size/serving guidance and fixed contents; see [batch 3 details](HOME-FOOD-SELLING-UNITS.md). A shared size-variant selector remains future work.
+1. **Preorder dates and cutoffs:** optional offered dates, deadlines and common
+   basket-date checks, alongside existing advance notice and kitchen scheduling.
+2. **Local fulfilment:** collection/delivery choices, separate handover hours,
+   location/area instructions and fees. See [batch 2](HOME-FOOD-FULFILMENT.md).
+3. **Units and offers:** selling units, sizes/servings and accepted fixed contents.
+   Separate products support size-specific prices and recipes. A shared size
+   variant selector remains future work. See [batch 3](HOME-FOOD-SELLING-UNITS.md).
+4. **Daily operations and seasonal enquiries:** dated collection/delivery runs,
+   packing and preparation review, payment/cancellation queues, clearer capacity
+   versus ingredient messages, and explicit dispatch-window enquiries. Seasonal
+   shipping is an owner conversation, not a parcel checkout or promised arrival.
+   See [batch 4](HOME-FOOD-DAILY-OPERATIONS.md).
 
-2. **Fulfilment:** owner-controlled pickup/delivery, locations/areas, collection
-   and delivery windows, fees and buffers. Pickup should not require a shipping
-   address or travel buffer. Cooking hours and handover hours are separate.
-   Customer-arranged Grab delivery is not a booking integration with Grab.
-3. **Units and offers:** boxes, sets, size/servings, fixed contents and no
-   substitutions across menu/basket/receipts/recipes. Two boxes means two selling
-   units, not two pieces or diners. Keep existing separate menu products usable.
-4. **Operations and dispatch:** workload/quantities by fulfilment slot, sold-out
-   messages, payment/cancellation handling, seasonal shipping and dispatch-versus-
-   arrival wording. Ingredient stock and production capacity are different.
-   Separate orders are not automatically combined into one cooking batch.
+The system now supports common local home-kitchen workflows and the private
+shipping-enquiry pattern in these examples. It does not claim to fit every food
+business. Courier booking/tracking, shipping-rate calculation and an online
+parcel-order lifecycle remain separate extensions. Identical menus in separate
+orders are not automatically combined into one cooking batch. Follow up with
+owner interviews and task-based usability tests; no measured conversion
+improvement is claimed.
 
-These are planned improvements, not a claim that all five sellers can use the
-current release without workarounds. Follow up with owner interviews and task-
-based usability tests; no measured conversion improvement is claimed.
+## Current release
 
-## Release and verification
+Batch 4 needs no new migration. The project owner has confirmed migrations 0020
+and 0021 are applied. See [batch 4 verification](HOME-FOOD-DAILY-OPERATIONS.md)
+for the current implementation and checks. The instructions below record the
+earlier batch 1 release; they are not an additional database task for batch 4.
+
+## Batch 1 release and verification record
 
 Migration `0019_product_preorder_windows` adds optional columns. It does not seed
 offers, invent order dates, change payments or modify inventory. Back up the

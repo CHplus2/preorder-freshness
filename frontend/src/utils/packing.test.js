@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {packingList} from './packing.js';
-const order = {id:1,status:'pending',delivery_at:'2026-10-02T16:00:00Z',items:[{id:1,product:5,product_name:'Rice',quantity:2}]};
+const order = {id:1,status:'pending',delivery_at:'2026-10-02T16:00:00Z',preparation_at:'2026-10-02T10:00:00Z',preparation_end_at:'2026-10-02T11:00:00Z',items:[{id:1,product:5,product_name:'Rice',quantity:2}]};
 test('unconfirmed requests cannot inflate quantities or enter printed packing totals',()=>{
  const request={...order,id:147,preparation_plan:{needs_review:true,tasks:[]},items:[{...order.items[0],quantity:90}]};
  const result=packingList([order,request],'2026-10-03');
@@ -27,4 +27,9 @@ test('reports missing dates and sorts deliveries without mutating source',()=>{
 test('keeps deleted product lines distinct and includes cooked orders',()=>{
  const result=packingList([{...order,status:'cooked',items:[{id:1,product:null,product_name:'Rice',quantity:1},{id:2,product:null,product_name:'Rice',quantity:2}]}],'2026-10-03');
  assert.equal(result.menus.length,2);assert.equal(result.portions,3);
+});
+
+test('a date without confirmed preparation is excluded and explicitly counted for review',()=>{
+ const result=packingList([{...order,preparation_at:null,preparation_end_at:null}],'2026-10-03');
+ assert.equal(result.orders.length,0);assert.equal(result.portions,0);assert.equal(result.needsPreparationReview,1);
 });

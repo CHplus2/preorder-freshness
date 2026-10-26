@@ -18,7 +18,7 @@ ALIASES=[(['chicken','ayam','鸡'],'chicken'),(['rice','nasi','饭','lunch','din
 
 
 def needs_owner(message):
-    return bool(re.search(ALLERGY,message,re.I))
+    return bool(re.search(ALLERGY,message,re.I) or re.search(r'\b(?:parcel|dispatch|ship|shipping|courier|kurier|poskan)\b|邮寄|发货',message,re.I))
 
 
 def local_extract(message, products=(), today=None):

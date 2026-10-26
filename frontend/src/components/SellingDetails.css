@@ -13,3 +13,9 @@
 .selling-editor .selling-fixed-choice input{width:auto;flex:0 0 auto;margin-top:.2rem;min-height:20px}
 .selling-editor .selling-summary{background:#f3f5ed;border-radius:8px;padding:.6rem .8rem}
 @media(max-width:480px){.selling-editor-grid{grid-template-columns:1fr}}
+.shipping-offer{padding:1rem;border:1px solid #cbd8c9;border-radius:10px;background:#f5f7ef;color:#36513d;line-height:1.55;margin:.75rem 0}
+.shipping-offer p{font-size:.875rem;line-height:1.6;margin:.4rem 0}
+.shipping-offer--compact{padding:.6rem;font-size:.8rem}
+.shipping-offer--compact p{font-size:inherit}
+.shipping-enquiry-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.5rem .8rem;background:#285a3e;color:#fff;border-radius:8px;text-decoration:none;font-weight:600}
+.shipping-editor{margin:.75rem 0;padding-top:.75rem;border-top:1px solid #ccd6c8}

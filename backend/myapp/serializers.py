@@ -20,6 +20,10 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class SellingDetailsSerializer(serializers.Serializer):
+    ordering_mode = serializers.ChoiceField(choices=['local_preorder', 'shipping_enquiry'], required=False)
+    dispatch_from = serializers.DateField(allow_null=True, required=False)
+    dispatch_through = serializers.DateField(allow_null=True, required=False)
+    shipping_note = serializers.CharField(max_length=300, allow_blank=True, required=False)
     unit = serializers.ChoiceField(choices=['item', 'portion', 'box', 'pack', 'set', 'tray', 'jar', 'bottle'], default='item')
     size_label = serializers.CharField(max_length=60, allow_blank=True, default='')
     serves_min = serializers.IntegerField(min_value=1, max_value=1000, allow_null=True, default=None)
@@ -38,6 +42,16 @@ class SellingDetailsSerializer(serializers.Serializer):
             raise serializers.ValidationError('Enter both serving estimates, with the minimum no greater than the maximum.')
         if attrs.get('no_substitutions') and not attrs.get('contents'):
             raise serializers.ValidationError('Describe the fixed contents before disabling substitutions.')
+        start, end = attrs.get('dispatch_from'), attrs.get('dispatch_through')
+        if (start is None) != (end is None) or start is not None and start > end:
+            raise serializers.ValidationError('Enter both dispatch dates, with the end on or after the start.')
+        if start is not None and (end-start).days > 365:
+            raise serializers.ValidationError('Keep a dispatch window within one year.')
+        if attrs.get('ordering_mode') == 'shipping_enquiry' and start is None:
+            raise serializers.ValidationError('Enter the dispatch window for this shipping enquiry offer.')
+        for key in ('dispatch_from', 'dispatch_through'):
+            if attrs.get(key) is not None:
+                attrs[key] = attrs[key].isoformat()
         return attrs
 
 

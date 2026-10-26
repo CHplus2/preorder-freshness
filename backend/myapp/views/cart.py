@@ -30,6 +30,8 @@ class CartViewSet(viewsets.ViewSet):
 
         if product.selling_status != 'active':
             raise serializers.ValidationError(f'{product.name} is not accepting new orders.')
+        from ..services.selling import require_local_preorder
+        require_local_preorder(product)
 
         item, created = CartItem.objects.get_or_create(
             user=request.user,
@@ -68,6 +70,9 @@ class CartViewSet(viewsets.ViewSet):
         product = Product.objects.select_for_update().get(pk=item.product_id)
         if quantity > item.quantity and product.selling_status != 'active':
             raise serializers.ValidationError(f'{product.name} is not accepting new orders. Remove it from your basket or reduce the quantity.')
+        if quantity > item.quantity:
+            from ..services.selling import require_local_preorder
+            require_local_preorder(product)
         item.quantity = quantity
         item.save()
 

@@ -1,7 +1,7 @@
 /* Owner tasks stay prominent; supporting tools remain available on demand. */
 .owner-orders-page .admin-page-heading h1{margin:6px 0 10px}
 .admin-shell .owner-workspace-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;border:1px solid #b9cdbf;border-radius:8px;color:#285a3e;background:#f2f7ef;text-decoration:none;font:600 13px/1.5 system-ui,sans-serif}
-.owner-order-shortcuts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:22px 0}
+.owner-order-shortcuts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:22px 0}
 .admin-shell .owner-order-shortcuts button{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;min-height:66px;padding:14px;border-radius:10px;background:#fff;color:#38513f;font-weight:500}
 .owner-order-shortcuts button span{font-size:12px;line-height:1.5}.owner-order-shortcuts strong{font-size:20px;line-height:1.3;color:inherit;font-weight:650}
 .admin-shell .owner-order-shortcuts button[aria-pressed=true]{background:#e9f2e6;border:2px solid #497453;padding:13px;color:#244d34}

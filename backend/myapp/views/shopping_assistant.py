@@ -1,4 +1,5 @@
 """Grounded suggestions and explicitly confirmed, idempotent basket additions."""
+from ..services.selling import shipping_enquiry, require_local_preorder
 import hashlib
 import json
 import uuid
@@ -106,7 +107,10 @@ def shop_suggestions(request):
             query=Q()
             for term in terms:query|=Q(name__icontains=term)
             products=products.filter(query)
-        for product in products[:100]:
+        choices = list(products[:100])
+        if choices and all(shipping_enquiry(p) for p in choices):mode='owner_review'
+        for product in choices:
+            if shipping_enquiry(product):continue
             try:candidate=proposed(rows,product,draft['portions'])
             except serializers.ValidationError:continue
             total=totals(candidate,store)
@@ -161,6 +165,7 @@ def shop_cart(request):
     list(Product.objects.select_for_update().filter(pk__in=ids).order_by('pk'))
     current=basket(request.user);rows=state(current)
     product=get_object_or_404(Product,pk=product_id,selling_status='active')
+    require_local_preorder(product)
     if any(row['status']!='active' for row in rows):raise serializers.ValidationError('Review inactive items in your basket before adding this recommendation.')
     updated=proposed(rows,product,quantity)
     before=fingerprint(rows,store);after=fingerprint(updated,store)

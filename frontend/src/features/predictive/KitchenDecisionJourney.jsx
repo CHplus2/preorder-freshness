@@ -649,6 +649,7 @@ export function MenuEvidence({ support, risk, compact = false }) {
             {m.demand_adjustments && m.forecast_portions!==null && <details><summary>Why the planning count differs</summary>
               <p>{qty(m.forecast_portions)} forecast {unitLabel(m.selling_details,m.forecast_portions)} across the full window.</p>
               <ul>{[
+                ['shipping_enquiry_excluded','requires a separate shipping agreement'],
                 ['delivery_day_excluded','outside offered dates or delivery weekdays'],
                 ['order_cutoff_excluded','after the menu order cutoff'],
                 ['lead_time_excluded','before the earliest permitted delivery (menu lead time)'],

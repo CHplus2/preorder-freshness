@@ -4,7 +4,7 @@ import {getCookie} from '../utils/cookieUtils';
 import {apiError} from '../utils/apiError';
 import './OrderWorkflowActions.css';
 
-export default function OrderWorkflowActions({order,onSaved}){
+export default function OrderWorkflowActions({order,onSaved,compact=false}){
  const [busy,setBusy]=useState(''),[error,setError]=useState('');
  if(!['pending','processing','cooked','shipped'].includes(order.status))return null;
  const planned=Number.isFinite(Date.parse(order.delivery_at || '')) && Number.isFinite(Date.parse(order.preparation_at || '')) && Number.isFinite(Date.parse(order.preparation_end_at || '')) && Date.parse(order.preparation_end_at)>Date.parse(order.preparation_at) && Date.parse(order.preparation_end_at)<=Date.parse(order.delivery_at) && !order.preparation_plan?.needs_review;
@@ -22,16 +22,16 @@ export default function OrderWorkflowActions({order,onSaved}){
   finally{setBusy('');}
  };
  return <div className="planner-progress-actions" aria-label={`Progress for order ${order.id}`}>
-  {order.status==='pending' && planned && <p>Already scheduled. Tracking the preparation start is optional.</p>}
-  {ready && <p>Food is ready for handover. Dispatch tracking is optional.</p>}
-  {order.status==='shipped' && <p>Out for delivery. Confirm delivery once the customer receives the order.</p>}
+  {!compact && order.status==='pending' && planned && <p>Already scheduled. Tracking the preparation start is optional.</p>}
+  {!compact && ready && <p>Food is ready for handover. Dispatch tracking is optional.</p>}
+  {!compact && order.status==='shipped' && <p>Out for delivery. Confirm delivery once the customer receives the order.</p>}
   {order.status==='pending' && !planned?<p>Confirm this order’s preparation plan before starting or marking it ready.</p>:<>
    <div className="planner-progress-buttons">
     <button type="button" className="admin-primary" disabled={!!busy} onClick={()=>update(preparing?'cooked':'delivered',preparing?'food ready':pickup?'collected':'delivered')}>{busy?'Saving…':preparing?'Mark food ready':pickup?'Mark collected':'Mark delivered'}</button>
-    {order.status==='pending' && <button type="button" disabled={!!busy} onClick={()=>update('processing','preparation started')}>Mark preparation started (optional)</button>}
-    {ready && !pickup && <button type="button" disabled={!!busy} onClick={()=>update('shipped','out for delivery')}>Out for delivery (optional)</button>}
+    {!compact && order.status==='pending' && <button type="button" disabled={!!busy} onClick={()=>update('processing','preparation started')}>Mark preparation started (optional)</button>}
+    {!compact && ready && !pickup && <button type="button" disabled={!!busy} onClick={()=>update('shipped','out for delivery')}>Out for delivery (optional)</button>}
    </div>
-   <p>{preparing?'Mark ready after cooking. This deducts ingredients once, using accepted recipes and earliest eligible expiry. Starting preparation does not deduct stock.':pickup?'Mark collected only after handing the order to the customer. Payment records are updated separately.':'Mark delivered only after the customer receives the order. Payment records are updated separately.'}</p>
+   {!compact && <p>{preparing?'Mark ready after cooking. This deducts ingredients once, using accepted recipes and earliest eligible expiry. Starting preparation does not deduct stock.':pickup?'Mark collected only after handing the order to the customer. Payment records are updated separately.':'Mark delivered only after the customer receives the order. Payment records are updated separately.'}</p>}
   </>}
   {error && <p role="alert">{error}</p>}
  </div>;

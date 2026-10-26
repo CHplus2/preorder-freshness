@@ -1,9 +1,10 @@
+import {confirmedHandover} from './handoverBoard.js';
 import {emptySellingDetails} from './sellingDetails.js';
-import {malaysiaDate,scheduledDelivery} from './planner.js';
+import {malaysiaDate} from './planner.js';
 
 export function packingList(orders, date) {
   const active = orders.filter(o=>['pending','processing','cooked'].includes(o.status));
-  const scheduled = active.filter(o=>scheduledDelivery(o) && malaysiaDate(o.delivery_at)===date)
+  const scheduled = active.filter(o=>confirmedHandover(o) && malaysiaDate(o.delivery_at)===date)
     .sort((a,b)=>Date.parse(a.delivery_at)-Date.parse(b.delivery_at) || a.id-b.id);
   const menus = new Map();
   for (const order of scheduled) for (const item of order.items) {
@@ -15,6 +16,7 @@ export function packingList(orders, date) {
   }
   return {orders:scheduled, menus:[...menus.values()].sort((a,b)=>a.name.localeCompare(b.name)),
     portions:scheduled.reduce((n,o)=>n+o.items.reduce((sum,i)=>sum+Number(i.quantity),0),0),
+    needsPreparationReview:active.filter(o=>Number.isFinite(Date.parse(o.delivery_at || '')) && malaysiaDate(o.delivery_at)===date && !o.preparation_plan?.needs_review && !confirmedHandover(o)).length,
     awaitingConfirmation:active.filter(o=>o.preparation_plan?.needs_review===true && Number.isFinite(Date.parse(o.delivery_at || '')) && malaysiaDate(o.delivery_at)===date).length,
     unscheduled:active.filter(o=>!o.delivery_at || !Number.isFinite(Date.parse(o.delivery_at))).length};
 }

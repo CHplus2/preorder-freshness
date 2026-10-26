@@ -1,3 +1,5 @@
+import ShippingOffer from './ShippingOffer';
+import {shippingEnquiry} from '../utils/sellingDetails';
 import SellingDetails from './SellingDetails';
 import {unitLabel,quantityLabel} from '../utils/sellingDetails';
 import {useRef,useState} from 'react';
@@ -24,6 +26,7 @@ export default function ProductOrderPanel({product}) {
   try{if(await addToCart(product.id,chosen))setMessage(`${quantityLabel(product.selling_details,chosen)} added to your basket.`);}
   finally{pending.current=false;setBusy(false);}
  };
+ if(shippingEnquiry(product.selling_details))return <section className="product-order-panel" aria-label="Shipping enquiry"><div className="meal-price-line"><strong>{formatPrice(product.price)}</strong><span>per {unitLabel(product.selling_details)} · shipping agreed separately</span></div><SellingDetails details={product.selling_details}/><ShippingOffer product={product}/></section>;
  return <section className="product-order-panel" aria-label="Add this meal to your basket">
   <div className="meal-price-line"><strong>{formatPrice(product.price)}</strong><span>per {unitLabel(product.selling_details)}</span></div>
   <SellingDetails details={product.selling_details}/><MenuPreorderRules product={product}/>

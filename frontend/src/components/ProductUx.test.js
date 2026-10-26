@@ -28,6 +28,8 @@ try{
  const full=orderPanel({},[{product:{id:1},quantity:10000}]);assert.match(full,/Basket limit reached/);assert.match(full,/10000 already in your basket/);
  const paused=orderPanel({selling_status:'paused'});assert.match(paused,/Orders paused/);assert.match(paused,/Explore the current menu/);
  assert.doesNotMatch(paused,/>Add 1/);assert.match(orderPanel({},[],null),/<button[^>]*disabled/);
+ const shipping=orderPanel({id:4,selling_details:{unit:'box',ordering_mode:'shipping_enquiry',dispatch_from:'2030-12-01',dispatch_through:'2030-12-31'}});
+ assert.match(shipping,/Ask about shipping/);assert.match(shipping,/not promised arrival dates/);assert.doesNotMatch(shipping,/<form|Add 1/);
  const {default:MenuListingStatus}=await server.ssrLoadModule('/src/components/MenuListingStatus.jsx');
  const status=p=>renderToStaticMarkup(createElement(MenuListingStatus,p));
  assert.match(status({error:true,count:0,shown:0}),/temporarily unavailable/);

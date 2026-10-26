@@ -42,11 +42,11 @@ function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedV
   {!busy && !result && !error && <div className="basket-slot-actions"><button type="button" className="basket-next-day" disabled={nextDisabled} onClick={()=>check()}>Find delivery times</button></div>}
   {!nextDisabled && error && <div role="alert"><p>{error}</p><button type="button" disabled={busy} onClick={()=>check(searchAnchor.current)}>Retry finding times</button></div>}
   {result && !nextDisabled && (result.slots.length===0?<div role="status" className="basket-slot-empty">
-   <strong>{result.code==='quantity_limit'?'This quantity needs a different arrangement.':'No suitable delivery times in this search.'}</strong>
+   <strong>{result.code==='shipping_enquiry'?'Agree shipping with the kitchen.':result.code==='daily_capacity'?'Not enough daily menu capacity for this basket.':result.code==='quantity_limit'?'This quantity needs a different arrangement.':'No suitable delivery times in this search.'}</strong>
    {result.from && result.through && <p>Checked {deliveryDateLabel(result.from)} to {deliveryDateLabel(result.through)}.</p>}
-   <p>{['quantity_limit','no_common_weekday','no_common_date'].includes(result.code)?result.reason:'Try the following week, adjust your basket, or ask the kitchen about a custom time.'}</p>
-   {result.reason && !['quantity_limit','no_common_weekday','no_common_date'].includes(result.code) && <details><summary>Why these times need review</summary><p>{result.reason}</p></details>}
-   {following && following<=lastDay && <button type="button" disabled={busy || nextDisabled} onClick={()=>check(following)}>Check the following week</button>}
+   <p>{['shipping_enquiry','daily_capacity','quantity_limit','no_common_weekday','no_common_date'].includes(result.code)?result.reason:'Try the following week, adjust your basket, or ask the kitchen about a custom time.'}</p>
+   {result.reason && !['shipping_enquiry','daily_capacity','quantity_limit','no_common_weekday','no_common_date'].includes(result.code) && <details><summary>Why these times need review</summary><p>{result.reason}</p></details>}
+   {!['shipping_enquiry','quantity_limit','no_common_date','no_common_weekday'].includes(result.code) && following && following<=lastDay && <button type="button" disabled={busy || nextDisabled} onClick={()=>check(following)}>Check the following week</button>}
   </div>:<>
    <div role="status" className="basket-found-date"><strong>{day && result.date!==day?'Next available day':method==='pickup'?'Available collection times':'Available delivery times'} · {deliveryDateLabel(result.date)}</strong>
     {day && result.date!==day && <p>We found the next workable times after your preferred date.</p>}

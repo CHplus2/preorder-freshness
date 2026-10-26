@@ -3,17 +3,19 @@ import {closedGeneratedHistory} from './orderPresentation.js';
 export const overdueOrder = (order, now) => !['delivered','cancelled'].includes(order.status) &&
   !!order.delivery_at && Date.parse(order.delivery_at) < now;
 
-export const orderQueues=[['open','Open orders'],['requests','Needs confirmation'],['ready','Ready / on the way'],['overdue','Past due'],['all','All orders']];
+export const orderQueues=[['open','Open orders'],['requests','Needs confirmation'],['ready','Ready / on the way'],['overdue','Past due'],['unpaid','Payment follow-up'],['cancelled','Cancelled / refunds'],['all','All orders']];
 export function inOrderQueue(order,queue,now) {
   if(queue==='open')return ['pending','processing','cooked','shipped'].includes(order.status);
   if(queue==='requests')return order.status==='pending' && order.preparation_plan?.needs_review===true;
   if(queue==='ready')return ['cooked','shipped'].includes(order.status);
   if(queue==='overdue')return overdueOrder(order,now);
+  if(queue==='unpaid')return order.payment_status==='unpaid' && order.status!=='cancelled' && !(order.status==='pending' && order.preparation_plan?.needs_review);
+  if(queue==='cancelled')return order.status==='cancelled';
   return true;
 }
-export function orderQueueCounts(orders,now) {
+export function orderQueueCounts(orders,now,catalogue=null) {
   const ordinary=orders.filter(order=>!closedGeneratedHistory(order));
-  return Object.fromEntries(orderQueues.map(([key])=>[key,ordinary.filter(order=>inOrderQueue(order,key,now)).length]));
+  return Object.fromEntries(orderQueues.map(([key])=>[key,ordinary.filter(order=>(!catalogue || ['unpaid','cancelled'].includes(key) || !hiddenArchivedHistory(order,catalogue)) && inOrderQueue(order,key,now)).length]));
 }
 
 export function orderMenuState(order,catalogue) {
@@ -38,7 +40,7 @@ export function filterOrders(orders, filters, now, catalogue=null) {
       ...(order.items || []).map(i=>i.product_name)].filter(Boolean).join(' ').toLowerCase();
     const scope=filters.historyScope || 'orders';
     return (scope==='all' || (scope==='generated' ? closedGeneratedHistory(order) : !closedGeneratedHistory(order))) &&
-      (filters.includeArchived!==false || filters.review==='archived-menus' || !hiddenArchivedHistory(order,catalogue)) &&
+      (filters.includeArchived!==false || filters.review==='archived-menus' || ['unpaid','cancelled'].includes(filters.queue) || !hiddenArchivedHistory(order,catalogue)) &&
       (filters.review!=='missing-delivery' || planningReadiness([order],now).missingDelivery.length>0) &&
       (filters.review!=='archived-menus' || archivedOnlyOrder(order,catalogue)) &&
       (!query || searchable.includes(query.replace(/^#/,''))) &&

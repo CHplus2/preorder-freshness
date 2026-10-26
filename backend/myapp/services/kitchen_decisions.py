@@ -2,6 +2,7 @@
 
 No Genpact identities, automatic promotions, purchases or inventory writes.
 """
+from .selling import shipping_enquiry
 from collections import Counter, defaultdict
 from datetime import timedelta
 from statistics import mean
@@ -214,6 +215,9 @@ def decision_support(plan, *, today=None, snapshot=None):
         adjustments = Counter()
         for offset, prediction in enumerate(result['daily_predictions']):
             day = today+timedelta(days=offset)
+            if shipping_enquiry(product):
+                adjustments['shipping_enquiry_excluded'] += prediction
+                continue
             allowed = delivery_day_allowed(product, day)
             if not allowed:
                 adjustments['delivery_day_excluded'] += prediction
@@ -242,7 +246,7 @@ def decision_support(plan, *, today=None, snapshot=None):
                                 'requirement': quantity})
         result['additional_forecast_portions'] = round(additional_total, 2) if values else None
         result['demand_adjustments'] = {key: round(adjustments[key], 2) for key in (
-            'delivery_day_excluded', 'order_cutoff_excluded', 'lead_time_excluded', 'capacity_excluded', 'recorded_orders_offset')}
+            'shipping_enquiry_excluded', 'delivery_day_excluded', 'order_cutoff_excluded', 'lead_time_excluded', 'capacity_excluded', 'recorded_orders_offset')}
         # Round only API display values, never FEFO inputs.
         result['daily_predictions'] = [round(v, 3) for v in result['daily_predictions']]
         menus.append(result)
@@ -334,6 +338,7 @@ def decision_support(plan, *, today=None, snapshot=None):
         'excluded_history': dict(exclusions), 'alert_count': sum(r['signal'] in ('confirmed_shortage','forecast_waste') for r in risks),
         'review_count': sum(r['signal'] == 'review' for r in risks),
         'assumptions': ['Current recipes map future portions only; historical renamed menus are excluded.',
+            'Shipping-enquiry offers retain historical forecasts but create no speculative local ingredient allocation before a separate agreement.',
             'Absent days mean zero recorded sales, not verified zero demand. Demo records remain demo evidence.',
             'Known booked portions are subtracted from total forecast before adding speculative ingredient needs.',
             'Forecast allocation uses delivery dates conservatively; the planner must verify earlier preparation, capacity and freshness.',

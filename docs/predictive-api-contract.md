@@ -689,3 +689,41 @@ names containing `portions` are retained. Serving estimates and piece counts
 inside a box do not multiply billable quantities, inventory use or forecasts.
 Changing the physical yield of one unit requires a separate menu/history identity.
 See [selling-unit setup and migration 0021](HOME-FOOD-SELLING-UNITS.md).
+
+
+### Daily operations and seasonal enquiries (home-food batch 4)
+
+No new schema migration or payment endpoint is added. Optional properties of
+`Product.selling_details` are `ordering_mode` (`local_preorder` by default or
+`shipping_enquiry`), paired `dispatch_from`/`dispatch_through` ISO dates (ordered,
+maximum span 365 days) and `shipping_note` (300 characters). Enquiry mode requires
+a window. These are dispatch information, never an arrival-time agreement.
+Validation keeps legacy offer documents valid and serializes dates as JSON strings.
+
+Enquiry-only products stay discoverable but are rejected from cart additions/
+increases, assistant additions and new checkout/quote, including custom requests.
+Older basket lines may still be reduced/removed. Local slot search returns no
+slots and `unavailable_code: shipping_enquiry`; the date guide can return
+`empty_reason: shipping_enquiry`. Dated suggestions/help exclude these offers;
+instant recommendations include their metadata for the enquiry CTA. Explicit
+shipping questions stay in `owner_review`. No enquiry sends a message or creates
+a payment/order/reservation. Accepted local orders retain their existing terms.
+
+Hourly search adds `unavailable_code: daily_capacity` for dated menu-quota
+failures. Kitchen-time eligibility stays independent of ingredient availability.
+`POST /api/orders/quote/` retains `procurement_required`; its stock preview skips
+unconfirmed requests without preparation reservations while counting scheduled
+unpaid bookings. No quote reserves stock. The private planning response excludes
+enquiry-only offers from `setup_menus`. All other response keys remain compatible.
+
+Kitchen `decision_support.menus[].demand_adjustments.shipping_enquiry_excluded`
+explains raw forecast demand withheld from speculative local ingredient planning.
+History/raw forecasts and confirmed accepted needs remain independent; no
+forecast method is retrained or replaced.
+
+Planner's collection/delivery runs are computed from its existing private order
+response, retaining exact times and method groups. Packing excludes unconfirmed
+or invalid/stale plans with an explicit review count. Owner financial queues
+(`queue=unpaid`, `queue=cancelled`) are client-side views of the staff order list;
+they add no public endpoint or access privilege and never change financial state.
+See [batch 4 setup and limitations](HOME-FOOD-DAILY-OPERATIONS.md).

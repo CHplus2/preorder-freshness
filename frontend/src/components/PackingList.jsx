@@ -11,6 +11,7 @@ function Sheet({list,date}) {
     <p>{list.orders.length} orders · {list.portions} selling units · Malaysia collection / delivery date</p>
     <p>Scheduled pending, processing and cooked orders only. Unconfirmed requests and dispatched orders are excluded. Refresh before packing; printed copies may become outdated.</p>
     {list.awaitingConfirmation>0 && <p role="status">{list.awaitingConfirmation} delivery {list.awaitingConfirmation===1?'request needs':'requests need'} confirmation for this date and {list.awaitingConfirmation===1?'is':'are'} excluded from packing totals.</p>}
+    {list.needsPreparationReview>0 && <p role="alert">{list.needsPreparationReview} dated orders have missing or stale preparation plans and are excluded. Review their plans before packing.</p>}
     {list.unscheduled>0 && <p role="alert">{list.unscheduled} active orders have no valid delivery time and are excluded. Review them in All Orders.</p>}
     {!list.orders.length ? <p>No orders awaiting dispatch for this date.</p> : <>
       <h3>Menu quantities to check</h3><ul className="packing-totals">{list.menus.map(m=><li key={m.key}><div>{m.name}<SellingDetails details={m.selling_details}/></div><strong>{quantityLabel(m.selling_details,m.quantity)}</strong></li>)}</ul>

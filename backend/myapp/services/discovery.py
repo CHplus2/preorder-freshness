@@ -1,4 +1,5 @@
 """Date-aware menu discovery using the same scheduler as checkout."""
+from .selling import shipping_enquiry
 import uuid
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
@@ -33,7 +34,10 @@ def slot_search(items, day, store, limit=3, now=None):
     request_after = advance+timedelta(minutes=store.delivery_buffer_minutes)
     snapshot = availability_snapshot(items, day, store)
     found = []
+    if any(shipping_enquiry(item.product) for item in items):
+        return dict(slots=[], unavailable_code='shipping_enquiry', unavailable_reason='This offer needs a shipping enquiry. Contact the kitchen to agree courier, fees and arrival estimates; dispatch dates are not local delivery slots.', suggested_date=None, searched_from=day.isoformat(), searched_through=day.isoformat(), searched_days=1, earliest_preparation_at=advance.isoformat(), delivery_request_after=request_after.isoformat())
     last_reason = ''
+    last_code = ''
     opening, closing = hours(store)
     for hour in range(opening, closing+1):
         delivery = timezone.make_aware(datetime.combine(day, time(hour)))
@@ -41,13 +45,15 @@ def slot_search(items, day, store, limit=3, now=None):
             plan = schedule_order(items, delivery, store, now=now, availability=snapshot)
         except ValidationError as exc:
             last_reason = ' '.join(str(part) for part in exc.detail)
+            codes = exc.get_codes()
+            last_code = 'daily_capacity' if isinstance(codes, list) and codes and all(code == 'daily_capacity' for code in codes) else ''
             continue
         found.append({'delivery_at': delivery.isoformat(), 'preparation_at': plan['start'].isoformat(),
             'preparation_end_at': plan['end'].isoformat(), 'hands_on_minutes': plan['hands_on_minutes']})
         if len(found) >= limit:
             break
     return {'slots': found, 'unavailable_reason': last_reason if not found else '',
-        'unavailable_code': '',
+        'unavailable_code': last_code if not found else '',
         'earliest_preparation_at': advance.isoformat(), 'delivery_request_after': request_after.isoformat(),
         'suggested_date': day.isoformat() if found else None,
         'searched_from': day.isoformat(), 'searched_through': day.isoformat(), 'searched_days': 1}
@@ -66,6 +72,8 @@ def next_basket_slots(items, day, store):
     empty = dict(slots=[], earliest_preparation_at=advance.isoformat(),
         delivery_request_after=request_after.isoformat(), suggested_date=None,
         searched_from=None, searched_through=None, searched_days=0)
+    if any(shipping_enquiry(item.product) for item in items):
+        return dict(empty, unavailable_code='shipping_enquiry', unavailable_reason='This offer needs a shipping enquiry. Contact the kitchen about courier, fees and arrival estimates.')
     # Changing dates cannot solve a basket that exceeds a menu's own limit or
     # contains menus with no shared delivery weekday. Avoid 91 futile checks.
     from collections import Counter
@@ -134,6 +142,9 @@ def shopping_preview(items, preparation_at, preparation_end_at):
         return missing
 
     for order in Order.objects.filter(status__in=['pending', 'processing'], inventory_deducted=False).prefetch_related('items__accepted_ingredients').order_by('preparation_at', 'pk'):
+        if order.preparation_plan.get('needs_review') and not order.preparation_at:
+            # An unaccepted request is not an existing stock commitment.
+            continue
         needs = {}
         for item in order.items.all():
             for r in item.accepted_ingredients.all():

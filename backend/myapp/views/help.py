@@ -1,3 +1,4 @@
+from ..services.selling import shipping_enquiry
 from decimal import Decimal
 from django.conf import settings
 from rest_framework import serializers
@@ -62,7 +63,7 @@ class KitchenHelp(APIView):
             menus = [{'name': p.name, 'price': str(p.price),
                       'food_total': str(p.price * data['portions']),
                       'portions': data['portions'], 'href': '/products/' + str(p.pk)}
-                     for p in rows[:3]]
+                     for p in rows[:30] if not shipping_enquiry(p)][:3]
             if not menus:
                 answer += '\n\n' + text['none']
         return Response({'answer': answer, 'topic': topic, 'mode': mode, 'menus': menus,

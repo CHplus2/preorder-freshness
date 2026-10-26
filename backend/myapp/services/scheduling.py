@@ -229,7 +229,9 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
     if not items:
         raise ValidationError('Your basket is empty.')
     if exclude_order_id is None:
+        from .selling import require_local_preorder
         for item in items:
+            require_local_preorder(item.product)
             if getattr(item.product, 'selling_status', 'active') != 'active':
                 raise ValidationError(f'{item.product.name} is not accepting new orders. Remove it from your basket before continuing.')
     local = timezone.localtime(delivery_at)
@@ -266,7 +268,7 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
             reason = (f'{item.product.name} exceeds the automatic capacity on this day: '
                 f'{quantity} requested + {reserved} already booked; daily limit {capacity}. {next_step}')
             if not (allow_manual_review and allow_request_exceptions):
-                raise ValidationError(reason)
+                raise ValidationError(reason, code='daily_capacity')
             request_reasons.append(reason)
     advance = max(now, (notice_from or now)+timedelta(hours=max(i.product.lead_hours for i in items)))
     if delivery_at < advance+timedelta(minutes=store.delivery_buffer_minutes):

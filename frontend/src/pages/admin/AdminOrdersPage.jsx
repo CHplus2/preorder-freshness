@@ -35,7 +35,7 @@ function OwnerOrders() {
     const historyScope=['generated','all'].includes(params.get('source'))?params.get('source'):'orders';
     const orderReference=/^[1-9]\d*$/.test(params.get('order') || '')?params.get('order'):null;
     const queue=orderReference || historyScope!=='orders' || review==='archived-menus'?'all':orderQueues.some(([key])=>key===params.get('queue'))?params.get('queue'):'open';
-    return {...emptyFilters,historyScope,queue,includeArchived:historyScope==='generated',sort:historyScope==='generated'?'newest':'delivery',search:orderReference?'#ORD-'+orderReference.padStart(5,'0'):''};
+    return {...emptyFilters,historyScope,queue,includeArchived:Boolean(orderReference) || historyScope==='generated',sort:historyScope==='generated'?'newest':'delivery',search:orderReference?'#ORD-'+orderReference.padStart(5,'0'):''};
   });
   const [now,setNow]=useState(()=>Date.now());
   useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer);},[]);
@@ -48,7 +48,7 @@ function OwnerOrders() {
   const { formatOrderNumber } = useUI();
   const { adminOrders, fetchAdminOrders, updateOrder, adminOrdersLoading, adminOrdersError } = useOrder();
   const {catalogue,error:catalogueError,retry:retryCatalogue}=useOrderCatalogue(adminOrders);
-  const queueCounts=orderQueueCounts(adminOrders.filter(order=>!hiddenArchivedHistory(order,catalogue)),now);
+  const queueCounts=orderQueueCounts(adminOrders,now,catalogue);
   const visibleOrders=filterOrders(adminOrders,{...filters,review},now,catalogue);
   const archivedHistoryCount=adminOrders.filter(order=>hiddenArchivedHistory(order,catalogue)).length;
   const generatedCount=adminOrders.filter(closedGeneratedHistory).length;
@@ -83,6 +83,8 @@ function OwnerOrders() {
   return (
     <main className="orders-container owner-orders-page">
       <div className="admin-page-heading"><div><span className="admin-kicker">KITCHEN OPERATIONS</span><h1 className="orders-title">{review==='missing-delivery'?'Review missing delivery dates':review==='archived-menus'?'Orders containing only archived menus':filters.historyScope==='generated'?'Generated sales history':'Orders'}</h1><p>Confirm requests, follow preparation and keep deliveries moving.</p></div><Link className="owner-workspace-link" to="/admin/planner">Open Planner</Link></div>
+      {filters.queue==='unpaid' && <p className="order-review-explanation">Unpaid bookings and completed handovers. Review payment records before collecting money; preparation and delivery updates do not record a payment. Requests awaiting confirmation stay in Needs confirmation.</p>}
+      {filters.queue==='cancelled' && <p className="order-review-explanation">Cancellation closes a booking; it does not itself refund payments or restore used ingredients. Review receipts and refund arrangements in Payment records. Check actual stock or disposal separately.</p>}
       {review==='missing-delivery' && <p className="order-review-explanation">Set an agreed future date to keep a request open, or review closing an obsolete request. Setting a date does not mark an order paid or delivered.</p>}
       {review==='archived-menus' && <p className="order-review-explanation">Every item in these orders refers to an archived menu. Open orders still need a decision; archiving a menu does not cancel a booking.</p>}
       {generatedCount>0 && <div className="admin-tabs order-record-tabs" role="group" aria-label="Order record source">{[['orders',`Orders (${adminOrders.length-generatedCount})`],['generated',`Generated history (${generatedCount})`],['all','All records']].map(([value,label])=><button key={value} aria-pressed={filters.historyScope===value} onClick={()=>{setFilters({...emptyFilters,historyScope:value,includeArchived:value==='generated',queue:value==='orders'?'open':'all'});setParams({source:value,queue:value==='orders'?'open':'all'});}}>{label}</button>)}</div>}
@@ -97,7 +99,7 @@ function OwnerOrders() {
         <label>Sort by<select value={filters.sort} onChange={e=>setFilters({...filters,sort:e.target.value})}><option value="newest">{historyView?'Newest record':'Newest order'}</option><option value="delivery">{historyView?'Earliest sales date':'Earliest delivery'}</option></select></label>
       </div>
       <div className="admin-toolbar">{!historyView && <label className="owner-overdue-filter"><input type="checkbox" checked={filters.overdue} onChange={e=>setFilters({...filters,overdue:e.target.checked})}/> Overdue deliveries only</label>}<button onClick={clearFilters}>Clear filters</button></div>
-      {!historyView && (archivedHistoryCount>0 || !catalogue) && <div className="order-history-scope"><label className="owner-overdue-filter"><input type="checkbox" checked={filters.includeArchived || review==='archived-menus'} disabled={review==='archived-menus' || !catalogue} onChange={e=>setFilters({...filters,includeArchived:e.target.checked})}/> Include completed or cancelled archived-menu history</label>
+      {!historyView && (archivedHistoryCount>0 || !catalogue) && <div className="order-history-scope"><label className="owner-overdue-filter"><input type="checkbox" checked={filters.includeArchived || review==='archived-menus' || ['unpaid','cancelled'].includes(filters.queue)} disabled={review==='archived-menus' || ['unpaid','cancelled'].includes(filters.queue) || !catalogue} onChange={e=>setFilters({...filters,includeArchived:e.target.checked})}/> Include completed or cancelled archived-menu history</label>
         <p>{catalogue ? `${archivedHistoryCount} archived-menu history records available. Open requests stay visible.` : catalogueError ? 'Menu status is unavailable; archived history has not been filtered.' : 'Checking menu status…'}</p>
         {catalogueError && <p role="alert">Menu status could not be loaded: {catalogueError} <button type="button" onClick={retryCatalogue}>Retry menu status</button></p>}
       </div>}
@@ -124,7 +126,7 @@ function OwnerOrders() {
 
                 <div className="badge-group">
                   <span className={`status-badge status-${order.status}`}>
-                    {orderStatusLabel(order.status)}
+                    {order.status==='delivered' && isPickup(order)?'Collected':orderStatusLabel(order.status)}
                   </span>
 
                   <span className={`payment-badge payment-${order.payment_status}`}>
@@ -133,10 +135,10 @@ function OwnerOrders() {
                 </div>
               </div>
 
-              <dl className="order-key-dates"><div><dt>Delivery</dt><dd>{orderDate(order.delivery_at)}</dd></div><div><dt>Preparation starts</dt><dd>{order.preparation_at?orderDate(order.preparation_at):'Needs a plan'}</dd></div></dl>
+              <dl className="order-key-dates"><div><dt>{handoverLabel(order)}</dt><dd>{orderDate(order.delivery_at)}</dd></div><div><dt>Preparation starts</dt><dd>{order.preparation_at?orderDate(order.preparation_at):'Needs a plan'}</dd></div></dl>
               {generatedSalesHistory(order) && <p className="owner-order-note">Demo data · Generated history record requiring review; not a customer transaction.</p>}
               {review==='missing-delivery' && catalogue && <p className="owner-order-note">{orderMenuState(order,catalogue)==='unlinked'?'Some menu references are missing from the catalogue. An old name in an order is a historical snapshot; it does not prove the menu is still available.':orderMenuState(order,catalogue)==='archived'?'This request contains only archived menus. Review whether it is still needed.':orderMenuState(order,catalogue)==='mixed'?'This request mixes current and archived menus. Review the items before arranging a new date.':'Menu references are available. Use Plan delivery & preparation to confirm a future time and cooking plan.'}</p>}
-              {overdueOrder(order,now) && <p className="admin-follow-up"><strong>Delivery follow-up</strong><span>The requested time has passed. Confirm delivery with the customer, then update the order status.</span></p>}
+              {overdueOrder(order,now) && <p className="admin-follow-up"><strong>{handoverLabel(order)} follow-up</strong><span>The requested time has passed. Confirm receipt with the customer, then update the order status.</span></p>}
               {order.status==='pending' && order.preparation_plan?.needs_review && <div className="owner-order-note"><strong>Delivery & preparation need confirmation</strong><p>Use Plan delivery & preparation below to find a workable time and confirm the cooking steps together.</p><details><summary>Automatic planning notes</summary><p>{order.preparation_plan.review_reason}</p></details></div>}
               {/* BODY */}
               <div className="order-body">
