@@ -1,3 +1,4 @@
+import {readArrivalWindow} from './arrivalWindow.js';
 import {invalidResponse,responseSlots} from './apiResponse.js';
 
 export const deliveryInput=value=>new Date(Date.parse(value)+8*3600000).toISOString().slice(0,16);
@@ -5,9 +6,11 @@ export const deliveryDateLabel=value=>new Date(`${value}T12:00:00+08:00`).toLoca
 const validDay=value=>typeof value==='string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
  && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0,10)===value;
 
-export function basketSlotResult(data) {
+export function basketSlotResult(data,minutes=0) {
+ if((data?.arrival_window_minutes ?? 0)!==minutes)throw invalidResponse();
  const slots=responseSlots(data);
  if(slots.length>24 || new Set(slots.map(s=>Date.parse(s.delivery_at))).size!==slots.length)throw invalidResponse();
+ for(const slot of slots){const window=readArrivalWindow(slot.arrival_window,slot.delivery_at);if((window?.minutes ?? 0)!==minutes)throw invalidResponse();}
  const date=data.suggested_date,from=data.searched_from,through=data.searched_through;
  if(slots.length && (!validDay(date) || slots.some(s=>deliveryInput(s.delivery_at).slice(0,10)!==date)))throw invalidResponse();
  if((from!=null || through!=null) && (!validDay(from) || !validDay(through) || from>through))throw invalidResponse();

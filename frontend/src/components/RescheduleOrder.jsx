@@ -1,3 +1,5 @@
+import ArrivalWindowChoice from './ArrivalWindowChoice';
+import {arrivalLabel,arrivalMinutes,makeArrivalWindow} from '../utils/arrivalWindow';
 import {isPickup} from '../utils/fulfilment';
 import {useId, useState} from 'react';
 import axios from 'axios';
@@ -18,6 +20,7 @@ export default function RescheduleOrder({order, onSaved, historyOnly=false}) {
   const [open, setOpen] = useState(null);
   const panelId = useId();
   const [policy, setPolicy] = useState(null);
+  const [windowMinutes,setWindowMinutes]=useState(()=>arrivalMinutes(order));
   const [delivery, setDelivery] = useState('');
   const [reason, setReason] = useState('');
   const [preview, setPreview] = useState(null);
@@ -42,7 +45,7 @@ export default function RescheduleOrder({order, onSaved, historyOnly=false}) {
     }
     setBusy(true); setError(''); setMessage('');
     try {
-      const body = confirm ? {confirm:preview.confirm} : {delivery_at:`${delivery}:00+08:00`, reason};
+      const body = confirm ? {confirm:preview.confirm} : {delivery_at:`${delivery}:00+08:00`, reason, arrival_window_minutes:windowMinutes};
       const response = await axios.post(url, body, {timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
       if (confirm) {
         const saved = deliveryConfirmation(response.data, order.id).order;
@@ -88,9 +91,11 @@ export default function RescheduleOrder({order, onSaved, historyOnly=false}) {
       {open === 'change' && policy?.eligible && <form className="fyp-form" noValidate onSubmit={submit}>
         <p className="delivery-change-hint">{policy.initial_delivery ? 'Record an agreed future delivery request. This does not mark the order paid or delivered, or reserve preparation time.' : policy.unconfirmed_request ? 'This request has no reserved preparation time. You can propose another future delivery time.' : <>Change by <strong>{when(policy.cutoff)}</strong>.</>} All times are Malaysia time.</p>
         {!preview ? <>
-          <label>New date and time
+          {!pickup && <ArrivalWindowChoice value={windowMinutes} onChange={setWindowMinutes} disabled={busy}/>}
+          <label>{windowMinutes?'New window ends':'New date and time'}
             <input type="datetime-local" required value={delivery} disabled={busy} onChange={e=>{setDelivery(e.target.value);setMessage('');}}/>
           </label>
+          {windowMinutes>0 && delivery && <p>New arrival window: {arrivalLabel({delivery_at:delivery+':00+08:00',arrival_window:makeArrivalWindow(delivery+':00+08:00',windowMinutes)})}</p>}
           <label>{policy.initial_delivery?'Delivery arrangement / reason':'Reason for the change'}
             <textarea rows={2} required maxLength={300} value={reason} disabled={busy} onChange={e=>{setReason(e.target.value);setMessage('');}}/>
           </label>
@@ -100,7 +105,7 @@ export default function RescheduleOrder({order, onSaved, historyOnly=false}) {
       </form>}
       {open === 'history' && policy && <div>
         {policy.history.length ? <ol className="delivery-change-history">{policy.history.map(change=><li key={change.id}>
-          <strong>{when(change.delivery_at)}</strong><p>Previously {when(change.previous_delivery)}</p>
+          <strong>{arrivalLabel({delivery_at:change.delivery_at,arrival_window:change.arrival_window})}</strong><p>Previously {arrivalLabel({delivery_at:change.previous_delivery,arrival_window:change.previous_window})}</p>
           <p>{change.reason}</p><small>Changed by {change.by} · {when(change.at)}</small>
         </li>)}</ol> : <p>No delivery changes recorded.</p>}
       </div>}
@@ -112,7 +117,7 @@ export function DeliveryChangePreview({preview,busy,onConfirm,onBack}) {
   const awaitingKitchen=preview.needs_review===true;
   return <div className="delivery-change-review">
     <h4>{awaitingKitchen?'Review your requested time':'Confirm your new delivery time'}</h4>
-    <dl><div><dt>{awaitingKitchen?'Current requested delivery':'Current delivery'}</dt><dd>{when(preview.previous_delivery)}</dd></div><div><dt>{awaitingKitchen?'New requested delivery':'New delivery'}</dt><dd><strong>{when(preview.delivery_at)}</strong></dd></div></dl>
+    <dl><div><dt>{awaitingKitchen?'Current requested delivery':'Current delivery'}</dt><dd>{arrivalLabel({delivery_at:preview.previous_delivery,arrival_window:preview.previous_window})}</dd></div><div><dt>{awaitingKitchen?'New requested delivery':'New delivery'}</dt><dd><strong>{arrivalLabel(preview)}</strong></dd></div></dl>
     <p>Reason: {preview.reason}</p>
     {awaitingKitchen && <p>This saves your delivery request. The kitchen must still confirm a workable preparation plan; no preparation slots are reserved.</p>}
     <p className="delivery-change-hint">This preview expires in 10 minutes. The time and kitchen availability are checked again when saved.</p>

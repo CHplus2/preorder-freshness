@@ -253,6 +253,18 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    arrival_window = serializers.SerializerMethodField()
+    dispatch_by = serializers.SerializerMethodField()
+
+    def get_arrival_window(self, obj):
+        from .services.arrival_windows import window, duration
+        return window(obj.delivery_at, duration(obj))
+
+    def get_dispatch_by(self, obj):
+        from .services.arrival_windows import dispatch_by
+        value = dispatch_by(obj)
+        return value.isoformat() if value else None
+
     fulfilment_snapshot = serializers.SerializerMethodField()
 
     def get_fulfilment_snapshot(self, obj):
@@ -263,6 +275,7 @@ class OrderSerializer(serializers.ModelSerializer):
             if isinstance(saved.get('courier'), dict):
                 saved['courier'].pop('contact_phone', None)
             saved.pop('dispatch_notice', None)
+            saved.pop('time_notice', None)
         return saved
 
     preparation_plan = serializers.SerializerMethodField()

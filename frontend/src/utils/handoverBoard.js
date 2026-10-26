@@ -1,3 +1,4 @@
+import {arrivalStart} from './arrivalWindow.js';
 import {malaysiaDate,savedPlanIssue} from './planner.js';
 import {closedGeneratedHistory} from './orderPresentation.js';
 import {unitLabel} from './sellingDetails.js';
@@ -21,10 +22,10 @@ export function unitTotals(orders){
 export function handoverBoard(orders,date,now=Date.now()){
  const open=(orders || []).filter(active);
  const selected=open.filter(order=>Number.isFinite(Date.parse(order.delivery_at || '')) && malaysiaDate(order.delivery_at)===date);
- const confirmed=selected.filter(order=>confirmedHandover(order,now)).sort((a,b)=>Date.parse(a.delivery_at)-Date.parse(b.delivery_at) || a.id-b.id);
+ const confirmed=selected.filter(order=>confirmedHandover(order,now)).sort((a,b)=>Date.parse(arrivalStart(a))-Date.parse(arrivalStart(b)) || a.id-b.id);
  const groups=new Map();
  for(const order of confirmed){
-  const hour=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',hourCycle:'h23'}).format(new Date(order.delivery_at));
+  const hour=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',hourCycle:'h23'}).format(new Date(arrivalStart(order)));
   const method=order.delivery_method || 'standard',key=hour+'-'+method;
   const group=groups.get(key) || {key,hour:Number(hour),method,orders:[]};group.orders.push(order);groups.set(key,group);
  }

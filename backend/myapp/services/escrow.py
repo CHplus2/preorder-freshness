@@ -52,8 +52,10 @@ def public_config():
 def total(order):
     return str((order.total_amount+order.shipping_fee).quantize(Decimal('0.01')))
 
-def locked_delivery(order, target):
-    if order.payment_method=='escrow' and order.payment_instructions.get('escrow_sepolia') and target!=order.delivery_at:
+def locked_delivery(order, target, window_minutes=None):
+    from .arrival_windows import duration
+    changed_window = window_minutes is not None and window_minutes != duration(order)
+    if order.payment_method=='escrow' and order.payment_instructions.get('escrow_sepolia') and (target!=order.delivery_at or changed_window):
         raise EscrowError('The escrow deadline is fixed for this invoice. Contact the kitchen to resolve the payment and replace the booking for another delivery time.', 'invoice_locked')
 
 class NoRedirect(HTTPRedirectHandler):

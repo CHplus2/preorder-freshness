@@ -133,3 +133,6 @@
 .planner-setup-row>div{min-width:0;flex:1}
 .batch-delivery-dates>button{max-width:100%;white-space:normal}
 @media(max-width:600px){.planner-setup-row>div{width:100%}}
+
+/* Keep primary labels readable when pointer hover persists on narrow screens. */
+.admin-shell .admin-primary:hover,.admin-shell .add-product-btn:hover,.admin-shell .modal-save:hover,.admin-shell .edit-btn:hover{background:#204b33;color:#fff;border-color:#204b33}

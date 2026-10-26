@@ -1,3 +1,4 @@
+import {slotLabel} from '../utils/arrivalWindow';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import axios from 'axios';
 import {getCookie} from '../utils/cookieUtils';
@@ -11,7 +12,7 @@ export default function BasketSlots({value='',...props}) {
  return <SlotSearch key={day} day={day} {...props}/>;
 }
 
-function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedValue='',autoSearch=false,method='standard'}) {
+function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedValue='',autoSearch=false,method='standard',windowMinutes=0}) {
  const [result,setResult]=useState(null),[busy,setBusy]=useState(autoSearch && !nextDisabled),[error,setError]=useState('');
  const [lastDay]=useState(()=>new Date(Date.now()+90*86400000+8*3600000).toISOString().slice(0,10));
  const request=useRef(null),pending=useRef(false),searchAnchor=useRef(day);
@@ -20,16 +21,16 @@ function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedV
   const controller=new AbortController();request.current=controller;pending.current=true;searchAnchor.current=searchFrom;
   setBusy(true);setError('');setResult(null);
   try {
-   const {data}=await axios.post('/api/orders/slots/',{...(searchFrom?{date:searchFrom}:{}),find_next:true,delivery_method:method},
+   const {data}=await axios.post('/api/orders/slots/',{...(searchFrom?{date:searchFrom}:{}),find_next:true,delivery_method:method,arrival_window_minutes:windowMinutes},
     {signal:controller.signal,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
-   if(!controller.signal.aborted)setResult(basketSlotResult(data));
+   if(!controller.signal.aborted)setResult(basketSlotResult(data,windowMinutes));
   } catch(e) {
    if(!controller.signal.aborted)setError(e.code==='ECONNABORTED'?'Finding delivery times took too long. Please retry.':readApiError(e,'Delivery times could not be checked.'));
   } finally {
    pending.current=false;
    if(!controller.signal.aborted)setBusy(false);
   }
- },[day,nextDisabled,method]);
+ },[day,nextDisabled,method,windowMinutes]);
  useEffect(()=>()=>request.current?.abort(),[]);
  useEffect(()=>{
   if(!autoSearch || nextDisabled)return;
@@ -54,7 +55,7 @@ function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedV
    </div>
    <div className="slot-suggestions" role="group" aria-label={'Available delivery times for '+deliveryDateLabel(result.date)}>{result.slots.map(slot=><button type="button" disabled={busy || nextDisabled} key={slot.delivery_at}
     aria-pressed={selectedValue===deliveryInput(slot.delivery_at)} onClick={()=>onSelect(deliveryInput(slot.delivery_at))}>
-    {new Date(slot.delivery_at).toLocaleTimeString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit'})}
+    {slotLabel(slot)}
    </button>)}</div>
   </>)}
  </div>;

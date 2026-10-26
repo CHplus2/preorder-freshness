@@ -1,3 +1,4 @@
+import {arrivalLabel} from '../../utils/arrivalWindow';
 import '../customer/CustomerExperience.css';
 import OrderContactActions from '../../components/OrderContactActions';
 import SellingDetails from '../../components/SellingDetails';
@@ -138,7 +139,7 @@ function OwnerOrders() {
                 </div>
               </div>
 
-              <dl className="order-key-dates"><div><dt>{handoverLabel(order)}</dt><dd>{orderDate(order.delivery_at)}</dd></div><div><dt>Preparation starts</dt><dd>{order.preparation_at?orderDate(order.preparation_at):'Needs a plan'}</dd></div></dl>
+              <dl className="order-key-dates"><div><dt>{handoverLabel(order)}</dt><dd>{arrivalLabel(order)}</dd></div><div><dt>Preparation starts</dt><dd>{order.preparation_at?orderDate(order.preparation_at):'Needs a plan'}</dd></div></dl>
               {generatedSalesHistory(order) && <p className="owner-order-note">Demo data · Generated history record requiring review; not a customer transaction.</p>}
               {review==='missing-delivery' && catalogue && <p className="owner-order-note">{orderMenuState(order,catalogue)==='unlinked'?'Some menu references are missing from the catalogue. An old name in an order is a historical snapshot; it does not prove the menu is still available.':orderMenuState(order,catalogue)==='archived'?'This request contains only archived menus. Review whether it is still needed.':orderMenuState(order,catalogue)==='mixed'?'This request mixes current and archived menus. Review the items before arranging a new date.':'Menu references are available. Use Plan delivery & preparation to confirm a future time and cooking plan.'}</p>}
               {overdueOrder(order,now) && <p className="admin-follow-up"><strong>{handoverLabel(order)} follow-up</strong><span>The requested time has passed. Confirm receipt with the customer, then update the order status.</span></p>}
@@ -208,7 +209,7 @@ function OwnerOrders() {
                 {editingOrder.preparation_plan?.needs_review && <p className="owner-order-note">Confirm delivery and preparation below before starting or marking food ready. Recording preparation started is optional.</p>}
                 <section aria-label="Delivery time">
                   <h3>{handoverLabel(editingOrder)} time</h3>
-                  <p>{editingOrder.delivery_at ? new Date(editingOrder.delivery_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'No delivery time recorded'} · Malaysia time</p>
+                  <p>{arrivalLabel(editingOrder)}</p>
                   {editingOrder.status==='pending' && <PlanReview key={editingOrder.id+'-'+editingOrder.updated_at} order={editingOrder} onSaved={async () => {
                     setEditingOrder(null);
                     await fetchAdminOrders();

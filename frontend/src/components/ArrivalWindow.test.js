@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {createElement as h} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {createServer} from 'vite';
+import {makeArrivalWindow,readArrivalWindow,arrivalLabel,slotLabel} from '../utils/arrivalWindow.js';
+import {basketSlotResult} from '../utils/deliverySlots.js';
+import {plannerCalendar} from '../utils/plannerCalendar.js';
+import {handoverBoard} from '../utils/handoverBoard.js';
+import {deliveryRunRequest} from '../utils/deliveryRun.js';
+const deadline='2030-01-10T15:00:00+08:00',window=makeArrivalWindow(deadline,60);
+assert.equal(Date.parse(window.end)-Date.parse(window.start),3600000);assert.equal(readArrivalWindow(null),null);
+assert.match(arrivalLabel({delivery_at:deadline,arrival_window:window}),/2:00.*3:00/);
+assert.match(slotLabel({delivery_at:deadline,arrival_window:window}),/2:00.*3:00/);
+for(const bad of [{...window,minutes:30},{...window,end:'bad'},{...window,start:'2030-01-09T14:00:00+08:00'}])assert.throws(()=>readArrivalWindow(bad,deadline));
+const response={slots:[{delivery_at:deadline,arrival_window:window}],arrival_window_minutes:60,suggested_date:'2030-01-10',searched_from:'2030-01-10',searched_through:'2030-01-10'};
+assert.equal(basketSlotResult(response,60).slots.length,1);assert.throws(()=>basketSlotResult(response,0));assert.throws(()=>basketSlotResult({...response,slots:[{delivery_at:deadline}]},60));
+const order={id:1,status:'cooked',delivery_method:'standard',delivery_at:deadline,arrival_window:window,preparation_plan:{},items:[]};
+assert.equal(handoverBoard([order],'2030-01-10',Date.parse('2030-01-09T00:00:00Z')).groups[0].hour,14);
+const calendar=plannerCalendar([order]);assert.match(calendar.content,/DTSTART:20300110T060000Z/);assert.match(calendar.content,/DTEND:20300110T070000Z/);
+const run=deliveryRunRequest('2030-01-10T13:30',90,1,Date.parse('2030-01-09T00:00:00Z'));assert.equal(run.end_at,'2030-01-10T07:00:00.000Z');
+for(const minutes of ['',-1,721,1.5])assert.throws(()=>deliveryRunRequest('2030-01-10T13:30',minutes,1,Date.parse('2030-01-09T00:00:00Z')));
+assert.throws(()=>deliveryRunRequest('2030-01-10T13:30',90,1,Date.parse('2030-01-11T00:00:00Z')));
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+try{
+ const {default:Choice}=await server.ssrLoadModule('/src/components/ArrivalWindowChoice.jsx');
+ const choice=renderToStaticMarkup(h(Choice,{value:60,onChange:()=>{}}));assert.match(choice,/Arrival timing/);assert.match(choice,/not a live traffic estimate/);
+ const {default:Run}=await server.ssrLoadModule('/src/components/DeliveryRunBlock.jsx');
+ assert.equal(renderToStaticMarkup(h(Run,{order:{...order,delivery_method:'pickup'}})),'');
+ console.log('Arrival windows: exact ranges, stale/missing API rejection, grouped handovers, calendar spans and bounded time-away requests passed.');
+}finally{await server.close();}

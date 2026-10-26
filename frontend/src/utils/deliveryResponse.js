@@ -1,3 +1,4 @@
+import {readArrivalWindow} from './arrivalWindow.js';
 import {invalidResponse} from './apiResponse.js';
 
 const date = value => typeof value === 'string' && Number.isFinite(Date.parse(value));
@@ -10,6 +11,7 @@ export function deliveryPolicy(data) {
       || data.history.some(row => !Number.isInteger(row?.id) || row.id < 1
         || !date(row.at) || !date(row.delivery_at) || !(row.previous_delivery === null || date(row.previous_delivery))
         || typeof row.reason !== 'string' || typeof row.by !== 'string')) throw invalidResponse();
+  for(const row of data.history){readArrivalWindow(row.arrival_window,row.delivery_at);readArrivalWindow(row.previous_window,row.previous_delivery);}
   return data;
 }
 
@@ -20,6 +22,8 @@ export function deliveryPreview(data) {
       || (preview?.unconfirmed_request !== undefined && typeof preview.unconfirmed_request !== 'boolean')
       || (preview?.needs_review !== undefined && typeof preview.needs_review !== 'boolean')
       || (!date(preview?.change_closes_at) && !(preview?.unconfirmed_request===true && preview.needs_review===true && preview.change_closes_at===null)) || typeof preview?.reason !== 'string') throw invalidResponse();
+  readArrivalWindow(preview.arrival_window,preview.delivery_at);
+  readArrivalWindow(preview.previous_window,preview.previous_delivery);
   return data;
 }
 

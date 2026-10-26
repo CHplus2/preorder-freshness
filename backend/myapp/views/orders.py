@@ -183,7 +183,10 @@ def place_order(request):
         updates = serializers.BooleanField().run_validation(request.data.get('email_dispatch_updates', False))
         if updates and not email_reminder:
             raise ValidationError('Enable email reminders before choosing dispatch updates.')
-        preference = reminder_preference(user, email_reminder, dispatch_updates=updates)
+        time_updates = serializers.BooleanField().run_validation(request.data.get('email_time_updates', False))
+        if time_updates and not email_reminder:
+            raise ValidationError('Enable email reminders before choosing time-change updates.')
+        preference = reminder_preference(user, email_reminder, dispatch_updates=updates, time_updates=time_updates)
     except EmailValidationError:
         raise ValidationError('Add a valid email in Account settings before enabling reminders.')
 
@@ -289,8 +292,10 @@ def preparation_quote(request):
     store, method, area = request_store(store, request.data, require_area=True)
     items = list(CartItem.objects.filter(user=request.user).select_related('product'))
     plan = schedule_order(items, delivery, store, allow_manual_review=True, allow_request_exceptions=True)
+    from ..services.arrival_windows import window, duration
+    timing = {'arrival_window': window(delivery, duration(store)), 'arrival_window_minutes': duration(store)}
     if plan.get('needs_review'):
-        return Response(dict(preparation_at=None, preparation_end_at=None, **plan_snapshot(plan)))
+        return Response(dict(**timing, preparation_at=None, preparation_end_at=None, **plan_snapshot(plan)))
     from ..services.discovery import shopping_preview
-    return Response(dict(preparation_at=plan['start'], preparation_end_at=plan['end'],
+    return Response(dict(**timing, preparation_at=plan['start'], preparation_end_at=plan['end'],
         procurement_required=bool(shopping_preview(items, plan['start'], plan['end'])), **plan_snapshot(plan)))

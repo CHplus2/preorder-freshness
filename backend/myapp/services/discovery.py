@@ -48,7 +48,8 @@ def slot_search(items, day, store, limit=3, now=None):
             codes = exc.get_codes()
             last_code = 'daily_capacity' if isinstance(codes, list) and codes and all(code == 'daily_capacity' for code in codes) else ''
             continue
-        found.append({'delivery_at': delivery.isoformat(), 'preparation_at': plan['start'].isoformat(),
+        from .arrival_windows import window, duration
+        found.append({'arrival_window': window(delivery, duration(store)), 'delivery_at': delivery.isoformat(), 'preparation_at': plan['start'].isoformat(),
             'preparation_end_at': plan['end'].isoformat(), 'hands_on_minutes': plan['hands_on_minutes']})
         if len(found) >= limit:
             break

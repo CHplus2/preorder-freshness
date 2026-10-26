@@ -1,3 +1,4 @@
+import {arrivalLabel} from '../../utils/arrivalWindow';
 import OrderHandoverEditor from '../../components/OrderHandoverEditor';
 import useOrderEmail from '../../hooks/useOrderEmail';
 import OrderEmailReminder from '../../components/OrderEmailReminder';
@@ -15,7 +16,7 @@ import { useEffect,useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useUI } from "../../contexts/UIContext";
 import { useOrder } from "../../contexts/OrderContext";
-import {customerOrderGroups,customerDelivery} from "../../utils/customerExperience";
+import {customerOrderGroups} from "../../utils/customerExperience";
 import "./OrdersPage.css";
 import "./CustomerExperience.css";
 
@@ -66,7 +67,7 @@ export default function OrdersPage() {
             </div>
 
             <OrderProgress order={order}/>
-            <dl className="customer-order-details"><div><dt>{order.status==='pending' && order.preparation_plan?.needs_review?`Requested ${handoverLabel(order).toLowerCase()}`:handoverLabel(order)}</dt><dd>{customerDelivery(order.delivery_at)} · {methodLabel(order.delivery_method)}</dd></div><div><dt>{isPickup(order)?'Collection fee':'Delivery fee'}</dt><dd>RM {order.shipping_fee}</dd></div><div><dt>Bulk discount</dt><dd>RM {order.discount_amount}</dd></div></dl>
+            <dl className="customer-order-details"><div><dt>{order.status==='pending' && order.preparation_plan?.needs_review?`Requested ${handoverLabel(order).toLowerCase()}`:handoverLabel(order)}</dt><dd>{arrivalLabel(order)} · {methodLabel(order.delivery_method)}</dd></div><div><dt>{isPickup(order)?'Collection fee':'Delivery fee'}</dt><dd>RM {order.shipping_fee}</dd></div><div><dt>Bulk discount</dt><dd>RM {order.discount_amount}</dd></div></dl>
             <OrderFulfilment order={order}/><ManualPayment order={order}/>{order.address && <details className="dk-panel customer-order-address"><summary>Delivery address</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}
             {/* BODY */}
             <div className="order-body">

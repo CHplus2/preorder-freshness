@@ -7,7 +7,7 @@ import {orderEmailContact,orderEmailPreference} from '../utils/orderEmail.js';
 for(const bad of [null,{},[],{email:'ok@example.test',available:'true'},{email:4,available:true}])assert.throws(()=>orderEmailContact(bad));
 for(const bad of [null,{},[],{email:'',enabled:true},{email:'ok@example.test',enabled:'true'}])assert.throws(()=>orderEmailPreference(bad));
 assert.deepEqual(orderEmailContact({email:'',available:false}),{email:'',available:false});
-assert.deepEqual(orderEmailPreference({email:'',enabled:false}),{email:'',enabled:false,dispatch_updates:false});
+assert.deepEqual(orderEmailPreference({email:'',enabled:false}),{email:'',enabled:false,dispatch_updates:false,time_updates:false});
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
  const {default:Choice}=await server.ssrLoadModule('/src/components/DeliveryEmailChoice.jsx');

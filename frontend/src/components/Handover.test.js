@@ -8,7 +8,7 @@ for(const bad of ['123','javascript:12345678','+60123;456789','+0123456789','601
 const order={id:7,status:'pending',delivery_method:'standard',delivery_at:'2030-01-02T12:00:00+08:00',address:{phone:'0123456789'},preparation_plan:{needs_review:false},fulfilment_snapshot:{}};
 assert.equal(handoverDetails(order).mode,'in_person');assert.equal(orderContact(order).whatsapp,null);
 const whatsapp={...order,fulfilment_snapshot:{handover:{contact_method:'whatsapp',contact_phone:'+60123456789'}}};
-const contact=orderContact(whatsapp);assert.ok(contact.whatsapp.startsWith('https://wa.me/60123456789?text='));assert.ok(decodeURIComponent(contact.whatsapp).includes('order #7'));assert.match(contact.text,/Malaysia time/);
+const contact=orderContact(whatsapp);assert.ok(contact.whatsapp.startsWith('https://wa.me/60123456789?text='));assert.ok(decodeURIComponent(contact.whatsapp).includes('order #7'));assert.match(contact.text,/Malaysia/);
 assert.match(orderContact({...order,preparation_plan:{needs_review:true}}).text,/still needs kitchen confirmation/);
 assert.match(orderContact({...order,status:'shipped'}).text,/marked order #7 out for delivery/);
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});

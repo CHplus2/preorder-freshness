@@ -26,6 +26,7 @@ class GuideInput(serializers.Serializer):
 
 
 class BasketSlotsInput(serializers.Serializer):
+    arrival_window_minutes = serializers.ChoiceField(choices=[0,30,60], default=0)
     delivery_method = serializers.ChoiceField(choices=['standard', 'express', 'pickup'], required=False)
     date = serializers.DateField(required=False)
     find_next = serializers.BooleanField(default=False)
@@ -123,8 +124,11 @@ def basket_slots(request):
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     store, method, _ = request_store(store, data.validated_data)
     if data.validated_data['find_next']:
-        return Response(next_basket_slots(items, data.validated_data.get('date'), store))
-    return Response(slot_search(items, data.validated_data['date'], store, limit=24))
+        result = next_basket_slots(items, data.validated_data.get('date'), store)
+    else:
+        result = slot_search(items, data.validated_data['date'], store, limit=24)
+    result['arrival_window_minutes'] = data.validated_data['arrival_window_minutes']
+    return Response(result)
 
 
 @api_view(['POST'])

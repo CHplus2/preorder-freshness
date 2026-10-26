@@ -123,21 +123,67 @@ Default command `python deploy/run_delivery_reminders.py` makes no network reque
 `--send` is the explicit send action. No scheduler secret or enabled variable was
 configured remotely during this implementation.
 
-## Batch 3: arrival windows and practical dispatch planning (pending)
+## Batch 3: arrival windows and practical dispatch planning (implemented)
 
-Design agreed arrival windows separately from kitchen preparation reservations and
-courier pickup/dispatch times. Carry accepted terms through checkout, scheduling,
-rescheduling, customer order history and the handover board. Add agreed time-change
-notifications with that scheduling contract; they are not implemented in Batch 2. Account for the single
-owner's driving blocks and recipe freshness limits. Avoid merely relabelling the
-current exact delivery time as a window without updating the scheduling contract.
+Delivery checkout supports a single agreed time, a 30-minute window or a one-hour
+window. New browsing sessions start with one hour; existing point-time choices
+and orders remain point times. Self-collection remains one agreed time with no
+travel allowance. A window must start in the future, stay on one Malaysia date
+and fit wholly inside delivery hours. It is an agreed handover range, not traffic
+tracking or a guarantee that a courier can arrive at its start.
+
+`delivery_at` remains the latest-arrival deadline (the end of the window). Recipes
+are scheduled before that deadline minus the accepted delivery buffer. Lead time,
+worker/equipment reservations, portion limits, recipe waiting/holding constraints,
+preparation span and closures all still apply. A range does not invent extra
+capacity or earlier preparation. Same-date ingredient/expiry forecasts continue
+to use the accepted delivery date. Escrow deadlines also remain unchanged; once
+an invoice exists, neither its deadline nor its accepted range can change.
+
+The accepted duration is stored in existing fulfilment JSON. Quotes, bounded
+hourly suggestions, checkout, customer history, signed time changes, owner plan
+previews, handover board, contact drafts, packing lists and calendar exports carry
+the same range. Owner range/time changes need customer agreement before confirming.
+Legacy single-time suggestion producers explicitly preserve their point-time
+selection rather than silently converting it into a range. No migration or
+retroactive order changes are required.
+
+Customer advance email eligibility begins two hours before the **start** of an
+arrival window. Time-confirmation/change emails are a separate per-order opt-in;
+old reminder or dispatch consent does not subscribe customers. Signed customer
+changes, owner replanning and manual confirmation of an unconfirmed request queue
+a notice only after saving a confirmed plan. The existing shared worker sends
+current accepted terms, with receipts, row locks, recipient/account/consent
+rechecks, retries and a 24-hour notice lifetime. It sends no payment information,
+internal reason or courier ETA. The total SMTP budget remains three attempts/run.
+No live mail is sent in booking, rescheduling or status transactions.
+
+The handover board groups ranges by their starting hour and shows the dispatch
+target from the accepted travel allowance. Calendar events span actual ranges;
+legacy single-time reminders keep their existing calendar display span. Overdue
+checks continue to use the latest-arrival deadline.
+
+An owner driving an order can enter a start and minutes away, including handover
+and return. The end is calculated. Saving uses existing kitchen-block conflict
+checks and reserves all work/equipment; it does not book a driver or update order
+status. This is an **independent** availability block: the owner must review or
+remove it after route/order changes. The system does not guess travel times,
+combine deliveries automatically or override food freshness limits.
+
+### Deferred setup (user preference)
+
+Finish the code batches before configuring live scheduler/provider settings.
+The GitHub automatic schedule remains disabled; no remote SMTP settings, secrets,
+provider accounts or enabled flags were changed. Setup does not require a new
+chat. It can be completed here when the necessary hosting/repository access is
+available; private credentials should not be pasted into chat.
 
 ## Batch 4: account sign-in, provider automation and final verification (pending)
 
 Recommended account direction: email/password by default for new customers,
 while preserving username access for existing accounts. This needs a deliberate
 email uniqueness, verification and recovery flow. Registration remains
-username/password with optional email in Batch 2. Google sign-in needs OAuth
+username/password with optional email through Batch 3. Google sign-in needs OAuth
 configuration; phone sign-in needs a verification provider. An order phone number
 or WhatsApp preference is contact information, not proof of account ownership.
 Notification channels are explicit choices, not inferred from a registration method.
@@ -167,3 +213,16 @@ HTTPS origin. An explicitly blank value still disables the origin. Existing URL
 validation rejects credentials, paths, query strings and unsafe public HTTP;
 request Host/forwarded-host headers never supply notification or recovery links.
 SMTP configuration and an actual scheduler are still required.
+
+
+Batch 3 validation: full application suite 680 tests passed (15 expected skips);
+81 focused tests passed against isolated PostgreSQL, including window boundaries,
+confirmed-order changes, escrow terms, opt-in isolation, retries and queue checks.
+All 32 deployment tests, affected frontend suites, lint and production build pass.
+Thirteen browser accessibility/overflow scans pass at 1440, 390 and 320 CSS pixels;
+flows cover checkout, owner confirmation, driving blocks, customer history and
+signed rescheduling, plus self-collection. A shared primary-button hover contrast
+issue found in the narrow-screen planner was corrected. Tests use generated local
+fixtures and mocked SMTP; no live reminders, production database writes or provider
+bookings occurred. No migration is required. Known unrelated PostgreSQL backup-test
+limitations above remain in the existing maintenance backlog.

@@ -259,6 +259,8 @@ def schedule_order(items, delivery_at, store, now=None, exclude_order_id=None, n
         raise ValidationError(f'Choose {"collection" if getattr(store, "fulfilment_method", "") == "pickup" else "delivery"} between {opening:02d}:00 and {closing:02d}:00 Malaysia time.')
     if delivery_at <= now or delivery_at > now+timedelta(days=90):
         raise ValidationError('Choose a future delivery within the next 90 days.')
+    from .arrival_windows import validate_window
+    validate_window(delivery_at, store, now)
     booked = availability.booked if availability is not None else dict(capacity_bookings([i.product_id for i in items]).filter(order__delivery_at__date=local.date()).exclude(order_id=exclude_order_id).values('product_id').annotate(n=Sum('quantity')).values_list('product_id', 'n'))
     request_reasons = []
     requested = Counter()

@@ -15,6 +15,7 @@ class StepTimeInput(serializers.Serializer):
 
 
 class PlanReviewInput(serializers.Serializer):
+    arrival_window_minutes = serializers.ChoiceField(choices=[0,30,60], required=False)
     adopt_current = serializers.BooleanField(default=False)
     confirm = serializers.CharField(max_length=300000, required=False, trim_whitespace=False)
     delivery_at = serializers.DateTimeField(required=False)
@@ -136,7 +137,10 @@ def manual_order_plan(request, pk):
         days = work_days(order.preparation_plan['tasks'])
         order.preparation_plan.update(daily_work=days, calendar_days=len(days),
             hands_on_days=sum(day['hands_on_minutes'] > 0 for day in days))
-        order.save(update_fields=['preparation_at','preparation_end_at','preparation_plan','updated_at'])
+        if original_plan.get('needs_review'):
+            from ..services.reminders import queue_time_notice
+            queue_time_notice(order)
+        order.save(update_fields=['fulfilment_snapshot','preparation_at','preparation_end_at','preparation_plan','updated_at'])
         OrderAmendment.objects.create(order=order, actor=request.user, before=before,
             after={'manual_request_id': snapshot['request_id'], 'plan': order.preparation_plan})
         return Response({'order': OrderSerializer(order, context={'request': request}).data, 'already_applied': False})
@@ -234,6 +238,11 @@ def review_order_plan(request, pk):
     if missing:
         raise serializers.ValidationError('Add preparation steps in Menus first: '+', '.join(missing)+'.')
     now = timezone.now()
+    from ..services.arrival_windows import duration, window
+    minutes = previous.get('arrival_window_minutes', duration(order)) if previous else values.get('arrival_window_minutes', duration(order))
+    if order.delivery_method == 'pickup' and minutes:
+        raise serializers.ValidationError('Self-collection uses one agreed time.')
+    store.arrival_window_minutes = minutes
     target = serializers.DateTimeField().run_validation(previous['delivery_at']) if previous else values.get('delivery_at', order.delivery_at)
     if target is not None:
         target = timezone.localtime(target)
@@ -250,14 +259,15 @@ def review_order_plan(request, pk):
             notice_from=order.created_at if target == order.delivery_at else now)
     from ..services.escrow import locked_delivery, EscrowError
     try:
-        locked_delivery(order,target)
+        locked_delivery(order,target, minutes)
     except EscrowError as error:
         raise serializers.ValidationError(error.message)
-    delivery_changed = target != order.delivery_at
+    delivery_changed = target != order.delivery_at or minutes != duration(order)
     if delivery_changed and not reason:
         raise serializers.ValidationError('Record the delivery arrangement agreed with the customer before reviewing a new time.')
     snapshot = dict(order=order.pk,start=plan['start'].isoformat(),end=plan['end'].isoformat(),plan=plan_snapshot(plan))
-    snapshot.update(delivery_at=timezone.localtime(target).isoformat(), reason=reason)
+    snapshot.update(delivery_at=timezone.localtime(target).isoformat(), reason=reason,
+                    arrival_window_minutes=minutes, arrival_window=window(target, minutes))
     if not adopt_current and order.preparation_plan.get('fictional_timing'):
         snapshot['plan']['fictional_timing'] = order.preparation_plan['fictional_timing']
     snapshot['adopt_current'] = adopt_current
@@ -274,7 +284,8 @@ def review_order_plan(request, pk):
     if previous is not None:
         if previous != snapshot:
             return Response({'detail':'Availability or menu timings changed. Preview again to review the updated plan.'},status=409)
-        before = {'delivery_at': order.delivery_at.isoformat() if order.delivery_at else None,
+        before = {'arrival_window': window(order.delivery_at, duration(order)),
+            'delivery_at': order.delivery_at.isoformat() if order.delivery_at else None,
             'preparation_at': order.preparation_at.isoformat() if order.preparation_at else None,
             'plan': order.preparation_plan, 'items': [
             {'id': i.pk, 'recipe_source': i.recipe_source, 'preparation': i.preparation_snapshot,
@@ -292,9 +303,14 @@ def review_order_plan(request, pk):
                 item.recipe_source = 'owner_amended'
                 item.packaging_unit_cost = row['packaging']
                 item.save(update_fields=['preparation_snapshot', 'recipe_source', 'packaging_unit_cost'])
+        confirmation_changed = order.preparation_plan.get('needs_review') is True
+        order.fulfilment_snapshot = dict(order.fulfilment_snapshot, arrival_window_minutes=minutes)
         order.delivery_at=target
         order.preparation_at=plan['start'];order.preparation_end_at=plan['end'];order.preparation_plan=snapshot['plan']
-        order.save(update_fields=['delivery_at','preparation_at','preparation_end_at','preparation_plan','updated_at'])
+        if delivery_changed or confirmation_changed:
+            from ..services.reminders import queue_time_notice
+            queue_time_notice(order)
+        order.save(update_fields=['fulfilment_snapshot','delivery_at','preparation_at','preparation_end_at','preparation_plan','updated_at'])
         if delivery_changed:
             snapshot.update(kind='delivery_change', actor_role='owner')
         OrderAmendment.objects.create(order=order, actor=request.user, before=before,

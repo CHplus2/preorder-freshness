@@ -13,7 +13,7 @@ import {guideDateBounds,guideEmptyMessage} from '../utils/guidePresentation';
 export default function GuidedMenu(){
  const [form,setForm]=useState({date:'',portions:1,budget:'',category:''});
  const [data,setData]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[adding,setAdding]=useState(null),[expanded,setExpanded]=useState(false),[submitted,setSubmitted]=useState(null);
- const {addToCart,cartLoading,cartError,cartUpdating,cart,fulfilmentMethod}=useCart(),{categories}=useProduct(),{formatPrice}=useUI();
+ const {addToCart,cartLoading,cartError,cartUpdating,cart,fulfilmentMethod,chooseArrivalWindow}=useCart(),{categories}=useProduct(),{formatPrice}=useUI();
  const generation=useRef(0),request=useRef(null),pending=useRef(false),errorRef=useRef(null),helpId=useId();
  const bounds=guideDateBounds();
  useEffect(()=>()=>request.current?.abort(),[]);
@@ -34,7 +34,7 @@ export default function GuidedMenu(){
  const searchAll=()=>{const next={...form,category:''};setForm(next);void search(null,next);};
  const add=async(menu,slot)=>{
   if(pending.current)return;pending.current=true;setAdding(menu.id);
-  rememberSuggestion('preferredDelivery',slot.delivery_at);selectRecommendation(data.session,menu.id);
+  chooseArrivalWindow?.(0);rememberSuggestion('preferredDelivery',slot.delivery_at);selectRecommendation(data.session,menu.id);
   try{if(await addToCart(menu.id,menu.portions))void recommendationEvent(data.session,'added',menu.id);}
   finally{pending.current=false;setAdding(null);}
  };

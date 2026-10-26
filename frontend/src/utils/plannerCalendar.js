@@ -1,3 +1,4 @@
+import {orderWindow} from './arrivalWindow.js';
 import {scheduledDelivery} from './planner.js';
 
 const stamp=value=>new Date(value).toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
@@ -25,7 +26,8 @@ export function plannerCalendar(orders, now=new Date()) {
    }
   }
   const delivery=Date.parse(order.delivery_at);
-  add(`${order.id}-delivery`,delivery,delivery+30*60000,`${order.delivery_method==='pickup'?'Collection for':'Deliver'} order ${order.id}`);
+  const window=orderWindow(order);
+  add(`${order.id}-delivery`,window?Date.parse(window.start):delivery,window?Date.parse(window.end):delivery+30*60000,`${order.delivery_method==='pickup'?'Collection for':'Deliver'} order ${order.id}`);
  }
  lines.push('END:VCALENDAR');
  return {content:lines.join('\r\n')+'\r\n',events,invalidTasks};

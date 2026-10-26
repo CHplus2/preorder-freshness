@@ -15,12 +15,14 @@ from ..services.commitments import scheduled_item
 from ..services.scheduling import schedule_order, plan_snapshot
 from ..services.initial_delivery import initial_delivery_plan
 from ..services.fulfilment import order_store
+from ..services.arrival_windows import duration, window
 
 SALT = 'order-delivery-change-v1'
 CUTOFF_HOURS = 24
 
 
 class ChangeInput(serializers.Serializer):
+    arrival_window_minutes = serializers.ChoiceField(choices=[0,30,60], required=False)
     delivery_at = serializers.DateTimeField()
     reason = serializers.CharField(max_length=300, trim_whitespace=True)
 
@@ -91,7 +93,8 @@ def reschedule_order(request, pk):
             'cutoff_hours': CUTOFF_HOURS,
             'history': [{'id': a.pk, 'at': a.created_at, 'by': a.after['actor_role'],
                 'previous_delivery': a.before['delivery_at'], 'delivery_at': a.after['delivery_at'],
-                'reason': a.after['reason']} for a in changes[:20]]})
+                'reason': a.after['reason'], 'arrival_window': a.after.get('arrival_window'),
+                'previous_window': a.before.get('arrival_window')} for a in changes[:20]]})
 
     token = request.data.get('confirm')
     previous = None
@@ -111,12 +114,16 @@ def reschedule_order(request, pk):
     incoming = ChangeInput(data=previous if previous else request.data)
     incoming.is_valid(raise_exception=True)
     target = incoming.validated_data['delivery_at']
+    minutes = incoming.validated_data.get('arrival_window_minutes', duration(order))
+    if order.delivery_method == 'pickup' and minutes:
+        raise serializers.ValidationError('Self-collection uses one agreed time.')
+    store.arrival_window_minutes = minutes
     from ..services.escrow import locked_delivery, EscrowError
     try:
-        locked_delivery(order,target)
+        locked_delivery(order,target, minutes)
     except EscrowError as error:
         raise serializers.ValidationError(error.message)
-    if target == order.delivery_at:
+    if target == order.delivery_at and minutes == duration(order):
         raise serializers.ValidationError('Choose a different delivery time.')
     if previous and previous['version'] != order.updated_at.isoformat():
         return Response({'detail': 'This order changed. Reload it and preview again.'}, status=409)
@@ -143,21 +150,27 @@ def reschedule_order(request, pk):
         'actor_role': 'owner' if request.user.is_staff else 'customer',
         'request_id': previous['request_id'] if previous else str(uuid.uuid4()),
         'version': order.updated_at.isoformat(), 'delivery_at': target.isoformat(),
+        'arrival_window_minutes': minutes, 'arrival_window': window(target, minutes),
         'reason': incoming.validated_data['reason'], 'preparation_at': plan['start'].isoformat() if plan['start'] else None,
         'preparation_end_at': plan['end'].isoformat() if plan['end'] else None, 'plan': plan_snapshot(plan)}
     if previous:
         if snapshot != previous:
             return Response({'detail': 'Kitchen availability changed. Preview the new time again.'}, status=409)
-        before = {'delivery_at': order.delivery_at.isoformat() if order.delivery_at else None,
+        before = {'arrival_window': window(order.delivery_at, duration(order)),
+            'delivery_at': order.delivery_at.isoformat() if order.delivery_at else None,
             'preparation_at': order.preparation_at.isoformat() if order.preparation_at else None, 'plan': order.preparation_plan}
+        order.fulfilment_snapshot = dict(order.fulfilment_snapshot, arrival_window_minutes=minutes)
         order.delivery_at = target
         order.preparation_at = plan['start']
         order.preparation_end_at = plan['end']
         order.preparation_plan = snapshot['plan']
-        order.save(update_fields=['delivery_at', 'preparation_at', 'preparation_end_at', 'preparation_plan', 'updated_at'])
+        from ..services.reminders import queue_time_notice
+        queue_time_notice(order)
+        order.save(update_fields=['fulfilment_snapshot', 'delivery_at', 'preparation_at', 'preparation_end_at', 'preparation_plan', 'updated_at'])
         OrderAmendment.objects.create(order=order, actor=request.user, before=before, after=snapshot)
         return Response({'order': OrderSerializer(order).data, 'already_applied': False})
     return Response({'preview': {'previous_delivery': order.delivery_at, 'delivery_at': target,
+        'previous_window': window(order.delivery_at, duration(order)), 'arrival_window': window(target, minutes),
         'reason': snapshot['reason'], 'change_closes_at': None if plan.get('needs_review') and editing_request else change_anchor-timedelta(hours=CUTOFF_HOURS),
         'unconfirmed_request': editing_request, 'needs_review': plan.get('needs_review',False)},
         'confirm': signing.dumps(snapshot, salt=SALT, compress=True)})

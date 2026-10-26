@@ -809,8 +809,8 @@ are unchanged. No migration is required.
   dated-recipient receipts avoid routine repeats across overlapping workers.
 
 See [Customer delivery batches](customer-delivery-batches.md) for scheduler setup,
-retry limits and planned handover/arrival-window/provider work. Those later batch
-features are proposals, not currently available endpoints.
+retry limits, implemented handover/arrival-window contracts and remaining provider
+work. The sections below distinguish implemented endpoints from future setup.
 
 
 ## Handover and dispatch integration (2026-10-26, Batch 2)
@@ -837,4 +837,52 @@ features are proposals, not currently available endpoints.
   repository secret and explicit enablement; see the batch guide.
 
 No migrations or model/forecast changes are required. Email-first registration,
-Google/phone sign-in, arrival windows and provider messaging remain later work.
+Google/phone sign-in and provider messaging remain later work. Arrival windows are implemented below.
+
+
+## Accepted arrival windows and owner driving blocks (2026-10-26, Batch 3)
+
+No database migration and no forecast/model/training changes. Kitchen demand and
+expiry projections retain the accepted delivery calendar date.
+
+- Quote, place and basket-slot inputs accept `arrival_window_minutes`: integer
+  `0`, `30` or `60`, default `0` for backward compatibility. Pickup requires `0`.
+  `delivery_at` is the latest-arrival deadline. Nonzero windows must start in the
+  future and fit wholly within delivery hours on the same Malaysia calendar date.
+  Scheduling still targets the deadline minus the accepted delivery buffer.
+- Quote responses and slot entries expose `arrival_window` as `{start,end,minutes}`
+  or `null` for a point time. Slot responses echo `arrival_window_minutes` even
+  when empty. `start`/`end` are ISO datetimes; `end` equals `delivery_at`.
+- Order serialization adds that same `arrival_window`, plus `dispatch_by` (ISO or
+  null). Dispatch requires confirmed preparation and a recorded nonnegative
+  buffer. Accepted JSON stores `arrival_window_minutes`; old missing values mean
+  zero and never convert historical bookings. No arrival/traffic guarantee is
+  implied by the range or dispatch target.
+- Customer reschedule and staff preparation-plan previews accept the optional
+  duration, preserving accepted terms when omitted. Signed confirmations include
+  the duration/range and recompute availability. A same-deadline duration change
+  is a real change requiring a reason/customer agreement; history includes
+  `previous_window` and `arrival_window`. Price, address and stock remain unchanged.
+  Existing escrow invoices prohibit changing either deadline or duration.
+- Checkout `email_time_updates` requires `email_reminder`. The own-order reminder
+  endpoint accepts `time_updates`; default false. Preferences are tied to the
+  current account email. Confirmation of a previously unconfirmed request or an
+  accepted time/window change queues a private `time_notice` in existing JSON.
+  Nonstaff order responses remove this worker metadata. The worker rechecks
+  recipient/consent/active confirmed order, expires queued notices after 24 hours
+  and records successful receipts. Staff reminder status adds
+  `customer_time_updates_due`. Existing SMTP budget/retry/locking rules apply.
+- Advance customer reminders are eligible within two hours **before window
+  start**; old point-time receipt keys remain unchanged. New window keys include
+  duration, so changing accepted ranges is not confused with an old send.
+- Owner driving UI posts entered start plus calculated end to the existing staff
+  kitchen-block endpoint. Duration is 1–720 whole minutes, including return.
+  These independent blocks reserve all work/equipment and use existing conflict
+  checks. They are not courier bookings or automatic order-linked reservations;
+  changing an order does not automatically delete or move a driving block.
+- The handover board groups by range start; overdue uses range end. Calendar
+  events span ranges. Self-collection remains a point time and has no driving UI.
+
+See `docs/customer-delivery-batches.md` for deferred live setup and remaining
+account/provider batches. Tests use isolated databases and mock SMTP; they do
+not establish live scheduler operation or courier arrival accuracy.

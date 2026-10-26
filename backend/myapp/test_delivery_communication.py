@@ -129,7 +129,7 @@ class DeliveryCommunicationTests(TestCase):
         product=Product.objects.create(name='Fixture meal',price=12)
         CartItem.objects.create(user=self.buyer,product=product,quantity=1)
         address=Address.objects.create(user=self.buyer,line1='Fixture',city='KL',state='KL',postal_code='50000',phone='0123456789')
-        result=self.client.post('/api/orders/place/',{'address_id':address.pk,'payment':'cod','delivery_at':(timezone.now()+timedelta(days=4)).isoformat(),
+        result=self.client.post('/api/orders/place/',{'address_id':address.pk,'payment':'cod','delivery_at':(timezone.localtime()+timedelta(days=4)).replace(hour=15,minute=0,second=0,microsecond=0).isoformat(),
             'email_reminder':True,'email_dispatch_updates':True,'handover':{'contact_phone':'+60123456789','contact_method':'whatsapp','notes':'Call on arrival'}},format='json')
         self.assertEqual(result.status_code,201,result.data)
         saved=Order.objects.get(pk=result.data['order_id'])
