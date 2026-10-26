@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {createElement as h} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {MemoryRouter} from 'react-router-dom';
+import {createServer} from 'vite';
+import {orderEmailContact,orderEmailPreference} from '../utils/orderEmail.js';
+for(const bad of [null,{},[],{email:'ok@example.test',available:'true'},{email:4,available:true}])assert.throws(()=>orderEmailContact(bad));
+for(const bad of [null,{},[],{email:'',enabled:true},{email:'ok@example.test',enabled:'true'}])assert.throws(()=>orderEmailPreference(bad));
+assert.deepEqual(orderEmailContact({email:'',available:false}),{email:'',available:false});
+assert.deepEqual(orderEmailPreference({email:'',enabled:false}),{email:'',enabled:false});
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+try{
+ const {default:Choice}=await server.ssrLoadModule('/src/components/DeliveryEmailChoice.jsx');
+ const {default:Reminder}=await server.ssrLoadModule('/src/components/OrderEmailReminder.jsx');
+ const render=(Component,props)=>renderToStaticMarkup(h(MemoryRouter,null,h(Component,props)));
+ assert.equal(render(Choice,{contact:null}),'');
+ assert.equal(render(Choice,{contact:{email:'buyer@example.test',available:false}}),'');
+ const missing=render(Choice,{contact:{email:'',available:true}});
+ assert.match(missing,/\/account#delivery-email/);assert.doesNotMatch(missing,/type="checkbox"/);
+ const choice=render(Choice,{contact:{email:'buyer@example.test',available:true},checked:false});
+ assert.match(choice,/type="checkbox"/);assert.doesNotMatch(choice,/checked=""/);
+ assert.match(choice,/not live arrival tracking/);assert.match(choice,/within two hours/);
+ const order={id:1,status:'pending',delivery_at:'2099-01-01T12:00:00+08:00',preparation_plan:{needs_review:true},fulfilment_snapshot:{customer_reminder:{enabled:true,email:'buyer@example.test'}}};
+ const contact={email:'buyer@example.test',available:true};
+ const pending=render(Reminder,{order,contact});assert.match(pending,/checked=""/);assert.match(pending,/waits for kitchen confirmation/);
+ assert.doesNotMatch(render(Reminder,{order,contact:{...contact,email:'new@example.test'}}),/checked=""/);
+ for(const status of ['delivered','cancelled'])assert.equal(render(Reminder,{order:{...order,status},contact}),'');
+ assert.equal(render(Reminder,{order:{...order,delivery_at:'2000-01-01T00:00:00Z'},contact}),'');
+ console.log('Delivery email: optional availability, account contact, explicit consent, confirmation and closed-order boundaries passed.');
+}finally{await server.close();}

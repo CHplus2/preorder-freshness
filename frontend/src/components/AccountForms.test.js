@@ -13,7 +13,7 @@ try{
  const login=auth();
  assert.match(login,/aria-label="Sign in"/);assert.match(login,/autoComplete="current-password"/);assert.match(login,/Show password/);
  assert.match(login,/maxLength="150"/);assert.doesNotMatch(login,/minLength="8"/);
- const signup=auth(true);assert.match(signup,/Recovery email \(optional\)/);assert.match(signup,/minLength="8"/);assert.match(signup,/Show confirm password/);assert.match(signup,/password-hint/);
+ const signup=auth(true);assert.match(signup,/Email \(optional\)/);assert.match(signup,/minLength="8"/);assert.match(signup,/Show confirm password/);assert.match(signup,/password-hint/);
  const error=auth(false,{authError:'Invalid credentials'});assert.equal((error.match(/role="alert"/g)||[]).length,1);assert.match(error,/tabindex="-1"/);
  const pending=auth(true,{authPending:true});assert.match(pending,/<fieldset disabled/);assert.match(pending,/Creating account…/);
  for(const type of ['success','error']){

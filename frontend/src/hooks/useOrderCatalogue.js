@@ -3,16 +3,17 @@ import axios from 'axios';
 import {costCatalogue} from '../utils/costResponse';
 import {readApiError} from '../utils/apiError';
 
-// Unknown catalogue status must never silently hide an order.
+// Unknown catalogue status must never silently hide an order. Scope responses
+// to the refresh that requested them, without cascading effect-time resets.
 export default function useOrderCatalogue(refreshKey=0) {
- const [catalogue,setCatalogue]=useState(null),[error,setError]=useState(''),[attempt,setAttempt]=useState(0);
+ const [snapshot,setSnapshot]=useState(null),[attempt,setAttempt]=useState(0);
  useEffect(()=>{
   const controller=new AbortController();
-  setCatalogue(null);setError('');
   axios.get('/api/products/',{signal:controller.signal,timeout:30000})
-   .then(({data})=>{if(!controller.signal.aborted)setCatalogue(costCatalogue(data));})
-   .catch(e=>{if(!axios.isCancel(e))setError(readApiError(e));});
+   .then(({data})=>{if(!controller.signal.aborted)setSnapshot({refreshKey,attempt,catalogue:costCatalogue(data),error:''});})
+   .catch(e=>{if(!controller.signal.aborted)setSnapshot({refreshKey,attempt,catalogue:null,error:readApiError(e)});});
   return()=>controller.abort();
  },[refreshKey,attempt]);
- return {catalogue,error,retry:()=>setAttempt(value=>value+1)};
+ const current=snapshot?.refreshKey===refreshKey && snapshot.attempt===attempt?snapshot:null;
+ return {catalogue:current?.catalogue ?? null,error:current?.error || '',retry:()=>setAttempt(value=>value+1)};
 }

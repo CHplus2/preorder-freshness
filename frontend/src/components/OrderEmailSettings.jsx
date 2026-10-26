@@ -1,0 +1,16 @@
+import {useEffect,useState} from 'react';
+import axios from 'axios';
+import {apiError} from '../utils/apiError';
+import {getCookie} from '../utils/cookieUtils';
+import {orderEmailContact} from '../utils/orderEmail';
+import PasswordField from './PasswordField';
+
+export default function OrderEmailSettings(){
+ const [value,setValue]=useState(null),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState(''),[attempt,setAttempt]=useState(0);
+ useEffect(()=>{const controller=new AbortController();axios.get('/api/account/order-email/',{signal:controller.signal,timeout:15000}).then(({data})=>{setValue(orderEmailContact(data));}).catch(e=>{if(!axios.isCancel(e))setError('Email settings could not be loaded. Please try again.');});return()=>controller.abort();},[attempt]);
+ const save=async event=>{
+  event.preventDefault();if(busy)return;setBusy(true);setError('');setMessage('');
+  try{const {data}=await axios.patch('/api/account/order-email/',{email:value.email,current_password:password},{timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});setValue(orderEmailContact(data));setPassword('');setMessage('Email saved. Choose reminders at checkout or in My orders. After changing your email, enable reminders again on existing orders.');}catch(e){setError(!e.response || e.response.status>=500 || e.code==='INVALID_RESPONSE'?'We could not confirm the email change. Your entries are still here. Reload this page to check the saved address.':apiError(e));}finally{setBusy(false);}
+ };
+ return <section className="checkout-section" id="delivery-email" aria-labelledby="order-email-heading"><h2 id="order-email-heading">Account email & delivery reminders</h2><p>Use this email for password recovery and optional order reminders. Reminders are selected per order; adding an email does not subscribe old orders.</p>{error && <p role="alert" className="customer-notice">{error}</p>}{value?<form onSubmit={save}><fieldset disabled={busy} className="account-fields"><label>Email address (optional)<input type="email" autoComplete="email" maxLength={254} value={value.email} onChange={e=>{setValue({...value,email:e.target.value});setMessage('');}}/></label><PasswordField label="Current password" name="current_password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></fieldset><div className="checkout-actions"><button className="checkout-submit" disabled={busy}>{busy?'Saving…':'Save email'}</button></div>{!value.available && <p>The kitchen’s email reminder service still needs setup. You can save your email now.</p>}<p role="status">{message}</p></form>:<>{!error && <p role="status">Loading email settings…</p>}{error && <button type="button" onClick={()=>{setError('');setAttempt(n=>n+1);}}>Try loading again</button>}</>}</section>;
+}

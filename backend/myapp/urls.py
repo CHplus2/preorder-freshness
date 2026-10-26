@@ -7,7 +7,7 @@ from .views.paypal import paypal_config, paypal_payment, paypal_owner_check
 from .views.paypal_notifications import paypal_notification
 from .views.shopping_assistant import shop_suggestions, shop_cart
 from .views.help import KitchenHelp
-from .views.account import account_profile
+from .views.account import account_profile, order_email
 from .views.setup import setup_checklist
 from .views.pricing import pricing_preview
 from .views.rescheduling import reschedule_order
@@ -17,7 +17,7 @@ from .views.outcomes import contribution_report, contribution_export, batch_trac
 from .views.discovery import guided_menu, menu_suggestions, basket_slots, recommendation_event, recommendation_metrics
 from .views.auth import recovery_request, recovery_confirm
 from .views.costs import expenses, void_expense, record_waste, cost_report
-from .views.reminders import reminder_status, run_reminders
+from .views.reminders import reminder_status, run_reminders, customer_reminder
 from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_plan, accepted_recipe, manual_order_plan
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
@@ -40,6 +40,8 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path('account/order-email/', order_email),
+    path('orders/<int:pk>/reminder/', customer_reminder),
     path('admin/shared-cooking/', shared_batches),
     path('admin/menu-photos/', upload_menu_photo),
     path('products/<int:pk>/variants/', product_variants),

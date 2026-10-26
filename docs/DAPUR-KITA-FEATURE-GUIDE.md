@@ -304,6 +304,21 @@ each run attempts at most three messages. Keep frequent checks for timely remind
 reduce message volume by redesigning notifications as a digest if desired. A daily
 digest is not currently implemented.
 
+### Customer reminders
+
+Customers may choose an email reminder per order at checkout or in My orders.
+The address comes from Account settings; old orders are not subscribed by default.
+Changing an account email requires the current password and customers must enable
+existing order reminders again. Only confirmed future times with reserved
+preparation are eligible within two hours. Review requests are excluded.
+
+The same worker shares its three-attempt budget across owner and customer mail.
+Customer receipts follow each delivery-time/recipient combination; rescheduling
+can create a new customer reminder, while existing owner receipt rules remain
+unchanged. Settings shows the eligible customer queue and explicitly cannot verify
+scheduler activity. For setup, throughput limits and subsequent workflow batches,
+see [Customer delivery communication](customer-delivery-batches.md).
+
 ### Private deployment setup (maintainer reference)
 
 Keep SMTP host/port/TLS, login/app password, DEFAULT_FROM_EMAIL,

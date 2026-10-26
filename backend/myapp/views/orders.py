@@ -112,8 +112,7 @@ def deduct_inventory(item, user, order, by_material=None):
 @transaction.atomic
 def place_order(request):
     from django.contrib.auth.models import User
-    User.objects.select_for_update().get(pk=request.user.pk)
-    user = request.user
+    user = User.objects.select_for_update().get(pk=request.user.pk)
     request_id = serializers.UUIDField(required=False).run_validation(request.data['request_id']) if 'request_id' in request.data else None
     if request_id:
         previous = Order.objects.filter(checkout_request_id=request_id).first()
@@ -177,6 +176,14 @@ def place_order(request):
         is_paid = 'paid'
     # PayPal must be verified server-side before an owner marks it paid.
 
+    from ..services.reminders import reminder_preference
+    from django.core.exceptions import ValidationError as EmailValidationError
+    email_reminder = serializers.BooleanField().run_validation(request.data.get('email_reminder', False))
+    try:
+        preference = reminder_preference(user, email_reminder)
+    except EmailValidationError:
+        raise ValidationError('Add a valid email in Account settings before enabling reminders.')
+
     # --- Create order ---
     order = Order.objects.create(
         checkout_request_id=request_id,
@@ -186,7 +193,7 @@ def place_order(request):
         preparation_end_at=plan['end'],
         preparation_plan=plan_snapshot(plan),
         delivery_method=method,
-        fulfilment_snapshot=snapshot(store, method, area),
+        fulfilment_snapshot=dict(snapshot(store, method, area), customer_reminder=preference),
         address=address,
         delivery_address=dict(AddressSerializer(address).data) if address else {},
         total_amount=0,

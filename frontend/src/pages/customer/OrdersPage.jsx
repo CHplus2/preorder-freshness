@@ -1,3 +1,5 @@
+import useOrderEmail from '../../hooks/useOrderEmail';
+import OrderEmailReminder from '../../components/OrderEmailReminder';
 import SellingDetails from '../../components/SellingDetails';
 import {quantityLabel} from '../../utils/sellingDetails';
 import OrderFulfilment from '../../components/OrderFulfilment';
@@ -18,6 +20,7 @@ import "./CustomerExperience.css";
 
 export default function OrdersPage() {
   const location = useLocation();
+  const orderEmail=useOrderEmail();
   const { formatOrderNumber, setAlert } = useUI();
   const { orders, fetchOrders, ordersLoading, ordersError } = useOrder();
 
@@ -86,6 +89,7 @@ export default function OrdersPage() {
             </div>
             {order.payment_method==='escrow' && <section className="paypal-order-note" aria-label="Escrow payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>Escrow payment</strong><span>Sepolia</span></div><p>{order.payment_status==='paid'?'Verified funding recorded. Funds are held or credited under the escrow rules; withdrawal is separate.':order.payment_status==='refunded'?'Buyer refund credit verified. Withdraw funds through the escrow payment page.':'Funding has not been verified yet. Open this saved payment to fund or check it.'}</p><Link to={'/payment/escrow?order='+order.id}>View escrow payment<ChevronRight size={16} aria-hidden="true"/></Link></section>}
             {order.payment_method==='paypal' && <section className="paypal-order-note" aria-label="PayPal payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>PayPal</strong><span>Sandbox</span></div><p>{order.payment_status==='paid'?'Payment recorded. No real money was transferred.':order.payment_status==='refunded'?'Refund recorded. This was a Sandbox test payment.':'Test payment — no real money is transferred. Review this saved payment before trying again.'}</p><Link to={'/payment/paypal?order='+order.id}>{order.payment_status==='paid' || order.payment_status==='refunded'?'View payment details':'Continue to payment'}<ChevronRight size={16} aria-hidden="true"/></Link></section>}
+            <OrderEmailReminder order={order} contact={orderEmail} onSaved={fetchOrders}/>
             <RescheduleOrder order={order} onSaved={fetchOrders}/>
             <Link className="customer-order-help" to={`/contact?order=${order.id}`}>Ask the kitchen about this order<ChevronRight size={16} aria-hidden="true"/></Link>
 

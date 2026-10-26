@@ -783,3 +783,31 @@ Concurrent menu/cart updates return HTTP 409 `menu_busy` instead of waiting in
 the inverse basket/menu lock order. Rejections roll back without partial removal.
 No migration, forecast method or payment endpoint changes. See
 [menu-management behavior and verification](MENU-MANAGEMENT-FEEDBACK.md).
+
+
+## Customer reminder integration (2026-10-26)
+
+Implemented outside predictive forecasting; forecast models and stock allocation
+are unchanged. No migration is required.
+
+- `GET /api/account/order-email/` (signed-in user): own `email` and SMTP/origin
+  configuration `available` flag. Availability does not prove a running cron.
+- `PATCH /api/account/order-email/`: `email` (valid or blank) and `current_password`;
+  updates only the current account, with password verification and rate limiting.
+- `POST /api/orders/{id}/reminder/`: own future open order, Boolean `enabled`.
+  Recipient is always the account email; client-supplied recipients are ignored.
+  Stores consent only; it does not confirm a requested time or reserve tasks.
+- Checkout accepts optional Boolean `email_reminder` (default false), snapshotted
+  with the account email in `fulfilment_snapshot.customer_reminder`.
+- Staff `GET /api/admin/reminder-status/` additionally returns
+  `customer_email_configured`, `customer_reminders_due` and
+  `scheduler_activity_verified: false`. Existing owner configuration fields stay.
+- Existing bearer-authenticated `GET /api/reminders/run/` handles both queues,
+  returning shared `sent`/`failed` counts with at most three attempts/run. Customer
+  sends require consent, a matching current account email, active account,
+  reserved preparation and a confirmed future time within two hours. Successful
+  dated-recipient receipts avoid routine repeats across overlapping workers.
+
+See [Customer delivery batches](customer-delivery-batches.md) for scheduler setup,
+retry limits and planned handover/arrival-window/provider work. Those later batch
+features are proposals, not currently available endpoints.
