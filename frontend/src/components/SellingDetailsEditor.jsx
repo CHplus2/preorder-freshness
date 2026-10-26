@@ -12,6 +12,7 @@ export default function SellingDetailsEditor({value,onChange}){
    <label>Estimated maximum servings<input type="number" min="1" max="1000" value={details.serves_max ?? ''} onChange={e=>update('serves_max',e.target.value===''?null:Number(e.target.value))}/></label>
   </div>
   <p>Servings are optional estimates per {unitLabel(details)}, not the order quantity.</p>
+  <label>Size group (optional)<input maxLength={80} placeholder="For example: Kacangma" value={details.variant_group} onChange={e=>update('variant_group',e.target.value)}/></label><p>Give size-specific menus the same group name to let customers switch sizes. Each size keeps its own price, recipe and availability.</p>
   <label>What is in one {unitLabel(details)}? (optional)<textarea maxLength={500} placeholder="For example: 3 original, 2 salted egg, 2 dark chocolate and 2 matcha pieces." value={details.contents} onChange={e=>update('contents',e.target.value)}/></label>
   <label className="selling-fixed-choice"><input type="checkbox" checked={details.no_substitutions} onChange={e=>update('no_substitutions',e.target.checked)}/>Fixed contents; substitutions are unavailable</label>
   <label>How customers order<select value={details.ordering_mode} onChange={e=>update('ordering_mode',e.target.value)}><option value="local_preorder">Preorder for collection or local delivery</option><option value="shipping_enquiry">Shipping enquiry — agree arrangements first</option></select></label>

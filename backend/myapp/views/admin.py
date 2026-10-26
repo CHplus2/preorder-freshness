@@ -14,7 +14,7 @@ from ..serializers import OrderSerializer, UserSerializer
 @permission_classes([IsAdminUser])
 def admin_order_list(request):
     orders = Order.objects.select_related("user", "address").prefetch_related("items").order_by("-created_at")
-    serializer = OrderSerializer(orders, many=True)
+    serializer = OrderSerializer(orders, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(["PATCH"])
@@ -56,7 +56,7 @@ def admin_order_detail(request, pk):
         raise ValidationError('Record a verified payment or refund in Payment records; status cannot be changed directly.')
     order.save()
 
-    return Response({"detail": "Order updated", "order": OrderSerializer(order).data}, status=status.HTTP_200_OK)
+    return Response({"detail": "Order updated", "order": OrderSerializer(order, context={'request': request}).data}, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])

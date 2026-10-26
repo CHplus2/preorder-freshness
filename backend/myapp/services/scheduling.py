@@ -103,7 +103,13 @@ def order_interval(order, store):
 
 def booked_tasks(orders, store):
     result = []
+    shared_seen = set()
     for order in orders:
+        shared = order.preparation_plan.get('shared_batch', {}).get('id')
+        if shared and shared in shared_seen:
+            continue
+        if shared:
+            shared_seen.add(shared)
         steps = order.preparation_plan.get('tasks', [])
         if steps:
             for step in steps:

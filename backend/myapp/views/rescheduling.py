@@ -33,6 +33,8 @@ def unconfirmed_request(order):
 
 
 def eligibility(order, now, allow_initial=False):
+    if order.preparation_plan.get('shared_batch'):
+        return None, 'This order is in a shared cooking batch. Contact the kitchen to separate its preparation reservation before changing the delivery time.'
     anchor = order.delivery_at if order.preparation_plan.get('needs_review') else order.preparation_at
     cutoff = anchor - timedelta(hours=CUTOFF_HOURS) if anchor else None
     if order.status != 'pending' or order.inventory_deducted:

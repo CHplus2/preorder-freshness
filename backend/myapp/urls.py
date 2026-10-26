@@ -1,4 +1,8 @@
 from .views.escrow import escrow_config, escrow_payment
+from .views.menu_photos import upload_menu_photo, menu_photo
+from .views.products import product_variants
+from .views.courier import courier_tracking
+from .views.shared_batches import shared_batches
 from .views.paypal import paypal_config, paypal_payment, paypal_owner_check
 from .views.paypal_notifications import paypal_notification
 from .views.shopping_assistant import shop_suggestions, shop_cart
@@ -36,6 +40,11 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path('admin/shared-cooking/', shared_batches),
+    path('admin/menu-photos/', upload_menu_photo),
+    path('products/<int:pk>/variants/', product_variants),
+    path('admin/orders/<int:pk>/tracking/', courier_tracking),
+    path('menu-photos/<str:digest>/', menu_photo),
     path('help/shop/', shop_suggestions),
     path('help/cart/', shop_cart),
     path('payments/paypal/config/', paypal_config),

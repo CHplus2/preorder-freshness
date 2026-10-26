@@ -6,6 +6,14 @@ test('fractional work minutes round without displaying 60 minutes',()=>{assert.e
 const date='2026-09-20';
 const task=(start,end,worker=true)=>({name:'Task',start:date+'T'+start+':00+08:00',end:date+'T'+end+':00+08:00',worker,resource:worker?'stove':'fridge'});
 const plan=tasks=>({availability:{open_hour:8,close_hour:16,blocks:[]},orders:[{id:1,status:'pending',items:[],preparation_plan:{tasks}}]});
+test('shared cooking reserves and exports preparation once while retaining both handovers',()=>{
+ const p=plan([task('09:00','10:00')]);
+ p.orders[0].delivery_at=date+'T12:00:00+08:00';p.orders[0].preparation_plan.shared_batch={id:'fixture-shared',order_ids:[1,2]};
+ p.orders.push({...p.orders[0],id:2});
+ const day=dailyWork(p,date);assert.equal(day.tasks.length,1);assert.equal(day.handsMinutes,60);assert.equal(day.conflictingMinutes,0);assert.equal(day.deliveries.length,2);
+ const calendar=plannerCalendar(p.orders);assert.equal(calendar.events,3);assert.match(calendar.content,/Shared cooking orders 1\/2/);
+ p.orders[0].status='cooked';assert.equal(dailyWork(p,date).handsMinutes,60);
+});
 test('delivery requests remain visible separately from scheduled deliveries and calendar exports',()=>{
  const p=plan([task('09:00','10:00')]);p.orders[0].delivery_at=date+'T12:00:00+08:00';
  const request={id:147,status:'pending',items:[],delivery_at:date+'T16:00:00+08:00',preparation_plan:{needs_review:true,tasks:[]}};

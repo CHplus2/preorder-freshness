@@ -35,11 +35,14 @@ function unionMinutes(intervals){
 export function dailyWork(plan,date){
  const start=Date.parse(date+'T00:00:00+08:00'),end=start+86400000;
  const open=start+(plan?.availability?.open_hour ?? 8)*3600000,close=start+(plan?.availability?.close_hour ?? 20)*3600000;
- const orders=plan?.orders || [],tasks=[];
+ const orders=plan?.orders || [],tasks=[],seenShared=new Set();
  for(const order of orders.filter(o=>['pending','processing'].includes(o.status))){
+  const shared=order.preparation_plan?.shared_batch;
+  if(shared && seenShared.has(shared.id))continue;
+  if(shared)seenShared.add(shared.id);
   const saved=order.preparation_plan?.tasks || [];
   const rows=saved.length?saved:order.preparation_at && order.preparation_end_at?[{name:'Preparation window needs review',menu:order.items.map(i=>i.product_name).join(', '),start:order.preparation_at,end:order.preparation_end_at,worker:true,resource:'all',legacy:true}]:[];
-  rows.forEach((task,index)=>{const a=Date.parse(task.start),b=Date.parse(task.end);if(overlap(a,b,start,end)>0)tasks.push({...task,orderId:order.id,key:`${order.id}-${index}`,conflicts:[],dayMinutes:overlap(a,b,start,end)/60000});});
+  rows.forEach((task,index)=>{const a=Date.parse(task.start),b=Date.parse(task.end);if(overlap(a,b,start,end)>0)tasks.push({...task,orderId:order.id,orderIds:shared?.order_ids,key:`${shared?.id || order.id}-${index}`,conflicts:[],dayMinutes:overlap(a,b,start,end)/60000});});
  }
  tasks.sort((a,b)=>Date.parse(a.start)-Date.parse(b.start));
  const equipmentConflicts=[],closureConflicts=[];

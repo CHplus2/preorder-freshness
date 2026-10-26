@@ -25,6 +25,7 @@ export default function AdminProductsPage() {
   const [newProduct, setNewProduct] = useState(false);
   const [updatedProduct, setUpdatedProduct] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [photoBusy,setPhotoBusy]=useState(false);
   const editingProductId=updatedProduct?.id;
   useEffect(()=>{
     if(!editingProductId || !['recipes','preparation','costs'].includes(review))return;
@@ -236,10 +237,10 @@ export default function AdminProductsPage() {
             ))}
           </select>
 
-          <MenuPhotoField value={updatedProduct.image_url || ""} onChange={url => setUpdatedProduct({ ...updatedProduct, image_url: url })} />
+          <MenuPhotoField value={updatedProduct.image_url || ""} onBusy={setPhotoBusy} onChange={url => setUpdatedProduct(previous=>previous?{ ...previous, image_url: url }:previous)} />
 
           <div className="modal-actions">  
-            <button onClick={handleUpdateProduct} disabled={loading}>
+            <button onClick={handleUpdateProduct} disabled={loading || photoBusy}>
               {loading ? "Saving..." : "Save"}
             </button>
             <button onClick={() => setUpdatedProduct(null)}>Cancel</button>
@@ -301,10 +302,10 @@ export default function AdminProductsPage() {
             ))}
           </select>
 
-          <MenuPhotoField value={newProduct.image_url || ""} onChange={url => setNewProduct({ ...newProduct, image_url: url })} />
+          <MenuPhotoField value={newProduct.image_url || ""} onBusy={setPhotoBusy} onChange={url => setNewProduct(previous=>previous?{ ...previous, image_url: url }:previous)} />
 
           <div className="modal-actions">
-            <button onClick={handleAddProduct} disabled={loading}>
+            <button onClick={handleAddProduct} disabled={loading || photoBusy}>
               {loading ? "Adding..." : "Add"}
             </button>
             <button onClick={() => setNewProduct(null)}>Cancel</button>

@@ -1,0 +1,11 @@
+.shared-cooking { line-height: 1.65; }
+.shared-cooking h2 { margin: 18px 0 8px; }
+.shared-cooking h3 { margin: 24px 0 12px; }
+.shared-cooking-choice, .shared-cooking-preview { padding: 20px; margin: 16px 0; background: #fff; border: 1px solid #d5dfd7; border-radius: 12px; }
+.shared-cooking-choice h4, .shared-cooking-preview h3 { margin: 0 0 10px; }
+.shared-cooking-preview { border-color: #9fbaa9; background: #f3f7f1; }
+.shared-cooking-preview ol { max-height: 360px; overflow-y: auto; padding-left: 24px; }
+.shared-cooking-preview li { margin: 10px 0; overflow-wrap: anywhere; }
+.shared-cooking-preview summary { padding: 12px 0; cursor: pointer; font-weight: 600; }
+.shared-cooking-preview button { margin: 8px 8px 0 0; min-height: 44px; }
+@media(max-width: 600px) { .shared-cooking-choice, .shared-cooking-preview { padding: 16px; } .shared-cooking-preview > button { width: 100%; margin-right: 0; } }

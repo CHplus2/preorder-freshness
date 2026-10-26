@@ -727,3 +727,47 @@ or invalid/stale plans with an explicit review count. Owner financial queues
 (`queue=unpaid`, `queue=cancelled`) are client-side views of the staff order list;
 they add no public endpoint or access privilege and never change financial state.
 See [batch 4 setup and limitations](HOME-FOOD-DAILY-OPERATIONS.md).
+
+### Photo, size, tracking and shared-reservation extension
+
+`POST /api/admin/menu-photos/` accepts a staff/session/CSRF-protected multipart
+`image`. It validates/decodes still JPEG/PNG/WebP (4 MiB, at most 20 megapixels),
+re-encodes metadata-free bounded WebP and persists it in `MenuPhoto` (migration
+0022). Response 201 contains a portable `/api/menu-photos/<sha256>/` `image_url`,
+width and height. Public GET serves WebP with ETag/conditional GET. Existing
+external image URLs remain accepted; ProductSerializer also validates managed
+relative paths against stored photo identities. No image byte/base64 is returned
+in product JSON. Database backups include the image table.
+
+Optional `selling_details.variant_group` is at most 80 characters. Products with
+the same exact group and separate `size_label` values remain separate priced,
+scheduled and forecast identities. Public `GET /api/products/<id>/variants/`
+returns `group` and up to 20 active `results` with ordinary menu-card metadata.
+No variant choice silently mutates an existing cart line.
+
+Staff `POST /api/admin/orders/<id>/tracking/` accepts `carrier` (80 chars),
+`reference` (100), optional public HTTPS `url` (500) and the order `version`
+timestamp. Stale records return 409; pickup/cancelled orders reject tracking.
+It audits and updates `fulfilment_snapshot.courier`, including `updated_at`.
+Customers read this through their existing private order list. No carrier API,
+booking, message, payment or progress update occurs.
+
+Staff `GET /api/admin/shared-cooking/?date=YYYY-MM-DD` discovers compatible groups
+among the first 100 pending orders on that delivery date. `POST` accepts distinct
+`order_ids` (2–10), `mode` (`combine` or `separate`) and optional signed `confirm`.
+A preview contains prior/proposed hands-on minutes, actual proposed tasks and
+per-order intervals, plus an actor/selection-bound ten-minute confirmation token.
+Confirmation recomputes under the kitchen/order/product locks, rejects changed
+plans with 409 and applies/audits once even for simultaneous repeats. Orders must
+be future, unstarted single-menu commitments with matching accepted recipes,
+settings, delivery and dispatch buffer. Accepted ingredient/payment/quantity and
+delivery records remain per order. Requests or mismatches cannot be merged.
+
+`preparation_plan.shared_batch` identifies the common reservation and its original
+order membership. Staff planning/order responses retain member IDs; customer
+responses expose only its opaque ID and member count. Scheduler reservations,
+agenda conflicts and calendar exports count the shared tasks once. Individual
+time edits reject until a reviewed separation fits all active members, so a
+member cannot silently free another order's reservation. See
+[setup, migration and limits](HOME-FOOD-EXTENSIONS.md). Forecast/model methods and
+the existing local planning API remain unchanged.

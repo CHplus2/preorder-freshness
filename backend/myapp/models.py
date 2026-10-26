@@ -5,6 +5,15 @@ from django.core.validators import MinValueValidator
 
 
 # ============ CATEGORY ============
+class MenuPhoto(models.Model):
+    """Small sanitized public photos, persisted with the application database."""
+    digest = models.CharField(max_length=64, primary_key=True)
+    content = models.BinaryField()
+    width = models.PositiveIntegerField()
+    height = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)

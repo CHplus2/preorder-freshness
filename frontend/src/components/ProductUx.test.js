@@ -10,6 +10,13 @@ try{
  assert.match(offer,/Per box/);assert.match(offer,/Serves 3–4/);assert.match(offer,/Fixed contents/);
  assert.doesNotMatch(offer,/<script>/);assert.match(offer,/&lt;script&gt;/);
  assert.equal(renderToStaticMarkup(createElement(SellingDetails,{details:{}})),'');
+ const {default:MenuPhotoField}=await server.ssrLoadModule('/src/components/MenuPhotoField.jsx');
+ const upload=renderToStaticMarkup(createElement(MenuPhotoField,{value:'',onChange:()=>{}}));
+ assert.match(upload,/type="file"/);assert.match(upload,/image\/jpeg,image\/png,image\/webp/);assert.match(upload,/Or paste an image URL/);
+ const {default:CourierTrackingEditor}=await server.ssrLoadModule('/src/components/CourierTrackingEditor.jsx');
+ const tracking=renderToStaticMarkup(createElement(CourierTrackingEditor,{order:{id:1,status:'pending',delivery_method:'standard'}}));
+ assert.match(tracking,/does not book a courier or mark the order dispatched/);assert.match(tracking,/Tracking reference/);
+ assert.equal(renderToStaticMarkup(createElement(CourierTrackingEditor,{order:{delivery_method:'pickup'}})),'');
  const {default:MenuKitchenHeader}=await server.ssrLoadModule('/src/components/MenuKitchenHeader.jsx');
  const kitchenHeader=store=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(MenuKitchenHeader,{store:{name:'Local home kitchen',...store}})));
  assert.match(kitchenHeader({}),/What sounds good/);assert.doesNotMatch(kitchenHeader({}),/% off|Free delivery|15.minutes/);

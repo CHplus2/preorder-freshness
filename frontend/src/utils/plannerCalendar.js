@@ -6,7 +6,7 @@ const stamp=value=>new Date(value).toISOString().replace(/[-:]/g,'').split('.')[
 // reminders for the rest of the kitchen from being downloaded.
 export function plannerCalendar(orders, now=new Date()) {
  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Dapur Kita//Planner//EN'];
- let events=0,invalidTasks=0;
+ let events=0,invalidTasks=0;const seenShared=new Set();
  const add=(uid,start,end,summary,alarm=false)=>{
   lines.push('BEGIN:VEVENT',`UID:${uid}@dapur-kita`,`DTSTAMP:${stamp(now)}`,
    `DTSTART:${stamp(start)}`,`DTEND:${stamp(end)}`,`SUMMARY:${summary}`);
@@ -15,11 +15,13 @@ export function plannerCalendar(orders, now=new Date()) {
  };
  for(const order of orders || []) {
   if(!scheduledDelivery(order))continue;
-  if(['pending','processing'].includes(order.status)) {
+  const shared=order.preparation_plan?.shared_batch;
+  if(['pending','processing'].includes(order.status) && !(shared && seenShared.has(shared.id))) {
+   if(shared)seenShared.add(shared.id);
    for(const [index,task] of (order.preparation_plan?.tasks || []).entries()) {
     const start=Date.parse(task.start || ''),end=Date.parse(task.end || '');
     if(!Number.isFinite(start) || !Number.isFinite(end) || end<=start){invalidTasks++;continue;}
-    add(`${order.id}-task-${index}`,start,end,`Prepare order ${order.id} step ${index+1}`,true);
+    add(`${shared?.id || order.id}-task-${index}`,start,end,shared?`Shared cooking orders ${shared.order_ids.join('/')} step ${index+1}`:`Prepare order ${order.id} step ${index+1}`,true);
    }
   }
   const delivery=Date.parse(order.delivery_at);

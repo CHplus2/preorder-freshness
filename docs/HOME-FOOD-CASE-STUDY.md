@@ -67,7 +67,8 @@ This batch does not train a model or establish forecast accuracy.
    location/area instructions and fees. See [batch 2](HOME-FOOD-FULFILMENT.md).
 3. **Units and offers:** selling units, sizes/servings and accepted fixed contents.
    Separate products support size-specific prices and recipes. A shared size
-   variant selector remains future work. See [batch 3](HOME-FOOD-SELLING-UNITS.md).
+   variant selector is now available through the Size group setting in
+   [the extensions release](HOME-FOOD-EXTENSIONS.md). See [batch 3](HOME-FOOD-SELLING-UNITS.md).
 4. **Daily operations and seasonal enquiries:** dated collection/delivery runs,
    packing and preparation review, payment/cancellation queues, clearer capacity
    versus ingredient messages, and explicit dispatch-window enquiries. Seasonal
@@ -76,9 +77,10 @@ This batch does not train a model or establish forecast accuracy.
 
 The system now supports common local home-kitchen workflows and the private
 shipping-enquiry pattern in these examples. It does not claim to fit every food
-business. Courier booking/tracking, shipping-rate calculation and an online
-parcel-order lifecycle remain separate extensions. Identical menus in separate
-orders are not automatically combined into one cooking batch. Follow up with
+business. Courier booking, live carrier events, shipping-rate calculation and an
+online parcel-order lifecycle remain separate extensions. Owner-entered courier
+tracking and reviewed shared cooking for compatible single-menu orders are now
+implemented in [the extensions release](HOME-FOOD-EXTENSIONS.md). Follow up with
 owner interviews and task-based usability tests; no measured conversion
 improvement is claimed.
 

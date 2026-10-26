@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from ..models import KitchenBlock, Storefront, Order
 from ..services.scheduling import booked_tasks
 from ..services.fulfilment import order_store
+from ..services.shared_batches import guard_shared
 
 class StepTimeInput(serializers.Serializer):
     index = serializers.IntegerField(min_value=0)
@@ -59,6 +60,7 @@ def manual_order_plan(request, pk):
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
     order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
+    guard_shared(order)
     store = order_store(store, order)
     token = request.data.get('confirm')
     previous = None
@@ -72,7 +74,7 @@ def manual_order_plan(request, pk):
         if previous['order'] != order.pk or previous['actor'] != request.user.pk:
             raise serializers.ValidationError('This preview belongs to another order or owner.')
         if order.amendments.filter(after__manual_request_id=previous['request_id']).exists():
-            return Response({'order': OrderSerializer(order).data, 'already_applied': True})
+            return Response({'order': OrderSerializer(order, context={'request': request}).data, 'already_applied': True})
     if order.status != 'pending' or order.inventory_deducted:
         raise serializers.ValidationError('Only orders awaiting preparation can have their plan edited.')
     if not order.delivery_at:
@@ -137,7 +139,7 @@ def manual_order_plan(request, pk):
         order.save(update_fields=['preparation_at','preparation_end_at','preparation_plan','updated_at'])
         OrderAmendment.objects.create(order=order, actor=request.user, before=before,
             after={'manual_request_id': snapshot['request_id'], 'plan': order.preparation_plan})
-        return Response({'order': OrderSerializer(order).data, 'already_applied': False})
+        return Response({'order': OrderSerializer(order, context={'request': request}).data, 'already_applied': False})
     return Response({'preview': dict(snapshot, task_times=tasks), 'confirm': signing.dumps(snapshot, salt='manual-kitchen-plan', compress=True)})
 
 class BlockSerializer(serializers.ModelSerializer):
@@ -193,6 +195,7 @@ def review_order_plan(request, pk):
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
     order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
+    guard_shared(order)
     store = order_store(store, order)
     previous = None
     if token is not None:
@@ -204,7 +207,7 @@ def review_order_plan(request, pk):
                 or previous.get('actor') != request.user.pk or not previous.get('request_id')):
             raise serializers.ValidationError('This preview belongs to another order or owner. Calculate a new plan.')
         if order.amendments.filter(after__automatic_request_id=previous['request_id']).exists():
-            return Response({'order': OrderSerializer(order).data, 'already_applied': True})
+            return Response({'order': OrderSerializer(order, context={'request': request}).data, 'already_applied': True})
         if 'delivery_at' not in previous:
             raise serializers.ValidationError('Calculate a fresh plan with the updated delivery controls.')
     if order.status != 'pending' or order.inventory_deducted:
@@ -296,7 +299,7 @@ def review_order_plan(request, pk):
             snapshot.update(kind='delivery_change', actor_role='owner')
         OrderAmendment.objects.create(order=order, actor=request.user, before=before,
             after=dict(snapshot, automatic_request_id=snapshot['request_id']))
-        return Response({'order':OrderSerializer(order).data, 'already_applied': False})
+        return Response({'order':OrderSerializer(order, context={'request': request}).data, 'already_applied': False})
     return Response({'preview':snapshot,'confirm':signing.dumps(snapshot,salt='kitchen-plan-review',compress=True), 'search': search})
 
 

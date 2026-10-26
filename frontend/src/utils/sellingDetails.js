@@ -1,6 +1,6 @@
 export const sellingUnits={item:['item','items'],portion:['portion','portions'],box:['box','boxes'],pack:['pack','packs'],set:['set','sets'],tray:['tray','trays'],jar:['jar','jars'],bottle:['bottle','bottles']};
 import {validDeliveryDate,deliveryDateText} from './preorderWindows.js';
-export const emptySellingDetails=()=>({unit:'item',size_label:'',serves_min:null,serves_max:null,contents:'',no_substitutions:false,ordering_mode:'local_preorder',dispatch_from:null,dispatch_through:null,shipping_note:''});
+export const emptySellingDetails=()=>({unit:'item',size_label:'',variant_group:'',serves_min:null,serves_max:null,contents:'',no_substitutions:false,ordering_mode:'local_preorder',dispatch_from:null,dispatch_through:null,shipping_note:''});
 export const shippingEnquiry=details=>details?.ordering_mode==='shipping_enquiry';
 export const shippingContact=id=>`/contact?topic=shipping${Number.isSafeInteger(Number(id))&&Number(id)>0?'&menu='+Number(id):''}`;
 export function dispatchWindow(details){
@@ -18,6 +18,7 @@ export function validSellingDetails(value){
  if(Object.keys(value).some(key=>!allowed.includes(key)))return false;
  const v={...emptySellingDetails(),...value};
  return Object.hasOwn(sellingUnits,v.unit) && typeof v.size_label==='string' && [...v.size_label].length<=60
+  && typeof v.variant_group==='string' && [...v.variant_group].length<=80
   && typeof v.contents==='string' && [...v.contents].length<=500 && typeof v.no_substitutions==='boolean'
   && (!v.no_substitutions || v.contents.trim().length>0)
   && ['local_preorder','shipping_enquiry'].includes(v.ordering_mode)

@@ -35,3 +35,11 @@
 @media(max-width:800px){.meal-detail-grid{gap:28px}.meal-order-facts>div{grid-template-columns:1fr;gap:4px}.meal-order-facts dd{padding-left:26px}}
 @media(max-width:700px){.meal-detail-page{padding:12px 16px 32px}.meal-back-link{margin-bottom:12px}.meal-detail-grid{grid-template-columns:1fr;gap:24px}.meal-detail-photo{position:static}.meal-detail-page .product-detail-image{aspect-ratio:1.3;border-radius:15px}.meal-photo-placeholder{aspect-ratio:1.3;border-radius:15px}.meal-description{font-size:14px}.product-order-panel{padding:18px;margin:18px 0}.meal-price-line strong{font-size:24px}.meal-purchase-dock{position:fixed;z-index:112;left:0;right:0;bottom:0;gap:12px;background:#fffef8;border-top:1px solid #dbe2d3;padding:12px 16px max(12px,env(safe-area-inset-bottom));box-shadow:0 -5px 25px #2940240c}.meal-detail-page .meal-add-button{font-size:13px}.meal-order-facts>div{grid-template-columns:145px minmax(0,1fr);gap:10px}.meal-order-facts dd{padding-left:0}.meal-detail-page .dk-reviews{margin-top:28px}}
 @media(max-width:360px){.meal-order-facts>div{grid-template-columns:1fr;gap:4px}.meal-order-facts dd{padding-left:26px}.meal-quantity button{width:44px;min-width:44px}.meal-quantity output{min-width:20px}.meal-purchase-dock{gap:8px}}
+
+.menu-variants { margin: 20px 0; }
+.menu-variants h2 { font-size: 18px; margin-bottom: 8px; }
+.menu-variants p { line-height: 1.6; color: #53645a; }
+.menu-variant-options { display: flex; flex-wrap: wrap; gap: 10px; }
+.menu-variant-options a { display: grid; gap: 6px; padding: 12px 16px; min-height: 48px; border: 1px solid #cad8ca; border-radius: 10px; text-decoration: none; color: #264f38; }
+.menu-variant-options a[aria-current=page] { border: 2px solid #285a40; background: #edf3e9; }
+.menu-variant-options span { font-size: 13px; }

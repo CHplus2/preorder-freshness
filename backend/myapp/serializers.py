@@ -20,6 +20,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class SellingDetailsSerializer(serializers.Serializer):
+    variant_group = serializers.CharField(max_length=80, allow_blank=True, required=False)
     ordering_mode = serializers.ChoiceField(choices=['local_preorder', 'shipping_enquiry'], required=False)
     dispatch_from = serializers.DateField(allow_null=True, required=False)
     dispatch_through = serializers.DateField(allow_null=True, required=False)
@@ -55,7 +56,20 @@ class SellingDetailsSerializer(serializers.Serializer):
         return attrs
 
 
+class MenuImageReference(serializers.CharField):
+    def to_internal_value(self, data):
+        import re
+        data = super().to_internal_value(data)
+        if re.fullmatch(r'/api/menu-photos/[0-9a-f]{64}/', data):
+            from .models import MenuPhoto
+            if not MenuPhoto.objects.filter(pk=data.split('/')[-2]).exists():
+                raise serializers.ValidationError('This uploaded photo is unavailable. Upload it again.')
+            return data
+        return serializers.URLField(max_length=200).run_validation(data)
+
+
 class ProductSerializer(serializers.ModelSerializer):
+    image_url = MenuImageReference(allow_blank=True, required=False, max_length=200)
     selling_details = serializers.JSONField(required=False)
 
     def validate_selling_details(self, value):
@@ -231,7 +245,17 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    preparation_plan = serializers.SerializerMethodField()
     address = serializers.SerializerMethodField()
+
+    def get_preparation_plan(self, obj):
+        from copy import deepcopy
+        plan = deepcopy(obj.preparation_plan)
+        request = self.context.get('request')
+        shared = plan.get('shared_batch')
+        if shared and not (request and request.user.is_staff):
+            plan['shared_batch'] = {'id': shared['id'], 'order_count': len(shared.get('order_ids', []))}
+        return plan
 
     def get_address(self, obj):
         return obj.delivery_address or (AddressSerializer(obj.address).data if obj.address else None)

@@ -1,6 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, BasePermission, SAFE_METHODS
+from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission, SAFE_METHODS
 from rest_framework.response import Response
 from ..models import Category, Product
 from ..serializers import CategorySerializer, ProductSerializer
@@ -95,3 +95,13 @@ class MenuList(generics.ListAPIView):
                 raise ValidationError({'category': 'Choose a valid menu category.'})
             rows = rows.filter(category_id=int(category))
         return rows
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def product_variants(request, pk):
+    from django.shortcuts import get_object_or_404
+    product = get_object_or_404(Product, pk=pk, selling_status='active')
+    group = product.selling_details.get('variant_group', '')
+    rows = Product.objects.filter(selling_status='active', selling_details__variant_group=group).select_related('category').order_by('price', 'id')[:20] if group else []
+    return Response({'group': group, 'results': MenuCardSerializer(rows, many=True).data})
