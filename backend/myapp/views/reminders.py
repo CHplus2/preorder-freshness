@@ -3,7 +3,7 @@ from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from ..services.reminders import email_ready, customer_email_ready, customer_due, send_due_reminders
+from ..services.reminders import email_ready, customer_email_ready, customer_due, dispatch_due, send_due_reminders
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -12,6 +12,7 @@ def reminder_status(request):
                      'customer_email_configured': customer_email_ready(),
                      'scheduler_activity_verified': False,
                      'customer_reminders_due': customer_due().count(),
+                     'customer_dispatch_due': dispatch_due().count(),
                      'scheduler_secret_configured': len(settings.CRON_SECRET) >= 32})
 
 @api_view(['GET'])
@@ -40,6 +41,7 @@ def customer_reminder(request, pk):
     from ..services.reminders import reminder_preference
     class Input(serializers.Serializer):
         enabled = serializers.BooleanField()
+        dispatch_updates = serializers.BooleanField(default=False)
     incoming = Input(data=request.data)
     incoming.is_valid(raise_exception=True)
     enabled = incoming.validated_data['enabled']
@@ -48,9 +50,9 @@ def customer_reminder(request, pk):
         if enabled and (order.status in ('cancelled', 'delivered') or not order.delivery_at or order.delivery_at <= timezone.now()):
             raise serializers.ValidationError('Reminders apply to open orders with a future time.')
         try:
-            preference = reminder_preference(request.user, enabled)
+            preference = reminder_preference(request.user, enabled, dispatch_updates=incoming.validated_data['dispatch_updates'])
         except DjangoValidationError:
             raise serializers.ValidationError('Add a valid email in Account settings before enabling reminders.')
         order.fulfilment_snapshot = dict(order.fulfilment_snapshot, customer_reminder=preference)
         order.save(update_fields=['fulfilment_snapshot', 'updated_at'])
-    return Response({'enabled': enabled, 'email': preference['email']})
+    return Response(preference)

@@ -2,7 +2,7 @@ from datetime import timedelta
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from myapp.models import Order, OrderReminder
-from myapp.services.reminders import email_ready, customer_email_ready, customer_due, send_due_reminders
+from myapp.services.reminders import email_ready, customer_email_ready, customer_due, dispatch_due, send_due_reminders
 
 class Command(BaseCommand):
     help = 'Preview owner and opted-in customer reminders. --send attempts up to 3 emails in total.'
@@ -30,3 +30,6 @@ class Command(BaseCommand):
 
         for order in customer_due(now)[:100]:
             self.stdout.write(f'PREVIEW: Customer reminder for order #{order.pk} (recipient not displayed).')
+
+        for order in dispatch_due(now)[:100]:
+            self.stdout.write(f'PREVIEW: Customer dispatch update for order #{order.pk} (recipient not displayed).')

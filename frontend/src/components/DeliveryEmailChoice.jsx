@@ -1,8 +1,7 @@
 import {Link} from 'react-router-dom';
 
-export default function DeliveryEmailChoice({contact,checked,onChange,disabled=false,id='delivery-email-choice'}){
- if(!contact?.available)return null;
- return <div className="delivery-email-choice">
-  {contact.email?<><label className="delivery-email-toggle" htmlFor={id}><input id={id} type="checkbox" checked={checked} disabled={disabled} onChange={e=>onChange(e.target.checked)}/><span>Email me before delivery or collection</span></label><p>To {contact.email}. The service checks for confirmed orders within two hours of their agreed time. This is a reminder, not live arrival tracking.</p></>:<p><Link to="/account#delivery-email">Add an account email</Link> to choose delivery reminders.</p>}
- </div>;
+export default function DeliveryEmailChoice({contact,checked,onChange,dispatchUpdates=false,onDispatchChange,disabled=false,id='delivery-email-choice'}){
+ return <section className="delivery-email-choice" aria-labelledby={`${id}-heading`}><h3 id={`${id}-heading`}>Email updates</h3>
+  {!contact || contact.status==='loading'?<p role="status">Checking email reminder availability…</p>:contact.status==='error'?<p>Email reminder settings could not be checked. <button type="button" onClick={contact.retry}>Try again</button> You can follow progress in <Link to="/orders">My orders</Link>.</p>:!contact.available?<p>Email reminders are currently unavailable. Follow your order in <Link to="/orders">My orders</Link> or contact the kitchen about delivery arrangements.</p>:contact.email?<><label className="delivery-email-toggle" htmlFor={id}><input id={id} type="checkbox" checked={checked} disabled={disabled} onChange={e=>onChange(e.target.checked)}/><span>Email me before delivery or collection</span></label><p>To {contact.email}. Confirmed orders are checked within two hours of their agreed time. This is a reminder, not live arrival tracking.</p>{onDispatchChange && checked && <label className="delivery-email-toggle" htmlFor={`${id}-dispatch`}><input id={`${id}-dispatch`} type="checkbox" checked={dispatchUpdates} disabled={disabled} onChange={e=>onDispatchChange(e.target.checked)}/><span>Also email me when the kitchen marks this order out for delivery</span></label>}</>:<p><Link to="/account#delivery-email">Add an account email</Link> to choose delivery reminders.</p>}
+ </section>;
 }

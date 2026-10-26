@@ -29,7 +29,7 @@ export default function OrderWorkflowActions({order,onSaved,compact=false}){
    <div className="planner-progress-buttons">
     <button type="button" className="admin-primary" disabled={!!busy} onClick={()=>update(preparing?'cooked':'delivered',preparing?'food ready':pickup?'collected':'delivered')}>{busy?'Saving…':preparing?'Mark food ready':pickup?'Mark collected':'Mark delivered'}</button>
     {!compact && order.status==='pending' && <button type="button" disabled={!!busy} onClick={()=>update('processing','preparation started')}>Mark preparation started (optional)</button>}
-    {!compact && ready && !pickup && <button type="button" disabled={!!busy} onClick={()=>update('shipped','out for delivery')}>Out for delivery (optional)</button>}
+    {ready && !pickup && <button type="button" disabled={!!busy} onClick={()=>update('shipped','out for delivery')}>Out for delivery (optional)</button>}
    </div>
    {!compact && <p>{preparing?'Mark ready after cooking. This deducts ingredients once, using accepted recipes and earliest eligible expiry. Starting preparation does not deduct stock.':pickup?'Mark collected only after handing the order to the customer. Payment records are updated separately.':'Mark delivered only after the customer receives the order. Payment records are updated separately.'}</p>}
   </>}

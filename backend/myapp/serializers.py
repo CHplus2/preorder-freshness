@@ -253,6 +253,18 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    fulfilment_snapshot = serializers.SerializerMethodField()
+
+    def get_fulfilment_snapshot(self, obj):
+        from copy import deepcopy
+        saved = deepcopy(obj.fulfilment_snapshot)
+        request = self.context.get('request')
+        if not (request and request.user.is_staff):
+            if isinstance(saved.get('courier'), dict):
+                saved['courier'].pop('contact_phone', None)
+            saved.pop('dispatch_notice', None)
+        return saved
+
     preparation_plan = serializers.SerializerMethodField()
     address = serializers.SerializerMethodField()
 

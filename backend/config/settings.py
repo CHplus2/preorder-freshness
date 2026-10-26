@@ -209,8 +209,12 @@ CRON_SECRET = os.getenv('CRON_SECRET', '')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
 GROQ_CHAT_MODEL = os.getenv('GROQ_CHAT_MODEL', 'llama-3.3-70b-versatile')
 
-# Explicit origin prevents password-reset links trusting an incoming Host header.
-PUBLIC_APP_URL = os.getenv('PUBLIC_APP_URL', '')
+# Explicit configuration takes precedence, including an intentional blank. Only
+# trusted Vercel production metadata may supply a default; never an HTTP Host.
+PUBLIC_APP_URL = os.getenv('PUBLIC_APP_URL')
+if PUBLIC_APP_URL is None:
+    production_origin_host = os.getenv('VERCEL_PROJECT_PRODUCTION_URL', '') if IS_VERCEL else ''
+    PUBLIC_APP_URL = 'https://' + production_origin_host if production_origin_host else ''
 PASSWORD_RESET_TIMEOUT = 3600
 RECOMMENDATION_EXPERIMENT = os.getenv('RECOMMENDATION_EXPERIMENT', 'False') == 'True'
 

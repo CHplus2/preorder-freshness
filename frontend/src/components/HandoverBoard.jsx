@@ -1,3 +1,6 @@
+import '../pages/customer/CustomerExperience.css';
+import HandoverDetails from './HandoverDetails';
+import OrderContactActions from './OrderContactActions';
 import {Link} from 'react-router-dom';
 import {useEffect,useState} from 'react';
 import {handoverBoard,unitTotals} from '../utils/handoverBoard';
@@ -15,7 +18,7 @@ export default function HandoverBoard({orders,date,onReview,onSaved,now}){
  return <section className="handover-board" aria-label="Daily handovers">
   <header><div><h2>Collection & delivery runs</h2><p>Grouped by hour and method for {date} · Malaysia time. Each order keeps its own agreed time and preparation plan.</p></div><Link to={`/admin/planner?view=packing&date=${date}`}>Open packing list</Link></header>
   <div className="handover-metrics"><div><strong>{board.confirmed.length}</strong><span>Scheduled handovers</span></div><div><strong>{board.ready}</strong><span>Food ready</span></div><div><strong>{board.unpaid}</strong><span>Unpaid scheduled orders</span></div></div>
-  <p className="handover-clarity">Grouping does not combine cooking batches or reserve a driver. If you deliver yourself, block driving time in Kitchen availability. Express requests need a courier arrangement.</p>
+  <p className="handover-clarity">Grouping does not combine cooking batches or reserve a driver. If you deliver yourself, block driving time in Kitchen availability. Express requests need a courier arrangement. Mark out for delivery when food is handed to the courier; opted-in dispatch emails are queued.</p>
   {board.requests.length>0 && <div className="handover-review"><strong>{board.requests.length} {board.requests.length===1?'order needs':'orders need'} preparation review for this date</strong><p>Excluded from run totals until reviewed. Existing reservations remain until replanned; new unconfirmed requests reserve no preparation time.</p><div>{board.requests.map(order=><button key={order.id} onClick={()=>onReview(order.id)}>Review #{order.id} · {time(order.delivery_at)}</button>)}</div></div>}
   {!board.groups.length && <p className="admin-empty">No confirmed handovers on this date. Choose another day or review requests above.</p>}
   {board.groups.map(group=><section className="handover-group" key={group.key} aria-label={`${hourLabel(group.hour)} ${methodLabel(group.method)}`}><div className="handover-group-heading"><h3>{hourLabel(group.hour)}–{hourLabel((group.hour+1)%24)} · {methodLabel(group.method)}</h3><span>{group.orders.length} {group.orders.length===1?'order':'orders'} · {unitTotals(group.orders)}</span></div>
@@ -23,6 +26,7 @@ export default function HandoverBoard({orders,date,onReview,onSaved,now}){
     <ul>{(order.items || []).slice(0,2).map((item,index)=><li key={item.id || index}>{quantityLabel(item.selling_details,item.quantity)} · {item.product_name}</li>)}</ul>
     {(order.items?.length || 0)>2 && <button className="handover-more" onClick={()=>onReview(order.id)}>View {order.items.length-2} more menu items</button>}
     <p className="handover-payment">Payment: <strong>{order.payment_status || 'Check payment records'}</strong>{order.fulfilment_snapshot?.delivery_area && <> · {order.fulfilment_snapshot.delivery_area}</>}</p>
+    <HandoverDetails order={order}/><OrderContactActions order={order}/>
     <OrderWorkflowActions order={order} onSaved={onSaved} compact/><div className="handover-order-links"><button onClick={()=>onReview(order.id)}>Review plan</button><Link to={`/admin/orders?order=${order.id}`}>Order & payment records</Link></div>
    </article>)}
   </section>)}

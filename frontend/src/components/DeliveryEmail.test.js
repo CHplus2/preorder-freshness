@@ -7,14 +7,15 @@ import {orderEmailContact,orderEmailPreference} from '../utils/orderEmail.js';
 for(const bad of [null,{},[],{email:'ok@example.test',available:'true'},{email:4,available:true}])assert.throws(()=>orderEmailContact(bad));
 for(const bad of [null,{},[],{email:'',enabled:true},{email:'ok@example.test',enabled:'true'}])assert.throws(()=>orderEmailPreference(bad));
 assert.deepEqual(orderEmailContact({email:'',available:false}),{email:'',available:false});
-assert.deepEqual(orderEmailPreference({email:'',enabled:false}),{email:'',enabled:false});
+assert.deepEqual(orderEmailPreference({email:'',enabled:false}),{email:'',enabled:false,dispatch_updates:false});
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
  const {default:Choice}=await server.ssrLoadModule('/src/components/DeliveryEmailChoice.jsx');
  const {default:Reminder}=await server.ssrLoadModule('/src/components/OrderEmailReminder.jsx');
  const render=(Component,props)=>renderToStaticMarkup(h(MemoryRouter,null,h(Component,props)));
- assert.equal(render(Choice,{contact:null}),'');
- assert.equal(render(Choice,{contact:{email:'buyer@example.test',available:false}}),'');
+ assert.match(render(Choice,{contact:null}),/Checking email reminder availability/);
+ assert.match(render(Choice,{contact:{email:'buyer@example.test',available:false}}),/Email reminders are currently unavailable/);
+ assert.match(render(Choice,{contact:{status:'error'}}),/Try again/);
  const missing=render(Choice,{contact:{email:'',available:true}});
  assert.match(missing,/\/account#delivery-email/);assert.doesNotMatch(missing,/type="checkbox"/);
  const choice=render(Choice,{contact:{email:'buyer@example.test',available:true},checked:false});
@@ -25,6 +26,9 @@ try{
  const pending=render(Reminder,{order,contact});assert.match(pending,/checked=""/);assert.match(pending,/waits for kitchen confirmation/);
  assert.doesNotMatch(render(Reminder,{order,contact:{...contact,email:'new@example.test'}}),/checked=""/);
  for(const status of ['delivered','cancelled'])assert.equal(render(Reminder,{order:{...order,status},contact}),'');
- assert.equal(render(Reminder,{order:{...order,delivery_at:'2000-01-01T00:00:00Z'},contact}),'');
+ assert.match(render(Reminder,{order:{...order,delivery_at:'2000-01-01T00:00:00Z'},contact}),/agreed time has passed/);
+ assert.equal(render(Reminder,{order:{...order,delivery_at:'2000-01-01T00:00:00Z',fulfilment_snapshot:{}},contact}),'');
+ const updates=render(Choice,{contact,checked:true,dispatchUpdates:false,onDispatchChange:()=>{}});
+ assert.match(updates,/Also email me/);assert.equal((updates.match(/type="checkbox"/g)||[]).length,2);
  console.log('Delivery email: optional availability, account contact, explicit consent, confirmation and closed-order boundaries passed.');
 }finally{await server.close();}

@@ -1,0 +1,11 @@
+import {useId} from 'react';
+export default function HandoverFields({value,onChange,pickup=false,disabled=false}){
+ const id=useId(),edit=(key,next)=>onChange({...value,[key]:next});
+ return <fieldset className="handover-fields" disabled={disabled}><legend>Contact & handover</legend>
+  <div><label htmlFor={`${id}-phone`}>Phone for this order{value.contact_method==='whatsapp'?' (required for WhatsApp)':' (optional)'}</label><input id={`${id}-phone`} required={value.contact_method==='whatsapp'} type="tel" autoComplete="tel" maxLength={30} placeholder="+60123456789" value={value.contact_phone} onChange={e=>edit('contact_phone',e.target.value)}/></div>
+  <div><label htmlFor={`${id}-contact`}>Preferred contact</label><select id={`${id}-contact`} value={value.contact_method} onChange={e=>edit('contact_method',e.target.value)}><option value="phone">Phone call</option><option value="whatsapp">WhatsApp message</option></select></div>
+  {value.contact_method==='whatsapp' && <p>The kitchen may contact this number about your order. WhatsApp messages are sent manually; choosing this does not enable automatic reminders.</p>}
+  {!pickup && <><div><label htmlFor={`${id}-mode`}>If nobody answers</label><select id={`${id}-mode`} value={value.mode} onChange={e=>edit('mode',e.target.value)}><option value="in_person">Contact me; hand to a person</option><option value="agreed_place">Leave only at the place I specify</option></select></div>{value.mode==='agreed_place' && <><div><label htmlFor={`${id}-place`}>Place you authorise</label><input id={`${id}-place`} required maxLength={150} value={value.location} onChange={e=>edit('location',e.target.value)} placeholder="For example, reception with the guard"/></div><p>Choose a place agreed with the kitchen. Make arrangements to receive and store the food promptly.</p></>}</>}
+  <div><label htmlFor={`${id}-notes`}>{pickup?'Collection note (optional)':'Handover instructions (optional)'}</label><textarea id={`${id}-notes`} maxLength={500} rows={3} value={value.notes} onChange={e=>edit('notes',e.target.value)} placeholder={pickup?'For example, someone else will collect for me':'For example, call on arrival; do not leave food near the driveway'}/></div>
+ </fieldset>;
+}

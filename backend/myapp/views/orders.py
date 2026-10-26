@@ -180,9 +180,16 @@ def place_order(request):
     from django.core.exceptions import ValidationError as EmailValidationError
     email_reminder = serializers.BooleanField().run_validation(request.data.get('email_reminder', False))
     try:
-        preference = reminder_preference(user, email_reminder)
+        updates = serializers.BooleanField().run_validation(request.data.get('email_dispatch_updates', False))
+        if updates and not email_reminder:
+            raise ValidationError('Enable email reminders before choosing dispatch updates.')
+        preference = reminder_preference(user, email_reminder, dispatch_updates=updates)
     except EmailValidationError:
         raise ValidationError('Add a valid email in Account settings before enabling reminders.')
+
+    from ..services.handover import HandoverInput
+    handover = HandoverInput(data=request.data.get('handover', {}), context={'pickup': method == 'pickup'})
+    handover.is_valid(raise_exception=True)
 
     # --- Create order ---
     order = Order.objects.create(
@@ -193,7 +200,7 @@ def place_order(request):
         preparation_end_at=plan['end'],
         preparation_plan=plan_snapshot(plan),
         delivery_method=method,
-        fulfilment_snapshot=dict(snapshot(store, method, area), customer_reminder=preference),
+        fulfilment_snapshot=dict(snapshot(store, method, area), customer_reminder=preference, handover=dict(handover.validated_data)),
         address=address,
         delivery_address=dict(AddressSerializer(address).data) if address else {},
         total_amount=0,

@@ -811,3 +811,30 @@ are unchanged. No migration is required.
 See [Customer delivery batches](customer-delivery-batches.md) for scheduler setup,
 retry limits and planned handover/arrival-window/provider work. Those later batch
 features are proposals, not currently available endpoints.
+
+
+## Handover and dispatch integration (2026-10-26, Batch 2)
+
+- Checkout accepts optional `handover`: `contact_phone`, `contact_method`
+  (`phone`/`whatsapp`), `mode` (`in_person`/`agreed_place`), `location`, `notes`.
+  Explicit drop-off requires a location; collection permits only in-person
+  handover. Phone numbers are normalised; choosing WhatsApp requires a valid one.
+- `PATCH /api/orders/{id}/handover/` is limited to the buyer, before dispatch/closure.
+  Body: `version` and `handover`. Stale versions return 409. Changes are audited and
+  do not update scheduling, payment, stock or address.
+- Owner courier tracking accepts optional `contact_phone`, visible only in staff
+  order payloads. Customer serialisation removes that field and private dispatch
+  metadata. Saving tracking never dispatches or books a courier.
+- Checkout optional Boolean `email_dispatch_updates` requires `email_reminder`.
+  The reminder preference endpoint accepts optional Boolean `dispatch_updates`;
+  existing reminders remain unsubscribed unless explicitly selected.
+- The first actual owner status transition to `shipped` queues a dispatch notice.
+  The existing cron sends it asynchronously under the shared three-attempt limit,
+  current recipient/consent/status checks and duplicate protection. Queued notices
+  older than 24 hours are excluded. No automatic dispatch/delivery is inferred.
+- Owner reminder status adds `customer_dispatch_due`. Scheduler activity is still
+  unverified by the application. The optional GitHub scheduler requires a private
+  repository secret and explicit enablement; see the batch guide.
+
+No migrations or model/forecast changes are required. Email-first registration,
+Google/phone sign-in, arrival windows and provider messaging remain later work.

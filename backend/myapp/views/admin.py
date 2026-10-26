@@ -51,6 +51,9 @@ def admin_order_detail(request, pk):
             order.inventory_deducted = True
         if new_status == 'processing' and (order.preparation_plan.get('needs_review') or not order.preparation_at or not order.preparation_end_at):
             raise ValidationError('Set and confirm preparation times in Planner before starting this order.')
+        if new_status == 'shipped' and order.status != 'shipped':
+            from ..services.reminders import queue_dispatch_notice
+            queue_dispatch_notice(order)
         order.status = new_status
     if new_payment_status and new_payment_status != order.payment_status:
         raise ValidationError('Record a verified payment or refund in Payment records; status cannot be changed directly.')

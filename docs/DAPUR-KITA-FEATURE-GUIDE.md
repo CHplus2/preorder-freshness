@@ -319,6 +319,20 @@ unchanged. Settings shows the eligible customer queue and explicitly cannot veri
 scheduler activity. For setup, throughput limits and subsequent workflow batches,
 see [Customer delivery communication](customer-delivery-batches.md).
 
+### Contact, handover and dispatch updates
+
+Checkout and My orders now support order-specific phone/WhatsApp preference,
+handover notes and an explicitly authorised drop-off place. The default is handover
+to a person. Owner packing/planner views show these details; WhatsApp opens a draft
+for manual review and Send. The site does not book a courier or automatically send
+WhatsApp messages. Courier phone contacts are private to staff.
+
+Customers may separately opt into dispatch email. The first recorded out-for-delivery
+transition queues a message for the same scheduled worker; it does not send mail
+synchronously. Existing reminder preferences are not expanded automatically.
+The optional GitHub workflow is prepared but its automatic schedule is disabled
+until explicitly configured. See the communication batch guide for exact setup.
+
 ### Private deployment setup (maintainer reference)
 
 Keep SMTP host/port/TLS, login/app password, DEFAULT_FROM_EMAIL,
@@ -446,3 +460,11 @@ uncertain response; the server saves it once. Changed availability still needs
 a fresh calculation. Invalid saved dates leave repair controls available, and
 calendar downloads report omitted invalid task timings. See the
 [planner review](PLANNER-REVIEW-2026-10-20.md) for tested behavior and limits.
+
+
+Email origin setup: an explicit `PUBLIC_APP_URL` takes precedence. If unset on
+Vercel, the app can use trusted `VERCEL_PROJECT_PRODUCTION_URL` metadata as its
+HTTPS origin. An explicitly blank value still disables the origin. Existing URL
+validation rejects credentials, paths, query strings and unsafe public HTTP;
+request Host/forwarded-host headers never supply notification or recovery links.
+SMTP configuration and an actual scheduler are still required.

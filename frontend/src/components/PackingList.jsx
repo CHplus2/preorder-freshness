@@ -1,3 +1,4 @@
+import HandoverDetails from './HandoverDetails';
 import SellingDetails from './SellingDetails';
 import {quantityLabel} from '../utils/sellingDetails';
 import {createPortal} from 'react-dom';
@@ -21,7 +22,7 @@ function Sheet({list,date}) {
         <p>{o.status} · {methodLabel(o.delivery_method)} · Payment: {o.payment_status}</p>
         {o.delivery_method==='pickup' && <p>Collect from: {o.fulfilment_snapshot?.pickup_location || 'Confirm location with the kitchen'}</p>}
         <ul>{o.items.map(i=><li key={i.id}><span className="packing-box" aria-hidden="true">□</span> {quantityLabel(i.selling_details,i.quantity)} × {i.product_name}<SellingDetails details={i.selling_details}/></li>)}</ul>
-        <p className="packing-signoff">□ Quantities checked &nbsp; □ Labels checked &nbsp; Checked by: __________</p>
+        <HandoverDetails order={o}/><p className="packing-signoff">□ Quantities checked &nbsp; □ Labels checked &nbsp; Checked by: __________</p>
       </article>)}
     </>}
   </div>;

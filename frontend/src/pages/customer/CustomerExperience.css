@@ -104,3 +104,21 @@
 .checkout-container .delivery-email-toggle, .customer-orders .delivery-email-toggle { flex-direction: row; align-items: flex-start; margin-bottom: 0; }
 .checkout-container .delivery-email-toggle input[type=checkbox] { display: inline-block; width: 20px; height: 20px; min-height: 20px; padding: 0; border-radius: 3px; }
 .order-email-reminder .delivery-email-choice { margin: 0; padding: 0; border-top: 0; }
+.handover-fields { border: 0; margin: 16px 0; padding: 0; min-width: 0; display: grid; gap: 12px; }
+.handover-fields legend { font-weight: 600; margin-bottom: 12px; }
+.handover-fields label { display: grid; gap: 8px; font-size: .9rem; }
+.handover-fields input, .handover-fields select, .handover-fields textarea { width: 100%; min-width: 0; box-sizing: border-box; padding: 12px; font: inherit; color: #263e2e; background: white; border: 1px solid #aebbab; border-radius: 8px; }
+.handover-fields textarea { resize: vertical; }
+.handover-checkout summary { min-height: 44px; cursor: pointer; font-weight: 600; }
+.handover-fields p, .handover-details p, .order-contact-actions p { font-size: .9rem; line-height: 1.6; font-weight: 400; overflow-wrap: anywhere; }
+.handover-details { margin-top: 14px; }
+.handover-notes { white-space: pre-wrap; }
+.handover-editor { margin: 16px 0; }
+.handover-editor form { margin-top: 16px; }
+.delivery-email-choice h3 { font: 600 1rem/1.4 system-ui, sans-serif; margin: 0 0 14px; }
+.order-contact-actions { margin: 16px 0; padding: 12px 0; border-top: 1px solid #d5dfd7; }
+.order-contact-actions>div { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.order-contact-actions a { min-height: 44px; display: inline-flex; align-items: center; padding: 8px 0; }
+
+.handover-fields>div { display: grid; gap: 8px; }
+.checkout-container .handover-fields label { margin-bottom: 0; }

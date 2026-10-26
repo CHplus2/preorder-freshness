@@ -16,7 +16,12 @@ class TrackingInput(serializers.Serializer):
     carrier = serializers.CharField(max_length=80)
     reference = serializers.CharField(max_length=100)
     url = serializers.URLField(max_length=500, allow_blank=True, default='')
+    contact_phone = serializers.CharField(max_length=30, allow_blank=True, default='')
     version = serializers.DateTimeField()
+
+    def validate_contact_phone(self, value):
+        from ..services.handover import contact_number
+        return contact_number(value)
 
     def validate_url(self, value):
         if not value:
@@ -53,4 +58,4 @@ def courier_tracking(request, pk):
     order.fulfilment_snapshot = dict(order.fulfilment_snapshot, courier=courier)
     order.save(update_fields=['fulfilment_snapshot', 'updated_at'])
     OrderAmendment.objects.create(order=order, actor=request.user, before={'courier': before}, after={'kind': 'courier_tracking', 'courier': courier})
-    return Response({'order': OrderSerializer(order).data})
+    return Response({'order': OrderSerializer(order, context={'request': request}).data})

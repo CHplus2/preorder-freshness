@@ -1,3 +1,5 @@
+import '../customer/CustomerExperience.css';
+import OrderContactActions from '../../components/OrderContactActions';
 import SellingDetails from '../../components/SellingDetails';
 import {quantityLabel} from '../../utils/sellingDetails';
 import OrderFulfilment from '../../components/OrderFulfilment';
@@ -167,7 +169,7 @@ function OwnerOrders() {
               </div>
               {order.payment_method==='escrow' && <p className="owner-order-note">Escrow · Sepolia <Link to={'/payment/escrow?order='+order.id}>Manage escrow payment</Link></p>}
               {order.items.some(i=>i.recipe_source?.startsWith('legacy')) && <p className="owner-order-note">Review this older order’s recipe in Planner before preparation.</p>}
-              <OrderFulfilment order={order}/><CourierTrackingEditor key={'tracking-'+order.id+order.updated_at} order={order} onSaved={fetchAdminOrders}/>
+              <OrderFulfilment order={order} owner/><OrderContactActions order={order}/><CourierTrackingEditor key={'tracking-'+order.id+order.updated_at} order={order} onSaved={fetchAdminOrders}/>
               {paymentOrder?.id===order.id && <PaymentRecords order={order} onSaved={fetchAdminOrders}/>}
               <AcceptedRecipe order={order}/>
               {planningOrder===order.id && <div id={'order-planning-'+order.id}><PlanReview key={order.id+'-'+order.updated_at} order={order} onSaved={fetchAdminOrders}/></div>}

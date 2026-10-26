@@ -1,3 +1,4 @@
+import HandoverFields from '../../components/HandoverFields';
 import useOrderEmail from '../../hooks/useOrderEmail';
 import DeliveryEmailChoice from '../../components/DeliveryEmailChoice';
 import {shippingEnquiry,shippingContact} from '../../utils/sellingDetails';
@@ -35,7 +36,8 @@ export default function CheckoutPage(){
  const {isSessionCurrent}=useAuth();
  const location=useLocation();
  const orderEmail=useOrderEmail();
- const [emailReminder,setEmailReminder]=useState(false);
+ const [emailReminder,setEmailReminder]=useState(false),[dispatchUpdates,setDispatchUpdates]=useState(false);
+ const [handover,setHandover]=useState({contact_phone:null,contact_method:'phone',mode:'in_person',location:'',notes:''});
  const {config:paypalConfig,error:paypalError,retry:retryPayPal}=usePayPalConfig();
  const escrowConfig=useEscrowConfig();
  const [requestMode,setRequestMode]=useState(false);
@@ -49,6 +51,7 @@ export default function CheckoutPage(){
  useEffect(()=>{refreshCart();},[refreshCart]);
 
  const pickup=fulfilmentMethod==='pickup';
+ const orderHandover={...handover,contact_phone:handover.contact_phone ?? address?.phone ?? '',mode:pickup?'in_person':handover.mode,location:pickup?'':handover.location};
  const areaIssue=!pickup && promotion?.delivery_areas?.length>0 && !promotion.delivery_areas.includes(deliveryArea);
  const weekdayIssue=deliveryDayIssue(cart,form.delivery_at);
  const quoteKey=JSON.stringify([form.delivery_at,basketAvailabilityKey(cart),fulfilmentKey(promotion,fulfilmentMethod,deliveryArea)]);
@@ -66,7 +69,7 @@ export default function CheckoutPage(){
   if(weekdayIssue)return;
   submitPending.current=true;setLoading(true);setSubmitError(null);
   try {
-   sessionStorage.setItem('deliveryPlan',JSON.stringify({delivery_at:form.delivery_at+':00+08:00',delivery_method:fulfilmentMethod,delivery_area:deliveryArea,email_reminder:emailReminder && !!orderEmail?.email && orderEmail.available}));
+   sessionStorage.setItem('deliveryPlan',JSON.stringify({delivery_at:form.delivery_at+':00+08:00',delivery_method:fulfilmentMethod,delivery_area:deliveryArea,email_reminder:emailReminder && !!orderEmail?.email && orderEmail.available,email_dispatch_updates:!pickup && emailReminder && dispatchUpdates && !!orderEmail?.email && orderEmail.available,handover:orderHandover}));
    if(needsReview || form.payment!=='wallet'){
     const placed=await placeOrder(address?.id ?? null,needsReview?'cod':form.payment,{throwOnError:true});
     if(placed.payment_method==='paypal' && !placed.needs_review){navigate('/payment/paypal?order='+placed.order_id);return;}
@@ -98,7 +101,8 @@ export default function CheckoutPage(){
  <FulfilmentChoices store={promotion} value={fulfilmentMethod} area={deliveryArea} disabled={loading} onChange={(method,area)=>{chooseFulfilment(method,area);if(method!==fulfilmentMethod){setForm(current=>({...current,delivery_at:''}));setRequestMode(false);}}}/>{!pickup && <CheckoutAddress value={deliveryAddress} disabled={loading}/>}
  <form onSubmit={submit} className="checkout-form"><section className="checkout-section"><div className="checkout-section-heading"><CalendarDays size={21}/><h2>{pickup?'Collection time':'Delivery time'}</h2></div><DeliveryTimePicker method={fulfilmentMethod} cart={cart} value={form.delivery_at} disabled={loading || cartLoading || cartUpdating} onSelect={chooseTime} allowRequest requestMode={requestMode} onRequestMode={setRequestMode} selectionUnavailable={quote?.plan.needs_review===true} refreshKey={!requestMode && quote?.plan.needs_review?quote.selectionKey:''}/><BasketDeliveryDays cart={cart} value={requestMode?form.delivery_at:''}/><AvailabilityResult checking={checking} error={quoteError} quote={quote} selectionKey={quoteKey} requestMode={requestMode}/>{retryable && <button type="button" onClick={retryQuote}>Retry availability check</button>}{quote?.plan.needs_review && !requestMode && <button type="button" disabled={loading} onClick={()=>setRequestMode(true)}>Ask kitchen to review this time</button>}</section>
  <section className="checkout-section"><div className="checkout-section-heading"><CreditCard size={21}/><h2>Payment</h2></div>{needsReview?<div className="checkout-payment-deferred" role="status"><strong>Payment after kitchen confirmation</strong><p>No payment is taken when you send this delivery request. The kitchen must confirm a preparation plan first.</p></div>:<><PaymentOptions value={form.payment} disabled={loading || cartLoading || cartUpdating} onChange={payment=>setForm({...form,payment})} manualEnabled={promotion?.manual_payment_enabled} paypalEnabled={paypalConfig?.enabled} escrowEnabled={!pickup && escrowConfig?.enabled} pickup={pickup}/>{paypalError && <p className="checkout-hint" role="status">PayPal availability could not be checked. Other displayed methods remain available. <button type="button" disabled={loading} onClick={retryPayPal}>Retry PayPal availability</button></p>}{!paymentAvailable && <p role="alert" className="checkout-hint">Choose an available payment method to continue.</p>}</>}</section>
- <DeliveryEmailChoice contact={orderEmail} checked={emailReminder} onChange={setEmailReminder} disabled={loading}/>
+ <details className="checkout-section handover-checkout"><summary>Contact & handover instructions (optional)</summary><HandoverFields value={orderHandover} onChange={setHandover} pickup={pickup} disabled={loading}/></details>
+ <DeliveryEmailChoice contact={orderEmail} checked={emailReminder} onChange={setEmailReminder} dispatchUpdates={dispatchUpdates} onDispatchChange={pickup?undefined:setDispatchUpdates} disabled={loading}/>
  <p className="checkout-hint">Availability is checked again when you place your order. Orders needing kitchen review remain unpaid and their requested time is unconfirmed.</p><div className="checkout-submit-dock order-action-bar"><div className="checkout-mobile-total"><span>Total</span><strong>{formatPrice(finalTotal)}</strong></div><button className="checkout-submit" disabled={loading || checking || cartLoading || cartUpdating || !pricingReady || !paymentAvailable || areaIssue || (!pickup && (saving || addressLoading || !address || editing)) || !!weekdayIssue || !quote || !!quoteError || (quote.plan.needs_review && !requestMode)}>{loading?'Placing order…':quote?.plan.needs_review && !requestMode?'Choose another available time':quote?.plan.needs_review?'Send for kitchen review':form.payment==='escrow'?'Save & continue to escrow':form.payment==='paypal'?'Save & continue to PayPal':form.payment!=='wallet'?`Place preorder · ${formatPrice(finalTotal)}`:'Continue with preorder'}</button></div>{!form.delivery_at && <p className="checkout-hint">Choose a delivery time above to continue.</p>}{!pickup && (!address || editing) && <p className="checkout-hint">Save your delivery address to continue.</p>}</form></div>
  <aside className="checkout-summary"><h2>Your preorder</h2><p className="checkout-hint">{cart.reduce((n,item)=>n+item.quantity,0)} {cart.reduce((n,item)=>n+item.quantity,0)===1?'item':'items'} · <Link to="/cart">Edit basket</Link></p>{(cartLoading || cartUpdating) && <p role="status">Updating basket and totals…</p>}{cart.map(item=><div className="checkout-summary-item" key={item.id}><div><strong>{item.product.name}</strong><span>{quantityLabel(item.product.selling_details,item.quantity)}</span><SellingDetails details={item.product.selling_details}/>{item.product.delivery_weekdays?.length > 0 && <span>{deliveryDaysText(item.product.delivery_weekdays)}</span>}</div><strong>{formatPrice(item.product.price*item.quantity)}</strong></div>)}<dl><div><dt>Food subtotal</dt><dd>{formatPrice(total)}</dd></div>{discount>0 && <div><dt>Bulk discount</dt><dd>−{formatPrice(discount)}</dd></div>}<div><dt>{pickup?'Collection':'Delivery'}</dt><dd>{SHIPPING_FEE?formatPrice(SHIPPING_FEE):'Free'}</dd></div><div className="checkout-total"><dt>Total</dt><dd>{formatPrice(finalTotal)}</dd></div></dl>{!pickup && promotion.free_delivery_minimum_myr!=null && total<Number(promotion.free_delivery_minimum_myr) && <p className="checkout-hint">Add {formatPrice(Number(promotion.free_delivery_minimum_myr)-total)} in food for free delivery.</p>}<p className="checkout-hint">Your order status will appear in My Orders after checkout.</p></aside></div></main>;
 }

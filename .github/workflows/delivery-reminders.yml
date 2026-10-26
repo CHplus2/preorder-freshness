@@ -1,0 +1,33 @@
+name: Delivery email reminders
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      send:
+        description: 'Execute the worker (may send real opted-in and owner emails)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: delivery-reminder-worker
+  cancel-in-progress: false
+jobs:
+  reminders:
+    # Automatic runs stay inactive until one scheduler is chosen and configured.
+    if: github.event_name == 'workflow_dispatch' || vars.REMINDER_SCHEDULER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Check or run the shared reminder worker
+        env:
+          REMINDER_CRON_SECRET: ${{ secrets.REMINDER_CRON_SECRET }}
+          SEND_REMINDERS: ${{ github.event_name == 'schedule' || inputs.send }}
+        run: |
+          if [ "$SEND_REMINDERS" = "true" ]; then
+            python3 deploy/run_delivery_reminders.py --send
+          else
+            python3 deploy/run_delivery_reminders.py
+          fi
