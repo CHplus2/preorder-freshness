@@ -1,5 +1,6 @@
-.fulfilment-choices{padding:20px;border:1px solid #d6dfd2;border-radius:14px;margin:0 0 24px;min-width:0;background:#fff}
-.fulfilment-choices legend{font-size:1.1rem;font-weight:650;padding:0 8px}
+.fulfilment-panel{padding:20px;border:1px solid #d6dfd2;border-radius:14px;margin:0 0 24px;min-width:0;background:#fff}
+.fulfilment-choices{padding:0;border:0;margin:0;min-width:0;width:100%;box-sizing:border-box}
+.fulfilment-choices legend{font-size:1.1rem;font-weight:650;line-height:1.4;padding:0;margin-bottom:16px;max-width:100%;overflow-wrap:anywhere}
 .fulfilment-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .fulfilment-choices .fulfilment-methods label{display:flex;flex-direction:row;align-items:flex-start;gap:10px;padding:14px;border:1px solid #d6dfd2;border-radius:10px;min-width:0;cursor:pointer}
 .fulfilment-methods label.selected{background:#eff5eb;border-color:#39704b}
@@ -11,7 +12,7 @@
 .fulfilment-location p{margin:6px 0;white-space:pre-line}
 .fulfilment-choices label{display:grid;gap:8px;font-size:.9rem}.fulfilment-choices select{width:100%;min-width:0;box-sizing:border-box}
 .fulfilment-choices .fulfilment-express{display:flex;flex-direction:row;gap:10px;align-items:center;min-height:44px;margin-top:12px}
-@media(max-width:480px){.fulfilment-choices{padding:16px}.fulfilment-methods{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:480px){.fulfilment-panel{padding:16px}.fulfilment-methods{grid-template-columns:minmax(0,1fr)}}
 .fulfilment-settings{min-width:0}.fulfilment-settings legend{padding:0 8px;font-size:1.15rem;font-weight:650}
 .admin-shell .fulfilment-settings .fulfilment-setting-toggle{display:flex;flex-direction:row;align-items:center;gap:12px;min-height:44px;margin:18px 0}
 .fulfilment-setting-toggle input[type=checkbox]{width:18px;height:18px;min-height:18px;padding:0;flex:0 0 18px;margin:0}

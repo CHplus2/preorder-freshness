@@ -4,7 +4,7 @@ import './FulfilmentChoices.css';
 export default function FulfilmentChoices({store,value='standard',area='',onChange,disabled=false}){
  const options=methodsFor(store),pickup=value==='pickup';
  const [first,last]=fulfilmentHours(store,value);
- return <fieldset className="fulfilment-choices" disabled={disabled}><legend>Receive your preorder</legend>
+ return <div className="fulfilment-panel"><fieldset className="fulfilment-choices" disabled={disabled}><legend>Receive your preorder</legend>
   {!options.length?<p role="status">This kitchen is not accepting delivery or collection orders right now.</p>:<>
   <div className="fulfilment-methods">{options.filter(m=>m!=='express').map(method=><label key={method} className={pickup===(method==='pickup')?'selected':''}><input type="radio" name="fulfilment" checked={pickup===(method==='pickup')} onChange={()=>onChange(method,'')}/><span><strong>{method==='pickup'?'Self-collection':'Delivery'}</strong><small>{method==='pickup'?'Collect from the kitchen · no delivery fee':'Delivered to your saved address'}</small></span></label>)}</div>
   <p className="fulfilment-hours">{pickup?'Collection':'Delivery'} hours: {hourLabel(first)}–{hourLabel(last)} · Malaysia time. Preparation availability is checked separately.</p>
@@ -14,5 +14,5 @@ export default function FulfilmentChoices({store,value='standard',area='',onChan
    {value==='express' && <p>The kitchen must confirm the courier and any additional charge. This does not book a Grab service.</p>}
   </>}
   </>}
- </fieldset>;
+ </fieldset></div>;
 }
