@@ -3,6 +3,38 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Private email delivery check — 27 October 2026
+
+`GET /api/admin/reminder-status/` additionally returns `email_delivery`:
+`{transport_ready, sender_address, owner_recipient, test_available}`. Addresses
+are validated current configuration, or null if missing/invalid. SMTP login and
+password are never returned. This staff-only response is private/no-store. It
+does not identify the destination of an earlier aggregate worker count or prove
+that SMTP credentials, inbox delivery or automatic scheduling work.
+
+`POST /api/admin/email-delivery-check/` is staff-session/CSRF protected and takes
+no address, subject or message input. It sends one fixed diagnostic message to
+the configured owner recipient. Only the explicit UI button invokes it; status
+reads and refresh never send. SMTP configuration, a valid owner address and a
+valid sender are required; the default `kitchen@localhost` sender is unavailable.
+Use a provider-approved sender, e.g. the Gmail account or configured Send mail as
+alias for Gmail SMTP. Format validation cannot certify provider approval.
+
+One attempted check per staff account per five minutes is enforced with the
+existing authentication-event table and a user-row lock released before SMTP.
+The check returns 202 for provider acceptance, 503 for a known rejection or an
+unconfirmed result, and 429 with Retry-After during cooldown. Accepted/rejected/
+unknown results include a searchable `FCMAIL-<12 hex>` reference, fixed recipient,
+`retry_after:300`, outcome (`accepted|not_accepted|unconfirmed`) and a fixed reason
+code (null for accepted). Raw SMTP errors are never exposed. A timeout/disconnect
+can occur after acceptance; it stays unconfirmed and has no automatic retry.
+
+Checks are separate from worker history, order eligibility and OrderReminder
+receipts. They change no order, stock, payment or scheduler settings. No schema
+migration is needed. Receiving the check is evidence of that message's delivery,
+not proof of future customer delivery. Provider delivery/bounce evidence remains
+necessary to diagnose a provider-accepted message missing from the inbox.
+
 ## Date-guide budget comparison — 27 October 2026
 
 `POST /api/menu/guide/` adds `budget_mode`: `within` (default), `above`, or `all`.

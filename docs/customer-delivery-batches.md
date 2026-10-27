@@ -1,5 +1,33 @@
 # Customer delivery communication batches
 
+## Email delivery diagnosis — 27 October 2026
+
+Settings → Order email reminders now shows current owner-recipient and sender
+addresses to staff only, and offers **Send one test email to owner**. Opening the
+page or refreshing status never sends. A requested check has a searchable
+`FCMAIL-...` reference and a five-minute per-staff cooldown; it does not process
+orders, modify reminder receipts or count as a scheduler run. No migration.
+
+For Gmail SMTP, configure `DEFAULT_FROM_EMAIL` as the sending Gmail account or
+an approved Send mail as alias. A missing/invalid sender, including the local
+fallback, disables the check. Review `OWNER_NOTIFICATION_EMAIL` as the intended
+destination; SMTP login is not the recipient. No passwords are shown or changed.
+Use the reference to search the recipient's inbox/spam and the sending Gmail
+account's Sent/bounce records. The app cannot certify inbox delivery or access
+Google's delivery records with these SMTP credentials. Do not reset passwords
+or repeatedly rerun order reminders merely because a provider-accepted message
+is missing. Known SMTP rejections have fixed categories; unknown results prompt
+review before another attempt. Historical aggregate worker counts do not reveal
+which recipient was used.
+
+Validation: all 762 application tests pass (21 platform-specific skips), and
+37 focused PostgreSQL diagnostic/reminder tests pass, including
+staff/CSRF controls, fixed recipients, private configuration, redacted failures,
+unknown outcomes and serialized concurrent clicks. Frontend lint, UX/unit suites
+and build pass; twelve full-page desktop/mobile accessibility and overflow
+checks pass against local fixtures with six mocked email-check requests and no
+worker calls. No real mail or production record was used during validation.
+
 ## Batch 1: optional customer email reminders (implemented)
 
 Customers add/update their account email in Account settings. Changing this address

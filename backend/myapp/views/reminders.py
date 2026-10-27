@@ -1,6 +1,7 @@
 import logging
 import secrets
 from django.conf import settings
+from django.views.decorators.cache import never_cache
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -9,10 +10,13 @@ from ..services.reminders import email_ready, customer_email_ready, customer_due
 
 logger = logging.getLogger(__name__)
 
+@never_cache
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def reminder_status(request):
+    from ..services.email_diagnostics import configuration
     return Response({'email_configured': email_ready(),
+                     'email_delivery': configuration(),
                      'customer_email_configured': customer_email_ready(),
                      'scheduler_activity_verified': False,
                      'worker_activity': reminder_activity.history(),
@@ -20,6 +24,19 @@ def reminder_status(request):
                      'customer_dispatch_due': dispatch_due().count(),
                      'customer_time_updates_due': time_due().count(),
                      'scheduler_secret_configured': len(settings.CRON_SECRET) >= 32})
+
+
+@never_cache
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def email_delivery_check(request):
+    from ..services.email_diagnostics import send_check
+    if request.data:
+        return Response({'detail':'This check uses the configured owner recipient. Do not submit an address or message.'},status=400)
+    result=send_check(request.user)
+    if result is None:
+        return Response({'detail':'Configure SMTP, OWNER_NOTIFICATION_EMAIL and a provider-approved DEFAULT_FROM_EMAIL before requesting the check.'},status=503)
+    return Response(result,status=202 if result['outcome']=='accepted' else 503)
 
 @api_view(['GET'])
 @authentication_classes([])

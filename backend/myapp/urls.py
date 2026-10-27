@@ -19,7 +19,7 @@ from .views.outcomes import contribution_report, contribution_export, batch_trac
 from .views.discovery import guided_menu, menu_suggestions, basket_slots, recommendation_event, recommendation_metrics
 from .views.auth import recovery_request, recovery_confirm
 from .views.costs import expenses, void_expense, record_waste, cost_report
-from .views.reminders import reminder_status, run_reminders, customer_reminder
+from .views.reminders import reminder_status, run_reminders, customer_reminder, email_delivery_check
 from .views.kitchen import kitchen_blocks, kitchen_block_detail, review_order_plan, accepted_recipe, manual_order_plan
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
@@ -85,6 +85,7 @@ urlpatterns = [
     path("admin/expenses/<int:pk>/void/", void_expense),
     path("admin/waste/", record_waste),
     path("admin/reminder-status/", reminder_status),
+    path("admin/email-delivery-check/", email_delivery_check),
     path("reminders/run/", run_reminders),
     path("menu/", MenuList.as_view()),
     path("inventory-freshness/", inventory_freshness),

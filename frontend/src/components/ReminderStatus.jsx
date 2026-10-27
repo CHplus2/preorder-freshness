@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import axios from 'axios';
+import EmailDeliveryCheck from './EmailDeliveryCheck';
 import {reminderStatus,activitySummary,workerTime,workerOutcome} from '../utils/reminderStatus';
 export default function ReminderStatus(){
  const [status,setStatus]=useState(null),[error,setError]=useState(''),[revision,setRevision]=useState(0);
@@ -14,6 +15,7 @@ export default function ReminderStatus(){
 export function ReminderEvidence({status}){
  const activity=status.worker_activity,summary=activitySummary(activity),last=activity.recent_runs[0];
  return <><p>Owner reminders: {status.email_configured?'configuration ready':'not configured'}. Customer reminders: {status.customer_email_configured?'configuration ready':'not configured'}. {status.email_configured && !status.customer_email_configured && 'Customer messages will wait even if owner reminders can run.'}</p><p>{status.scheduler_secret_configured?'Worker authentication is configured.':'The worker’s private credential still needs configuration.'} Automatic scheduling must still be checked in your scheduler.</p>
+ {status.email_delivery && <EmailDeliveryCheck key={`${status.email_delivery.sender_address}|${status.email_delivery.owner_recipient}`} configuration={status.email_delivery}/>}
  <div className="reminder-run-summary"><h3>{summary.title}</h3><p>{summary.detail}</p>{last && <p>Started: <strong>{workerTime(last.started_at)}</strong>{last.completed_at && <> · Finished: {workerTime(last.completed_at)}</>}</p>}{summary.stale && <p className="reminder-run-stale">No newer authenticated run was observed within this check’s 15-minute reference window. Review scheduler history before relying on timely reminders.</p>}<p>{activity.authenticated_runs_24h} authenticated HTTP {activity.authenticated_runs_24h===1?'call':'calls'} recorded in 24 hours. Manual calls are included; command-line sends are separate.</p></div>
  <div className="reminder-queue-grid"><div><strong>{status.customer_reminders_due}</strong><span>Advance reminders waiting</span></div><div><strong>{status.customer_dispatch_due}</strong><span>Dispatch updates waiting</span></div><div><strong>{status.customer_time_updates_due}</strong><span>Time updates waiting</span></div></div>
  {status.customer_reminders_due+status.customer_dispatch_due+status.customer_time_updates_due>3 && <p>A customer queue exceeds one call’s total budget. Check how often the worker completes; owner messages also share that budget.</p>}

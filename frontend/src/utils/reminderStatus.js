@@ -1,4 +1,5 @@
 import {invalidResponse} from './apiResponse.js';
+import {emailDelivery} from './emailDelivery.js';
 const stamp=value=>typeof value==='string' && Number.isFinite(Date.parse(value));
 const count=value=>Number.isSafeInteger(value) && value>=0;
 const outcomes=['running','incomplete','completed','send_failed','not_configured','worker_error'];
@@ -11,6 +12,7 @@ export function reminderStatus(data){
   || (['running','incomplete'].includes(run.outcome)?run.completed_at!==null || run.sent!==null || run.failed!==null:
    !stamp(run.completed_at) || Date.parse(run.completed_at)<Date.parse(run.started_at)
     || (['completed','send_failed'].includes(run.outcome)?!count(run.sent) || !count(run.failed) || run.sent+run.failed>3 || (run.outcome==='completed' && run.failed!==0) || (run.outcome==='send_failed' && run.failed<1):run.sent!==null || run.failed!==null))))throw invalidResponse();
+ if(data.email_delivery!==undefined)emailDelivery(data.email_delivery);
  return data;
 }
 export function activitySummary(activity){
