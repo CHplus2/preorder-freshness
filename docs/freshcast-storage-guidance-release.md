@@ -1,7 +1,12 @@
 # Reusable storage guidance release
 
 Implementation branch: `release/raw-material-guidance`.
-Production/integration baseline: `332b530`.
+Pre-release production/integration baseline: `332b530`.
+
+Release status: the owner confirmed the migration result on 27 October 2026.
+Main and integration can advance together to the tested implementation
+`2f01137` and this release record. Production database access and live deployment
+health were not independently verified from the managed coding environment.
 
 This release adds optional, owner-documented receipt-based storage references
 to raw materials. It does not seed food-storage durations, assess physical food

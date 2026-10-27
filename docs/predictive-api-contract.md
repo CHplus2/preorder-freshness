@@ -51,7 +51,7 @@ The source link is general reference material, not auto-verified guidance or a
 physical safety assessment. No shelf-life values are preseeded. This deadline
 fix alone needs no schema or forecast/model change.
 
-## Reusable ingredient storage guidance — batch 2B release pending
+## Reusable ingredient storage guidance — 27 October 2026
 
 After migration `0023_raw_material_storage_guidance`, existing staff-only raw
 material list/create/detail endpoints expose `storage_guidance`, an optional

@@ -51,7 +51,7 @@ cover unlabelled receipt-based creation, handling holds, printed/opened limits,
 edits and mode switching against a disposable local PostgreSQL database. No
 production records or real emails/courier requests were used.
 
-## Batch 2B: optional reusable raw-material guidance (implemented; release pending)
+## Batch 2B: optional reusable raw-material guidance (released)
 
 The ingredient directory supports up to one receipt-based reference for each
 storage type: chilled, frozen or ambient. Days, a source/document reference and
@@ -68,8 +68,10 @@ Migration `0023_raw_material_storage_guidance` adds a JSON field defaulting to a
 empty list for existing ingredients. The tested Supabase SQL equivalent is in
 `deploy/sql/0023_raw_material_storage_guidance.sql`. Follow the
 [release instructions](freshcast-storage-guidance-release.md) before publishing
-to production; no database password changes are needed. Main and integration
-stay on the prior release until the target migration is confirmed.
+to production; no database password changes are needed. The owner confirmed the
+target migration result on 27 October 2026, allowing main and integration to
+advance together. This confirmation is owner-reported; live Vercel deployment
+health is separate from the completed local release checks.
 
 All 751 application tests pass (20 platform-specific skips). Validation includes
 six new API tests for optional guidance, storage separation,
