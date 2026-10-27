@@ -3,6 +3,32 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Date-guide budget comparison — 27 October 2026
+
+`POST /api/menu/guide/` adds `budget_mode`: `within` (default), `above`, or `all`.
+The supplied `budget` is the **total food amount for the requested quantity of
+one menu before discounts**, excluding delivery and existing basket items.
+`within` means total <= budget; `above` means total > budget; equality remains
+within. Above/all comparisons require a budget. Legacy requests without a budget
+or mode retain their existing unfiltered/default-within behaviour.
+
+The server compares Decimal `price × portions` totals. Each row retains `price`,
+`portions` and `food_total`, and adds `budget_relation` (`within`/`above` or null)
+and `budget_difference` (absolute Decimal money string or null). The top-level
+`budget` is null or `{amount, mode, basis: "food_total_before_discounts_and_delivery"}`.
+Responses still contain at most three results and check at most 30 ranked menus.
+In all mode, when both ranges have available times within that bounded scan, the
+selection includes each range. The existing history/popularity ranking otherwise
+remains in force. No available kitchen times are invented to satisfy a budget.
+
+Session context is `date-guide-v2` and records budget mode. Existing session-bound
+attribution and instant date-free menu suggestions are unchanged. The browser
+checks returned quantity, unit-price arithmetic and budget relation against the
+submitted preferences before displaying results. Search filters apply to the
+finder only, not the catalogue, instant cards or whole basket. Recommendation
+selection still reserves nothing and checkout remains authoritative. No database
+migration or demand-forecast/model artifact changes.
+
 ## Manual courier handover — 27 October 2026
 
 Owner Orders and both Planner order/run views share a recipient-copy panel and

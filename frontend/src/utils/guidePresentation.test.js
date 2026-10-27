@@ -6,4 +6,6 @@ assert.match(guideEmptyMessage('category_unavailable','Bakes'),/No Bakes menus/)
 assert.match(guideEmptyMessage('no_kitchen_times','Bakes'),/No automatic kitchen times/);
 assert.match(guideEmptyMessage('no_menu_match','Bakes'),/Bakes menus do not match/);
 assert.doesNotMatch(guideEmptyMessage(undefined,'Any category'),/No Bakes/);
+assert.match(guideEmptyMessage('no_menu_match','Any category','above'),/lower budget threshold/);
+assert.doesNotMatch(guideEmptyMessage('no_menu_match','Any category','all'),/larger food budget/);
 console.log('Guide presentation: Malaysia date bounds, leap-year arithmetic and category/time/filter recovery passed.');

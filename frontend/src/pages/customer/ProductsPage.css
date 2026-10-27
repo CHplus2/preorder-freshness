@@ -372,7 +372,7 @@ body {
 .menu-storefront .guided-menu>summary{font-size:14px;font-weight:600;cursor:pointer;min-height:28px;align-content:center}
 .menu-storefront .guided-menu>p{font-size:13px;line-height:1.65}
 .menu-storefront .guided-menu[open]>summary{margin-bottom:16px}
-.menu-storefront .guided-menu form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:end;gap:16px;margin-top:20px}
+.menu-storefront .guided-menu form{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:end;gap:16px;margin-top:20px}
 .menu-storefront .guided-menu form label{font-size:12px;display:grid;gap:7px;margin:0;min-width:0}
 .menu-storefront .guided-menu form input,.menu-storefront .guided-menu form select{width:100%;min-width:0;min-height:44px;margin:0;background:#fff;border:1px solid #bac9b9;border-radius:8px;color:#294631}
 .menu-storefront .guided-menu form>button{margin:0;justify-self:start;min-height:44px;grid-column:1/-1}

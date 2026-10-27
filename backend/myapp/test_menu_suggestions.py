@@ -101,3 +101,79 @@ class MenuSuggestionTests(TestCase):
         for body in bodies:
             with self.subTest(body=body):
                 self.assertEqual(self.client.post('/api/menu/guide/',body,format='json').status_code,400)
+
+    def test_food_budget_is_for_requested_quantity_not_unit_price(self):
+        from unittest.mock import patch
+        date=timezone.localdate()+timedelta(days=3)
+        expensive=self.menus[0];expensive.price='35.00';expensive.save()
+        Product.objects.exclude(pk=expensive.pk).update(price='33.33')
+        with patch('myapp.views.discovery.slots',return_value=[{'delivery_at':str(date)+'T15:00:00+08:00'}]):
+            result=self.client.post('/api/menu/guide/',{'date':str(date),'portions':3,'budget':'100.00'},format='json')
+        self.assertEqual(result.status_code,200,result.data)
+        self.assertEqual(len(result.data['results']),3)
+        self.assertNotIn(expensive.pk,[row['id'] for row in result.data['results']])
+        self.assertTrue(all(row['food_total']=='99.99' for row in result.data['results']))
+
+    def test_above_budget_is_explicit_and_exact_budget_is_within(self):
+        from unittest.mock import patch
+        date=timezone.localdate()+timedelta(days=3)
+        Product.objects.all().update(price='33.33')
+        expensive=self.menus[-1];expensive.price='35.00';expensive.save()
+        payload={'date':str(date),'portions':3,'budget':'99.99'}
+        with patch('myapp.views.discovery.slots',return_value=[{'delivery_at':str(date)+'T15:00:00+08:00'}]):
+            within=self.client.post('/api/menu/guide/',payload,format='json')
+            above=self.client.post('/api/menu/guide/',dict(payload,budget_mode='above'),format='json')
+        self.assertEqual(within.status_code,200,within.data)
+        self.assertTrue(all(row['budget_relation']=='within' and row['budget_difference']=='0.00' for row in within.data['results']))
+        self.assertEqual([row['id'] for row in above.data['results']],[expensive.pk])
+        row=above.data['results'][0]
+        self.assertEqual(row['food_total'],'105.00');self.assertEqual(row['budget_relation'],'above');self.assertEqual(row['budget_difference'],'5.01')
+        self.assertNotIn('Within your',str(row['reasons']))
+        self.assertEqual(above.data['budget']['mode'],'above')
+        context=RecommendationSession.objects.get(pk=above.data['session']).context
+        self.assertEqual(context['budget_mode'],'above');self.assertEqual(context['version'],'date-guide-v2')
+
+    def test_both_budget_ranges_include_each_when_feasible_without_exceeding_three(self):
+        from unittest.mock import patch
+        date=timezone.localdate()+timedelta(days=3)
+        Product.objects.all().update(price='30.00')
+        expensive=self.menus[-1];expensive.price='35.00';expensive.save()
+        with patch('myapp.views.discovery.slots',return_value=[{'delivery_at':str(date)+'T15:00:00+08:00'}]):
+            result=self.client.post('/api/menu/guide/',{'date':str(date),'portions':3,'budget':'100','budget_mode':'all'},format='json')
+        self.assertEqual(result.status_code,200,result.data)
+        self.assertEqual(len(result.data['results']),3)
+        self.assertEqual({row['budget_relation'] for row in result.data['results']},{'within','above'})
+        self.assertIn(expensive.pk,[row['id'] for row in result.data['results']])
+        self.assertEqual(RecommendationSession.objects.get(pk=result.data['session']).products,[row['id'] for row in result.data['results']])
+
+    def test_above_or_both_require_budget_and_both_scan_is_bounded(self):
+        from unittest.mock import patch
+        date=timezone.localdate()+timedelta(days=3)
+        for mode in ('above','all','invalid'):
+            result=self.client.post('/api/menu/guide/',{'date':str(date),'budget_mode':mode},format='json')
+            self.assertEqual(result.status_code,400,result.data)
+        first=self.menus[0]
+        for index in range(32):
+            menu=Product.objects.create(name=f'Extra meal {index}',price=10,category=self.category)
+            ProductIngredient.objects.create(product=menu,raw_material=first.ingredients.first().raw_material,quantity_required=10)
+        available=[{'delivery_at':str(date)+'T15:00:00+08:00'}]
+        with patch('myapp.views.discovery.slots',return_value=available) as scanned:
+            result=self.client.post('/api/menu/guide/',{'date':str(date),'portions':3,'budget':'100','budget_mode':'all'},format='json')
+        self.assertEqual(result.status_code,200,result.data)
+        self.assertEqual(scanned.call_count,3)  # No opposite price range exists in the bounded candidate set.
+        self.assertEqual(len(result.data['results']),3)
+        self.menus[0].price='35.00';self.menus[0].save()
+        with patch('myapp.views.discovery.slots',side_effect=lambda items,*args: [] if items[0].product.pk==self.menus[0].pk else available) as scanned:
+            result=self.client.post('/api/menu/guide/',{'date':str(date),'portions':3,'budget':'100','budget_mode':'all'},format='json')
+        self.assertEqual(scanned.call_count,30)  # An opposite-range menu exists but has no feasible times.
+        self.assertEqual(len(result.data['results']),3)
+
+    def test_above_budget_never_invents_capacity_or_changes_instant_menu_discovery(self):
+        from unittest.mock import patch
+        date=timezone.localdate()+timedelta(days=3)
+        with patch('myapp.views.discovery.slots',return_value=[]):
+            result=self.client.post('/api/menu/guide/',{'date':str(date),'portions':3,'budget':'1','budget_mode':'above'},format='json')
+        self.assertEqual(result.data['results'],[])
+        self.assertEqual(result.data['empty_reason'],'no_kitchen_times')
+        instant=self.client.post('/api/menu/suggestions/',{},format='json')
+        self.assertTrue(instant.data['results']);self.assertNotIn('budget',instant.data)

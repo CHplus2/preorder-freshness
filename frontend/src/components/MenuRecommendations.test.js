@@ -22,5 +22,6 @@ try{
  const compact=render(h(Card,{compact:true,maxReasons:1,menu:{id:4,name:'Rice meal',image_url:'',reasons:['Reason one','Reason two']},priceLabel:'RM 12.00 each'}));
  assert.match(compact,/menu-recommendation-card--compact/);assert.match(compact,/Reason one/);assert.doesNotMatch(compact,/Reason two/);
  assert.match(guide,/1–100 selling units/);assert.match(guide,/max="100"/);assert.match(guide,/max="99999999.99"/);
+ assert.match(guide,/Compare food total/);assert.match(guide,/Above this budget/);assert.match(guide,/Within and above budget/);assert.match(guide,/before discounts\. Delivery and existing basket items are extra/);
  console.log('Recommendation UI: visible entry point, loading distinction, shared evidence/photo cards and optional date refinement passed.');
 }finally{await server.close();}

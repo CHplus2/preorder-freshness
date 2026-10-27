@@ -22,7 +22,13 @@ class GuideInput(serializers.Serializer):
     date = serializers.DateField()
     portions = serializers.IntegerField(min_value=1, max_value=100, default=1)
     budget = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0.01'), required=False)
+    budget_mode = serializers.ChoiceField(choices=['within', 'above', 'all'], default='within')
     category = serializers.IntegerField(min_value=1, required=False)
+
+    def validate(self, data):
+        if data['budget_mode'] != 'within' and 'budget' not in data:
+            raise serializers.ValidationError({'budget': 'Enter a total food budget to compare prices with it.'})
+        return data
 
 
 class BasketSlotsInput(serializers.Serializer):
@@ -80,14 +86,18 @@ def guided_menu(request):
     if data.get('category'):
         products = products.filter(category_id=data['category'])
     category_available = not data.get('category') or products.filter(ingredients__isnull=False).exists()
-    if data.get('budget'):
-        products = products.filter(price__lte=data['budget']/data['portions'])
     # Both discovery surfaces use the same ranking; dates additionally constrain it.
     products = list(products)
+    budget, budget_mode = data.get('budget'), data['budget_mode']
+    if budget is not None and budget_mode != 'all':
+        # Compare exact Decimal totals, not rounded unit-price limits or floats.
+        products = [p for p in products if (p.price*data['portions'] <= budget) == (budget_mode == 'within')]
     shipping_only = bool(products) and all(shipping_enquiry(p) for p in products)
     candidates = rank_menu_choices(
         (p for p in products if not shipping_enquiry(p) and delivery_day_allowed(p, data['date']) and orders_open(p, data['date'], timezone.now())),
         request.user, personalised=variant == 'personalised')
+    compare_both = (budget is not None and budget_mode == 'all' and
+                    len({p.price*data['portions'] <= budget for _, p, _ in candidates[:30]}) == 2)
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     store, method, _ = request_store(store, data)
     results = []
@@ -96,21 +106,34 @@ def guided_menu(request):
         available = slots([item], data['date'], store)
         if not available:
             continue
+        total = p.price*data['portions']
+        relation = ('within' if total <= budget else 'above') if budget is not None else None
+        difference = abs(total-budget) if budget is not None else None
         results.append({'id': p.pk, 'name': p.name, 'image_url': p.image_url,
-            'price': str(p.price), 'selling_details': p.selling_details, 'food_total': str(p.price*data['portions']),
+            'price': str(p.price), 'selling_details': p.selling_details, 'food_total': str(total),
+            'budget_relation': relation, 'budget_difference': str(difference) if difference is not None else None,
             'portions': data['portions'], 'slots': available,
-            'reasons': [f'Kitchen time available for {data["portions"]} selling units'] +
-                ([f'Within your RM {data["budget"]} food budget'] if data.get('budget') else []) + reasons})
-        if len(results) == 3:
+            'reasons': [f'Kitchen time available for {data["portions"]} selling units'] + reasons})
+        if len(results) >= 3 and (not compare_both or len({r['budget_relation'] for r in results}) == 2):
             break
+    if budget is not None and budget_mode == 'all' and len(results) > 3:
+        selected = results[:3]
+        if len({r['budget_relation'] for r in selected}) == 1:
+            other = next((r for r in results[3:] if r['budget_relation'] != selected[0]['budget_relation']), None)
+            if other:
+                selected[-1] = other
+        results = selected
+    else:
+        results = results[:3]
     session = RecommendationSession.objects.create(id=uuid.uuid4(), owner_key=key, variant=variant,
         context={'date': data['date'].isoformat(), 'portions': data['portions'],
-            'budget': str(data.get('budget', '')), 'category': data.get('category'),
-            'version': 'date-guide-v1', 'surface': 'date_guide', 'experiment': settings.RECOMMENDATION_EXPERIMENT},
+            'budget': str(data.get('budget', '')), 'budget_mode': budget_mode, 'category': data.get('category'),
+            'version': 'date-guide-v2', 'surface': 'date_guide', 'experiment': settings.RECOMMENDATION_EXPERIMENT},
         products=[r['id'] for r in results])
     return Response({'session': str(session.pk), 'results': results,
+        'budget': {'amount': str(budget), 'mode': budget_mode, 'basis': 'food_total_before_discounts_and_delivery'} if budget is not None else None,
         'empty_reason': None if results else 'shipping_enquiry' if shipping_only else 'category_unavailable' if not category_available else 'no_kitchen_times' if candidates else 'no_menu_match',
-        'checked_limit': 30, 'message': 'Hourly suggestions use kitchen capacity, not current stock. The owner may need to purchase ingredients. Food totals exclude discounts and delivery; checkout rechecks the whole basket.'})
+        'checked_limit': 30, 'message': 'Hourly suggestions use kitchen capacity, not current stock. The owner may need to purchase ingredients. Each food total covers the requested quantity of one menu before discounts; delivery and existing basket items are excluded. Checkout rechecks the whole basket. Up to 30 ranked menus are checked, so these are suggestions rather than an exhaustive search.'})
 
 
 @api_view(['POST'])

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {guideResponse, rememberSuggestion} from './guideResponse.js';
+import {moneyCents,budgetBadge,budgetSummary} from './guideBudget.js';
 const row={id:1,name:'Rice',portions:2,food_total:'24.00',reasons:['Within budget'],slots:[{delivery_at:'2026-10-10T15:00:00+08:00'}]};
 const response={session:'test-session',message:'Suggestions only',results:[row]};
 assert.equal(guideResponse(response),response);
@@ -13,4 +14,21 @@ for(const bad of [null,{}, {...response,results:null}, {...response,empty_reason
 Object.defineProperty(globalThis,'sessionStorage',{configurable:true,get(){throw new Error('Storage blocked');}});
 assert.doesNotThrow(()=>rememberSuggestion('preferredDelivery','date'));
 delete globalThis.sessionStorage;
+const request={portions:3,budget:'100.00',budget_mode:'within'};
+const expensive={...row,price:'35.00',portions:3,food_total:'105.00',budget_relation:'above',budget_difference:'5.00'};
+assert.throws(()=>guideResponse({...response,results:[expensive]},request));
+assert.equal(guideResponse({...response,results:[expensive]},{...request,budget_mode:'above'}).results[0],expensive);
+assert.equal(guideResponse({...response,results:[expensive]},{...request,budget_mode:'all'}).results[0],expensive);
+for(const bad of [{food_total:'35.00'},{portions:1},{budget_relation:'within'},{budget_difference:'4.00'},{price:undefined}])assert.throws(()=>guideResponse({...response,results:[{...expensive,...bad}]},{...request,budget_mode:'above'}));
+const exact={...row,portions:3,price:'33.33',food_total:'99.99',budget_relation:'within',budget_difference:'0.00'};
+assert.equal(guideResponse({...response,results:[exact]},{...request,budget:'99.99'}).results[0],exact);
+assert.throws(()=>guideResponse({...response,results:[exact]},{...request,budget:'99.99',budget_mode:'above'}));
+assert.throws(()=>guideResponse({...response,budget:{amount:'100.00',mode:'within',basis:'invented'},results:[exact]},request));
+assert.equal(moneyCents('33.33')*3,9999);assert.equal(moneyCents('0.01'),1);
+assert.equal(moneyCents('1e2'),10000);assert.equal(moneyCents('1e-2'),1);
+for(const invalid of [true,null,'-1','NaN','1.001','999999999999999999'])assert.equal(moneyCents(invalid),null);
+const format=value=>'RM '+Number(value).toFixed(2);
+assert.equal(budgetBadge(expensive,'100.00',format),'RM 5.00 above your budget');
+assert.equal(budgetBadge(exact,'99.99',format),'Exactly on your budget');
+assert.equal(budgetSummary('all','100.00',format),'within and above RM 100.00 food total');
 console.log('Guide response validation and optional storage recovery passed.');
