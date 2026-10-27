@@ -1,4 +1,5 @@
 import {responseList,invalidResponse} from './apiResponse.js';
+import {validStorageGuidance} from './storageGuidance.js';
 const dayNumber = date => {
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date || ''))return NaN;
  const time=Date.parse(`${date}T00:00:00Z`);
@@ -12,7 +13,7 @@ export function inventoryRecords(data) {
 }
 export function materialRecords(data) {
  const rows=responseList(data);
- if(rows.some(row=>!Number.isSafeInteger(row.id) || row.id<1 || typeof row.name!=='string' || typeof row.unit!=='string'))throw invalidResponse();
+ if(rows.some(row=>!Number.isSafeInteger(row.id) || row.id<1 || typeof row.name!=='string' || typeof row.unit!=='string' || (row.storage_guidance!==undefined && !validStorageGuidance(row.storage_guidance))))throw invalidResponse();
  return rows;
 }
 export function expiryStatus(expiry, today) {

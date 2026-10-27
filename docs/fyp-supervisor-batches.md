@@ -51,14 +51,35 @@ cover unlabelled receipt-based creation, handling holds, printed/opened limits,
 edits and mode switching against a disposable local PostgreSQL database. No
 production records or real emails/courier requests were used.
 
-## Batch 2B: optional reusable raw-material guidance (pending)
+## Batch 2B: optional reusable raw-material guidance (implemented; release pending)
 
-Add optional reusable raw-material guidance with source and storage context,
-while retaining documented custom input on each batch. A raw-material default
-will not be mandatory before an owner can record a batch's own guidance.
-Do not silently apply a frozen duration to chilled stock or replace a shorter
-supplier/handling deadline with a longer generic rule. Any schema addition needs
-a concrete tested migration/release script; no database password changes.
+The ingredient directory supports up to one receipt-based reference for each
+storage type: chilled, frozen or ambient. Days, a source/document reference and
+applicable ingredient state/storage conditions are required for an entry; an
+empty list remains valid. No duration is preseeded or claimed to be verified.
+
+A batch offers only the reference matching its actual storage. An explicit
+action copies days and evidence into received-date mode, keeping printed caps,
+opened/thawed limits and holds. Custom evidence remains editable. Switching the
+ingredient clears borrowed date evidence instead of carrying guidance for a
+different ingredient. Existing saved batches are not changed by reference edits.
+
+Migration `0023_raw_material_storage_guidance` adds a JSON field defaulting to an
+empty list for existing ingredients. The tested Supabase SQL equivalent is in
+`deploy/sql/0023_raw_material_storage_guidance.sql`. Follow the
+[release instructions](freshcast-storage-guidance-release.md) before publishing
+to production; no database password changes are needed. Main and integration
+stay on the prior release until the target migration is confirmed.
+
+All 751 application tests pass (20 platform-specific skips). Validation includes
+six new API tests for optional guidance, storage separation,
+strict input validation, access control, snapshots and source limits, plus 58
+focused PostgreSQL tests. Frontend lint, UX/unit suites and production build
+pass. Eleven full-page accessibility/overflow checks at 1440, 390 and 320 pixels
+exercise UI creation/error recovery, matching-storage copy, printed caps,
+multi-storage edits, custom values and ingredient switching. The SQL script was
+run twice on an isolated pre-migration PostgreSQL fixture and preserves existing
+ingredient rows. No production records, emails or courier requests were used.
 
 ## Courier automation and reminder verification
 

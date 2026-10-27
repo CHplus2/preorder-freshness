@@ -1,15 +1,17 @@
 import {useId} from 'react';
 import {changeExpiryBasis,expiryPreview} from '../utils/expiryEvidence';
 import {malaysiaDate} from '../utils/planner';
+import {applyStorageGuidance,matchingStorageGuidance,storageNames} from '../utils/storageGuidance';
 import './ExpiryFields.css';
 
 function Field({id,label,children}){return <div className="expiry-field"><label htmlFor={id}>{label}</label>{children}</div>;}
-export default function ExpiryFields({value,onChange,disabled=false}){
+export default function ExpiryFields({value,onChange,disabled=false,material=null}){
  const prefix=useId(),id=key=>prefix+'-'+key,set=(key,next)=>onChange({...value,[key]:next});
  const basis=value.expiry_basis || 'label',today=malaysiaDate(new Date()),preview=expiryPreview(value,today);
  const forcedHold=['unknown','breach'].includes(value.handling_history);
  const needsSource=basis!=='label' || !!value.opened_date || !!value.thawed_date;
  const printed=value.original_expiry_date || (basis==='label'?value.expiry_date:'') || '';
+ const saved=matchingStorageGuidance(value,material);
  const setPrinted=next=>onChange({...value,original_expiry_date:next || null,...(basis==='label'?{expiry_date:next}:{})});
  return <div className="expiry-evidence-panel"><fieldset className="expiry-evidence" disabled={disabled}><legend>Batch dates and shelf-life evidence</legend>
   <p>Received date records when this batch reached you. A printed expiry is the supplier’s deadline. For unlabelled food, use documented storage guidance that matches the ingredient and its actual conditions.</p>
@@ -19,6 +21,13 @@ export default function ExpiryFields({value,onChange,disabled=false}){
    <Field id={id('basis')} label="Expiry calculation"><select id={id('basis')} value={basis} onChange={e=>onChange(changeExpiryBasis(value,e.target.value))}><option value="label">Printed expiry / best-before date</option><option value="manufactured">Manufacture date + documented shelf life</option><option value="storage">Received date + documented storage life</option></select></Field>
    <Field id={id('storage')} label="Actual storage"><select id={id('storage')} value={value.storage_type || 'chilled'} onChange={e=>set('storage_type',e.target.value)}><option value="chilled">Chilled</option><option value="frozen">Frozen</option><option value="ambient">Ambient</option></select></Field>
   </div>
+  {material && <div className="expiry-saved-guidance">
+   <strong>Saved guidance · {storageNames[value.storage_type || 'chilled']}</strong>
+   {saved?<><p>{saved.shelf_life_days} days from receipt. {saved.conditions}</p><p>Source: {saved.source}</p>
+    <button type="button" onClick={()=>onChange(applyStorageGuidance(value,material))}>Use this guidance for this batch</button>
+    <p>Copies the days and evidence into received-date mode, replacing this form’s calculation and source. Check that the conditions match. Earlier printed, opened or thawed limits still apply; holds stay in place.</p>
+   </>:<p>No saved guidance for this storage type. Enter custom documented days below, use a printed date, or save a reference in the ingredient directory.</p>}
+  </div>}
   {basis==='label'?<>
    <Field id={id('printed')} label="Printed expiry / best-before date"><input id={id('printed')} required type="date" value={printed} onChange={e=>setPrinted(e.target.value)}/></Field>
    <Field id={id('label-type')} label="Printed date meaning"><select id={id('label-type')} value={value.label_date_type || 'not_recorded'} onChange={e=>set('label_date_type',e.target.value)}><option value="not_recorded">Not recorded</option><option value="use_by">Use by / expiry</option><option value="best_before">Best before (quality date)</option></select></Field>

@@ -48,9 +48,34 @@ The browser shows only the relevant mode fields and previews calendar-day
 arithmetic; the server remains authoritative. Switching calculated to labelled
 mode requires an actual printed date rather than relabelling a calculated one.
 The source link is general reference material, not auto-verified guidance or a
-physical safety assessment. No shelf-life values are preseeded. Reusable
-raw-material guidance remains a separate pending batch; no schema migration or
-forecast/model change is included here.
+physical safety assessment. No shelf-life values are preseeded. This deadline
+fix alone needs no schema or forecast/model change.
+
+## Reusable ingredient storage guidance — batch 2B release pending
+
+After migration `0023_raw_material_storage_guidance`, existing staff-only raw
+material list/create/detail endpoints expose `storage_guidance`, an optional
+JSON array (default `[]`). Each entry has exactly `storage_type`
+(`chilled|frozen|ambient`), `shelf_life_days` (integer 1–3650), `source`
+(nonblank, at most 140 characters) and `conditions` (nonblank, at most 155).
+One entry per storage type, at most three. Unknown entry keys, null, duplicate
+types and incomplete entries are rejected. Omitting guidance on an existing
+material PATCH preserves it; `[]` explicitly removes it. Existing unit-change
+and deletion restrictions still apply. No public/customer access is added.
+
+Guidance is receipt-based and remains owner-documented. The API does not infer a
+manufacturing date or auto-apply a material reference to stock. The browser's
+explicit copy action selects a matching material/storage entry, switches to
+receipt-based calculation and copies days plus `source; conditions` into the
+existing batch evidence fields. The joined text fits the 300-character batch
+note. The owner may use custom evidence instead. Printed/opened/thawed caps and
+holds remain in force. Changing a material reference never rewrites existing
+batches; changing the selected ingredient in a new-batch form clears the old
+date evidence. No durations are seeded or advertised as safety guarantees.
+
+The migration is additive; old code ignores the new field. Do not deploy this
+code before applying the migration. See `docs/freshcast-storage-guidance-release.md`.
+Forecast/model artifacts, allocation and reminder behavior are unchanged.
 
 ## Manual courier handover — 27 October 2026
 

@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {createServer} from 'vite';
+import {validStorageGuidance,matchingStorageGuidance,applyStorageGuidance,changeBatchMaterial} from '../utils/storageGuidance.js';
+import {materialRecords} from '../utils/inventoryAttention.js';
+import {expiryPreview} from '../utils/expiryEvidence.js';
+const profile={storage_type:'chilled',shelf_life_days:2,source:'Fixture reference',conditions:'Fixture raw unopened chilled conditions'};
+const material={id:1,name:'Fixture',unit:'g',storage_guidance:[profile]};
+const lot={raw_material:1,received_date:'2026-10-27',expiry_date:'2026-10-28',expiry_basis:'label',storage_type:'chilled',quarantined:true,quantity:10};
+assert.equal(validStorageGuidance([]),true);
+for(const value of [null,{},[profile,profile],[{...profile,storage_type:'room'}],[{...profile,shelf_life_days:1.5}],[{...profile,shelf_life_days:3651}],[{...profile,source:' '}],[{...profile,conditions:'c'.repeat(156)}]])assert.equal(validStorageGuidance(value),false);
+assert.equal(matchingStorageGuidance(lot,material),profile);
+assert.equal(matchingStorageGuidance({...lot,storage_type:'frozen'},material),null);
+assert.equal(applyStorageGuidance({...lot,raw_material:2},material),null);
+const copied=applyStorageGuidance(lot,material);
+assert.equal(copied.expiry_basis,'storage');assert.equal(copied.shelf_life_days,2);
+assert.equal(copied.guidance_note,'Fixture reference; Fixture raw unopened chilled conditions');
+assert.equal(copied.quarantined,true);assert.equal(copied.quantity,10);
+assert.equal(copied.original_expiry_date,'2026-10-28');assert.equal(expiryPreview(copied).effective,'2026-10-28');
+const changed=changeBatchMaterial(copied,2);
+assert.equal(changed.shelf_life_days,null);assert.equal(changed.guidance_note,'');assert.equal(changed.original_expiry_date,null);
+assert.equal(changed.quarantined,true);assert.equal(changed.received_date,lot.received_date);
+assert.equal(changeBatchMaterial(copied,1).guidance_note,copied.guidance_note);
+materialRecords([material]);assert.throws(()=>materialRecords([{...material,storage_guidance:[{...profile,source:''}]}]));
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+try{
+ const {default:Editor}=await server.ssrLoadModule('/src/components/StorageGuidanceEditor.jsx');
+ const {default:Fields}=await server.ssrLoadModule('/src/components/ExpiryFields.jsx');
+ const editor=renderToStaticMarkup(createElement(Editor,{value:[profile],onChange:()=>{}}));
+ assert.match(editor,/Reusable storage guidance \(optional\)/);assert.match(editor,/Existing batches keep their saved evidence/);
+ assert.match(editor,/Source \/ document reference/);assert.match(editor,/Ingredient state and storage conditions/);
+ const html=renderToStaticMarkup(createElement(Fields,{value:lot,material,onChange:()=>{}}));
+ assert.match(html,/Use this guidance for this batch/);assert.match(html,/Fixture raw unopened chilled conditions/);assert.match(html,/Earlier printed, opened or thawed limits still apply/);
+ const mismatch=renderToStaticMarkup(createElement(Fields,{value:{...lot,storage_type:'frozen'},material,onChange:()=>{}}));
+ assert.doesNotMatch(mismatch,/Use this guidance for this batch/);assert.match(mismatch,/No saved guidance for this storage type/);
+ console.log('Saved storage guidance: optional evidence, matching storage, explicit copy, earlier caps, preserved holds and material changes passed.');
+}finally{await server.close();}

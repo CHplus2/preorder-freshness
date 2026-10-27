@@ -93,6 +93,9 @@ class Product(models.Model):
 # ============ RAW MATERIAL ============
 class RawMaterial(models.Model):
     estimated_unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True, blank=True, validators=[MinValueValidator(0)])
+    # Optional owner-documented, receipt-based guidance. Batches copy evidence
+    # explicitly; changing this list never rewrites saved batch deadlines.
+    storage_guidance = models.JSONField(default=list, blank=True)
     UNIT_CHOICES = [
         ("g", "Gram"),
         ("kg", "Kilogram"),

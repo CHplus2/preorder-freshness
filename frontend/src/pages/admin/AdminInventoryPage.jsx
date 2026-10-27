@@ -7,6 +7,8 @@ import ModalDialog from '../../components/ModalDialog';
 import PageLoading from "../../components/PageLoading";
 import {apiError,readApiError} from '../../utils/apiError';
 import ExpiryFields from "../../components/ExpiryFields";
+import StorageGuidanceEditor from "../../components/StorageGuidanceEditor";
+import {changeBatchMaterial,validStorageGuidance} from "../../utils/storageGuidance";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { getCookie } from "../../utils/cookieUtils";
@@ -24,6 +26,7 @@ function inventorySaveError(error) {
 }
 
 const emptyRawMaterial = {
+  storage_guidance: [],
   name: "",
   unit: "g",
 };
@@ -204,6 +207,10 @@ export default function AdminInventoryPage() {
   ]);
 
   const handleCreateRawMaterial = async () => {
+    if (!validStorageGuidance(newRawMaterial.storage_guidance || [])) {
+      setError("Complete each guidance entry with a storage type, whole days (1–3650), source and conditions, or remove the entry to save without it.");
+      return;
+    }
     if (!newRawMaterial.name.trim()) {
       setError("Raw material name is required.");
       return;
@@ -224,8 +231,7 @@ export default function AdminInventoryPage() {
       setNewRawMaterial(null);
     } catch (err) {
       setError(
-        err.response?.data?.name?.[0] ||
-        "Failed to create raw material."
+        apiError(err,"Could not save this ingredient. Your entries are still here; check the records before trying again.")
       );
     } finally {
       setLoading(false);
@@ -233,6 +239,10 @@ export default function AdminInventoryPage() {
   };
 
   const handleUpdateRawMaterial = async () => {
+    if (!validStorageGuidance(editingRawMaterial.storage_guidance || [])) {
+      setError("Complete each guidance entry with a storage type, whole days (1–3650), source and conditions, or remove the entry to save without it.");
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -242,6 +252,7 @@ export default function AdminInventoryPage() {
         {
           name: editingRawMaterial.name,
           unit: editingRawMaterial.unit,
+          storage_guidance: editingRawMaterial.storage_guidance || [],
         },
         getAuthConfig()
       );
@@ -251,8 +262,7 @@ export default function AdminInventoryPage() {
       setEditingRawMaterial(null);
     } catch (err) {
       setError(
-        err.response?.data?.detail ||
-        "Failed to update raw material."
+        apiError(err,"Could not save this ingredient. Your entries are still here; check the records before trying again.")
       );
     } finally {
       setLoading(false);
@@ -629,6 +639,7 @@ export default function AdminInventoryPage() {
             <tr>
               <th>Name</th>
               <th>Unit</th>
+              <th>Saved guidance</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -644,6 +655,7 @@ export default function AdminInventoryPage() {
                 <td data-label="Unit">
                   {material.unit_display}
                 </td>
+                <td data-label="Saved guidance">{material.storage_guidance?.length?`${material.storage_guidance.length} storage reference${material.storage_guidance.length===1?'':'s'}`:'Custom batch entry available'}</td>
 
                 <td className="table-actions" data-label="Actions">
 
@@ -732,6 +744,8 @@ export default function AdminInventoryPage() {
               <option value="unit">Unit</option>
             </select>
 
+            <StorageGuidanceEditor value={newRawMaterial.storage_guidance || []} disabled={loading} onChange={rows=>setNewRawMaterial({...newRawMaterial,storage_guidance:rows})}/>
+
             <div className="modal-actions">
 
               <button
@@ -814,6 +828,8 @@ export default function AdminInventoryPage() {
               <option value="unit">Unit</option>
             </select>
 
+            <StorageGuidanceEditor value={editingRawMaterial.storage_guidance || []} disabled={loading} onChange={rows=>setEditingRawMaterial({...editingRawMaterial,storage_guidance:rows})}/>
+
             <div className="modal-actions">
 
               <button
@@ -869,11 +885,7 @@ export default function AdminInventoryPage() {
                 newInventoryItem.raw_material
               }
               onChange={(e) =>
-                setNewInventoryItem({
-                  ...newInventoryItem,
-                  raw_material:
-                    Number(e.target.value),
-                })
+                setNewInventoryItem(changeBatchMaterial(newInventoryItem,e.target.value?Number(e.target.value):""))
               }
             >
               <option value="">
@@ -960,7 +972,7 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <ExpiryFields value={newInventoryItem} onChange={setNewInventoryItem} disabled={loading}/>
+            <ExpiryFields value={newInventoryItem} onChange={setNewInventoryItem} disabled={loading} material={rawMaterials.find(row=>row.id===Number(newInventoryItem.raw_material))}/>
 
 
             <div className="modal-actions">
@@ -1113,7 +1125,7 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <ExpiryFields value={editingInventoryItem} onChange={setEditingInventoryItem} disabled={loading}/>
+            <ExpiryFields value={editingInventoryItem} onChange={setEditingInventoryItem} disabled={loading} material={rawMaterials.find(row=>row.id===Number(editingInventoryItem.raw_material))}/>
 
 
             <div className="modal-actions">

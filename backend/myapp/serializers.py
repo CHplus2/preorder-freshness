@@ -302,7 +302,27 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         return {"id": obj.user.id, "username": obj.user.username}
 
+class StorageGuidanceSerializer(serializers.Serializer):
+    storage_type = serializers.ChoiceField(choices=['chilled', 'frozen', 'ambient'])
+    shelf_life_days = serializers.IntegerField(min_value=1, max_value=3650)
+    source = serializers.CharField(max_length=140, allow_blank=False)
+    conditions = serializers.CharField(max_length=155, allow_blank=False)
+
+    def to_internal_value(self, data):
+        if isinstance(data, dict) and set(data) - set(self.fields):
+            raise serializers.ValidationError('Use only storage type, days, source and conditions for saved guidance.')
+        return super().to_internal_value(data)
+
+
 class RawMaterialSerializer(serializers.ModelSerializer):
+    storage_guidance = StorageGuidanceSerializer(many=True, required=False, allow_empty=True, max_length=3)
+
+    def validate_storage_guidance(self, value):
+        storage_types = [row['storage_type'] for row in value]
+        if len(storage_types) != len(set(storage_types)):
+            raise serializers.ValidationError('Save one guidance entry per storage type. Include the applicable ingredient state and temperature in its conditions.')
+        return value
+
     def validate_unit(self, value):
         if self.instance and value != self.instance.unit and (self.instance.inventory_items.exists() or self.instance.product_ingredients.exists() or self.instance.orderingredient_set.exists()):
             raise serializers.ValidationError('Create a new material to change units once batches or recipes use this material.')
