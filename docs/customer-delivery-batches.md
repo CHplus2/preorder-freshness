@@ -117,6 +117,15 @@ If another scheduler already calls the worker reliably, use that one. Otherwise,
    best effort, not a real-time delivery guarantee. A reliable production scheduler
    or provider-backed queue is needed for stricter timing or greater volume.
 
+Workflow maintenance (27 October 2026): the reminder job pins Ubuntu 24.04 and
+the official checkout v5 commit using Node.js 24. Run titles and the run Summary
+now distinguish a configuration-only check from actual worker execution. Summary
+evidence includes only bounded sent/failed counts; zero attempts does not prove
+an empty queue or inbox delivery. A re-run retains its original inputs **and old
+commit**: start a new workflow run on main to use changed settings or this fix.
+The configured five-minute schedule remains best effort. No real email was sent
+while validating this workflow change; all 34 deployment tests pass.
+
 The runner uses a fixed HTTPS endpoint, refuses redirects, bounds reads and time,
 logs counts only, and does not retry immediately after a network/HTTP failure.
 Default command `python deploy/run_delivery_reminders.py` makes no network request;

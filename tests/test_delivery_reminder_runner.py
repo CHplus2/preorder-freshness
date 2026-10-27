@@ -1,6 +1,8 @@
 import io
 import json
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from http.client import HTTPException
 from contextlib import redirect_stdout
 from unittest.mock import patch, MagicMock
@@ -53,3 +55,34 @@ class ReminderRunnerTests(unittest.TestCase):
     def test_redirect_is_never_followed_and_count_contract_is_strict(self):
         self.assertIsNone(NoRedirect().redirect_request(None,None,302,'',{},'https://another.example'))
         for bad in [None,[],{}, {'sent':True,'failed':0},{'sent':-1,'failed':0},{'sent':3,'failed':3}]:self.assertIsNone(counts(bad))
+
+
+    def test_summary_distinguishes_check_only_from_actual_zero_send(self):
+        with TemporaryDirectory() as directory:
+            summary=Path(directory)/'summary.md'
+            with patch.dict('os.environ',{'GITHUB_STEP_SUMMARY':str(summary),'GITHUB_EVENT_NAME':'workflow_dispatch'}):
+                opener=MagicMock()
+                self.assertEqual(self.run_main([],opener)[0],0)
+                text=summary.read_text()
+                self.assertIn('Configuration check only',text)
+                self.assertIn('Re-running this check keeps its original inputs',text)
+                self.assertNotIn(self.secret,text)
+                summary.unlink()
+                response=opener.open.return_value.__enter__.return_value
+                response.status=200;response.read.return_value=b'{"sent":0,"failed":0}'
+                with patch.dict('os.environ',{'GITHUB_EVENT_NAME':'schedule'}):
+                    self.assertEqual(self.run_main(['--send'],opener)[0],0)
+                text=summary.read_text()
+                self.assertIn('Scheduled execution',text)
+                self.assertIn('No emails were attempted',text)
+                self.assertIn('sent=0, failed=0',text)
+                self.assertNotIn('Configuration check only',text)
+                self.assertNotIn(self.secret,text)
+
+    def test_failed_summary_write_does_not_repeat_network_or_hide_worker_outcome(self):
+        with TemporaryDirectory() as directory, patch.dict('os.environ',{'GITHUB_STEP_SUMMARY':directory}):
+            opener=MagicMock();response=opener.open.return_value.__enter__.return_value
+            response.status=200;response.read.return_value=b'{"sent":1,"failed":0}'
+            code,text=self.run_main(['--send'],opener)
+            self.assertEqual(code,0);opener.open.assert_called_once()
+            self.assertIn('summary could not be saved',text)
