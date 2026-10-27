@@ -10,6 +10,8 @@ from django.db import IntegrityError, transaction
 from rest_framework import serializers
 from rest_framework.authentication import SessionAuthentication
 from ..services.auth_limits import limit
+from ..services.account_identity import email_address, lock_account_writes, require_available_email, login_account, recovery_account
+from uuid import uuid4
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
@@ -36,7 +38,8 @@ def admin_login(request, extra_context=None):
 
 
 class SignupInput(serializers.Serializer):
-    username = serializers.RegexField(r'^[\w.@+-]+$', max_length=150)
+    username = serializers.RegexField(r'^[\w.@+-]+$', max_length=150, required=False)
+    first_name = serializers.CharField(max_length=150, required=False, allow_blank=True, default='')
     password = serializers.CharField(max_length=128, trim_whitespace=False)
     confirmPassword = serializers.CharField(max_length=128, trim_whitespace=False)
     email = serializers.EmailField(max_length=254, required=False, allow_blank=True, default='')
@@ -47,7 +50,12 @@ def signup_view(request):
     limit(request, 'signup')
     data = SignupInput(data=request.data)
     data.is_valid(raise_exception=True)
-    username = data.validated_data['username']
+    email = email_address(data.validated_data['email'])
+    username = data.validated_data.get('username')
+    if not username and not email:
+        raise serializers.ValidationError({'email': 'Enter an email address to create your account.'})
+    username = SignupInput().fields['username'].run_validation(User.normalize_username(username) if username else 'customer-'+uuid4().hex)
+    first_name = data.validated_data['first_name']
     password = data.validated_data['password']
     confirm_password = data.validated_data['confirmPassword']
 
@@ -57,19 +65,21 @@ def signup_view(request):
     if password != confirm_password:
         return Response({"detail": "Password mismatch"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if User.objects.filter(username=username).exists():
-        return Response({"detail": "Username taken"}, status=status.HTTP_409_CONFLICT)
-
-    user = User(username=username, email=data.validated_data['email'])
+    user = User(username=username, email=email, first_name=first_name)
     try:
         validate_password(password, user)
     except DjangoValidationError as exc:
         raise serializers.ValidationError({'password': exc.messages})
+    user.set_password(password)
     try:
         with transaction.atomic():
-            user = User.objects.create_user(username=username, password=password, email=user.email)
+            lock_account_writes()
+            if User.objects.filter(username__iexact=username).exists() or User.objects.filter(email__iexact=username).exclude(email='').exists():
+                raise serializers.ValidationError({'username': 'This sign-in name is unavailable. Try signing in or choose another.'})
+            require_available_email(email)
+            user.save()
     except IntegrityError:
-        raise serializers.ValidationError('Username is unavailable.')
+        raise serializers.ValidationError('These sign-in details are unavailable. Try signing in or use another email.')
     login(request, user)
 
     return Response({"detail": "User created and logged in"}, status=status.HTTP_201_CREATED
@@ -77,8 +87,15 @@ def signup_view(request):
 
 
 class LoginInput(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
+    identifier = serializers.CharField(max_length=254, required=False)
+    # Legacy clients can explicitly authenticate the exact Django username.
+    username = serializers.CharField(max_length=150, required=False)
     password = serializers.CharField(max_length=128, trim_whitespace=False)
+
+    def validate(self, data):
+        if ('identifier' in data) == ('username' in data):
+            raise serializers.ValidationError('Enter your email or username and password.')
+        return data
 
 
 @api_view(["POST"])
@@ -86,15 +103,22 @@ def login_view(request):
     SessionAuthentication().enforce_csrf(request)
     incoming = LoginInput(data=request.data)
     incoming.is_valid(raise_exception=True)
-    username = incoming.validated_data['username']
-    password = incoming.validated_data['password']
-    limit(request, 'login', username)
-
-    user = authenticate(request, username=username, password=password)
+    values = incoming.validated_data
+    identifier = values.get('identifier', values.get('username'))
+    password = values['password']
+    account = login_account(identifier, username_only='username' in values)
+    # Email and username aliases share one account limit. Unknown or ambiguous
+    # identifiers keep their own limit and the same public failure response.
+    limit(request, 'login', account.username if account else identifier)
+    if account:
+        user = authenticate(request, username=account.username, password=password)
+    else:
+        User().set_password(password)  # Same expensive hash for an unknown identity.
+        user = None
     if user:
         login(request, user)
         return Response({"detail": "Logged in"}, status=status.HTTP_200_OK)
-    return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({"detail": "Sign-in details were not accepted. Check your email or username and password. For a shared email, use your existing username."}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(["POST"])
 def logout_view(request):
@@ -119,17 +143,18 @@ def recovery_request(request):
     SessionAuthentication().enforce_csrf(request)
     incoming = RecoveryInput(data=request.data)
     incoming.is_valid(raise_exception=True)
-    username,email = incoming.validated_data['username'],incoming.validated_data['email']
-    limit(request, 'recovery', username, maximum=5)
-    user = User.objects.filter(username=username, email__iexact=email, is_active=True).first()
-    if user and user.has_usable_password():
+    email = email_address(incoming.validated_data['email'])
+    username = incoming.validated_data['username']
+    user = recovery_account(email, username)
+    limit(request, 'recovery', user.username if user else username or email, maximum=5)
+    if user:
         from ..services.recovery_email import send_recovery_email
         send_recovery_email(user)
-    return Response({'detail': 'If the account and recovery email match, a reset link will be sent. For an older account without an email, contact the kitchen owner.'})
+    return Response({'detail': 'If these details identify an eligible account, a reset link will be sent. If an older email is shared, include your username. Accounts without an email need help from the kitchen.'})
 
 
 class RecoveryInput(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
+    username = serializers.CharField(max_length=150, required=False, allow_blank=True, default='')
     email = serializers.EmailField(max_length=254)
 
 

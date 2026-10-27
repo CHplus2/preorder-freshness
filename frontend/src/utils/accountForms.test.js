@@ -23,3 +23,10 @@ test('reset-fragment parsing is repeatable and distinguishes absent from incompl
  assert.deepEqual(resetCredentials(),{uid:null,token:null});
  assert.deepEqual(resetCredentials('#uid=abc'),{uid:'abc',token:null});
 });
+
+test('credential failures guide sign-in rather than asking an anonymous customer to sign in again',()=>{
+ const error={response:{status:401,data:{detail:'untrusted account candidate'}}};
+ assert.match(accountRequestError(error,'signin'),/email or username/);
+ assert.match(accountRequestError(error,'signin'),/existing username/);
+ assert.doesNotMatch(accountRequestError(error,'signin'),/Please sign in again|untrusted account/);
+});

@@ -42,7 +42,12 @@ def order_email(request):
             user = User.objects.select_for_update().get(pk=request.user.pk)
             if not user.check_password(incoming.validated_data['current_password']):
                 raise serializers.ValidationError({'current_password': 'Enter your current password to change your email.'})
-            user.email = incoming.validated_data['email'].strip().lower()
+            from ..services.account_identity import email_address, lock_account_writes, require_available_email
+            email = email_address(incoming.validated_data['email'])
+            lock_account_writes()
+            if email != email_address(user.email):
+                require_available_email(email, excluding=user.pk)
+            user.email = email
             user.save(update_fields=['email'])
     else:
         user = request.user

@@ -33,3 +33,7 @@
 .recovery-actions button,.recovery-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border:1px solid #c7d2c0;border-radius:8px;color:#31583c;background:#fff;font-size:14px;text-decoration:none}
 @media(max-width:480px){.account-dialog .account-form-card{padding:24px 20px}.account-form-card .dk-eyebrow{font-size:9px}.account-dialog .account-form-card h2{font-size:29px}.recovery-page{margin:14px auto;padding:20px 16px}.recovery-card{padding:22px 18px}}
 @media(max-height:650px){.account-dialog .account-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;align-items:flex-start}.account-dialog .account-form-card{padding-top:24px}}
+
+.recovery-legacy{border-top:1px solid #dfe6d9;padding-top:16px;font-size:14px;line-height:1.6}.recovery-legacy summary,.account-reference summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:#315a3c;font-weight:600}.recovery-legacy[open] summary{margin-bottom:8px}.recovery-legacy p{font-size:13px;color:#52634f;margin:0 0 12px}.account-reference p{overflow-wrap:anywhere;font-size:13px}
+
+.account-signin-help{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}.account-signin-help .account-legacy-toggle{border:0;background:transparent;color:#315a3c;min-height:44px;font-size:12px;padding:8px 0;text-decoration:underline;text-underline-offset:3px}

@@ -178,22 +178,71 @@ provider accounts or enabled flags were changed. Setup does not require a new
 chat. It can be completed here when the necessary hosting/repository access is
 available; private credentials should not be pasted into chat.
 
-## Batch 4: account sign-in, provider automation and final verification (pending)
+## Batch 4A: email-first sign-in and recovery (implemented)
 
-Recommended account direction: email/password by default for new customers,
-while preserving username access for existing accounts. This needs a deliberate
-email uniqueness, verification and recovery flow. Registration remains
-username/password with optional email through Batch 3. Google sign-in needs OAuth
-configuration; phone sign-in needs a verification provider. An order phone number
-or WhatsApp preference is contact information, not proof of account ownership.
-Notification channels are explicit choices, not inferred from a registration method.
+New storefront registration asks for email, optional name and password/confirmation;
+customers no longer need to invent a username. The server stores a random stable
+account reference in the existing username column. IDs, orders, wallets and old
+usernames do not change. Old API clients may still supply a username; the public
+form uses email by default. No migration or mail/provider setup is required for
+password sign-in.
 
-Official WhatsApp messaging needs an account/provider, consent, templates and
-applicable charges. GrabExpress booking/event integration needs verified access,
-regional capabilities and available testing credentials. Neither provider is
-connected in this release. Verify event authenticity, retries, duplicates and
-status transitions before automating carrier updates. Keep manual operation
-available, with responsive and accessible customer/owner views across all batches.
+The default sign-in accepts an email or existing username. It only authenticates
+when that identifier matches one account. Shared legacy emails, including inactive
+accounts, and collisions between one username and another account's email do not
+select a first result. Existing usernames remain available; the small exact-username
+option supports rare email-shaped legacy usernames. Password failures, unknown
+accounts and inactive accounts use the same generic response. Email and username
+aliases share the account's database-backed attempt limit; changing email does not
+reset that limit. CSRF/session/password-validation protections remain in force.
+
+Email-only password recovery sends a link only for one eligible account. A shared
+older email needs the optional existing username to disambiguate. Unknown, inactive,
+unusable-password and ambiguous requests return the same generic response. Email
+and username recovery aliases share their limit. Existing expiring, single-use
+password-reset links and trusted origin restrictions remain unchanged. Without
+SMTP, recovery mail still needs setup; registration/sign-in continue to work.
+
+New email claims are trimmed/lowercased and checked case-insensitively against
+both email addresses and email-shaped usernames, including inactive accounts.
+Signup and password-confirmed account email changes serialize their checks with
+the existing singleton kitchen row lock. Password validation/hashing takes place
+before the shared lock; existing user row locks precede it, like checkout. The
+PostgreSQL concurrency tests exercise simultaneous claims. Historical duplicates
+are not modified; saving the same legacy email leaves it ambiguous. Direct imports,
+SQL or Django-admin email changes bypass these application guards and must preserve
+uniqueness. This is not a new database-wide unique constraint on `User.email`.
+
+The account reference is tucked under Profile details; the email section explains
+sign-in and existing-order reminder consent. Email changes still need the current
+password, never transfer old reminder subscriptions, and never rename a legacy
+username. Reset and sign-in requests are bounded in the browser. Mobile forms use
+password managers, accessible password controls and one error surface.
+
+Email/password authentication proves knowledge of the account password. This
+release does not add a persistent verified-email identity or claim a registration
+address is verified. A reset link proves access to that mailbox for its particular
+reset. Mandatory signup/email-change verification and identity-provider linking
+need a deliberate identity schema and SMTP rollout; they are not silently enabled
+on historical accounts or presented as complete here.
+
+## Remaining setup and optional provider work (deferred)
+
+At the user's request, finish code batches before live configuration. The shared
+GitHub reminder schedule remains disabled. Google sign-in needs OAuth credentials
+and account-linking/verification rules; phone sign-in needs a verification provider.
+Neither is implied by email registration. Contact phone/WhatsApp choices are not
+proof of account ownership, and notification channels remain explicit per-order
+choices.
+
+Official automatic WhatsApp messaging needs provider access, consent and approved
+templates. GrabExpress booking/event integration needs verified regional access
+and testing credentials. Neither provider is connected, booked or simulated as
+real integration. Manual call/WhatsApp drafts, owner-entered courier tracking,
+arrival windows and driving blocks remain the usable workflow. Provider callbacks
+must be authenticated and handle retries, duplicates and valid status transitions
+before enabling automation. No customer messages or production data were used to
+verify this release.
 
 
 ### Validation notes
@@ -226,3 +275,16 @@ issue found in the narrow-screen planner was corrected. Tests use generated loca
 fixtures and mocked SMTP; no live reminders, production database writes or provider
 bookings occurred. No migration is required. Known unrelated PostgreSQL backup-test
 limitations above remain in the existing maintenance backlog.
+
+
+Batch 4A validation: 695 application tests passed (17 expected skips), including
+legacy auth/CSRF, checkout, payments, reminders and kitchen regressions. The 82-test
+focused PostgreSQL run passed, including simultaneous signups and competing account
+email changes. All 32 deployment tests, affected frontend/UX/checkout suites, lint
+and production build pass. Thirteen accessibility/overflow browser scans pass at
+1440, 390 and 320 CSS pixels, covering email registration/sign-in, shared legacy
+email handling, rejected/successful email changes and recovery/reset. The browser
+flow completes a local reset and signs in with the changed password. Email uses
+in-memory test transport only; no real mail, production database writes or live
+scheduler/provider configuration occurred. `makemigrations --check --dry-run`
+reports no changes. Existing PostgreSQL backup-test limitations above are unchanged.

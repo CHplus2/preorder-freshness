@@ -836,8 +836,9 @@ work. The sections below distinguish implemented endpoints from future setup.
   unverified by the application. The optional GitHub scheduler requires a private
   repository secret and explicit enablement; see the batch guide.
 
-No migrations or model/forecast changes are required. Email-first registration,
-Google/phone sign-in and provider messaging remain later work. Arrival windows are implemented below.
+No migrations or model/forecast changes are required. Arrival windows and email-first
+registration are implemented in the later sections below. Google/phone sign-in and
+provider messaging remain future work.
 
 
 ## Accepted arrival windows and owner driving blocks (2026-10-26, Batch 3)
@@ -886,3 +887,41 @@ expiry projections retain the accepted delivery calendar date.
 See `docs/customer-delivery-batches.md` for deferred live setup and remaining
 account/provider batches. Tests use isolated databases and mock SMTP; they do
 not establish live scheduler operation or courier arrival accuracy.
+
+
+## Email-first account endpoints (2026-10-27, Batch 4A)
+
+This account batch changes no model, predictive algorithm, forecast, stock or
+payment schema. No migration is required; existing user IDs/usernames remain.
+
+- `POST /api/signup/`: public UI supplies required `email`, optional `first_name`,
+  `password` and `confirmPassword`. An email-first account receives a random stable
+  internal username. Legacy clients can still supply `username` and optional email.
+  Missing both identities, invalid/weak passwords, mismatch and collisions return
+  400. Privilege fields cannot create staff/superusers. Successful signup returns
+  201 and establishes the normal CSRF-protected session.
+- `POST /api/login/`: `identifier` (max 254) plus password accepts email or username
+  only when exactly one existing account matches. Email comparison is case-insensitive;
+  usernames remain exact/case-sensitive. Legacy `username` (max 150) explicitly
+  authenticates that username. Sending both/neither returns 400. Ambiguity, invalid
+  password, unknown and inactive accounts all return the same generic 401; no account
+  candidate list or email address is returned. Known aliases share one account limit.
+- `POST /api/auth/recovery/`: email, optional username. Email-only requests require
+  one account across active/inactive legacy rows; the selected account must be active
+  and have a usable password. Optional exact username disambiguates shared mailboxes.
+  The public response remains generic and does not establish that a mail was sent.
+  Alias attempts share the recovery limit. Existing reset-confirm endpoint/token
+  expiry/single-use semantics stay unchanged.
+- `PATCH /api/account/order-email/` still requires the current password. Changed
+  emails are normalised and collision-checked; unchanged legacy duplicate emails
+  are not silently rewritten. Existing account reference and order opt-ins stay.
+- Public signup and email changes use the existing kitchen singleton row lock to
+  serialize case-insensitive collision checks against `User.email` and usernames.
+  This adds no database-wide email constraint; direct SQL/import/admin changes
+  must respect the same policy. Existing duplicates remain username-accessible.
+- Registration does not send mail or set a verified-email badge. Persistent email
+  verification, OAuth identity linking and phone verification remain future work;
+  no caller should interpret email/password login as proof of mailbox ownership.
+  Live SMTP/scheduler/provider setup remains deferred by user preference.
+
+See `docs/customer-delivery-batches.md` for implemented and deferred work.

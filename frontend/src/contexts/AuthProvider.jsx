@@ -30,7 +30,7 @@ export default function AuthProvider({children}){
   const request=++authRequest.current;
   controller.current?.abort();const current=new AbortController();controller.current=current;
   try{
-   const {data}=await axios.get('/api/check-auth/',{withCredentials:true,signal:current.signal});
+   const {data}=await axios.get('/api/check-auth/',{withCredentials:true,signal:current.signal,timeout:15000});
    if(request!==authRequest.current || current.signal.aborted)return null;
    return commit(data);
   }catch{
@@ -49,7 +49,7 @@ export default function AuthProvider({children}){
   if(accountChangeBusy.current)return 'An account change is already running.';
   accountChangeBusy.current=true;setAuthPending(true);setAuthError('');
   try{
-   await axios.post(url,account,{withCredentials:true,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   await axios.post(url,account,{withCredentials:true,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    invalidate();announceSessionChange();
    const next=await checkAuth();
    if(!next?.isAuthenticated){const message='The account session could not be verified. Refresh this page and sign in before continuing.';setAuthError(message);return message;}
@@ -61,7 +61,7 @@ export default function AuthProvider({children}){
   if(accountChangeBusy.current)return;
   accountChangeBusy.current=true;
   try{
-   await axios.post('/api/logout/',{},{withCredentials:true,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   await axios.post('/api/logout/',{},{withCredentials:true,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    invalidate();commit({authenticated:false});announceSessionChange();
    setAlert({message:'',type:''});setDropdownOpen(false);
   }catch(error){setAlert({type:'error',message:accountRequestError(error,'logout')})}
