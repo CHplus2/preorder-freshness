@@ -925,3 +925,55 @@ payment schema. No migration is required; existing user IDs/usernames remain.
   Live SMTP/scheduler/provider setup remains deferred by user preference.
 
 See `docs/customer-delivery-batches.md` for implemented and deferred work.
+
+
+## Mailbox-confirmed email changes (2026-10-27, Batch 4B)
+
+Implemented with an opt-in rollout flag, default **disabled**. No migration,
+forecast/model, stock, payment or order-consent changes. Configuring this flag
+never enables the order-reminder cron.
+
+- `ACCOUNT_EMAIL_CONFIRMATION_REQUIRED=1` requires confirmed mailbox changes.
+  Keep `0` while live setup is deferred. Existing direct password-confirmed edits
+  remain compatible in disabled mode. In required mode, old PATCH attempts to
+  add/replace a nonblank email return 400 with confirmation guidance; same-address
+  edits and password-confirmed removal remain allowed. Removal/password reset
+  invalidates outstanding challenges.
+- `GET/PATCH /api/account/order-email/` adds booleans
+  `email_change_confirmation_required`, `email_change_available` (configuration
+  only, not inbox verification) and `email_change_pending`. No pending recipient
+  or confirmation credential is returned. The existing `email` is always the
+  currently saved address and `available` remains reminder configuration status.
+- `POST /api/account/email-change/`: authenticated CSRF-protected request with
+  `email` and `current_password`. Nonblank, different, unclaimed address required.
+  At most five requests/account/15 minutes plus the existing IP limit. Needs
+  required mode, SMTP and a trusted public origin. Successful provider acceptance
+  returns 202, current email settings and `confirmation_sent:true`; it does not
+  save the email or expose a link/token. Unavailable/failed sending returns 503,
+  invalidates that challenge and leaves the current email unchanged. SMTP occurs
+  outside locks and is never called during confirmation/cancellation.
+- `POST /api/account/email-change/confirm/`: `token` (max 4096) and `action`
+  (`inspect`, default, or `confirm`). Only the signed-in account owning the signed
+  request can inspect the proposed address. Inspect returns `current_email`,
+  `proposed_email`, `already_applied` and makes no email change. Explicit confirm
+  checks token age/state/latest request, user lock and final email collision lock;
+  returns current settings and `already_applied`. Retries do not mutate twice.
+  Wrong-account results reveal no proposed recipient. Invalid/expired/replaced/
+  cancelled tokens return 400. Confirmation attempts are rate-limited separately.
+- `POST /api/account/email-change/cancel/`: same-account authenticated CSRF-protected
+  action. Invalidates outstanding links, returns settings/current address and never
+  sends. Cancellation is separately rate-limited. No GET route mutates email.
+- Tokens last 30 minutes and carry a HMAC state proof instead of a raw password
+  hash. Purpose-separated hashed challenge/receipt records use existing
+  `AuthAttempt` storage; its one-day cleanup cannot outlive a valid link. Only the
+  newest request works; receipts are checked under the user lock. Direct imports
+  and admin/SQL writes still need to preserve the application email uniqueness rule.
+- Browser route `/confirm-email#token=...` gates inspection on sign-in, preserves
+  the fragment across sign-in/account switching, strips it after valid inspection
+  and requires an explicit save. No token is stored in local/session storage or
+  returned by request/cancel APIs. Request Host never supplies a mail origin.
+
+The rollout verifies mailbox access for a particular change. It does not create a
+persistent signup verification marker, link Google identities, transfer reminder
+subscriptions or make courier/scheduler setup live. See the customer delivery
+batch guide for setup and remaining provider work.

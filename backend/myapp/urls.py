@@ -8,7 +8,7 @@ from .views.paypal import paypal_config, paypal_payment, paypal_owner_check
 from .views.paypal_notifications import paypal_notification
 from .views.shopping_assistant import shop_suggestions, shop_cart
 from .views.help import KitchenHelp
-from .views.account import account_profile, order_email
+from .views.account import account_profile, order_email, request_email_change, confirm_email_change, cancel_email_change
 from .views.setup import setup_checklist
 from .views.pricing import pricing_preview
 from .views.rescheduling import reschedule_order
@@ -43,6 +43,9 @@ router.register("admin/customers", AdminCustomerViewSet, basename="admin-custome
 urlpatterns = [
     path('orders/<int:pk>/handover/', order_handover),
     path('account/order-email/', order_email),
+    path('account/email-change/', request_email_change),
+    path('account/email-change/confirm/', confirm_email_change),
+    path('account/email-change/cancel/', cancel_email_change),
     path('orders/<int:pk>/reminder/', customer_reminder),
     path('admin/shared-cooking/', shared_batches),
     path('admin/menu-photos/', upload_menu_photo),

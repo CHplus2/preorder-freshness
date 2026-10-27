@@ -189,4 +189,7 @@ def apply_password_reset(uid, token, password):
         raise serializers.ValidationError({'password': exc.messages})
     user.set_password(password)
     user.save(update_fields=['password'])
+    from ..services.email_changes import required, cancel
+    if required():
+        cancel(user)
     return Response({'detail': 'Password updated. Sign in with your new password.'})

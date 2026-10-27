@@ -15,6 +15,7 @@ test('section selection keeps meal details in Menu and all FreshCast pages in Fr
 test('every navigation destination has its own title; unknown routes do not inherit the previous page',()=>{
  for(const [path] of [...publicNavigation,...kitchenNavigation])assert.notEqual(pageMetadata(path).title,'Page not found');
  assert.equal(pageMetadata('/checkout').title,'Checkout');assert.equal(pageMetadata('/orders').title,'My orders');assert.equal(pageMetadata('/payment/paypal').title,'PayPal payment');
+ assert.equal(pageMetadata('/confirm-email').title,'Confirm email change');
  assert.equal(pageMetadata('/products/24').title,'Menu details');assert.equal(pageMetadata('/missing').title,'Page not found');
 });
 test('customer account reads distinguish valid empty lists from invalid or duplicate identities',()=>{

@@ -27,6 +27,7 @@ const OrdersPage=lazy(()=>import("./pages/customer/OrdersPage"));
 const AccountPage=lazy(()=>import("./pages/customer/AccountPage"));
 const CheckoutPage=lazy(()=>import("./pages/customer/CheckoutPage"));
 const RecoveryPage=lazy(()=>import('./pages/customer/RecoveryPage'));
+const ConfirmEmailPage=lazy(()=>import('./pages/customer/ConfirmEmailPage'));
 import './fyp.css';
 const PaymentPage=lazy(()=>import("./pages/customer/PaymentPage"));
 const AdminProductsPage=lazy(()=>import("./pages/admin/AdminProductsPage"));
@@ -70,6 +71,7 @@ function AnimatedRoutes() {
         ))}
         <Route path="/account" element={<RequireAuth><AccountPage/></RequireAuth>}/>
         <Route path="/recover" element={<RecoveryPage/>}/>
+        <Route path="/confirm-email" element={<ConfirmEmailPage/>}/>
         <Route path="/payment/escrow" element={<RequireAuth><Suspense fallback={<PageLoading label="Loading order escrow…"/>}><EscrowOrderPayment/></Suspense></RequireAuth>}/>
         <Route path="/escrow-demo" element={<Suspense fallback={<PageLoading label="Loading escrow payment…"/>}><EscrowDemoPage/></Suspense>}/>
         <Route path="/story" element={<StoryPage/>}/>

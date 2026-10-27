@@ -186,6 +186,8 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'kitchen@localhost')
 OWNER_NOTIFICATION_EMAIL = os.getenv('OWNER_NOTIFICATION_EMAIL', '')
 EMAIL_TIMEOUT = 10
+# Enable only after SMTP/origin setup is verified. Existing edits stay compatible until rollout.
+ACCOUNT_EMAIL_CONFIRMATION_REQUIRED = os.getenv('ACCOUNT_EMAIL_CONFIRMATION_REQUIRED', '0') == '1'
 
 FRONTEND_DIST = BASE_DIR.parent / 'frontend' / 'dist'
 STATICFILES_DIRS = [FRONTEND_DIST] if FRONTEND_DIST.exists() else []

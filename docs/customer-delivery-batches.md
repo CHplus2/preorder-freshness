@@ -226,6 +226,58 @@ reset. Mandatory signup/email-change verification and identity-provider linking
 need a deliberate identity schema and SMTP rollout; they are not silently enabled
 on historical accounts or presented as complete here.
 
+## Batch 4B: mailbox confirmation for email changes (implemented, rollout deferred)
+
+`ACCOUNT_EMAIL_CONFIRMATION_REQUIRED=0` remains the default. No hosting setting,
+SMTP account, scheduler or provider was enabled during implementation. Existing
+email edits stay compatible until the owner opts into the confirmation rollout.
+Only set it to `1` after SMTP/from/origin settings have been tested with intended
+recipients; leave it off while setup is deferred. No migration is required.
+
+When enabled, replacing or adding a nonblank email requires the current password
+and a confirmation link sent to the proposed mailbox. The existing email remains
+in place for sign-in, recovery and current reminders until the customer signs in
+to the same account and explicitly confirms. Merely opening a link, including by
+a mail scanner, does not change the account. The old PATCH endpoint cannot bypass
+this requirement. Removing an email still requires the password and invalidates
+outstanding requests; it does not send a confirmation to a removed address.
+
+Links are signed, bound to the account/password/current-email state, valid for
+30 minutes and one-use. Only the newest request is eligible; customers can cancel
+outstanding requests in Account settings. Confirmation rechecks address collisions
+under the same kitchen row lock used by signup/email edits. Concurrent confirms
+of one link have one mutation plus an idempotent already-applied result; competing
+accounts cannot claim the same new address. Password reset, removal, expiry,
+cancellation or another email change invalidate earlier proof. This never changes
+username, password, order/payment data or per-order reminder subscriptions.
+
+The existing `AuthAttempt` table stores purpose-separated HMAC challenge/receipt
+keys and timestamps, without recipient addresses, raw password hashes or tokens.
+Its one-day housekeeping lifetime exceeds the 30-minute token lifetime. User row
+locks serialize requests/cancellation/consumption. Password validation happens
+before the shared kitchen lock and SMTP happens after database locks are released.
+Failed sending consumes that challenge without changing the email. A timeout may
+still have reached the provider; an email whose request failed may need a new link.
+Provider acceptance is not proof of inbox receipt. Logs/results never expose the
+confirmation credential or private SMTP exceptions.
+
+The confirmation page keeps the token in the URL fragment while sign-in is needed
+and removes it after a valid same-account inspection. It uses no browser storage
+for credentials, no GET mutation, no automatic redirect and no automatic save.
+Wrong-account inspections reveal no target address and allow switching accounts.
+A network failure keeps the same explicit confirmation available for safe retry.
+Account settings distinguish current email, proposed draft, pending requests and
+unavailable sending. If rollout is enabled without valid mail/origin configuration,
+new-address requests fail safely and the UI keeps the current address usable.
+
+This mail is sent on the customer's explicit account request, not by cron. Customer
+order reminders still use the one shared deferred scheduler. Enabling mailbox
+confirmation is a separate opt-in setting and does not enable that scheduler.
+Registration still uses email/password without a persistent verified-email badge;
+this feature verifies a particular **change**, not every historical/signup address.
+Mandatory signup verification/OAuth identity linking still needs its own identity
+schema and rollout. No Google, automatic WhatsApp or GrabExpress provider was added.
+
 ## Remaining setup and optional provider work (deferred)
 
 At the user's request, finish code batches before live configuration. The shared
@@ -288,3 +340,14 @@ flow completes a local reset and signs in with the changed password. Email uses
 in-memory test transport only; no real mail, production database writes or live
 scheduler/provider configuration occurred. `makemigrations --check --dry-run`
 reports no changes. Existing PostgreSQL backup-test limitations above are unchanged.
+
+
+Batch 4B validation: all 712 application tests passed (19 expected skips); 86
+focused PostgreSQL tests passed, including one-use confirmation races and competing
+accounts claiming a new email. All 32 deployment tests, affected frontend suites,
+lint and production build pass. Ten accessibility/overflow browser scans pass at
+1440, 390 and 320 CSS pixels, covering pending requests, sign-in gating, explicit
+confirmation, retry receipt, cancellation and switching from the wrong account.
+Test SMTP is mocked/captured locally; no real account email, production database
+record, scheduler variable or provider configuration was changed. The default
+rollout remains off and `makemigrations --check --dry-run` reports no changes.

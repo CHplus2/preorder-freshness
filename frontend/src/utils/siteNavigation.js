@@ -16,6 +16,7 @@ const pages={
  '/orders':['My orders','Follow delivery progress and payment status for your preorders.'],
  '/account':['Account settings','Manage your saved account and delivery details.'],
  '/recover':['Account recovery','Recover access to your kitchen account.'],
+ '/confirm-email':['Confirm email change','Review and confirm a requested account email change.'],
  '/payment/paypal':['PayPal payment','Review your saved preorder and its verified Sandbox payment status.'],
  '/payment/wallet':['Demo credit payment','Review a preorder using demonstration credits.'],
  '/payment/escrow':['Order escrow payment','Verified wallet funding for your preorder.'],
