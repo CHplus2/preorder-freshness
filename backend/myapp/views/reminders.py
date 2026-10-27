@@ -1,9 +1,13 @@
+import logging
 import secrets
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from ..services import reminder_activity
 from ..services.reminders import email_ready, customer_email_ready, customer_due, dispatch_due, time_due, send_due_reminders
+
+logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -11,6 +15,7 @@ def reminder_status(request):
     return Response({'email_configured': email_ready(),
                      'customer_email_configured': customer_email_ready(),
                      'scheduler_activity_verified': False,
+                     'worker_activity': reminder_activity.history(),
                      'customer_reminders_due': customer_due().count(),
                      'customer_dispatch_due': dispatch_due().count(),
                      'customer_time_updates_due': time_due().count(),
@@ -24,9 +29,17 @@ def run_reminders(request):
     if len(secret) < 32 or not secrets.compare_digest(
             request.headers.get('Authorization', '').encode('utf-8'), ('Bearer '+secret).encode('utf-8')):
         return Response({'detail': 'Unauthorized.'}, status=401)
+    run_id = reminder_activity.begin()
     if not (email_ready() or customer_email_ready()):
+        reminder_activity.finish(run_id, outcome='not_configured')
         return Response({'detail': 'Configure SMTP and an owner email or customer reminder origin before enabling reminders.'}, status=503)
-    result = send_due_reminders(include_owner=email_ready(), include_customer=customer_email_ready())
+    try:
+        result = send_due_reminders(include_owner=email_ready(), include_customer=customer_email_ready())
+    except Exception as error:
+        reminder_activity.finish(run_id, outcome='worker_error')
+        logger.warning('Reminder processing did not complete (%s); review configuration and records privately.', type(error).__name__)
+        return Response({'detail': 'Reminder processing did not complete. Check worker status and the next scheduled run.'}, status=503)
+    reminder_activity.finish(run_id, result=result)
     return Response(result, status=503 if result['failed'] else 200)
 
 

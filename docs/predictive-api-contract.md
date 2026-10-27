@@ -977,3 +977,43 @@ The rollout verifies mailbox access for a particular change. It does not create 
 persistent signup verification marker, link Google identities, transfer reminder
 subscriptions or make courier/scheduler setup live. See the customer delivery
 batch guide for setup and remaining provider work.
+
+
+## Read-only reminder worker observations (2026-10-27, Batch 5)
+
+No migration, predictive model, stock allocation or payment contract changes.
+
+- Staff-only `GET /api/admin/reminder-status/` now includes `worker_activity`:
+  `generated_at`, `retention_hours:24`, `recent_threshold_minutes:15`,
+  `authenticated_runs_24h`, `recent_runs` (newest start first, at most 10).
+  Existing configuration/queue fields remain. Refresh is read-only and sends no mail.
+- Each observed row has `started_at`, `completed_at` (ISO or null), `outcome`,
+  `sent` and `failed` (bounded 0–3 integers or null when unknown/unattempted).
+  Outcomes: `running`, `incomplete`, `completed`, `send_failed`,
+  `not_configured`, `worker_error`. No completion after two minutes is incomplete,
+  not a claim that mail failed. A completed zero-attempt run does not prove the
+  queue is empty; locked or already-handled work can also yield zero.
+- Only a valid bearer request to the existing HTTP worker creates activity.
+  Unauthorized requests, CLI preview/send commands and status reads do not.
+  Manual authorised HTTP calls are included, so `scheduler_activity_verified`
+  remains **false**. Observations cannot establish an automatic scheduler is enabled.
+- Activity uses purpose-prefixed start/completion markers in the existing
+  `AuthAttempt` table, including only run IDs, timestamps and bounded aggregate
+  counts. There are no bearer values, recipients, order identities or mail content.
+  Worker cleanup affects only its own expired markers. Existing daily auth cleanup
+  and 30-minute email-change challenges remain compatible. Run identity keeps
+  overlapping starts/finishes distinct; status reads are bounded to three queries.
+- Monitoring is best effort and isolated in savepoints: a marker-write failure
+  does not change SMTP/notification receipts or convert success into a retryable
+  error. Unexpected worker exceptions return sanitized HTTP 503, record an error
+  when possible and log only a safe exception type. Normal response counts and
+  the existing three-attempt budget remain unchanged.
+- The monitor renders Malaysia times, current customer queues, recent calls,
+  failed/incomplete/stale evidence and retryable read errors. It contains no
+  button to invoke a sending endpoint. GitHub execution history remains the place
+  to inspect the actual configured schedule.
+
+This completes the planned delivery/email **code** batches. Live SMTP/scheduler
+setup and email-confirmation rollout remain deferred, not silently enabled.
+Optional Google/phone identity, mandatory signup verification and automatic
+WhatsApp/GrabExpress integrations still require separate development/provider access.

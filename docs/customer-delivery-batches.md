@@ -39,7 +39,7 @@ sent during implementation tests.
 
 An optional GitHub scheduler workflow is prepared; automatic runs are disabled
 until explicitly enabled. Existing external scheduler frequency is unknown. Do not treat configured SMTP/CRON_SECRET as proof of an active job.
-Settings displays this distinction and the current eligible customer queue count.
+Settings displays this distinction, observed HTTP worker activity and current eligible customer queue counts.
 
 Configure one external HTTP scheduler to request
 `https://preorder-freshness.vercel.app/api/reminders/run/` with header
@@ -278,6 +278,64 @@ this feature verifies a particular **change**, not every historical/signup addre
 Mandatory signup verification/OAuth identity linking still needs its own identity
 schema and rollout. No Google, automatic WhatsApp or GrabExpress provider was added.
 
+## Batch 5: worker evidence and delivery integration review (implemented)
+
+Settings -> Email reminders & worker activity now shows read-only configuration,
+customer queue counts and up to ten authenticated HTTP worker calls from the last
+24 hours. A call records start, completion/outcome and bounded aggregate accepted/
+failed counts. It includes manual bearer-authorised HTTP calls; CLI previews and
+CLI sends are separate and never manufacture scheduler evidence. Dates are shown
+in Malaysia time. Refresh only reads status; it never starts a worker or sends mail.
+
+The monitor distinguishes no observed run, a zero-attempt completed run, provider
+failures, missing configuration, unexpected processing errors and a run with no
+completion. An unfinished call becomes "no completion" after two minutes. The
+15-minute reference window highlights old observations without declaring that an
+external schedule is broken. A quiet run can skip locked/already-handled work or
+have no due mail; zero does not prove there is no backlog. Read queue counts and
+scheduler execution history together. Provider acceptance never proves inbox receipt.
+
+`worker_activity` is observed evidence, not a scheduler enablement flag.
+`scheduler_activity_verified` intentionally remains false: a single/manual HTTP
+call cannot prove automatic scheduling. The prepared GitHub schedule remains
+**disabled**, live account-email confirmation rollout remains **off**, and no
+SMTP secret, provider, job variable or production record was configured in this
+batch. An enabled external scheduler must be checked in its own execution history.
+
+Purpose-prefixed markers use existing authentication-event storage. No bearer,
+recipient, order ID, subject/body or mail credential is recorded. Only authorised
+worker calls create markers; rejected requests and staff status refreshes do not.
+Worker housekeeping removes only its own markers older than 24 hours; existing
+authentication/confirmation cleanup remains compatible. Reads have a fixed bound
+and at most three activity queries. Independent run IDs associate overlapping
+completions with the correct start. Monitoring is best effort: a marker-write
+failure cannot turn an already-accepted email into a failed HTTP response. A lost
+completion marker is shown as unknown, never as proof that mail was not sent.
+
+A new regression journey covers checkout with an accepted arrival window and
+explicit notification choices, signed delivery change, time-update mail, food
+ready/one stock deduction, dispatch mail, and delivered-order suppression. The
+same bounded worker and notification receipts handle the whole journey, while
+payment remains separate. Tests use local fixtures and mocked SMTP.
+
+### Planned code batches complete; live setup remains
+
+The requested delivery/email code batches are complete. There is no need to add
+more code merely to make the configured reminder worker start running. The next
+required operational task, when the user is ready, is private SMTP/origin and
+scheduler setup/verification. Review the due queues before a real send test:
+calling `/api/reminders/run/` is a sending action even though it uses HTTP GET.
+Keep one schedule, reuse the intended existing secrets rather than resetting
+unrelated database passwords, and never paste credentials into chat or Git.
+Enable mailbox-change confirmation separately after testing its mail path.
+
+Google/phone sign-in, persistent mandatory signup verification and automatic
+WhatsApp/GrabExpress integrations are optional further development, not features
+that become available simply by turning on this scheduler. The existing manual
+courier tracking/contact workflow remains available. Live inbox receipt,
+provider permissions/charges and real-world courier timing were not established
+by local integration tests.
+
 ## Remaining setup and optional provider work (deferred)
 
 At the user's request, finish code batches before live configuration. The shared
@@ -351,3 +409,17 @@ confirmation, retry receipt, cancellation and switching from the wrong account.
 Test SMTP is mocked/captured locally; no real account email, production database
 record, scheduler variable or provider configuration was changed. The default
 rollout remains off and `makemigrations --check --dry-run` reports no changes.
+
+
+Batch 5 validation: 725 application tests passed (19 expected skips); 101 focused
+PostgreSQL tests passed, including notification/identity concurrency, window rules,
+the full checkout-to-delivered notification journey, and loss of telemetry after
+an accepted send. All 32 deployment tests, affected frontend suites, lint and
+production build pass. Twelve whole-page accessibility/overflow browser scans
+pass at 1440, 390 and 320 CSS pixels, including private read-only monitor states,
+owner-only configuration, a keyboard-focusable horizontal history table and
+malformed-response recovery. Browser checks made zero calls to the sending
+endpoint. Tests used isolated databases, mocked SMTP and local UI fixtures; no
+real email, production record, scheduler secret/variable or provider was changed.
+No migration is required. Live SMTP/scheduler setup is the remaining operational
+step; optional identity/courier/WhatsApp automation is separate development.
