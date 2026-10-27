@@ -3,6 +3,29 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Grouped actual order progress — 27 October 2026
+
+`POST /api/admin/orders/progress/` is staff-session/CSRF protected. Body:
+`{"status":"cooked|shipped|delivered","orders":[{"id":12,"version":"<updated_at>"}]}`.
+Select 1–20 distinct orders, each with its exact last-read `updated_at`. Success
+returns `{"updated":[{"id":12,"status":"cooked","updated_at":"<new timestamp>"}]}`.
+All selected orders and stock writes commit together. A stale version returns
+409, a missing order 404, invalid transitions/recipes/stock 400; none apply a
+partial group. Unknown network/server results require a fresh Planner read,
+not a blind retry. Fields for payment changes are not accepted.
+
+Individual status PATCH and grouped updates share the same transition rules.
+Food ready (`cooked`) requires a complete reviewed schedule for pending **and
+processing** orders and deducts accepted recipes once from usable FEFO stock.
+The group locks orders by ID and the union of stock by material/expiry before
+deductions. Pickup cannot be shipped. Courier handover (`shipped`) queues the
+existing separately opted-in dispatch notice once; it does not send mail inside
+the transaction or book a courier. Actual customer receipt/collection is
+`delivered`, allowed from cooked or shipped. Preparation-start and dispatch
+tracking remain optional; no clock automatically marks an order ready, shipped
+or delivered. Progress does not take payment, mark an order paid, reserve new
+capacity or alter recipes/delivery dates. No schema/model/forecast changes.
+
 ## Optional menu trading windows — 23 October 2026
 
 ### Fulfilment extension (batch 2)

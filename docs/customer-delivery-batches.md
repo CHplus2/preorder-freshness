@@ -432,3 +432,37 @@ endpoint. Tests used isolated databases, mocked SMTP and local UI fixtures; no
 real email, production record, scheduler secret/variable or provider was changed.
 No migration is required. Live SMTP/scheduler setup is the remaining operational
 step; optional identity/courier/WhatsApp automation is separate development.
+
+### Owner workload: grouped actual progress — 27 October 2026
+
+Planner's Daily tasks and Collection & delivery runs now offer **Update several
+orders**. Choose Food ready, Handed to courier, or Received / collected; explicitly
+select up to 20 eligible orders, review their IDs and confirm the actual event.
+The owner may select the first 20 eligible entries in one action. Requests without
+confirmed preparation are excluded from ready updates, and pickup is excluded
+from courier handover. Individual ready delivery orders now offer Handed to
+courier as the primary action, with direct confirmed receipt available separately.
+Preparation-start tracking remains optional. Delivery updates reflect actual
+handover, not an assumption based on the clock.
+
+The bounded staff API checks each last-read order version under row locks and
+commits the entire selection together. A changed order or stock shortage prevents
+partial writes. Stock locks cover the union of materials before deductions;
+accepted recipe consumption remains once-only and FEFO. Pending and processing
+orders both require valid preparation boundaries before food-ready confirmation.
+Dispatch only queues the existing opted-in notices; the shared worker sends them
+later. Payment, courier booking, delivery dates, recipes and capacity are not
+changed. An uncertain response blocks another UI submission until Planner is
+refreshed. No new migration, external courier/WhatsApp API or forecast change.
+
+Validation: 733 application tests pass (20 expected skips), with 107 focused
+PostgreSQL tests passing, including competing grouped requests, stale versions,
+transaction rollback on shortage, FEFO stock, notification queues and CSRF.
+Legacy stock-test fixtures now include complete confirmed preparation boundaries;
+the new guard is also tested against invalid processing orders. All 34 deployment
+tests, frontend planner/checkout/UX/general checks, lint and production build pass.
+Nine whole-page accessibility/overflow checks pass at 1440, 390 and 320 pixels,
+including explicit mobile checkbox alignment, pickup, stale records and uncertain
+results. Browser tests use generated local orders and never call the live worker.
+No production record, email credential, scheduler setting, model artifact
+or customer message is modified by these tests.

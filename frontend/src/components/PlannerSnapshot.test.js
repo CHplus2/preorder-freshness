@@ -116,8 +116,8 @@ try {
   assert.doesNotMatch(progress('pending',{preparation_end_at:'2026-10-20T09:00:00+08:00'}),/Mark food ready/);
   assert.match(progress('processing'),/Mark food ready/);assert.doesNotMatch(progress('processing'),/Mark preparation started/);
   const compactReady=renderToStaticMarkup(createElement(OrderWorkflowActions,{compact:true,order:{id:12,status:'cooked',delivery_method:'standard'}}));
-  assert.match(compactReady,/Out for delivery \(optional\)/);
-  assert.match(progress('cooked'),/Mark delivered/);assert.match(progress('cooked'),/Out for delivery \(optional\)/);
+  assert.match(compactReady,/Handed to courier/);
+  assert.match(progress('cooked'),/Mark delivered/);assert.match(progress('cooked'),/Handed to courier/);
   assert.match(progress('shipped'),/Mark delivered/);assert.equal(progress('delivered'),'');
   console.log('Planner progress: scheduled pending orders, guarded unreviewed plans, optional intermediate stages and actual completion actions passed.');
   console.log('Planner snapshot: initial loading, refresh with cached data, failed refresh, missing response and ready state passed.');

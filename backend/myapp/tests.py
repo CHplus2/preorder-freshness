@@ -24,7 +24,8 @@ class KitchenTests(TestCase):
         return InventoryItem.objects.create(raw_material=self.material, quantity=qty, received_date=self.today-timedelta(days=2), expiry_date=self.today+timedelta(days=days), storage_location='Fridge', **kwargs)
 
     def order(self, qty=1):
-        order = Order.objects.create(user=self.user, status='processing', delivery_at=self.delivery, preparation_at=self.delivery-timedelta(hours=3))
+        order = Order.objects.create(user=self.user, status='processing', delivery_at=self.delivery,
+            preparation_at=self.delivery-timedelta(hours=3), preparation_end_at=self.delivery-timedelta(hours=2))
         OrderItem.objects.create(order=order, product=self.product, product_name=self.product.name, unit_price=12, quantity=qty, subtotal=12*qty)
         return order
 

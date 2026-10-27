@@ -87,7 +87,9 @@ class CookingStockTests(TestCase):
             received_date=self.today,expiry_date=self.today+timedelta(days=days),**changes)
 
     def order(self,products=None):
-        order=Order.objects.create(user=self.buyer,status='processing')
+        delivery=timezone.now()+timedelta(days=2)
+        order=Order.objects.create(user=self.buyer,status='processing',delivery_at=delivery,
+            preparation_at=delivery-timedelta(hours=3),preparation_end_at=delivery-timedelta(hours=2))
         for product in products or [self.product]:
             OrderItem.objects.create(order=order,product=product,product_name=product.name,quantity=1,unit_price=10,subtotal=10)
         return order

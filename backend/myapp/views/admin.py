@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.db.models import Sum, F
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
-from .orders import deduct_order_inventory
+from ..services.order_progress import apply_progress
 from django.contrib.auth.models import User
 from ..models import Order, OrderItem
 from ..serializers import OrderSerializer, UserSerializer
@@ -27,37 +27,13 @@ def admin_order_detail(request, pk):
         return Response({"detail": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
 
     new_status = request.data.get("status")
-    if order.delivery_method == 'pickup' and new_status == 'shipped':
-        raise ValidationError('Self-collection orders are marked collected after handover; they do not go out for delivery.')
     new_payment_status = request.data.get("payment_status")
-
-    transitions = {
-        'pending': {'pending', 'processing', 'cooked', 'cancelled'},
-        'processing': {'processing', 'cooked', 'cancelled'},
-        'cooked': {'cooked', 'shipped', 'delivered', 'cancelled'},
-        'shipped': {'shipped', 'delivered'},
-        'delivered': {'delivered'}, 'cancelled': {'cancelled'},
-    }
-    if new_status:
-        if new_status not in transitions.get(order.status, set()):
-            raise ValidationError('Confirm preparation before delivery. Preparing and out-for-delivery updates are optional; cancellation is allowed before dispatch.')
-        if order.status == 'pending' and new_status == 'cooked' and (
-                order.preparation_plan.get('needs_review') or not order.preparation_at or not order.preparation_end_at
-                or order.preparation_end_at <= order.preparation_at or not order.delivery_at
-                or order.preparation_end_at > order.delivery_at):
-            raise ValidationError('Set and confirm preparation times in Planner before starting or finishing this order.')
-        if new_status == 'cooked' and not order.inventory_deducted:
-            deduct_order_inventory(order, request.user)
-            order.inventory_deducted = True
-        if new_status == 'processing' and (order.preparation_plan.get('needs_review') or not order.preparation_at or not order.preparation_end_at):
-            raise ValidationError('Set and confirm preparation times in Planner before starting this order.')
-        if new_status == 'shipped' and order.status != 'shipped':
-            from ..services.reminders import queue_dispatch_notice
-            queue_dispatch_notice(order)
-        order.status = new_status
     if new_payment_status and new_payment_status != order.payment_status:
         raise ValidationError('Record a verified payment or refund in Payment records; status cannot be changed directly.')
-    order.save()
+    if new_status:
+        apply_progress(order, new_status, request.user)
+    else:
+        order.save()
 
     return Response({"detail": "Order updated", "order": OrderSerializer(order, context={'request': request}).data}, status=status.HTTP_200_OK)
 
