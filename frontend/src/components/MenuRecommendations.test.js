@@ -23,5 +23,6 @@ try{
  assert.match(compact,/menu-recommendation-card--compact/);assert.match(compact,/Reason one/);assert.doesNotMatch(compact,/Reason two/);
  assert.match(guide,/1–100 selling units/);assert.match(guide,/max="100"/);assert.match(guide,/max="99999999.99"/);
  assert.match(guide,/Compare food total/);assert.match(guide,/Above this budget/);assert.match(guide,/Within and above budget/);assert.match(guide,/before discounts\. Delivery and existing basket items are extra/);
+ assert.match(guide,/Quantity per menu/);assert.match(guide,/Each suggestion is an alternative purchase of one menu/);
  console.log('Recommendation UI: visible entry point, loading distinction, shared evidence/photo cards and optional date refinement passed.');
 }finally{await server.close();}

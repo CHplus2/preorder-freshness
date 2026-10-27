@@ -15,6 +15,19 @@ backend**: that menu was excluded. No incorrect production response was availabl
 for inspection. This batch removes ambiguous price presentation and adds explicit
 above-budget exploration rather than claiming a reproduced arithmetic bug.
 
+Budget presentation follow-up: results are explicitly alternative purchases of
+the requested quantity of one menu. Price filtering was verified to occur before
+top-three selection; no incorrect multiplication was reproduced. The finder now
+shows the date/category price range before capacity checks and counts within/
+above budget, so an empty above-budget search can be explained by the absence
+of any qualifying menu price. Tests include an expensive menu absent from the
+original top three that is nevertheless returned by Above. No price changes,
+combined-basket recommendation, schema change or model retraining is included.
+Validation: 52 focused recommendation/preorder tests, frontend lint and unit/UX/
+recommendation suites and build, plus 11 desktop/phone accessibility and overflow
+checks against a local API fixture. No live email, production data or order was
+used in the browser checks.
+
 ## Batch 2A: inventory date modes and deadline evidence (completed)
 
 The form now shows the fields needed for printed expiry, manufacture plus

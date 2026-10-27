@@ -22,3 +22,10 @@ export function budgetBadge(menu,budget,formatPrice){
  if(!comparison.difference)return 'Exactly on your budget';
  return `${formatPrice(comparison.difference)} ${comparison.relation==='within'?'under':'above'} your budget`;
 }
+export function budgetCatalogueMessage(catalogue,budget,formatPrice){
+ if(!catalogue)return '';
+ if(!catalogue.menu_count)return 'No active menus with recipes are open for this date and category.';
+ const range=catalogue.minimum_food_total===catalogue.maximum_food_total?`cost ${formatPrice(catalogue.minimum_food_total)}`:`range from ${formatPrice(catalogue.minimum_food_total)} to ${formatPrice(catalogue.maximum_food_total)}`;
+ const relation=!catalogue.above_count?`None is above ${formatPrice(budget)}.`:!catalogue.within_count?`None is within ${formatPrice(budget)}.`:`${catalogue.within_count} within ${formatPrice(budget)}; ${catalogue.above_count} above.`;
+ return `Price check for ${catalogue.quantity} ${catalogue.quantity===1?'unit':'units'} of one menu: food totals ${range}. ${relation} Based on ${catalogue.menu_count} date/category matches with recipes, before kitchen availability checks.`;
+}

@@ -61,6 +61,24 @@ finder only, not the catalogue, instant cards or whole basket. Recommendation
 selection still reserves nothing and checkout remains authoritative. No database
 migration or demand-forecast/model artifact changes.
 
+The response optionally adds `budget_catalogue` (null without a budget), with
+scope `date_category_recipes_before_capacity`, the requested `quantity`,
+`menu_count`, `within_count`, `above_count`, and Decimal-string
+`minimum_food_total`/`maximum_food_total` (both null for zero menus). This price
+evidence covers all active, recipe-backed, locally orderable menus open for the
+requested date/category **before** budget filtering, ranking, top-three selection
+or the bounded kitchen-capacity scan. Shipping-enquiry-only offers are excluded.
+Counts partition total price <= budget versus > budget; they do not certify
+capacity. Above-budget filtering already preceded the top-three limit and remains
+unchanged. A menu outside the first three recommendations can be returned by an
+above-budget search if it meets the filters and has a workable kitchen time.
+
+The UI labels quantity per menu, identifies results as alternatives, and shows
+this range to explain empty above-budget results when every matching menu total
+is within the threshold. Client validation checks partition counts, requested
+quantity, range ordering/budget boundaries, and consistency with returned rows.
+The range never manufactures a more expensive offer to fill a result slot.
+
 ## Inventory deadline evidence — 27 October 2026
 
 Existing inventory fields, staff access and versioned PATCH contract are

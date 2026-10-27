@@ -56,4 +56,5 @@
 .guided-menu .guide-price-breakdown{font:400 13px/1.65 system-ui,sans-serif;margin:0;color:#40583d;overflow-wrap:anywhere}
 .guided-menu .guide-budget-comparison{font:600 13px/1.6 system-ui,sans-serif;margin:0;padding:8px 10px;border-radius:6px;background:#edf5e7;color:#2e5134;overflow-wrap:anywhere}
 .guided-menu .guide-budget-comparison[data-relation=above]{background:#fff4df;color:#704b18}
+.guided-menu .guide-catalogue-price{font:400 13px/1.65 system-ui,sans-serif;color:#40583d;background:#f3f7ee;border:1px solid #d4dfcf;border-radius:8px;padding:12px;margin:16px 0;overflow-wrap:anywhere}
 .guide-recovery-actions{display:flex;gap:10px;flex-wrap:wrap}

@@ -177,3 +177,47 @@ class MenuSuggestionTests(TestCase):
         self.assertEqual(result.data['empty_reason'],'no_kitchen_times')
         instant=self.client.post('/api/menu/suggestions/',{},format='json')
         self.assertTrue(instant.data['results']);self.assertNotIn('budget',instant.data)
+
+    def test_above_search_uses_the_full_price_partition_before_selecting_top_three(self):
+        from unittest.mock import patch
+        date=timezone.localdate()+timedelta(days=3)
+        expensive=self.menus[-1];expensive.price='35.00';expensive.save()
+        for menu in self.menus[:3]:self.sale(self.buyer,menu,quantity=10)
+        self.client.force_authenticate(self.buyer)
+        instant=self.client.post('/api/menu/suggestions/',{},format='json').data
+        self.assertNotIn(expensive.pk,[row['id'] for row in instant['results']])
+        payload={'date':str(date),'portions':3,'budget':'100.00'}
+        with patch('myapp.views.discovery.slots',return_value=[{'delivery_at':str(date)+'T15:00:00+08:00'}]):
+            within=self.client.post('/api/menu/guide/',payload,format='json').data
+            above=self.client.post('/api/menu/guide/',dict(payload,budget_mode='above'),format='json').data
+        self.assertNotIn(expensive.pk,[row['id'] for row in within['results']])
+        self.assertEqual([row['id'] for row in above['results']],[expensive.pk])
+        self.assertEqual(above['results'][0]['food_total'],'105.00')
+        self.assertEqual(within['budget_catalogue'],above['budget_catalogue'])
+        self.assertEqual(above['budget_catalogue'],dict(scope='date_category_recipes_before_capacity',quantity=3,
+            menu_count=5,within_count=4,above_count=1,minimum_food_total='30.00',maximum_food_total='105.00'))
+
+    def test_empty_above_budget_explains_when_all_menu_totals_are_under_threshold(self):
+        from unittest.mock import patch
+        date=timezone.localdate()+timedelta(days=3)
+        with patch('myapp.views.discovery.slots') as available:
+            result=self.client.post('/api/menu/guide/',dict(date=str(date),portions=3,budget='100',budget_mode='above'),format='json')
+        self.assertEqual(result.status_code,200,result.data);self.assertEqual(result.data['results'],[])
+        summary=result.data['budget_catalogue'];self.assertEqual(summary['menu_count'],5)
+        self.assertEqual((summary['within_count'],summary['above_count']),(5,0))
+        self.assertEqual(summary['maximum_food_total'],'42.00');available.assert_not_called()
+
+    def test_price_summary_respects_date_category_recipe_and_active_status_before_capacity(self):
+        from unittest.mock import patch
+        date=timezone.localdate()+timedelta(days=3)
+        self.menus[0].selling_status='paused';self.menus[0].save()
+        self.menus[1].ingredients.all().delete()
+        self.menus[2].delivery_weekdays=[(date.weekday()+1)%7];self.menus[2].save()
+        self.menus[3].category=Category.objects.create(name='Other');self.menus[3].save()
+        with patch('myapp.views.discovery.slots',return_value=[]):
+            result=self.client.post('/api/menu/guide/',dict(date=str(date),portions=3,budget='100',category=self.category.pk),format='json')
+        self.assertEqual(result.status_code,200,result.data);self.assertEqual(result.data['empty_reason'],'no_kitchen_times')
+        self.assertEqual(result.data['budget_catalogue']['menu_count'],1)
+        self.assertEqual(result.data['budget_catalogue']['minimum_food_total'],'42.00')
+        no_budget=self.client.post('/api/menu/guide/',dict(date=str(date),portions=3),format='json')
+        self.assertIsNone(no_budget.data['budget_catalogue'])

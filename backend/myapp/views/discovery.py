@@ -89,6 +89,18 @@ def guided_menu(request):
     # Both discovery surfaces use the same ranking; dates additionally constrain it.
     products = list(products)
     budget, budget_mode = data.get('budget'), data['budget_mode']
+    budget_catalogue = None
+    if budget is not None:
+        # Explain prices across the entire date/category/recipe eligible set,
+        # before ranking, top-three selection or bounded kitchen-time checks.
+        totals = [p.price*data['portions'] for p in products if p.ingredients.all()
+                  and not shipping_enquiry(p) and delivery_day_allowed(p, data['date'])
+                  and orders_open(p, data['date'], timezone.now())]
+        within = sum(total <= budget for total in totals)
+        budget_catalogue = {'scope': 'date_category_recipes_before_capacity', 'quantity': data['portions'],
+            'menu_count': len(totals), 'within_count': within, 'above_count': len(totals)-within,
+            'minimum_food_total': str(min(totals)) if totals else None,
+            'maximum_food_total': str(max(totals)) if totals else None}
     if budget is not None and budget_mode != 'all':
         # Compare exact Decimal totals, not rounded unit-price limits or floats.
         products = [p for p in products if (p.price*data['portions'] <= budget) == (budget_mode == 'within')]
@@ -131,6 +143,7 @@ def guided_menu(request):
             'version': 'date-guide-v2', 'surface': 'date_guide', 'experiment': settings.RECOMMENDATION_EXPERIMENT},
         products=[r['id'] for r in results])
     return Response({'session': str(session.pk), 'results': results,
+        'budget_catalogue': budget_catalogue,
         'budget': {'amount': str(budget), 'mode': budget_mode, 'basis': 'food_total_before_discounts_and_delivery'} if budget is not None else None,
         'empty_reason': None if results else 'shipping_enquiry' if shipping_only else 'category_unavailable' if not category_available else 'no_kitchen_times' if candidates else 'no_menu_match',
         'checked_limit': 30, 'message': 'Hourly suggestions use kitchen capacity, not current stock. The owner may need to purchase ingredients. Each food total covers the requested quantity of one menu before discounts; delivery and existing basket items are excluded. Checkout rechecks the whole basket. Up to 30 ranked menus are checked, so these are suggestions rather than an exhaustive search.'})
