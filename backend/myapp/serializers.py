@@ -341,7 +341,7 @@ class InventoryItemSerializer(serializers.ModelSerializer):
         if basis != 'label':
             start = value('manufactured_date') if basis == 'manufactured' else received
             days = value('shelf_life_days')
-            if not start or not days or not value('guidance_note'):
+            if not start or not days or not value('guidance_note', '').strip():
                 raise serializers.ValidationError('Provide the start date, shelf-life days and source of guidance.')
             if basis == 'manufactured' and received and start > received:
                 raise serializers.ValidationError('Manufacture date must not be after receipt.')
@@ -351,14 +351,21 @@ class InventoryItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('An expiry date is required.')
         if received and expiry < received:
             raise serializers.ValidationError('Expiry must not be before receipt.')
-        # Keep the original label date separate from shorter opened/thawed deadlines.
+        # Retain the printed limit separately. Changing calculation basis must
+        # not let a generic duration extend an already recorded label deadline.
+        original = value('original_expiry_date')
+        if original is None and self.instance and self.instance.expiry_basis == 'label' and 'original_expiry_date' not in attrs:
+            original = self.instance.expiry_date
+            attrs['original_expiry_date'] = original
         if basis == 'label':
-            original = value('original_expiry_date') or expiry
-            if received and original < received:
-                raise serializers.ValidationError('Original printed date must not precede receipt.')
+            original = original or expiry
             attrs['original_expiry_date'] = original
             expiry = original
         deadlines = [expiry]
+        if original:
+            if received and original < received:
+                raise serializers.ValidationError('Original printed date must not precede receipt.')
+            deadlines.append(original)
         for field, days_field in [('opened_date', 'after_open_days'), ('thawed_date', 'after_thaw_days')]:
             event, days = value(field), value(days_field)
             if bool(event) != bool(days):

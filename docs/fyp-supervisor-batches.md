@@ -15,14 +15,26 @@ backend**: that menu was excluded. No incorrect production response was availabl
 for inspection. This batch removes ambiguous price presentation and adds explicit
 above-budget exploration rather than claiming a reproduced arithmetic bug.
 
-## Batch 2: inventory date modes and shelf-life guidance (pending)
+## Batch 2A: inventory date modes and deadline evidence (completed)
 
-Audit all existing printed-expiry, manufacture-plus-duration and receipt/storage-
-duration modes, including edits, opened/thawed deadlines and handling history.
-Show only the relevant date fields and distinguish receipt date from a supplier's
-printed expiry. Existing date-based statuses and remaining-window percentages
-are deterministic record calculations, not random values or laboratory safety
-measurements; make those definitions clear to the owner.
+The form now shows the fields needed for printed expiry, manufacture plus
+documented duration, or receipt plus documented storage life. Receipt means when
+the batch reached the owner; it is not the manufacture date or printed expiry.
+Unlabelled batches can use custom documented storage life without an invented
+manufacturing date or a raw-material preset. A preview shows the date arithmetic.
+
+Saving preserves the earliest calculated, printed, opened or thawed deadline.
+Previously a separately recorded printed limit could be ignored in calculated
+modes. Switching a legacy labelled batch to a calculation retains its old printed
+deadline when omitted; switching back does not invent a printed date from a
+calculation. Unknown handling or a storage breach visibly holds the batch.
+Existing stored records are not rewritten: review their evidence on edit.
+
+Recorded status uses Malaysia's date: before today is expired, today through
+three days ahead needs attention, and later dates are within the recorded
+deadline. A hold overrides these statuses. These are deterministic planning
+rules, not random values or physical freshness/safety measurements. No database
+migration, production data edit or forecast/model change is needed for 2A.
 
 Use documented, condition-specific general guidance for unlabelled ingredients.
 The supplied FoodSafety.gov cold-food storage chart is a reference to review,
@@ -31,9 +43,19 @@ Do not invent a manufacturing date. Storage conditions, ingredient state and
 actual handling must match the selected guidance. Review source text before
 seeding any reusable defaults.
 
-Prefer optional reusable raw-material guidance with source and storage context,
+Batch 2A validation: all 745 application tests pass (20 platform-specific skips),
+including seven new expiry-evidence regressions; 90 focused PostgreSQL tests
+also pass. Frontend lint, UX/recommendation tests and production build pass.
+Eleven full-page accessibility/overflow checks at desktop and 390/320 pixels
+cover unlabelled receipt-based creation, handling holds, printed/opened limits,
+edits and mode switching against a disposable local PostgreSQL database. No
+production records or real emails/courier requests were used.
+
+## Batch 2B: optional reusable raw-material guidance (pending)
+
+Add optional reusable raw-material guidance with source and storage context,
 while retaining documented custom input on each batch. A raw-material default
-should not be mandatory before an owner can record a batch's own guidance.
+will not be mandatory before an owner can record a batch's own guidance.
 Do not silently apply a frozen duration to chilled stock or replace a shorter
 supplier/handling deadline with a longer generic rule. Any schema addition needs
 a concrete tested migration/release script; no database password changes.

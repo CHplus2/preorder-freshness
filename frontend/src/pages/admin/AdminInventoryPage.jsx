@@ -480,7 +480,7 @@ export default function AdminInventoryPage() {
           }
         >
           <option value="">
-            All Freshness Status
+            All recorded statuses
           </option>
           <option value="fresh">Within recorded shelf life</option>
           <option value="expiring">
@@ -493,6 +493,7 @@ export default function AdminInventoryPage() {
         </select></label>
 
       </div>
+      <p className="inventory-date-rules">Recorded status uses Malaysia’s current date and the earliest saved deadline: past date = expired; today–3 days = attention due; more than 3 days = within recorded date. On hold overrides the date status. These are planning rules, not a physical food-safety test.</p>
       <p className="inventory-list-status" role="status">{filteredInventory.length} of {inventoryItems.length} batches shown{(searchQuery || selectedRawMaterial || freshnessFilter)?' · filters applied':''}. {(searchQuery || selectedRawMaterial || freshnessFilter) && <button type="button" onClick={()=>{setSearchQuery('');setSelectedRawMaterial('');setFreshnessFilter('')}}>Reset filters</button>}</p>
 
       {/* Inventory table */}
@@ -554,10 +555,10 @@ export default function AdminInventoryPage() {
                       className={`freshness-badge ${freshness}`}
                     >
                       {freshness === "fresh" &&
-                        "Within shelf life"}
+                        "Within recorded date"}
 
                       {freshness === "expiring" &&
-                        "Expiring Soon"}
+                        (item.expiry_date===today?"Expires today":"Due within 3 days")}
 
                       {freshness === "held" && "On hold"}
                       {freshness === "unknown" && "Date needs review"}
@@ -943,7 +944,7 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label htmlFor="admininventorypage-field-9">Received Date</label>
+            <label htmlFor="admininventorypage-field-9">Received on (when this batch reached you)</label>
 
             <input id="admininventorypage-field-9"
               type="date"
@@ -959,22 +960,8 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <ExpiryFields value={newInventoryItem} onChange={setNewInventoryItem}/>
-            <label htmlFor="admininventorypage-field-10">Original printed date (leave blank for calculated shelf life)</label>
+            <ExpiryFields value={newInventoryItem} onChange={setNewInventoryItem} disabled={loading}/>
 
-            <input id="admininventorypage-field-10"
-              type="date"
-              value={
-                newInventoryItem.original_expiry_date || newInventoryItem.expiry_date
-              }
-              onChange={(e) =>
-                setNewInventoryItem({
-                  ...newInventoryItem,
-                  expiry_date: e.target.value,
-                  original_expiry_date: e.target.value || null,
-                })
-              }
-            />
 
             <div className="modal-actions">
 
@@ -1110,7 +1097,7 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label htmlFor="admininventorypage-field-15">Received Date</label>
+            <label htmlFor="admininventorypage-field-15">Received on (when this batch reached you)</label>
 
             <input id="admininventorypage-field-15"
               type="date"
@@ -1126,22 +1113,8 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <ExpiryFields value={editingInventoryItem} onChange={setEditingInventoryItem}/>
-            <label htmlFor="admininventorypage-field-16">Original printed date / calculated shelf-life deadline</label>
+            <ExpiryFields value={editingInventoryItem} onChange={setEditingInventoryItem} disabled={loading}/>
 
-            <input id="admininventorypage-field-16"
-              type="date"
-              value={
-                editingInventoryItem.original_expiry_date || editingInventoryItem.expiry_date
-              }
-              onChange={(e) =>
-                setEditingInventoryItem({
-                  ...editingInventoryItem,
-                  expiry_date: e.target.value,
-                  original_expiry_date: e.target.value || null,
-                })
-              }
-            />
 
             <div className="modal-actions">
 

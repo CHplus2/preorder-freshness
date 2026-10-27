@@ -29,6 +29,29 @@ finder only, not the catalogue, instant cards or whole basket. Recommendation
 selection still reserves nothing and checkout remains authoritative. No database
 migration or demand-forecast/model artifact changes.
 
+## Inventory deadline evidence — 27 October 2026
+
+Existing inventory fields, staff access and versioned PATCH contract are
+unchanged. For `expiry_basis=storage`, `received_date + shelf_life_days` gives
+the base deadline; `manufactured` uses `manufactured_date` instead. Calculated
+modes require a nonblank `guidance_note`. A client-supplied `expiry_date` cannot
+override this calculation. `label` uses the recorded original printed date.
+
+All modes now take the earliest of their base date, `original_expiry_date`, and
+documented opened/thawed deadlines. When changing a legacy labelled batch whose
+original date is null, omitting that field retains its saved printed expiry as
+the cap. Printed limits cannot precede receipt. Existing event/date-pair and
+handling validations still apply; unknown handling or a breach forces a hold.
+No mass rewrite of stored records occurs; existing evidence needs review on edit.
+
+The browser shows only the relevant mode fields and previews calendar-day
+arithmetic; the server remains authoritative. Switching calculated to labelled
+mode requires an actual printed date rather than relabelling a calculated one.
+The source link is general reference material, not auto-verified guidance or a
+physical safety assessment. No shelf-life values are preseeded. Reusable
+raw-material guidance remains a separate pending batch; no schema migration or
+forecast/model change is included here.
+
 ## Manual courier handover — 27 October 2026
 
 Owner Orders and both Planner order/run views share a recipient-copy panel and
