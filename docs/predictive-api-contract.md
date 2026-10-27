@@ -3,6 +3,20 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Manual courier handover — 27 October 2026
+
+Owner Orders and both Planner order/run views share a recipient-copy panel and
+the existing `POST /api/admin/orders/<id>/tracking/` form. Tracking's versioned
+request/response, staff access and customer-private courier phone contract are
+unchanged. The UI verifies returned order identity, unchanged progress/payment
+and submitted courier data before reporting a save. A stale or unknown result
+requires refreshing the order. Copied recipient details use the accepted address
+and explicit per-order contact; incomplete/older addresses require verification.
+Clipboard and WhatsApp draft actions do not contact a courier, send a message,
+book delivery, generate a tracking ID or advance an order. GrabExpress booking,
+provider webhooks and automatic reference imports remain unimplemented pending
+official regional/account access. No schema or forecast/model contract changes.
+
 ## Grouped actual order progress — 27 October 2026
 
 `POST /api/admin/orders/progress/` is staff-session/CSRF protected. Body:

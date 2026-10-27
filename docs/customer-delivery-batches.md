@@ -466,3 +466,46 @@ including explicit mobile checkbox alignment, pickup, stale records and uncertai
 results. Browser tests use generated local orders and never call the live worker.
 No production record, email credential, scheduler setting, model artifact
 or customer message is modified by these tests.
+
+### Courier handover and customer contact — 27 October 2026
+
+Owner Orders, Planner order review and Collection & delivery runs now share
+**Arrange courier handover**. It shows the recipient, saved delivery address,
+order contact phone and handover instructions together, with a button to copy
+plain recipient details into a manually arranged courier booking. Explicit order
+contact overrides the saved address phone; a nonempty saved address is never
+combined with an edited account address. Older linked addresses and missing
+recipient details are labelled for verification. No address is replaced, no
+tracking reference is invented and copying neither books nor dispatches anything.
+
+The existing version-protected tracking form is available in that panel. The
+client now validates the saved order identity, unchanged status/payment and
+submitted courier fields before confirming success. Unknown or stale results
+require a refresh before another save. The owner can call a recorded courier
+number. Customers' order responses continue to hide that private courier phone.
+
+Call/WhatsApp customer links remain per-order actions. WhatsApp drafts appear
+only for the customer's chosen WhatsApp contact method; the owner reviews and
+sends them in WhatsApp. Copy actions now offer selectable plain text when browser
+clipboard access fails. Customer handover guidance explains courier use of the
+address/contact and keeping an authorised unattended location away from vehicle
+paths. Automatic WhatsApp sending is not enabled.
+
+No courier provider credentials or regional GrabExpress API entitlement are
+available in this environment. This batch makes no claim that a public Malaysian
+sandbox is available, issues no courier request and receives no provider events.
+Provider booking, automatic reference import and verified status callbacks remain
+separate work requiring official account-specific documentation and access; see
+[courier integration readiness](courier-integration-readiness.md).
+
+Validation: the 35-test backend notification/arrival/grouped-progress selection
+passes with one expected SQLite concurrency skip. Frontend checkout, planner,
+UX/general suites, lint and production build pass. Ten full-page accessibility
+and overflow scans pass at 1440, 390 and 320 pixels across owner order/run views,
+clipboard failures, actual local tracking saves, stale/malformed responses and
+customer handover guidance. The local tracking save preserves cooked/unpaid
+state and creates no dispatch notice; courier phone remains hidden from the
+customer response. Tests use generated local contacts and mocked clipboard or
+SMTP. No real messages, courier bookings, live worker calls, provider credentials
+or production records were used or changed. No database migration or model
+retraining is needed.

@@ -1,5 +1,6 @@
 import {arrivalLabel} from '../utils/arrivalWindow';
 import OrderContactActions from './OrderContactActions';
+import CourierHandover from './CourierHandover';
 import SellingDetails from './SellingDetails';
 import {quantityLabel} from '../utils/sellingDetails';
 import OrderFulfilment from './OrderFulfilment';
@@ -27,7 +28,7 @@ export default function PlannerOrderCard({order,onSaved,now}) {
   <header className="planner-order-heading"><h2>{request?'Delivery request':'Order'} #{order.id}</h2><span className={'status-badge status-'+order.status}>{request?'Awaiting confirmation':orderStatusLabel(order.status)}</span></header>
   <ul className="planner-order-menus" aria-label="Ordered menus">{order.items.map((item,index)=><li key={item.id || index}><div>{item.product_name}<SellingDetails details={item.selling_details} compact/></div><strong>{quantityLabel(item.selling_details,item.quantity)}</strong></li>)}</ul>
   <dl className="planner-order-dates"><div><dt>{request?`Requested ${handoverLabel(order).toLowerCase()}`:handoverLabel(order)}</dt><dd>{arrivalLabel(order)}</dd></div><div><dt>Preparation starts</dt><dd>{orderDate(order.preparation_at)}</dd></div></dl>
-  <OrderFulfilment order={order} owner/><OrderContactActions order={order}/><PlanTimingNotice order={order} now={now}/>
+  <OrderFulfilment order={order} owner/><OrderContactActions order={order}/><CourierHandover key={'courier-'+order.id+'-'+order.updated_at} order={order} onSaved={onSaved}/><PlanTimingNotice order={order} now={now}/>
   {order.preparation_plan?.shared_batch && <p className="admin-notice">Shared cooking for orders {order.preparation_plan.shared_batch.order_ids.map(id=>'#'+id).join(', ')}. Task times and work totals describe the whole batch. Ingredients and customer handovers remain per order. Use Shared cooking to separate future reservations before individual time changes.</p>}
   <OrderWorkflowActions order={order} onSaved={onSaved}/>
   {valid && <><dl className="planner-order-stats"><div><dt>Hands-on work</dt><dd>{duration(hands)}</dd></div><div><dt>Equipment & pauses</dt><dd>{duration(passive)}</dd></div><div><dt>Start to finish</dt><dd>{duration(elapsed)}</dd></div></dl><p className="planner-order-caption">The full window includes breaks; unattended steps can overlap.</p></>}

@@ -9,7 +9,11 @@ export function contactNumber(value=''){
 }
 export function handoverDetails(order){
  const saved=order.fulfilment_snapshot?.handover || {};
- return {contact_phone:saved.contact_phone || order.address?.phone || '',contact_method:saved.contact_method || 'phone',mode:saved.mode || 'in_person',location:saved.location || '',notes:saved.notes || ''};
+ return {contact_phone:saved.contact_phone || orderAddress(order).phone || '',contact_method:saved.contact_method || 'phone',mode:saved.mode || 'in_person',location:saved.location || '',notes:saved.notes || ''};
+}
+export function orderAddress(order){
+ const saved=order.delivery_address;
+ return saved && typeof saved==='object' && !Array.isArray(saved) && Object.keys(saved).length?saved:order.address || {};
 }
 export function orderContact(order){
  const saved=handoverDetails(order),phone=contactNumber(saved.contact_phone);

@@ -3,6 +3,7 @@ import {arrivalLabel} from '../utils/arrivalWindow';
 import '../pages/customer/CustomerExperience.css';
 import HandoverDetails from './HandoverDetails';
 import OrderContactActions from './OrderContactActions';
+import CourierHandover from './CourierHandover';
 import {Link} from 'react-router-dom';
 import {useEffect,useState} from 'react';
 import {handoverBoard,unitTotals} from '../utils/handoverBoard';
@@ -31,7 +32,7 @@ export default function HandoverBoard({orders,date,onReview,onSaved,now}){
     {(order.items?.length || 0)>2 && <button className="handover-more" onClick={()=>onReview(order.id)}>View {order.items.length-2} more menu items</button>}
     <p className="handover-payment">Payment: <strong>{order.payment_status || 'Check payment records'}</strong>{order.fulfilment_snapshot?.delivery_area && <> · {order.fulfilment_snapshot.delivery_area}</>}</p>
     {order.dispatch_by && <p><strong>Dispatch target: {time(order.dispatch_by)}</strong> · planning allowance, not a live courier estimate.</p>}
-    <HandoverDetails order={order}/><OrderContactActions order={order}/>
+    <HandoverDetails order={order}/><OrderContactActions order={order}/><CourierHandover key={'courier-'+order.id+'-'+order.updated_at} order={order} onSaved={onSaved}/>
     <OrderWorkflowActions order={order} onSaved={onSaved} compact/><DeliveryRunBlock order={order} onChanged={onSaved}/><div className="handover-order-links"><button onClick={()=>onReview(order.id)}>Review plan</button><Link to={`/admin/orders?order=${order.id}`}>Order & payment records</Link></div>
    </article>)}
   </section>)}

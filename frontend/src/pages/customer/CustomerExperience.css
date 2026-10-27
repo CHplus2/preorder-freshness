@@ -119,6 +119,8 @@
 .order-contact-actions { margin: 16px 0; padding: 12px 0; border-top: 1px solid #d5dfd7; }
 .order-contact-actions>div { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .order-contact-actions a { min-height: 44px; display: inline-flex; align-items: center; padding: 8px 0; }
+.order-contact-actions .order-message-copy{display:grid;gap:8px;font-size:.875rem;font-weight:400;margin-top:12px}
+.order-message-copy textarea{box-sizing:border-box;width:100%;min-width:0;font:inherit;padding:12px;border:1px solid #aebbab;border-radius:8px;color:#263e2e;background:#fff;resize:vertical}
 
 .handover-fields>div { display: grid; gap: 8px; }
 .checkout-container .handover-fields label { margin-bottom: 0; }
