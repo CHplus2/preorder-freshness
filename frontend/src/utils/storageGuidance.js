@@ -17,6 +17,12 @@ export function applyStorageGuidance(value,material){
  if(!row)return null;
  return {...changeExpiryBasis(value,'storage'),shelf_life_days:row.shelf_life_days,guidance_note:`${row.source}; ${row.conditions}`};
 }
+export function changeBatchStorage(value,storageType){
+ if((value.storage_type || 'chilled')===storageType)return {...value,storage_type:storageType};
+ // A duration/source for the previous temperature is not guidance for the new
+ // one. Keep earlier printed/handling limits and holds until reviewed.
+ return {...value,storage_type:storageType,shelf_life_days:null,guidance_note:''};
+}
 export function changeBatchMaterial(value,materialId){
  if(Number(value.raw_material)===Number(materialId))return {...value,raw_material:materialId};
  return {...value,raw_material:materialId,expiry_basis:'label',expiry_date:'',original_expiry_date:null,

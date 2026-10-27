@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createServer} from 'vite';
-import {validStorageGuidance,matchingStorageGuidance,applyStorageGuidance,changeBatchMaterial} from '../utils/storageGuidance.js';
+import {validStorageGuidance,matchingStorageGuidance,applyStorageGuidance,changeBatchMaterial,changeBatchStorage} from '../utils/storageGuidance.js';
 import {materialRecords} from '../utils/inventoryAttention.js';
 import {expiryPreview} from '../utils/expiryEvidence.js';
 const profile={storage_type:'chilled',shelf_life_days:2,source:'Fixture reference',conditions:'Fixture raw unopened chilled conditions'};
@@ -22,6 +22,10 @@ const changed=changeBatchMaterial(copied,2);
 assert.equal(changed.shelf_life_days,null);assert.equal(changed.guidance_note,'');assert.equal(changed.original_expiry_date,null);
 assert.equal(changed.quarantined,true);assert.equal(changed.received_date,lot.received_date);
 assert.equal(changeBatchMaterial(copied,1).guidance_note,copied.guidance_note);
+const moved=changeBatchStorage({...copied,opened_date:'2026-10-27',after_open_days:1},'frozen');
+assert.equal(moved.shelf_life_days,null);assert.equal(moved.guidance_note,'');assert.equal(moved.quarantined,true);
+assert.equal(moved.original_expiry_date,'2026-10-28');assert.equal(moved.after_open_days,1);
+assert.equal(changeBatchStorage(copied,'chilled').guidance_note,copied.guidance_note);
 materialRecords([material]);assert.throws(()=>materialRecords([{...material,storage_guidance:[{...profile,source:''}]}]));
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
@@ -30,9 +34,9 @@ try{
  const editor=renderToStaticMarkup(createElement(Editor,{value:[profile],onChange:()=>{}}));
  assert.match(editor,/Reusable storage guidance \(optional\)/);assert.match(editor,/Existing batches keep their saved evidence/);
  assert.match(editor,/Source \/ document reference/);assert.match(editor,/Ingredient state and storage conditions/);
- const html=renderToStaticMarkup(createElement(Fields,{value:lot,material,onChange:()=>{}}));
+ const html=renderToStaticMarkup(createElement(Fields,{value:copied,material,onChange:()=>{}}));
  assert.match(html,/Use this guidance for this batch/);assert.match(html,/Fixture raw unopened chilled conditions/);assert.match(html,/Earlier printed, opened or thawed limits still apply/);
- const mismatch=renderToStaticMarkup(createElement(Fields,{value:{...lot,storage_type:'frozen'},material,onChange:()=>{}}));
+ const mismatch=renderToStaticMarkup(createElement(Fields,{value:{...copied,storage_type:'frozen'},material,onChange:()=>{}}));
  assert.doesNotMatch(mismatch,/Use this guidance for this batch/);assert.match(mismatch,/No saved guidance for this storage type/);
  console.log('Saved storage guidance: optional evidence, matching storage, explicit copy, earlier caps, preserved holds and material changes passed.');
 }finally{await server.close();}

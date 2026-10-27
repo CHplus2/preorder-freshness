@@ -57,6 +57,9 @@ export default function AdminInventoryPage() {
   const [editingInventoryItem, setEditingInventoryItem] =
     useState(null);
 
+  const [originalQuantity, setOriginalQuantity] = useState(null);
+  const openInventory = item => { setEditingInventoryItem({...item}); setOriginalQuantity(item.quantity); };
+
   const [editingRawMaterial, setEditingRawMaterial] =
     useState(null);
 
@@ -448,7 +451,7 @@ export default function AdminInventoryPage() {
 
       </div>
 
-      <InventoryAttention disabled={refreshing || !!refreshError} items={inventoryItems} today={today} onReview={id=>setEditingInventoryItem({...inventoryItems.find(item=>item.id===id)})}/>
+      <InventoryAttention disabled={refreshing || !!refreshError} items={inventoryItems} today={today} onReview={id=>openInventory(inventoryItems.find(item=>item.id===id))}/>
 
       <h2 className="inventory-batch-heading">All stock batches · {inventoryItems.length}</h2>
       {/* Filters */}
@@ -497,13 +500,13 @@ export default function AdminInventoryPage() {
             Expiring Soon
           </option>
           <option value="expired">
-            Expired
+            Past recorded deadline
           </option>
           <option value="held">On hold</option><option value="unknown">Date needs review</option>
         </select></label>
 
       </div>
-      <p className="inventory-date-rules">Recorded status uses Malaysia’s current date and the earliest saved deadline: past date = expired; today–3 days = attention due; more than 3 days = within recorded date. On hold overrides the date status. These are planning rules, not a physical food-safety test.</p>
+      <p className="inventory-date-rules">Recorded status uses Malaysia’s current date and the earliest saved deadline: past date = past recorded deadline; today–3 days = attention due; more than 3 days = within recorded date. On hold overrides the date status. These are planning rules, not a physical food-safety test.</p>
       <p className="inventory-list-status" role="status">{filteredInventory.length} of {inventoryItems.length} batches shown{(searchQuery || selectedRawMaterial || freshnessFilter)?' · filters applied':''}. {(searchQuery || selectedRawMaterial || freshnessFilter) && <button type="button" onClick={()=>{setSearchQuery('');setSelectedRawMaterial('');setFreshnessFilter('')}}>Reset filters</button>}</p>
 
       {/* Inventory table */}
@@ -573,7 +576,7 @@ export default function AdminInventoryPage() {
                       {freshness === "held" && "On hold"}
                       {freshness === "unknown" && "Date needs review"}
                       {freshness === "expired" &&
-                        "Expired"}
+                        (item.label_date_type==='best_before'?'Past best-before':'Past recorded date')}
                     </span>
                   </td>
 
@@ -581,9 +584,7 @@ export default function AdminInventoryPage() {
 
                     <button disabled={refreshing || !!refreshError}
                       onClick={() =>
-                        setEditingInventoryItem({
-                          ...item,
-                        })
+                        openInventory(item)
                       }
                     >
                       Edit
@@ -1025,39 +1026,15 @@ export default function AdminInventoryPage() {
               setLoading(true);
               try {
                 const response = await axios.get(`${API_URL}/inventory-items/${editingInventoryItem.id}/`, getAuthConfig());
-                setEditingInventoryItem(response.data);
+                openInventory(response.data);
                 setError("");
               } catch (err) { setError(apiError(err, "Could not reload this batch.")); }
               finally { setLoading(false); }
             }}>Reload latest batch (discards edits)</button></InventoryFeedback>
 
-            <label htmlFor="admininventorypage-field-11">Raw Material</label>
+            <div className="inventory-fixed-ingredient"><span>Ingredient</span><strong>{editingInventoryItem.raw_material_name || rawMaterials.find(row=>row.id===editingInventoryItem.raw_material)?.name}</strong></div>
 
-            <select id="admininventorypage-field-11" disabled
-              value={
-                editingInventoryItem.raw_material
-              }
-              onChange={(e) =>
-                setEditingInventoryItem({
-                  ...editingInventoryItem,
-                  raw_material:
-                    Number(e.target.value),
-                })
-              }
-            >
-
-              {rawMaterials.map((material) => (
-                <option
-                  key={material.id}
-                  value={material.id}
-                >
-                  {material.name}
-                </option>
-              ))}
-
-            </select>
-
-            <label>Reason for quantity adjustment<input maxLength={200} value={editingInventoryItem.adjustment_reason || ''} onChange={e=>setEditingInventoryItem({...editingInventoryItem,adjustment_reason:e.target.value})}/></label>
+            {Number(editingInventoryItem.quantity)!==Number(originalQuantity) && <label>Reason for quantity adjustment<input required maxLength={200} value={editingInventoryItem.adjustment_reason || ''} onChange={e=>setEditingInventoryItem({...editingInventoryItem,adjustment_reason:e.target.value})}/></label>}
               <label htmlFor="admininventorypage-field-12">
               Quantity (
               {editingInventoryItem.unit}

@@ -83,6 +83,26 @@ multi-storage edits, custom values and ingredient switching. The SQL script was
 run twice on an isolated pre-migration PostgreSQL fixture and preserves existing
 ingredient rows. No production records, emails or courier requests were used.
 
+## Inventory form follow-up: simpler primary path
+
+The date form now leads with package date, received-date calculation or
+manufacture-date calculation. Receipt-based guidance is offered only in the
+relevant mode; manual documented input remains available without a preset.
+Supplier/cost and opened/thawed/handling fields are collapsed, with recorded
+limits indicated and holds visible. Unchanged quantities do not ask for an
+adjustment reason. Edit displays one ingredient identity rather than the whole
+disabled directory. Best-before wording distinguishes quality from measured
+spoilage, while retaining the conservative allocation cutoff.
+
+Changing storage clears old calculation days/source so a frozen reference is not
+silently reused for chilled stock. Earlier printed and event limits/holds remain.
+The change has no migration or backend rule/model modifications. Validation:
+45 focused inventory/reminder tests pass (one PostgreSQL-only skip), frontend
+lint, unit/UX suites and production build pass, and ten full-page accessibility/
+overflow checks pass at 1440, 390 and 320 pixels. The browser uses local fixture
+records for printed, manual/saved receipt, manufacture, stock-adjustment and
+earlier-limit paths. No live worker, real email or production record was used.
+
 ## Courier automation and reminder verification
 
 Grouped progress and manual courier/WhatsApp contact actions are implemented.

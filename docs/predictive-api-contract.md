@@ -77,6 +77,29 @@ The migration is additive; old code ignores the new field. Do not deploy this
 code before applying the migration. See `docs/freshcast-storage-guidance-release.md`.
 Forecast/model artifacts, allocation and reminder behavior are unchanged.
 
+### Inventory form presentation follow-up
+
+The main form presents the date method, storage and its relevant date fields.
+Package-date mode hides optional evidence inside handling details and does not
+show receipt-based template controls. An explicit no-package-date action opens
+receipt-based calculation, where matching saved ingredient guidance and custom
+documented days/source remain available. Manufacturing and package expiry are
+labelled separately. Source of purchase does not force a date method: unpackaged
+stock can have supplier documentation, and packaged stock may need a calculation.
+
+Supplier/cost and opened/thawed/handling fields remain available in two collapsed
+sections. Existing limits are indicated in the summary and remain in the preview
+and server validation. The hold is always visible. An edited batch shows its
+fixed ingredient name; the quantity-adjustment reason appears only after the
+quantity differs from the version loaded into the form. The server still checks
+the version and requires reasons for actual quantity changes.
+
+Changing storage clears the prior calculation's days and source for review,
+without clearing earlier label/event limits or holds. The browser cannot verify
+source accuracy or handling temperatures. Past best-before rows say so rather
+than claiming measured spoilage; allocation still excludes them conservatively.
+No API fields, schema, stock quantities, forecasts or reminder rules change.
+
 ## Manual courier handover — 27 October 2026
 
 Owner Orders and both Planner order/run views share a recipient-copy panel and

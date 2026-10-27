@@ -18,10 +18,16 @@ try{
  const {default:Fields}=await server.ssrLoadModule('/src/components/ExpiryFields.jsx');
  const render=value=>renderToStaticMarkup(createElement(Fields,{value,onChange:()=>{}}));
  const storage=render(stored),label=render(labelled),manufacture=render({...stored,expiry_basis:'manufactured'});
- assert.match(storage,/No manufacturing date is needed/);assert.doesNotMatch(storage,/<label[^>]*>Manufacture date</);
+ assert.match(storage,/For unlabelled ingredients/);assert.doesNotMatch(storage,/<label[^>]*>Manufacture date</);
  assert.match(storage,/Documented storage life from receipt/);assert.doesNotMatch(storage,/<label[^>]*>Printed expiry \/ best-before date</);
  assert.match(storage,/Also have a printed expiry\? \(optional\)/);assert.match(storage,/FoodSafety.gov cold food storage chart/);
  assert.match(label,/<label[^>]*>Printed expiry \/ best-before date</);assert.doesNotMatch(label,/<label[^>]*>Documented shelf life from manufacture/);
+ assert.match(label,/No package date\? Calculate from received date/);
+ assert.doesNotMatch(label,/class="expiry-saved-guidance"/);
+ assert.match(label,/<details class="expiry-purchase"><summary>Supplier and cost/);
+ assert.match(label,/<details class="expiry-handling"><summary>Opened, thawed or handling limits/);
+ assert.doesNotMatch(label,/<details[^>]*open/);
+ assert.match(render({...labelled,label_date_type:'best_before'}),/Best-before describes quality/);
  assert.match(manufacture,/<label[^>]*>Manufacture date</);assert.match(manufacture,/Documented shelf life from manufacture/);
  assert.match(storage,/not measure physical freshness/);
  assert.match(render({...stored,handling_history:'unknown'}),/<input[^>]*type="checkbox"[^>]*disabled=""[^>]*checked=""/);
