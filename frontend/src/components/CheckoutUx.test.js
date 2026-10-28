@@ -23,5 +23,12 @@ try{
  const saving=address({editing:true,saving:true});assert.match(saving,/<fieldset[^>]*disabled/);assert.match(saving,/Saving…/);
  const options=renderToStaticMarkup(h(MemoryRouter,null,h(PaymentOptions,{value:'cod',onChange:()=>{},disabled:true})));
  assert.match(options,/<fieldset[^>]*disabled/);assert.match(options,/<legend>Payment method/);
+ const {default:Picker}=await server.ssrLoadModule('/src/components/DeliveryTimePicker.jsx');
+ const picker=props=>renderToStaticMarkup(h(MemoryRouter,null,h(Picker,{cart:[row],onSelect:()=>{},...props})));
+ const chosen=picker({value:'2030-01-02T15:00'});assert.match(chosen,/Selected delivery|Selected arrival window/);assert.match(chosen,/Change delivery time/);assert.doesNotMatch(chosen,/Preferred day|Finding available times/);
+ const unavailable=picker({value:'2030-01-02T15:00',selectionUnavailable:true});assert.match(unavailable,/Time needs another check/);assert.match(unavailable,/Preferred day/);
+ assert.match(picker({value:'2030-01-02T15:00',method:'pickup'}),/Selected collection/);
+ assert.match(picker({value:'2030-01-02T15:00',disabled:true}),/<button[^>]*disabled[^>]*>Change delivery time/);
+ assert.match(picker({value:''}),/Preferred day/);
  console.log('Checkout UX: stale basket actions hidden, update/pricing guards, address read recovery and disabled payment groups passed.');
 }finally{await server.close();}

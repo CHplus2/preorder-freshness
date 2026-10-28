@@ -8,7 +8,6 @@ import {useProduct} from '../contexts/ProductContext';
 import {useUI} from '../contexts/UIContext';
 import {getCookie} from '../utils/cookieUtils';
 import {readApiError} from '../utils/apiError';
-import {rememberSuggestion} from '../utils/guideResponse';
 import {recommendationEvent,selectRecommendation} from '../utils/recommendationEvents';
 import {basketGuideResponse,basketGuideEmpty} from '../utils/basketGuide';
 import MenuRecommendationCard from './MenuRecommendationCard';
@@ -19,7 +18,7 @@ export default function GuidedMenu(){
  const [form,setForm]=useState({date:'',quantity:3,budget:'',budget_mode:'within',category:''});
  const [data,setData]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[adding,setAdding]=useState(false),[expanded,setExpanded]=useState(false),[selected,setSelected]=useState(''),[chosenTime,setChosenTime]=useState(''),[success,setSuccess]=useState(null);
  const [requestScope,setRequestScope]=useState('');
- const {cart=[],cartLoading,cartError,cartUpdating,fulfilmentMethod,deliveryArea,chooseArrivalWindow,addSuggestedBasket}=useCart();
+ const {cart=[],cartLoading,cartError,cartUpdating,fulfilmentMethod,deliveryArea,chooseDeliveryTime,addSuggestedBasket}=useCart();
  const {isAuthenticated,accountKey}=useAuth(),{categories}=useProduct(),{formatPrice}=useUI();
  const generation=useRef(0),request=useRef(null),pending=useRef(false),errorRef=useRef(null),helpId=useId();
  const scope=JSON.stringify([accountKey,isAuthenticated,cart.map(row=>[row.product.id,row.quantity,row.product.price]),fulfilmentMethod,deliveryArea]);
@@ -52,7 +51,6 @@ export default function GuidedMenu(){
   try{
    const result=await addSuggestedBasket({session,plan:picked.id,delivery_at:delivery},{session,plan:picked,quantity:shown.quantity,delivery_at:delivery});
    if(result){
-    chooseArrivalWindow?.(0);rememberSuggestion('preferredDelivery',delivery);
     for(const item of picked.items.filter(item=>item.add_quantity>0))void recommendationEvent(session,'added',item.id);
     const first=picked.items.find(item=>item.add_quantity>0);if(first)selectRecommendation(session,first.id);
     setSuccess({account:accountKey,message:result.basket_changed?'This option was already added; review your basket’s current total.':result.already_applied?'This option was already added. No duplicate items were added.':'Suggested items added. Review your basket to continue.'});
@@ -94,7 +92,7 @@ export default function GuidedMenu(){
     <div className="guide-order-footer"><dl className="guide-order-breakdown"><div><dt>Food subtotal</dt><dd>{formatPrice(plan.totals.subtotal)}</dd></div>{Number(plan.totals.discount)>0 && <div><dt>Current discount</dt><dd>−{formatPrice(plan.totals.discount)}</dd></div>}<div><dt>{shown.delivery_method==='pickup'?'Collection':'Delivery'}</dt><dd>{formatPrice(plan.totals.shipping)}</dd></div><div className="guide-order-total"><dt>Whole-order total · {shown.quantity} items</dt><dd>{formatPrice(plan.totals.total)}</dd></div></dl>
      {difference!==null && <p className="guide-order-budget" data-relation={difference>0?'above':'within'}>{difference===0?'Exactly on your whole-order budget':`${formatPrice(Math.abs(difference)/100)} ${difference>0?'over':'under'} your whole-order budget`}</p>}
      <label className="guide-shared-time" htmlFor={helpId+'-delivery'}>One delivery time for this basket · Malaysia<select id={helpId+'-delivery'} disabled={adding} value={delivery} onChange={event=>setChosenTime(event.target.value)}>{plan.slots.map(slot=><option key={slot.delivery_at} value={slot.delivery_at}>{new Date(slot.delivery_at).toLocaleTimeString('en-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit'})}</option>)}</select></label>
-     {additions>0?<button className="guide-add-basket" type="button" disabled={adding || cartUpdating || cartLoading || !!cartError} onClick={add}>{adding?'Adding suggested items…':!isAuthenticated?'Sign in to add this basket':`Add ${additions} ${additions===1?'item':'items'} to basket`}</button>:<Link className="guide-review-basket" to="/cart" onClick={()=>{chooseArrivalWindow?.(0);rememberSuggestion('preferredDelivery',delivery);}}>Your {shown.quantity}-item basket is complete · review basket</Link>}
+     {additions>0?<button className="guide-add-basket" type="button" disabled={adding || cartUpdating || cartLoading || !!cartError} onClick={add}>{adding?'Adding suggested items…':!isAuthenticated?'Sign in to add this basket':`Add ${additions} ${additions===1?'item':'items'} to basket`}</button>:<Link className="guide-review-basket" to="/cart" onClick={()=>{chooseDeliveryTime?.(delivery,{windowMinutes:0});}}>Your {shown.quantity}-item basket is complete · review basket</Link>}
      <p className="guide-input-help">The shown time is checked for all items together. Adding a basket does not reserve preparation; checkout checks again.</p>
     </div>
    </section>}

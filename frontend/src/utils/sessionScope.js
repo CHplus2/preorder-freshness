@@ -3,7 +3,7 @@ import {invalidResponse} from './apiResponse.js';
 export const SESSION_SIGNAL='dk-session-change';
 export const DECISION_REVIEW_KEY='freshcast.local-decision-reviews.v1';
 const MARKER='dk-account-scope';
-const sessionKeys=['checkoutAttempt','deliveryPlan','preferredDelivery','recommendationSession','walletTopupAttempt','fulfilmentChoice'];
+const sessionKeys=['checkoutAttempt','deliveryPlan','preferredDelivery','basketDeliveryChoice','recommendationSession','walletTopupAttempt','fulfilmentChoice'];
 export function authSession(data){
  if(!data || typeof data.authenticated!=='boolean')throw invalidResponse();
  if(!data.authenticated)return {isAuthenticated:false,isAdmin:false,accountKey:'anonymous'};

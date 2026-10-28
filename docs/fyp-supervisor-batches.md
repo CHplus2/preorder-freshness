@@ -182,3 +182,46 @@ with target 3: it should offer review rather than another three additions. With
 one existing item, the Add action must add only two. Above mode needs a feasible
 three-item basket whose complete total is strictly greater than RM100; it should
 show no match when no generated basket meets that condition.
+
+
+## Recommendation-to-checkout handoff — 28 October 2026
+
+The earlier RM36 card was RM12 × 3 units of one menu, not a unit price of RM36.
+The user subsequently clarified a preference for three total items allowing a
+mix, implemented in the preceding batch. This batch follows that basket choice
+through to checkout.
+
+Review found a genuine handoff bug: the recommendation saved a time, but the
+basket passed empty navigation state which overrode it at checkout. Delivery
+choices now live in one account/basket/fulfilment-scoped context, optionally
+persisted for a same-account reload. All three entry points use it. Scope changes,
+expired or malformed storage and old navigation history cannot supply a current
+choice for a different basket. Account changes clear the stored preference.
+Browser-storage failure still permits in-memory navigation with a choice; it
+does not promise persistence across a reload.
+
+A selected-time summary and Change time button replace a repeated automatic
+search when a choice already exists. Changing quantity or fulfilment rules
+requires a fresh check. Checkout still obtains a current quote, and final server
+submission retains its capacity/stock checks. Nothing here places an order,
+reserves preparation or dispatches a courier. No migration, scheduler change or
+forecast retraining is required.
+
+Validation: frontend lint, checkout, recommendation, shopping, unit and UX suites
+and production build pass. Focused tests cover Malaysia-time normalization,
+invalid/expired values, stable basket ordering, exact account/basket/fulfilment
+scope, blocked storage, selected/changed/unavailable display and account clearing.
+The real local browser/API journey verifies RM35.50 for three mixed items and an
+unchanged selected time from recommendation through basket to checkout, restoration
+on reload, changed-time carryover, quantity-change invalidation, and the same
+navigation with session storage blocked. Six full-page WCAG/overflow checks pass
+at 1440, 390 and 320 pixels. Test records are fictional and external browser
+requests are blocked. No production data, real order, email, payment or courier
+request is used.
+
+Manual acceptance after deployment is Ready: choose a mixed basket and time,
+open the basket and continue to checkout. The same chosen date/time should appear
+without another search. Change it in the basket, continue and verify the new
+time. Change an item quantity: the previous choice should no longer be used, and
+fresh available times should be offered. All displayed totals must still match
+food minus discount plus current delivery.

@@ -27,3 +27,10 @@
 @media(max-width:480px){.delivery-time-picker .slot-suggestions{grid-template-columns:repeat(2,minmax(0,1fr))}.delivery-time-picker>input{max-width:none}}
 
 .delivery-time-picker .delivery-selected-unavailable{background:#f4f4ed;border-color:#d6d9cc;color:#5b6049}
+
+/* Keep an existing choice visible without repeating the whole slot search. */
+.delivery-selection-review{padding:16px;border:1px solid #c3d8c8;border-radius:10px;background:#f2f7ef;margin-bottom:16px}
+.delivery-selection-review .delivery-selected{margin:0;padding:0;border:0;background:transparent}
+.delivery-selection-review .delivery-selected span{font-size:12px;line-height:1.65;color:inherit}
+.delivery-time-picker .delivery-change-time{min-height:44px;padding:10px 14px;margin:12px 0 0;border:1px solid #9bb49e;border-radius:8px;background:#fff;color:#285a3e;font:600 13px/1.5 system-ui,sans-serif;box-shadow:none;transform:none;white-space:normal;text-align:center}
+.delivery-time-picker .delivery-change-time:focus-visible{outline:3px solid #477b4f;outline-offset:3px}

@@ -21,7 +21,7 @@ const dateLabel=(value,language)=>new Date(value+'T12:00:00+08:00').toLocaleDate
 const cleanDraft=draft=>Object.fromEntries(Object.entries(draft).filter(([,v])=>v!==''));
 const draftFields=data=>({portions:data.portions===undefined?'':String(data.portions),date:data.date || '',budget:data.budget || '',search:data.search || ''});
 export default function ShoppingAssistant({language='en',aiAvailable=false,onClose}){
- const t=copy[language];const {isAuthenticated}=useAuth() || {};const {setShowLogin}=useUI();const {cart,cartLoading,cartError,refreshCart,fulfilmentMethod,chooseArrivalWindow}=useCart();const navigate=useNavigate();
+ const t=copy[language];const {isAuthenticated}=useAuth() || {};const {setShowLogin}=useUI();const {cart,cartLoading,cartError,refreshCart,fulfilmentMethod,chooseDeliveryTime}=useCart();const navigate=useNavigate();
  const [message,setMessage]=useState(''),[lastMessage,setLastMessage]=useState(''),[useAI,setUseAI]=useState(false);
  const [draft,setDraft]=useState(draftFields({})),[result,setResult]=useState(null),[preview,setPreview]=useState(null),[added,setAdded]=useState(null),[selection,setSelection]=useState(null);
  const [busy,setBusy]=useState(''),[error,setError]=useState('');const pending=useRef(false),read=useRef(null),mounted=useRef(true),resultRef=useRef(null),previewRef=useRef(null),addedRef=useRef(null);
@@ -64,9 +64,8 @@ export default function ShoppingAssistant({language='en',aiAvailable=false,onClo
  function change(field,value){setDraft(current=>({...current,[field]:value}));setResult(null);setPreview(null);setError('')}
  function checkout(){
   const preferred=selected?selected+':00+08:00':'';
-  if(preferred)chooseArrivalWindow?.(0);
-  try{if(preferred)sessionStorage.setItem('preferredDelivery',preferred);else sessionStorage.removeItem('preferredDelivery')}catch{/* Navigation state also carries the selected time. */}
-  onClose?.();navigate('/checkout',{state:{preferredDelivery:preferred}});
+  chooseDeliveryTime?.(preferred,{windowMinutes:0});
+  onClose?.();navigate('/checkout');
  }
  return <section className="shopping-assistant" aria-label={t.title}>
   <p className="shopping-steps">{t.step}</p><h3>{t.title}</h3><p>{t.intro}</p>

@@ -3,6 +3,33 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Delivery-choice handoff — 28 October 2026
+
+This client-only follow-up preserves one advisory delivery choice across menu
+suggestions, basket and checkout. A successful mixed-basket add stores the returned
+time against the refreshed basket, with exact-time (zero-minute window) semantics.
+A completed-basket review and the shopping assistant use the same context action.
+The basket no longer overwrites a previously chosen time with empty route state.
+Checkout reads the shared choice and still calls `/api/orders/quote/` for current
+capacity; order placement remains authoritative under the existing server locks.
+No slot, payment or courier status is confirmed by remembering a time.
+
+Optional `basketDeliveryChoice` browser-session storage holds version 1, a Malaysia
+local-minute value and a scope composed of account, stable basket row identities/
+quantities/menu settings, fulfilment terms, area and arrival-window duration.
+Malformed/expired values and scope mismatches are ignored. Account changes clear
+the record; fulfilment/window changes clear it explicitly. An unchanged same-user
+reload restores it after current basket/pricing reads. Legacy unscoped
+`preferredDelivery` and navigation-history values are no longer used to initialise
+checkout, preventing stale choices from returning through old route entries.
+Storage failure still allows in-memory preferences during same-page navigation;
+a reload without working storage cannot restore them.
+
+The selected-time summary is shown first, with Change time exposing the optional
+search. Basket/fulfilment changes or a known unavailable quote expose fresh
+choices. Every quote and submission keeps its existing basket/rule checks. API
+request/response schemas, database models and forecast artifacts are unchanged.
+
 ## Mixed whole-order finder — 28 October 2026
 
 The storefront date finder now uses `POST /api/menu/basket-guide/`, version

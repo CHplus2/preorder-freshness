@@ -10,6 +10,7 @@ import { useUI } from "./UIContext";
 import axios from "axios";
 import { useStorefront } from "./StorefrontContext";
 import {methodsFor} from '../utils/fulfilment';
+import {chosenDeliveryInput,deliveryChoiceScope,activeDeliveryChoice,readDeliveryChoice,saveDeliveryChoice} from '../utils/deliveryChoice';
 import {basketPlanAdded} from '../utils/basketGuide';
 
 export default function CartProvider({ children }) {
@@ -24,13 +25,26 @@ export default function CartProvider({ children }) {
 
   const [cart,setCart]=useState([]);
   const { isAuthenticated, accountKey, isSessionCurrent } = useAuth();
-  const [fulfilment,setFulfilment]=useState(()=>{try{const saved=JSON.parse(sessionStorage.getItem('fulfilmentChoice') || '{}');return {account:accountKey,...saved,window_minutes:saved.window_minutes ?? (sessionStorage.getItem('preferredDelivery')?0:60)}}catch{return {account:accountKey,window_minutes:60}}});
+  const [fulfilment,setFulfilment]=useState(()=>{try{const saved=JSON.parse(sessionStorage.getItem('fulfilmentChoice') || '{}');return {account:accountKey,...saved,window_minutes:saved.window_minutes ?? 60}}catch{return {account:accountKey,window_minutes:60}}});
   const options=methodsFor(promotion);
   const fulfilmentMethod=fulfilment.account===accountKey && options.includes(fulfilment.method)?fulfilment.method:options[0] || 'standard';
   const arrivalWindowMinutes=fulfilmentMethod==='pickup'?0:[0,30,60].includes(fulfilment.window_minutes)?fulfilment.window_minutes:0;
   const deliveryArea=fulfilment.account===accountKey && promotion?.delivery_areas?.includes(fulfilment.area)?fulfilment.area:'';
-  const chooseFulfilment=(method,area='')=>{const window_minutes=fulfilment.window_minutes ?? 60;setFulfilment({account:accountKey,method,area,window_minutes});try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method,area,window_minutes}));sessionStorage.removeItem('preferredDelivery');}catch{/* The current choice remains usable. */}};
-  const chooseArrivalWindow=minutes=>{if(![0,30,60].includes(minutes))return;setFulfilment({account:accountKey,method:fulfilmentMethod,area:deliveryArea,window_minutes:minutes});try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method:fulfilmentMethod,area:deliveryArea,window_minutes:minutes}));sessionStorage.removeItem('preferredDelivery');}catch{/* Keep the current timing usable. */}};
+  const [deliveryChoice,setDeliveryChoice]=useState(()=>{try{return readDeliveryChoice(sessionStorage)}catch{return null}});
+  const choiceScope=deliveryChoiceScope(accountKey,cart,promotion,fulfilmentMethod,deliveryArea,arrivalWindowMinutes);
+  const preferredDelivery=activeDeliveryChoice(deliveryChoice,choiceScope);
+  const saveChoice=record=>{setDeliveryChoice(record);try{saveDeliveryChoice(sessionStorage,record)}catch{/* Keep the choice in memory. */}};
+  const chooseFulfilment=(method,area='')=>{const window_minutes=fulfilment.window_minutes ?? 60;setFulfilment({account:accountKey,method,area,window_minutes});saveChoice(null);try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method,area,window_minutes}));}catch{/* The current choice remains usable. */}};
+  const chooseArrivalWindow=minutes=>{if(![0,30,60].includes(minutes))return;setFulfilment({account:accountKey,method:fulfilmentMethod,area:deliveryArea,window_minutes:minutes});saveChoice(null);try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method:fulfilmentMethod,area:deliveryArea,window_minutes:minutes}));}catch{/* Keep the current timing usable. */}};
+  const chooseDeliveryTime=(time,{rows=cart,windowMinutes=arrivalWindowMinutes}={})=>{
+    if(!isSessionCurrent() || ![0,30,60].includes(windowMinutes))return;
+    const value=chosenDeliveryInput(time);
+    if(windowMinutes!==arrivalWindowMinutes){
+      setFulfilment({account:accountKey,method:fulfilmentMethod,area:deliveryArea,window_minutes:windowMinutes});
+      try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method:fulfilmentMethod,area:deliveryArea,window_minutes:windowMinutes}));}catch{/* Use the in-memory window. */}
+    }
+    saveChoice(value?{version:1,value,scope:deliveryChoiceScope(accountKey,rows,promotion,fulfilmentMethod,deliveryArea,windowMinutes)}:null);
+  };
   const topupPending=useRef(false),cartRead=useRef(null),cartMutation=useRef(false);
   const [cartUpdating,setCartUpdating]=useState(false);
   const { setAlert, setShowLogin } = useUI();
@@ -51,7 +65,7 @@ export default function CartProvider({ children }) {
     try {
       const {data}=await axios.get('/api/cart/',{withCredentials:true,timeout:30000,signal:controller.signal});
       const rows=basketRows(data);
-      if(!controller.signal.aborted && isSessionCurrent()){setCart(rows);return true;}
+      if(!controller.signal.aborted && isSessionCurrent()){setCart(rows);return rows;}
     }catch(error){if(!controller.signal.aborted && isSessionCurrent())setCartError(readApiError(error,'Your basket could not be loaded.'));}
     finally{if(!controller.signal.aborted && isSessionCurrent())setCartLoading(false);}
     return false;
@@ -178,7 +192,8 @@ export default function CartProvider({ children }) {
       const response=await axios.post('/api/menu/basket-guide/add/',selection,{withCredentials:true,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
       if(!isSessionCurrent())return false;
       const result=basketPlanAdded(response.data,expected);
-      await refreshCart();
+      const rows=await refreshCart();
+      if(rows && !result.basket_changed)chooseDeliveryTime(result.delivery_at,{rows,windowMinutes:0});
       return result;
     }catch(error){
       if(!isSessionCurrent())return false;
@@ -193,7 +208,7 @@ export default function CartProvider({ children }) {
   return (
     <CartContext.Provider
       value={{
-        fulfilmentMethod,deliveryArea,chooseFulfilment,arrivalWindowMinutes,chooseArrivalWindow,
+        fulfilmentMethod,deliveryArea,chooseFulfilment,arrivalWindowMinutes,chooseArrivalWindow,preferredDelivery,chooseDeliveryTime,
         discount, promotion, pricingReady, pricingError, refreshPricing,
         cart,
         cartLoading, cartError, cartUpdating,

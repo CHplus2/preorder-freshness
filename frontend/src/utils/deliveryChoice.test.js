@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {DELIVERY_CHOICE_KEY,chosenDeliveryInput,deliveryChoiceScope,activeDeliveryChoice,readDeliveryChoice,saveDeliveryChoice} from './deliveryChoice.js';
+const now=Date.parse('2030-01-01T00:00:00Z');
+assert.equal(chosenDeliveryInput('2030-01-02T15:00',now),'2030-01-02T15:00');
+assert.equal(chosenDeliveryInput('2030-01-02T07:00:00Z',now),'2030-01-02T15:00');
+assert.equal(chosenDeliveryInput('2030-01-02T15:00:00+08:00',now),'2030-01-02T15:00');
+for(const value of ['',null,'2030-02-30T15:00','2030-01-02T24:00','2030-01-02T15:61','2030-01-02T15:00:61+08:00','2029-12-31T12:00','2030-01-01T08:00','garbage'])assert.equal(chosenDeliveryInput(value,now),'',String(value));
+const rows=[{id:1,quantity:1,product:{id:2,updated_at:'2030-01-01',lead_hours:24}},{id:2,quantity:2,product:{id:3,updated_at:'2030-01-01',lead_hours:24}}];
+const store={delivery_fee_myr:5,delivery_areas:['A','B']};
+const scope=(cart=rows,method='standard',area='A',minutes=0,account='user:1:customer',kitchen=store)=>deliveryChoiceScope(account,cart,kitchen,method,area,minutes);
+const record={version:1,scope:scope(),value:'2030-01-02T15:00'};
+assert.equal(activeDeliveryChoice(record,scope(),now),record.value);
+assert.equal(scope([...rows].reverse()),scope());
+assert.equal(activeDeliveryChoice(record,scope(),Date.parse('2030-01-03T00:00:00Z')),'');
+for(const changed of [scope([{...rows[0],quantity:2},rows[1]]),scope([rows[0]]),scope([{...rows[0],id:7},rows[1]]),scope([{...rows[0],product:{...rows[0].product,updated_at:'2030-01-02'}},rows[1]]),scope(rows,'pickup'),scope(rows,'standard','B'),scope(rows,'standard','A',60),scope(rows,'standard','A',0,'user:2:customer'),scope(rows,'standard','A',0,'user:1:customer',{...store,delivery_fee_myr:10})])assert.equal(activeDeliveryChoice(record,changed,now),'');
+const values=new Map(),storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};
+saveDeliveryChoice(storage,record);assert.deepEqual(readDeliveryChoice(storage),record);
+values.set('preferredDelivery','legacy');saveDeliveryChoice(storage,null);assert.equal(readDeliveryChoice(storage),null);assert.equal(values.has('preferredDelivery'),false);
+for(const text of ['not json','null','{}','{"version":2}',JSON.stringify({...record,value:'2020-01-01T12:00'})]){values.set(DELIVERY_CHOICE_KEY,text);assert.equal(readDeliveryChoice(storage),null);}
+const blocked={getItem(){throw Error('Blocked')},setItem(){throw Error('Blocked')},removeItem(){throw Error('Blocked')}};
+assert.equal(readDeliveryChoice(blocked),null);assert.doesNotThrow(()=>saveDeliveryChoice(blocked,record));assert.equal(activeDeliveryChoice(record,scope(),now),record.value);
+console.log('Delivery choices: Malaysia time, invalid/expired data, exact basket/account/fulfilment scope, stable ordering and blocked-storage recovery passed.');
