@@ -3,11 +3,28 @@ import {createElement as h} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {MemoryRouter} from 'react-router-dom';
 import {createServer} from 'vite';
+import {checkoutNextStep} from '../utils/checkoutNextStep.js';
+const ready={hasAddress:true,deliveryAt:'2030-01-02T15:00',quote:{plan:{needs_review:false}}};
+assert.equal(checkoutNextStep(ready),null);
+assert.equal(checkoutNextStep({...ready,areaIssue:true}).href,'#checkout-receive');
+assert.equal(checkoutNextStep({...ready,hasAddress:false}).href,'#checkout-address-title');
+assert.equal(checkoutNextStep({...ready,addressError:'Read failed'}).message,'Reload your delivery address');
+assert.equal(checkoutNextStep({...ready,pickup:true,hasAddress:false,addressLoading:true,addressError:'Read failed'}),null);
+assert.equal(checkoutNextStep({...ready,deliveryAt:''}).message,'Choose a delivery time');
+assert.equal(checkoutNextStep({...ready,pickup:true,deliveryAt:''}).message,'Choose a collection time');
+assert.equal(checkoutNextStep({...ready,checking:true}).href,undefined);
+assert.equal(checkoutNextStep({...ready,quoteError:'Read failed'}).href,'#checkout-time');
+assert.equal(checkoutNextStep({...ready,quote:{plan:{needs_review:true}}}).href,'#checkout-time');
+assert.equal(checkoutNextStep({...ready,requestMode:true,quote:{plan:{needs_review:true}}}),null);
+assert.equal(checkoutNextStep({...ready,paymentAvailable:false}).href,'#checkout-payment');
+assert.equal(checkoutNextStep({...ready,weekdayIssue:'Different days'}).href,'/cart');
+assert.equal(checkoutNextStep({...ready,updating:true,areaIssue:true}).message,'Updating basket and totals…');
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
  const {default:CartPage}=await server.ssrLoadModule('/src/pages/customer/CartPage.jsx');
  const {default:CheckoutAddress}=await server.ssrLoadModule('/src/components/CheckoutAddress.jsx');
  const {default:PaymentOptions}=await server.ssrLoadModule('/src/components/PaymentOptions.jsx');
+ const {default:Summary}=await server.ssrLoadModule('/src/components/CheckoutSummary.jsx');
  const {CartContext}=await server.ssrLoadModule('/src/contexts/CartContext.js');
  const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
  const {StoreContext}=await server.ssrLoadModule('/src/contexts/StorefrontContext.js');
@@ -30,5 +47,9 @@ try{
  assert.match(picker({value:'2030-01-02T15:00',method:'pickup'}),/Selected collection/);
  assert.match(picker({value:'2030-01-02T15:00',disabled:true}),/<button[^>]*disabled[^>]*>Change delivery time/);
  assert.match(picker({value:''}),/Preferred day/);assert.match(picker({day:'2030-01-02'}),/value="2030-01-02"/);
+ const summary=props=>renderToStaticMarkup(h(MemoryRouter,null,h(Summary,{cart:[row],total:10.05,discount:1,shipping:5,finalTotal:14.05,formatPrice:value=>'RM '+Number(value).toFixed(2),...props})));
+ const bill=summary({});assert.match(bill,/Your preorder/);assert.match(bill,/RM 10.05 \/ item × 1/);assert.match(bill,/Bulk discount/);assert.match(bill,/RM 14.05/);assert.match(bill,/Edit basket/);
+ assert.match(summary({pickup:true,shipping:0,finalTotal:9.05}),/<dt>Collection<\/dt><dd>Free/);
+ assert.match(summary({updating:true}),/aria-busy="true"/);assert.match(summary({updating:true}),/Updating…/);
  console.log('Checkout UX: stale basket actions hidden, update/pricing guards, address read recovery and disabled payment groups passed.');
 }finally{await server.close();}

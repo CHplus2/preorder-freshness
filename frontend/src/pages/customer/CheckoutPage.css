@@ -58,3 +58,28 @@
 .checkout-main,.checkout-form{grid-template-columns:minmax(0,1fr)}
 .checkout-form>section{min-width:0}
 .checkout-container .delivery-custom-request input{max-width:100%;box-sizing:border-box}
+
+/* October review, batch 2: a visible bill and a recoverable next step. */
+.checkout-container .checkout-title{margin-top:12px;margin-bottom:10px;font-size:38px}.checkout-intro{font-size:14px;line-height:1.65;margin-bottom:24px}
+.checkout-receive{min-width:0}.checkout-receive .fulfilment-panel{margin-bottom:0}
+.checkout-container :is(#checkout-receive,#checkout-time,#checkout-payment,#checkout-address-title){scroll-margin-top:125px}
+.checkout-container :is(#checkout-receive,#checkout-time,#checkout-payment,#checkout-address-title):focus-visible{outline:3px solid #477b4f;outline-offset:4px;border-radius:8px}
+.checkout-summary{padding:0;overflow:hidden}.checkout-summary>details>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px;cursor:pointer;list-style:none;color:#294d35}.checkout-summary summary::-webkit-details-marker{display:none}
+.checkout-summary summary h2{font-size:19px;margin-bottom:6px}.checkout-summary summary small{font-size:12px;color:#53664d}.checkout-summary-preview{display:flex;align-items:center;gap:10px;flex-shrink:0}.checkout-summary-preview strong{font-size:18px;white-space:nowrap}.checkout-summary>details[open]>summary .checkout-summary-preview>svg{transform:rotate(180deg)}
+.checkout-summary-hide{display:none}.checkout-summary>details[open] .checkout-summary-view{display:none}.checkout-summary>details[open] .checkout-summary-hide{display:inline}
+.checkout-summary-body{padding:0 22px 20px;border-top:1px solid #dce3d7}.checkout-edit-basket{display:inline-flex;align-items:center;min-height:44px;font-size:13px;color:#285a3e;text-underline-offset:4px;margin-top:4px}
+.checkout-summary .checkout-summary-item{align-items:flex-start;padding:14px 0;gap:12px}.checkout-summary-item>div{flex:1;min-width:0;gap:5px}.checkout-summary-item>div>strong{font-size:14px;line-height:1.5;overflow-wrap:anywhere}.checkout-summary-item>strong{font-size:14px;line-height:1.5}
+.checkout-summary .checkout-summary-photo{width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0}.checkout-summary-photo[hidden]{display:none}
+.checkout-summary-body>.checkout-hint{font-size:12px;line-height:1.7;margin:14px 0 0}.checkout-summary .checkout-discount{color:#3b7042}.checkout-summary .checkout-total{font-size:20px}
+.checkout-submit-dock{display:flex;flex-wrap:wrap;gap:10px;min-width:0}.checkout-submit-dock .checkout-next-step{flex:0 0 100%;min-width:0;margin:0;font:500 13px/1.5 system-ui,sans-serif;color:#405b42;overflow-wrap:anywhere}
+.checkout-next-step>a{display:flex;align-items:center;min-height:44px;color:#285a3e;text-underline-offset:4px;line-height:1.5}
+.checkout-submit-dock>.checkout-submit{flex:1 1 200px}.checkout-container .checkout-section-heading{margin-bottom:18px}.checkout-container .delivery-time-picker{margin-bottom:12px}
+.checkout-container .fulfilment-choices input:is([type=checkbox],[type=radio]){width:18px;max-width:18px;height:18px;min-height:18px;padding:0;border-radius:3px;flex:0 0 18px}
+.checkout-container .fulfilment-methods label{margin:0}.checkout-container .fulfilment-choices .fulfilment-express{font-size:13px;font-weight:500;margin-bottom:0}
+.checkout-container .availability-result{font-size:13px;margin-bottom:0;padding:14px 16px}.availability-result>strong{font-size:14px}.availability-result summary{min-height:44px;align-content:center;font-size:13px}.availability-result details{margin-top:8px}
+.checkout-container .delivery-email-choice{padding:18px 20px;border:1px solid #d5dfd7;border-radius:12px;background:#fff;margin:0}.checkout-container .delivery-email-choice p{font-size:13px;line-height:1.65;margin-top:8px}.checkout-container .delivery-email-toggle{font-size:13px;line-height:1.6;margin:0}.checkout-container .delivery-email-choice h3{font-size:16px}
+.checkout-container .handover-checkout{padding-block:12px}.checkout-demo-options{margin-top:18px;padding-top:12px}.checkout-demo-options>summary{min-height:44px;align-content:center}
+@media(max-width:800px){.checkout-grid>.checkout-summary{grid-row:1}.checkout-grid>.checkout-main{grid-row:2}.checkout-summary>details>summary{padding:16px 18px}.checkout-summary-body{padding-inline:18px}.checkout-summary summary h2{font-size:17px}}
+@media(min-width:801px){.checkout-summary-preview strong{display:none}.checkout-summary summary small>.checkout-summary-view,.checkout-summary summary small>.checkout-summary-hide{display:none}}
+@media(max-width:700px){.checkout-submit-dock{column-gap:12px;row-gap:4px}.checkout-submit-dock>.checkout-submit{flex:1 1 0;min-width:0}.checkout-submit-dock .checkout-next-step{font-size:12px}.checkout-mobile-total{min-width:80px}.checkout-mobile-total>strong{font-size:17px}.checkout-container .checkout-title{font-size:32px}.checkout-container{padding-bottom:145px}}
+@media(max-width:380px){.checkout-summary .checkout-summary-photo{display:none}.checkout-summary-preview{gap:6px}.checkout-summary-preview strong{font-size:16px}.checkout-summary summary h2{font-size:16px}}

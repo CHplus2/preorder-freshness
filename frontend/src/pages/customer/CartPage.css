@@ -299,3 +299,11 @@
 .cart-storefront .basket-update-status{margin:14px 0;padding:12px 14px;border:1px solid #ccd9c5;border-radius:8px;background:#f1f6eb;font-size:14px;line-height:1.6;color:#35523a}
 .cart-storefront .basket-pricing-status{margin:20px 0;padding:14px;border:1px solid #c9d6bf;border-radius:8px;background:#fff;font-size:14px;line-height:1.6}
 .cart-storefront .basket-pricing-status p{margin:0 0 12px}
+
+/* October review, batch 2: clear item controls and optional time selection. */
+.cart-storefront .cart-title{margin-top:0}.cart-page-heading{margin-bottom:24px}.cart-page-heading p{font-size:14px;line-height:1.6}
+.cart-storefront .qty-btn{width:44px;min-width:44px}.cart-storefront .remove-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:auto;min-width:44px;min-height:44px;padding:0 6px;color:#765148;font-size:12px}.cart-storefront .remove-btn>span{display:inline}
+.cart-storefront .cart-right{flex-wrap:wrap;min-width:0}.cart-storefront .cart-time-note{font-size:13px;line-height:1.65;color:#53664d;margin:0 0 12px}
+@media(max-width:1119px){.cart-storefront .cart-right{margin-left:0}}
+@media(max-width:700px){.cart-mobile-total>span{font-size:12px;color:#52634f}.cart-mobile-total>strong{font-size:17px}.cart-page-heading>a{margin-top:6px}.cart-storefront .checkout-btn{font-size:13px}}
+@media(max-width:480px){.cart-choices,.cart-storefront .cart-availability{padding:16px}.cart-page-heading p{font-size:13px}.cart-storefront .cart-right{gap:8px}.cart-storefront .cart-line-total{font-size:13px}}

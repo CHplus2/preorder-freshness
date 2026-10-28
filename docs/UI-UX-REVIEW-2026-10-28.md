@@ -69,3 +69,48 @@ containment inside their cards. Desktop and phone screenshots are also reviewed.
 No production record was changed, no real message or payment was sent, and no
 order was placed. These checks do not establish customer conversion improvement
 or production deployment readiness. No migration is required.
+
+## Batch 2 — basket and checkout
+
+- Checkout has an itemised bill with menu thumbnails, per-unit × quantity, line
+  totals, discount and fulfilment fee. It remains a sidebar on desktop; on phones
+  and narrow tablets a native expandable summary leads the form with its count
+  and total visible. Customers can inspect or edit the basket before submitting.
+- The order action now explains the next missing requirement and links directly
+  to its section: area, address, time/availability or payment. Pending reads/saves
+  have their own status. The existing submit guards still decide eligibility;
+  the explanatory helper never permits an otherwise blocked submission.
+- The basket names time selection as optional at that stage and explains that a
+  selection carries forward. Existing choices are reviewed in checkout instead
+  of forcing another slot search. Collection search labels use collection terms.
+- Basket quantity/remove targets are at least 44 pixels; Remove has a visible
+  label. Intermediate-width wrapping keeps item actions in their cards. Mobile
+  totals show Updating during a basket refresh instead of presenting the old
+  amount as current.
+- Checkout explicitly sizes the express checkbox, preventing generic text-input
+  rules from stretching it. Email consent remains opt-in. Preparation detail,
+  including multi-day preparation, stays available inside the existing disclosure
+  while the availability result leads with whether the selected time can proceed.
+
+The Swiggy/Talabat references inform the visible bill and reachable order action.
+The changes apply recognition of current state, a clear next step, prevention of
+mistakes and accessible native disclosure. Payment test labels, custom-request
+confirmation, quote rechecking, storage and account boundaries remain in place.
+No backend endpoint, model, database migration, provider connection or scheduler
+has changed.
+
+### Batch 2 verification
+
+Frontend lint, checkout, UX, unit and recommendation suites and the production
+build pass. Tests cover next-step priority, address-read errors, collection not
+requiring a delivery address, pending/stale/failed availability, unconfirmed
+requests and payment selection, plus bill arithmetic and refresh states.
+
+The local browser checks basket controls and the collapsible bill at 1440, 768,
+390 and 320 pixels, native summary expansion and placement, address saving,
+section-link focus, selected-time carryover, delivery-to-collection switching,
+quote failure/retry and a completed fictional cash-on-collection order. Ten
+full-page WCAG A/AA and overflow checks pass; screenshots were visually reviewed.
+The express checkbox and basket quantity/remove targets are measured directly.
+All data is isolated test data; no production order, email, payment or courier
+booking is made. No migration is required.

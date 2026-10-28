@@ -13,6 +13,7 @@ export default function BasketSlots({value='',...props}) {
 }
 
 function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedValue='',autoSearch=false,method='standard',windowMinutes=0}) {
+ const handover=method==='pickup'?'collection':'delivery';
  const [result,setResult]=useState(null),[busy,setBusy]=useState(autoSearch && !nextDisabled),[error,setError]=useState('');
  const [lastDay]=useState(()=>new Date(Date.now()+90*86400000+8*3600000).toISOString().slice(0,10));
  const request=useRef(null),pending=useRef(false),searchAnchor=useRef(day);
@@ -40,10 +41,10 @@ function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedV
  const following=followingSearchDay(result);
  return <div className="basket-slot-search" aria-busy={busy}>
   {busy && <p role="status" className="basket-slot-loading">Finding available times for your whole basket…</p>}
-  {!busy && !result && !error && <div className="basket-slot-actions"><button type="button" className="basket-next-day" disabled={nextDisabled} onClick={()=>check()}>Find delivery times</button></div>}
+  {!busy && !result && !error && <div className="basket-slot-actions"><button type="button" className="basket-next-day" disabled={nextDisabled} onClick={()=>check()}>Find {handover} times</button></div>}
   {!nextDisabled && error && <div role="alert"><p>{error}</p><button type="button" disabled={busy} onClick={()=>check(searchAnchor.current)}>Retry finding times</button></div>}
   {result && !nextDisabled && (result.slots.length===0?<div role="status" className="basket-slot-empty">
-   <strong>{result.code==='shipping_enquiry'?'Agree shipping with the kitchen.':result.code==='daily_capacity'?'Not enough daily menu capacity for this basket.':result.code==='quantity_limit'?'This quantity needs a different arrangement.':'No suitable delivery times in this search.'}</strong>
+   <strong>{result.code==='shipping_enquiry'?'Agree shipping with the kitchen.':result.code==='daily_capacity'?'Not enough daily menu capacity for this basket.':result.code==='quantity_limit'?'This quantity needs a different arrangement.':`No suitable ${handover} times in this search.`}</strong>
    {result.from && result.through && <p>Checked {deliveryDateLabel(result.from)} to {deliveryDateLabel(result.through)}.</p>}
    <p>{['shipping_enquiry','daily_capacity','quantity_limit','no_common_weekday','no_common_date'].includes(result.code)?result.reason:'Try the following week, adjust your basket, or ask the kitchen about a custom time.'}</p>
    {result.reason && !['shipping_enquiry','daily_capacity','quantity_limit','no_common_weekday','no_common_date'].includes(result.code) && <details><summary>Why these times need review</summary><p>{result.reason}</p></details>}
@@ -53,7 +54,7 @@ function SlotSearch({day,onSelect,disabled=false,nextDisabled=disabled,selectedV
     {day && result.date!==day && <p>We found the next workable times after your preferred date.</p>}
     <p>Choose one time. Availability is checked again when you order.</p>
    </div>
-   <div className="slot-suggestions" role="group" aria-label={'Available delivery times for '+deliveryDateLabel(result.date)}>{result.slots.map(slot=><button type="button" disabled={busy || nextDisabled} key={slot.delivery_at}
+   <div className="slot-suggestions" role="group" aria-label={`Available ${handover} times for ${deliveryDateLabel(result.date)}`}>{result.slots.map(slot=><button type="button" disabled={busy || nextDisabled} key={slot.delivery_at}
     aria-pressed={selectedValue===deliveryInput(slot.delivery_at)} onClick={()=>onSelect(deliveryInput(slot.delivery_at))}>
     {slotLabel(slot)}
    </button>)}</div>
