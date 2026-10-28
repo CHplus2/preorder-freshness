@@ -132,3 +132,8 @@
 .delivery-run-block form { margin-top: 16px; display: grid; gap: 12px; }
 .delivery-run-block label { display: grid; gap: 8px; }
 .delivery-run-block input { width: 100%; box-sizing: border-box; min-height: 44px; padding: 10px; font: inherit; border: 1px solid #aebbab; border-radius: 8px; color: #263e2e; background: white; }
+
+/* October review, batch 3: direct account section links and restrained metadata. */
+.account-section-links{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px;padding:0;background:transparent;border:0;backdrop-filter:none}.account-section-links a{display:inline-flex;align-items:center;min-height:44px;padding:8px 12px;background:#fff;border:1px solid #c9d5c2;border-radius:8px;font-size:13px;color:#31543b;text-decoration:none}
+.account-settings :is(#profile-heading,#address-heading,#delivery-email){scroll-margin-top:125px}.account-section-links a:focus-visible,.account-settings :is(#profile-heading,#address-heading,#delivery-email):focus-visible{outline:3px solid #4d7950;outline-offset:4px;border-radius:6px}
+.customer-order-more .delivery-email-choice p,.customer-order-more .handover-fields p,.customer-order-more .handover-details p{font-size:13px;line-height:1.65}.customer-order-more .delivery-email-toggle{font-size:13px;font-weight:500;line-height:1.6}.customer-order-more .delivery-email-choice h3{font-size:15px}

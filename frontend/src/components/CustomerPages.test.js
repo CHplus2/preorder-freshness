@@ -14,6 +14,12 @@ try{
  assert.match(current,/Delivery request #ORD-1/);assert.doesNotMatch(current,/Order #ORD-2/);
  assert.match(current,/Awaiting kitchen confirmation/);assert.match(current,/No payment was taken/);
  assert.match(current,/contact\?order=1/);assert.match(current,/History/);
+ assert.ok(current.indexOf('class="order-body"')<current.indexOf('class="order-progress"'));
+ assert.match(current,/<details class="customer-order-more"><summary>Receipt &amp; order preferences/);
+ assert.doesNotMatch(current,/<details class="customer-order-more" open/);
+ const pickup=render({orders:[{...base,delivery_method:'pickup'}]});assert.match(pickup,/This collection time is requested/);assert.doesNotMatch(pickup,/This delivery time is requested/);
+ const tracked=render({orders:[{...base,fulfilment_snapshot:{courier:{carrier:'Fixture courier',reference:'F-123',url:'https://courier.example.test/track/F-123'}}}]});assert.match(tracked,/class="customer-track-link"/);assert.match(tracked,/Track with Fixture courier/);
+ const unsafeTracking=render({orders:[{...base,fulfilment_snapshot:{courier:{url:'javascript:alert(1)'}}}]});assert.doesNotMatch(unsafeTracking,/class="customer-track-link"/);
  for(const state of [{ordersLoading:true},{ordersError:'Read failed'}]){
   const html=render(state);assert.doesNotMatch(html,/<article|Change delivery time|Continue to payment/);
   assert.doesNotMatch(html,/Your next meal starts here|Showing [0-9]/);

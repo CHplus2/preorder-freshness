@@ -10,7 +10,7 @@ import {unconfirmedDeliveryRequest} from '../utils/orderProgress';
 import {useUI} from '../contexts/UIContext';
 import {useAuth} from '../contexts/AuthContext';
 
-const when = value => value ? new Date(value).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'}) : 'Not recorded';
+const when = value => value ? new Date(value).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur',dateStyle:'medium',timeStyle:'short'}) : 'Not recorded';
 
 export default function RescheduleOrder({order, onSaved, historyOnly=false}) {
   const {setAlert} = useUI();
@@ -55,8 +55,8 @@ export default function RescheduleOrder({order, onSaved, historyOnly=false}) {
         setDelivery(''); setReason('');
         setMessage(awaitingKitchen
           ? 'Requested time saved. The kitchen still needs to confirm preparation; no preparation slots are reserved. Your order total and accepted menu remain unchanged.'
-          : 'Delivery time updated. Your order total and accepted menu remain unchanged.');
-        setAlert({message:awaitingKitchen?'Request updated · awaiting kitchen confirmation.':'Delivery time updated.',type:'success'});
+          : `${pickup?'Collection':'Delivery'} time updated. Your order total and accepted menu remain unchanged.`);
+        setAlert({message:awaitingKitchen?'Request updated · awaiting kitchen confirmation.':`${pickup?'Collection':'Delivery'} time updated.`,type:'success'});
         // The mutation is confirmed. A later read failure must not imply it failed.
         try {
           await onSaved?.();
@@ -99,25 +99,25 @@ export default function RescheduleOrder({order, onSaved, historyOnly=false}) {
           <label>{policy.initial_delivery?'Delivery arrangement / reason':'Reason for the change'}
             <textarea rows={2} required maxLength={300} value={reason} disabled={busy} onChange={e=>{setReason(e.target.value);setMessage('');}}/>
           </label>
-          <details className="delivery-change-rules"><summary>How delivery changes work</summary><p>{policy.initial_delivery?'Choose an agreed date within 90 days, more than 24 hours away and after the menu lead time. Delivery restrictions and menu capacity are checked. Preparation still needs owner confirmation.':policy.unconfirmed_request?'You can change an unconfirmed request while no preparation is reserved. If the new time cannot be scheduled, it still needs kitchen confirmation.':'Changes close 24 hours before preparation starts. The new time must meet this cutoff and kitchen availability.'} Your items, address and price stay the same.</p></details>
+          <details className="delivery-change-rules"><summary>How {pickup?'collection':'delivery'} changes work</summary><p>{policy.initial_delivery?'Choose an agreed date within 90 days, more than 24 hours away and after the menu lead time. Delivery restrictions and menu capacity are checked. Preparation still needs owner confirmation.':policy.unconfirmed_request?'You can change an unconfirmed request while no preparation is reserved. If the new time cannot be scheduled, it still needs kitchen confirmation.':'Changes close 24 hours before preparation starts. The new time must meet this cutoff and kitchen availability.'} Your items, address and price stay the same.</p></details>
           <div className="delivery-change-actions"><button disabled={busy}>Check new time</button><button type="button" disabled={busy} onClick={()=>setOpen(null)}>Cancel</button></div>
-        </> : <DeliveryChangePreview preview={preview.preview} busy={busy} onConfirm={e=>submit(e,true)} onBack={()=>setPreview(null)}/>}
+        </> : <DeliveryChangePreview preview={preview.preview} busy={busy} onConfirm={e=>submit(e,true)} onBack={()=>setPreview(null)} pickup={pickup}/>}
       </form>}
       {open === 'history' && policy && <div>
         {policy.history.length ? <ol className="delivery-change-history">{policy.history.map(change=><li key={change.id}>
           <strong>{arrivalLabel({delivery_at:change.delivery_at,arrival_window:change.arrival_window})}</strong><p>Previously {arrivalLabel({delivery_at:change.previous_delivery,arrival_window:change.previous_window})}</p>
           <p>{change.reason}</p><small>Changed by {change.by} · {when(change.at)}</small>
-        </li>)}</ol> : <p>No delivery changes recorded.</p>}
+        </li>)}</ol> : <p>No {pickup?'collection':'delivery'} changes recorded.</p>}
       </div>}
     </div>}
   </section>;
 }
 
-export function DeliveryChangePreview({preview,busy,onConfirm,onBack}) {
+export function DeliveryChangePreview({preview,busy,onConfirm,onBack,pickup=false}) {
   const awaitingKitchen=preview.needs_review===true;
   return <div className="delivery-change-review">
-    <h4>{awaitingKitchen?'Review your requested time':'Confirm your new delivery time'}</h4>
-    <dl><div><dt>{awaitingKitchen?'Current requested delivery':'Current delivery'}</dt><dd>{arrivalLabel({delivery_at:preview.previous_delivery,arrival_window:preview.previous_window})}</dd></div><div><dt>{awaitingKitchen?'New requested delivery':'New delivery'}</dt><dd><strong>{arrivalLabel(preview)}</strong></dd></div></dl>
+    <h4>{awaitingKitchen?'Review your requested time':`Confirm your new ${pickup?'collection':'delivery'} time`}</h4>
+    <dl><div><dt>{awaitingKitchen?`Current requested ${pickup?'collection':'delivery'}`:`Current ${pickup?'collection':'delivery'}`}</dt><dd>{arrivalLabel({delivery_at:preview.previous_delivery,arrival_window:preview.previous_window})}</dd></div><div><dt>{awaitingKitchen?`New requested ${pickup?'collection':'delivery'}`:`New ${pickup?'collection':'delivery'}`}</dt><dd><strong>{arrivalLabel(preview)}</strong></dd></div></dl>
     <p>Reason: {preview.reason}</p>
     {awaitingKitchen && <p>This saves your delivery request. The kitchen must still confirm a workable preparation plan; no preparation slots are reserved.</p>}
     <p className="delivery-change-hint">This preview expires in 10 minutes. The time and kitchen availability are checked again when saved.</p>

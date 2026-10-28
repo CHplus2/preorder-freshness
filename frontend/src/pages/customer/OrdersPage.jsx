@@ -66,9 +66,8 @@ export default function OrdersPage() {
               </span>
             </div>
 
-            <OrderProgress order={order}/>
-            <dl className="customer-order-details"><div><dt>{order.status==='pending' && order.preparation_plan?.needs_review?`Requested ${handoverLabel(order).toLowerCase()}`:handoverLabel(order)}</dt><dd>{arrivalLabel(order)} · {methodLabel(order.delivery_method)}</dd></div><div><dt>{isPickup(order)?'Collection fee':'Delivery fee'}</dt><dd>RM {order.shipping_fee}</dd></div><div><dt>Bulk discount</dt><dd>RM {order.discount_amount}</dd></div></dl>
-            <OrderFulfilment order={order}/><ManualPayment order={order}/>{order.address && <details className="dk-panel customer-order-address"><summary>Delivery address</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}
+            <dl className="customer-order-arrival"><div><dt>{order.status==='pending' && order.preparation_plan?.needs_review?`Requested ${handoverLabel(order).toLowerCase()}`:handoverLabel(order)}</dt><dd>{arrivalLabel(order)}</dd></div><div><dt>How you receive it</dt><dd>{methodLabel(order.delivery_method)}</dd></div></dl>
+
             {/* BODY */}
             <div className="order-body">
               {order.items.map((item) => (
@@ -89,10 +88,16 @@ export default function OrdersPage() {
                 RM {(Number(order.total_amount)+Number(order.shipping_fee)).toFixed(2)}
               </div>
             </div>
+            <OrderProgress order={order}/><ManualPayment order={order}/>
             {order.payment_method==='escrow' && <section className="paypal-order-note" aria-label="Escrow payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>Escrow payment</strong><span>Sepolia</span></div><p>{order.payment_status==='paid'?'Verified funding recorded. Funds are held or credited under the escrow rules; withdrawal is separate.':order.payment_status==='refunded'?'Buyer refund credit verified. Withdraw funds through the escrow payment page.':'Funding has not been verified yet. Open this saved payment to fund or check it.'}</p><Link to={'/payment/escrow?order='+order.id}>View escrow payment<ChevronRight size={16} aria-hidden="true"/></Link></section>}
             {order.payment_method==='paypal' && <section className="paypal-order-note" aria-label="PayPal payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>PayPal</strong><span>Sandbox</span></div><p>{order.payment_status==='paid'?'Payment recorded. No real money was transferred.':order.payment_status==='refunded'?'Refund recorded. This was a Sandbox test payment.':'Test payment — no real money is transferred. Review this saved payment before trying again.'}</p><Link to={'/payment/paypal?order='+order.id}>{order.payment_status==='paid' || order.payment_status==='refunded'?'View payment details':'Continue to payment'}<ChevronRight size={16} aria-hidden="true"/></Link></section>}
+            <details className="customer-order-more"><summary>Receipt & order preferences<ChevronRight size={17} aria-hidden="true"/></summary><div className="customer-order-more-body">
+              <dl className="customer-order-details"><div><dt>{isPickup(order)?'Collection fee':'Delivery fee'}</dt><dd>{Number(order.shipping_fee)===0?'Free':`RM ${order.shipping_fee}`}</dd></div>{Number(order.discount_amount)>0 && <div><dt>Bulk discount</dt><dd>−RM {order.discount_amount}</dd></div>}</dl>
+            <OrderFulfilment order={order}/>{order.address && <details className="dk-panel customer-order-address"><summary>Delivery address</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}
             <OrderEmailReminder order={order} contact={orderEmail} onSaved={fetchOrders}/>
             <OrderHandoverEditor key={order.id+order.updated_at} order={order} onSaved={fetchOrders}/>
+            </div></details>
+            {!isPickup(order) && /^https:\/\//.test(order.fulfilment_snapshot?.courier?.url || '') && <a className="customer-track-link" href={order.fulfilment_snapshot.courier.url} target="_blank" rel="noopener noreferrer">Track with {order.fulfilment_snapshot.courier.carrier || 'courier'}<ChevronRight size={16} aria-hidden="true"/></a>}
             <RescheduleOrder order={order} onSaved={fetchOrders}/>
             <Link className="customer-order-help" to={`/contact?order=${order.id}`}>Ask the kitchen about this order<ChevronRight size={16} aria-hidden="true"/></Link>
 

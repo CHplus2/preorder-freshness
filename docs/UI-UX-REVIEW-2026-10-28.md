@@ -114,3 +114,37 @@ full-page WCAG A/AA and overflow checks pass; screenshots were visually reviewed
 The express checkbox and basket quantity/remove targets are measured directly.
 All data is isolated test data; no production order, email, payment or courier
 booking is made. No migration is required.
+
+## Batch 3 — customer orders and account follow-up
+
+- Order cards lead with the agreed/requested time, fulfilment method, food and
+  quantity, payment state and total, before the progress explanation. Requested
+  times still visibly need kitchen confirmation; cancelled/payment states and
+  verified-test-payment disclosures remain explicit.
+- Receipt fees, saved fulfilment/address, email preferences and handover editing
+  share one native Receipt & order preferences panel. Payment continuation,
+  an available kitchen-supplied courier link, time changes and kitchen contact
+  remain directly accessible. Tracking links still open the courier website;
+  this does not add courier event synchronization.
+- Collection requests now say collection rather than delivery. Rescheduling
+  previews, history and save messages use the appropriate fulfilment name, and
+  supporting timestamps omit unnecessary seconds while retaining Malaysia time.
+- Account has direct Profile, Delivery address and Sign-in email & reminders
+  links, with focus and scroll positioning for those sections and email deep
+  links. Existing save/error handling and password/confirmation requirements are
+  unchanged. Checkout's fixed-action padding is limited to an actual checkout
+  action instead of unnecessarily extending Account pages.
+
+Frontend lint, UX, checkout, unit, Planner and PayPal regressions and the
+production build pass. Rendering coverage checks essential information order,
+collapsed preference panels, pickup wording and safe tracking-link rendering.
+Local Chromium exercises fictional current/requested/shipped/completed orders,
+receipt expansion, direct tracking, explicit Sandbox disclosure, refresh failure
+and recovery, an actual rescheduling preview without applying it, account deep
+links and a local profile save. Eleven full-page WCAG A/AA and overflow checks
+pass at 1440, 768, 390 and 320 pixels; screenshots were visually reviewed.
+
+Only isolated local test data is used. No production record, message, payment,
+courier booking, scheduler, model or backend API is changed. No migration is
+required. Provider status and availability still come from existing records;
+the UI does not infer progress from the planned clock time.
