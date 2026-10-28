@@ -10,7 +10,7 @@ import { useUI } from "./UIContext";
 import axios from "axios";
 import { useStorefront } from "./StorefrontContext";
 import {methodsFor} from '../utils/fulfilment';
-import {chosenDeliveryInput,deliveryChoiceScope,activeDeliveryChoice,readDeliveryChoice,saveDeliveryChoice} from '../utils/deliveryChoice';
+import {chosenDeliveryInput,chosenDeliveryDay,deliveryChoiceScope,activeDeliveryChoice,activeDeliveryDay,readDeliveryChoice,saveDeliveryChoice} from '../utils/deliveryChoice';
 import {basketPlanAdded} from '../utils/basketGuide';
 
 export default function CartProvider({ children }) {
@@ -33,6 +33,7 @@ export default function CartProvider({ children }) {
   const [deliveryChoice,setDeliveryChoice]=useState(()=>{try{return readDeliveryChoice(sessionStorage)}catch{return null}});
   const choiceScope=deliveryChoiceScope(accountKey,cart,promotion,fulfilmentMethod,deliveryArea,arrivalWindowMinutes);
   const preferredDelivery=activeDeliveryChoice(deliveryChoice,choiceScope);
+  const preferredDeliveryDay=activeDeliveryDay(deliveryChoice,choiceScope);
   const saveChoice=record=>{setDeliveryChoice(record);try{saveDeliveryChoice(sessionStorage,record)}catch{/* Keep the choice in memory. */}};
   const chooseFulfilment=(method,area='')=>{const window_minutes=fulfilment.window_minutes ?? 60;setFulfilment({account:accountKey,method,area,window_minutes});saveChoice(null);try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method,area,window_minutes}));}catch{/* The current choice remains usable. */}};
   const chooseArrivalWindow=minutes=>{if(![0,30,60].includes(minutes))return;setFulfilment({account:accountKey,method:fulfilmentMethod,area:deliveryArea,window_minutes:minutes});saveChoice(null);try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method:fulfilmentMethod,area:deliveryArea,window_minutes:minutes}));}catch{/* Keep the current timing usable. */}};
@@ -44,6 +45,12 @@ export default function CartProvider({ children }) {
       try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method:fulfilmentMethod,area:deliveryArea,window_minutes:windowMinutes}));}catch{/* Use the in-memory window. */}
     }
     saveChoice(value?{version:1,value,scope:deliveryChoiceScope(accountKey,rows,promotion,fulfilmentMethod,deliveryArea,windowMinutes)}:null);
+  };
+  const chooseDeliveryDay=(date,{rows=cart}={})=>{
+    if(!isSessionCurrent())return;
+    const day=chosenDeliveryDay(date),scope=deliveryChoiceScope(accountKey,rows,promotion,fulfilmentMethod,deliveryArea,arrivalWindowMinutes);
+    if(day && activeDeliveryChoice(deliveryChoice,scope).slice(0,10)===day)return;
+    saveChoice(day?{version:1,day,value:'',scope}:null);
   };
   const topupPending=useRef(false),cartRead=useRef(null),cartMutation=useRef(false);
   const [cartUpdating,setCartUpdating]=useState(false);
@@ -193,7 +200,10 @@ export default function CartProvider({ children }) {
       if(!isSessionCurrent())return false;
       const result=basketPlanAdded(response.data,expected);
       const rows=await refreshCart();
-      if(rows && !result.basket_changed)chooseDeliveryTime(result.delivery_at,{rows,windowMinutes:0});
+      if(rows && !result.basket_changed){
+        if(result.date_only)chooseDeliveryDay(result.date,{rows});
+        else chooseDeliveryTime(result.delivery_at,{rows,windowMinutes:0});
+      }
       return result;
     }catch(error){
       if(!isSessionCurrent())return false;
@@ -208,7 +218,7 @@ export default function CartProvider({ children }) {
   return (
     <CartContext.Provider
       value={{
-        fulfilmentMethod,deliveryArea,chooseFulfilment,arrivalWindowMinutes,chooseArrivalWindow,preferredDelivery,chooseDeliveryTime,
+        fulfilmentMethod,deliveryArea,chooseFulfilment,arrivalWindowMinutes,chooseArrivalWindow,preferredDelivery,chooseDeliveryTime,preferredDeliveryDay,chooseDeliveryDay,
         discount, promotion, pricingReady, pricingError, refreshPricing,
         cart,
         cartLoading, cartError, cartUpdating,

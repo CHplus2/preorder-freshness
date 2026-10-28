@@ -30,6 +30,7 @@ BASIS='whole_order_after_discount_and_delivery'
 class Input(serializers.Serializer):
     date=serializers.DateField()
     quantity=serializers.IntegerField(min_value=1,max_value=100)
+    menu_mode=serializers.ChoiceField(choices=['mixed','same'],default='mixed')
     budget=serializers.DecimalField(max_digits=10,decimal_places=2,min_value=Decimal('0.01'),required=False)
     budget_mode=serializers.ChoiceField(choices=['within','above','all'],default='within')
     category=serializers.IntegerField(min_value=1,required=False)
@@ -74,12 +75,13 @@ def basket_guide(request):
     by_id={product.pk:product for product in products};reason=None;budget=data.get('budget');mode=data['budget_mode']
     if sum(existing.values())>data['quantity']:reason='quantity_below_basket'
     elif any(pk not in by_id or not usable(by_id[pk],data['date'],now) or quantity>by_id[pk].daily_capacity for pk,quantity in existing.items()):reason='basket_needs_review'
+    elif data['menu_mode']=='same' and len(existing)>1:reason='existing_menu_mix'
     eligible=[p for p in products if usable(p,data['date'],now) and (not data.get('category') or p.category_id==data['category'])]
     ranked=rank_menu_choices(eligible,request.user,personalised=variant=='personalised')
     scores={p.pk:score for score,p,_ in ranked};reasons={p.pk:why for _,p,why in ranked}
     candidates=[]
     if reason is None:
-        for addition in mixed_additions(ranked,existing,data['quantity']):
+        for addition in mixed_additions(ranked,existing,data['quantity'],data['menu_mode']):
             rows=candidate_rows(base,addition,by_id);cost=quote(rows,store)
             candidates.append(dict(addition=addition,rows=rows,totals=cost,
                 rank=(-len(rows),-sum(scores.get(pk,0)*q for pk,q in addition.items()),tuple((r['product_id'],r['quantity']) for r in rows))))
@@ -116,25 +118,28 @@ def basket_guide(request):
         if len(selected)==3:break
     if not selected and reason is None:reason='no_price_match' if candidates and not ordered else 'no_kitchen_times' if ordered else 'no_menu_match'
     context=dict(version=VERSION,actor=request.user.pk if request.user.is_authenticated else None,date=data['date'].isoformat(),
-        quantity=data['quantity'],budget=str(budget) if budget is not None else '',budget_mode=mode,category=data.get('category'),
+        quantity=data['quantity'],menu_mode=data['menu_mode'],budget=str(budget) if budget is not None else '',budget_mode=mode,category=data.get('category'),
         method=method,area=area,before_fingerprint=fingerprint(base,store),options=saved,surface='basket_guide')
     session=RecommendationSession.objects.create(id=uuid.uuid4(),owner_key=key,variant=variant,context=context,
         products=sorted({row['id'] for plan in selected for row in plan['items']}))
     return Response(dict(session=str(session.pk),version=VERSION,date=data['date'].isoformat(),quantity=data['quantity'],
-        delivery_method=method,basket_known=request.user.is_authenticated,current_quantity=sum(existing.values()),basket_before=quote(base,store),
+        menu_mode=data['menu_mode'],delivery_method=method,basket_known=request.user.is_authenticated,current_quantity=sum(existing.values()),basket_before=quote(base,store),
         budget=dict(amount=str(budget),mode=mode,basis=BASIS) if budget is not None else None,
         plans=selected,empty_reason=reason if not selected else None,price_evidence=evidence,checked_baskets=checked,
         pool_limit=POOL_LIMIT,checked_limit=CAPACITY_CHECK_LIMIT,
-        message='Suggestions preserve current basket items and complete the requested total item count. Order totals include current bulk discounts and delivery. The bounded search uses up to 12 candidate menus and checks at most 30 complete baskets for kitchen times; other combinations may exist. Nothing is reserved until checkout.'))
+        message='Allow a mix can combine menus or include repeated items; one menu only keeps every item the same menu. Suggestions preserve current basket items and complete the requested total item count. Order totals include current bulk discounts and delivery. The bounded search uses up to 12 candidate menus and checks at most 30 complete baskets for kitchen times; other combinations may exist. Nothing is reserved until checkout.'))
 
 
 class AddInput(serializers.Serializer):
     session=serializers.UUIDField()
     plan=serializers.RegexField(r'^bp_[0-9a-f]{16}$')
-    delivery_at=serializers.DateTimeField()
+    delivery_at=serializers.DateTimeField(required=False)
+    date_only=serializers.BooleanField(default=False)
 
     def validate(self,data):
         if set(self.initial_data)-set(self.fields):raise serializers.ValidationError('Use the returned basket option and time; do not submit prices or quantities.')
+        if data['date_only'] and 'delivery_at' in data:raise serializers.ValidationError('Choose the delivery time later in your basket, or submit a returned time without date-only mode.')
+        if not data['date_only'] and 'delivery_at' not in data:raise serializers.ValidationError('Choose a returned delivery time or request a date-only basket addition.')
         return data
 
 
@@ -154,13 +159,13 @@ def add_basket_plan(request):
     option=next((o for o in context['options'] if o['id']==data['plan']),None)
     if not option:raise serializers.ValidationError('Choose a returned basket option.')
     store,_,_=request_store(original,dict(delivery_method=context['method'],delivery_area=context['area']))
-    requested=data['delivery_at']
+    date_only=data['date_only'];requested=data.get('delivery_at')
     field=serializers.DateTimeField()
-    if not any(field.run_validation(value)==requested for value in option['slots']):
+    if not date_only and not any(field.run_validation(value)==requested for value in option['slots']):
         raise serializers.ValidationError('Choose a time returned for this complete basket.')
     applied=context.get('applied')
     if applied:
-        if applied['plan']!=data['plan'] or field.run_validation(applied['delivery_at'])!=requested:
+        if applied['plan']!=data['plan'] or applied.get('date_only',False)!=date_only or (not date_only and field.run_validation(applied['delivery_at'])!=requested):
             return Response({'detail':'This suggestion was already used. Review your basket before choosing another option.'},status=409)
         result=dict(applied['result'],already_applied=True,basket_changed=fingerprint(state(current),store)!=option['after_fingerprint'])
         return Response(result)
@@ -177,14 +182,18 @@ def add_basket_plan(request):
     if fingerprint(current,store)!=context['before_fingerprint'] or fingerprint(updated,store)!=option['after_fingerprint'] or cost!=option['totals']:
         return Response({'detail':'Your basket, menu prices or delivery/promotion terms changed. Search again for the whole-order total.'},status=409)
     from ..services.scheduling import schedule_order
-    try:schedule_order([candidate_item(products[row['product_id']],row['quantity']) for row in updated],requested,store,now=timezone.now())
+    items=[candidate_item(products[row['product_id']],row['quantity']) for row in updated]
+    try:
+        if date_only:
+            if not slots(items,day,store):raise serializers.ValidationError('No remaining times for this date.')
+        else:schedule_order(items,requested,store,now=timezone.now())
     except serializers.ValidationError:
         return Response({'detail':'Kitchen availability changed. Search again for a workable time for the whole basket.'},status=409)
     for row in updated:
         if row['product_id'] in additions:
             CartItem.objects.update_or_create(user=request.user,product_id=row['product_id'],defaults={'quantity':row['quantity']})
     result=dict(added=True,session=str(session.pk),plan=data['plan'],already_applied=False,basket_changed=False,
-        quantity=context['quantity'],added_quantity=sum(additions.values()),delivery_at=requested.isoformat(),totals=cost)
-    context['applied']=dict(plan=data['plan'],delivery_at=requested.isoformat(),result=result)
+        quantity=context['quantity'],added_quantity=sum(additions.values()),date_only=date_only,date=context['date'],delivery_at=None if date_only else requested.isoformat(),totals=cost)
+    context['applied']=dict(plan=data['plan'],date_only=date_only,delivery_at=None if date_only else requested.isoformat(),result=result)
     session.context=context;session.save(update_fields=['context'])
     return Response(result)

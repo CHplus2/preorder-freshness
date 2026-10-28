@@ -264,3 +264,50 @@ Any category while keeping date, quantity and budget. With four items already in
 the basket, a target of three should offer Use 4 total items or Review basket,
 without adding anything. Kitchen-time misses should offer another date rather
 than an irrelevant budget button.
+
+
+## Allow a mix / One menu only and delivery-time simplification — 28 October 2026
+
+Customers can choose Allow a mix (default) or One menu only. The latter proposes
+alternative single-menu baskets at the requested final total quantity. Existing
+items count toward that total and are preserved: one existing menu is topped up,
+while a basket already containing different menus needs explicit permission to
+allow a mix or a manual basket edit. Category, date, budget and capacity limits
+remain in force. The browser validates the echoed mode and one-menu row count.
+Mixed mode allows variety and repeats; it does not claim variety is possible for
+every preference or date. Three units at RM12 have a RM36 food subtotal, with
+current discounts/delivery applied once to the whole-order total.
+
+The finder no longer displays hour options. It checks that the entire basket has
+some available time on the searched day. A date-only add rechecks that day under
+the same atomic/fingerprint protections, returns no selected hour and stores
+only the scoped day preference. Legacy explicit-time API requests remain valid.
+Both types are idempotent and cannot be replayed as the other type. Nothing
+reserves preparation or places an order at this step.
+
+The basket offers an optional time choice with that date prefilled. Customers
+who choose there see the same time for review/change at checkout; those who skip
+it can choose at checkout. Earlier visibility gives customers a chance to assess
+times before entering payment/address details. This is a usability rationale,
+not measured conversion improvement. Day-only preferences work during navigation
+with blocked session storage, just like explicit times. Same-account reloads can
+restore valid stored days; changed basket/fulfilment scope invalidates them.
+
+Validation: the full backend suite passes 791 tests (22 platform-specific skips).
+All 52 focused PostgreSQL recommendation/reminder tests pass, including atomic
+addition, replay guards, cross-worker deduplication and mocked mail journeys.
+Frontend lint, recommendation, checkout, shopping, UX/unit suites and production
+build pass. Eight full-page WCAG/overflow checks at 1440, 390 and 320 pixels cover
+both choices, absent finder-hour controls, correct same-menu unit/line totals,
+date-only addition and basket carryover, optional cart selection, checkout review,
+existing mixed-basket recovery and topping up one menu. The local browser also
+exercises this flow with session storage blocked. No real order, payment, email,
+courier or production record is used; no migration or retraining is needed.
+
+Reminder configuration is unchanged: one GitHub Actions workflow declares a
+five-minute queue check, gated by the existing repository variable and secret.
+The old cron-job.org schedule is unnecessary in this setup. Preparation and
+delivery are distinct owner events and can legitimately produce separate
+messages for one order; queue polling does not create a new reminder every five
+minutes. This source/test review does not identify the trigger of an individual
+live email or verify a particular external scheduler account.

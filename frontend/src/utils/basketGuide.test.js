@@ -23,3 +23,16 @@ assert.match(basketGuideEmpty('quantity_below_basket',3,4),/already has 4/);asse
 assert.match(basketGuideEmpty('no_kitchen_times',3,0),/common kitchen time/);
 assert.match(basketGuideEmpty('no_price_match',3,0),/budget range/);
 console.log('Mixed basket response: total quantity, existing items, whole-order arithmetic, price evidence and atomic-add receipt validation passed.');
+
+assert.throws(()=>basketGuideResponse({...response,menu_mode:'same'},{...request,menu_mode:'same'}));
+assert.throws(()=>basketGuideResponse(response,{...request,menu_mode:'same'}));
+const same={...response,menu_mode:'same',plans:[{...plan,items:[{...item(1,'12.00'),quantity:3,add_quantity:3,line_total:'36.00'}],totals:{...totals,subtotal:'36.00',total:'41.00'}}]};
+assert.equal(basketGuideResponse(same,{...request,menu_mode:'same'}).menu_mode,'same');
+assert.throws(()=>basketGuideResponse(same,{...request,menu_mode:'mixed'}));
+assert.match(basketGuideEmpty('existing_menu_mix',3,2,'same'),/already contains different menus/);
+
+const dateExpected={...expected,date_only:true,date:request.date};
+const dateAdded={...added,date_only:true,date:request.date,delivery_at:null};
+assert.equal(basketPlanAdded(dateAdded,dateExpected),dateAdded);
+for(const wrong of [{...dateAdded,date:'2026-11-02'},{...dateAdded,delivery_at:expected.delivery_at},{...dateAdded,date_only:false}])assert.throws(()=>basketPlanAdded(wrong,dateExpected));
+assert.throws(()=>basketPlanAdded(dateAdded,expected));

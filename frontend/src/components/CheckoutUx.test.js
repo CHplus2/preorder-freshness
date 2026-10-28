@@ -29,6 +29,6 @@ try{
  const unavailable=picker({value:'2030-01-02T15:00',selectionUnavailable:true});assert.match(unavailable,/Time needs another check/);assert.match(unavailable,/Preferred day/);
  assert.match(picker({value:'2030-01-02T15:00',method:'pickup'}),/Selected collection/);
  assert.match(picker({value:'2030-01-02T15:00',disabled:true}),/<button[^>]*disabled[^>]*>Change delivery time/);
- assert.match(picker({value:''}),/Preferred day/);
+ assert.match(picker({value:''}),/Preferred day/);assert.match(picker({day:'2030-01-02'}),/value="2030-01-02"/);
  console.log('Checkout UX: stale basket actions hidden, update/pricing guards, address read recovery and disabled payment groups passed.');
 }finally{await server.close();}

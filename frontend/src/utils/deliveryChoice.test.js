@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {DELIVERY_CHOICE_KEY,chosenDeliveryInput,deliveryChoiceScope,activeDeliveryChoice,readDeliveryChoice,saveDeliveryChoice} from './deliveryChoice.js';
+import {DELIVERY_CHOICE_KEY,chosenDeliveryInput,chosenDeliveryDay,activeDeliveryDay,deliveryChoiceScope,activeDeliveryChoice,readDeliveryChoice,saveDeliveryChoice} from './deliveryChoice.js';
 const now=Date.parse('2030-01-01T00:00:00Z');
 assert.equal(chosenDeliveryInput('2030-01-02T15:00',now),'2030-01-02T15:00');
 assert.equal(chosenDeliveryInput('2030-01-02T07:00:00Z',now),'2030-01-02T15:00');
@@ -20,3 +20,12 @@ for(const text of ['not json','null','{}','{"version":2}',JSON.stringify({...rec
 const blocked={getItem(){throw Error('Blocked')},setItem(){throw Error('Blocked')},removeItem(){throw Error('Blocked')}};
 assert.equal(readDeliveryChoice(blocked),null);assert.doesNotThrow(()=>saveDeliveryChoice(blocked,record));assert.equal(activeDeliveryChoice(record,scope(),now),record.value);
 console.log('Delivery choices: Malaysia time, invalid/expired data, exact basket/account/fulfilment scope, stable ordering and blocked-storage recovery passed.');
+
+const dayRecord={version:1,scope:scope(),day:'2030-01-02',value:''};
+assert.equal(chosenDeliveryDay('2030-01-02',now),'2030-01-02');
+for(const bad of ['2029-12-31','2030-02-30','2030-04-02','not a day','2030-01-02T15:00'])assert.equal(chosenDeliveryDay(bad,now),'');
+assert.equal(activeDeliveryDay(dayRecord,scope(),now),'2030-01-02');assert.equal(activeDeliveryChoice(dayRecord,scope(),now),'');
+assert.equal(activeDeliveryDay(dayRecord,scope(rows,'pickup'),now),'');
+assert.equal(activeDeliveryDay(record,scope(),now),'2030-01-02');
+saveDeliveryChoice(storage,dayRecord);assert.deepEqual(readDeliveryChoice(storage,now),dayRecord);
+assert.equal(readDeliveryChoice(storage,Date.parse('2030-01-03T00:00:00Z')),null);

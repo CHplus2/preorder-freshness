@@ -3,6 +3,56 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Menu choice and a single delivery-time decision — 28 October 2026
+
+The finder now accepts optional `menu_mode: "mixed" | "same"`, default `mixed`
+for existing clients. Mixed means a mix is allowed, including repeated items;
+it prefers variety but does not promise multiple distinct menus when choices
+are limited. Same requires the **entire final basket** to contain one menu,
+with the requested total quantity. It preserves an existing single-menu basket
+and adds only the remainder, respecting category, date, budget and daily limits.
+If existing items contain different menus, it returns `existing_menu_mix` with
+no plan or mutation. The UI offers explicit Allow a mix or basket review. A
+completed one-menu basket stays review-only. The response and saved session
+context echo `menu_mode`; the browser refuses a different mode or a same-mode
+plan with multiple menu rows. Responses omitting mode remain compatible only
+with default mixed requests. Ranking and the existing bounded search limits
+are unchanged.
+
+The finder previews **date availability** without asking the customer to choose
+an hour. `POST /api/menu/basket-guide/add/` additionally supports
+`{session, plan, date_only:true}`. In this form, `delivery_at` must be absent.
+After the existing session/actor/expiry, quote, menu and cart fingerprint checks,
+the locked transaction checks for at least one current whole-basket slot on the
+session's searched day. No current slot returns 409 without adding anything.
+It can use another feasible hour on that same day when an earlier preview hour
+is no longer available; it never silently changes the requested date.
+
+A date-only success adds `date_only:true`, `date:YYYY-MM-DD` and
+`delivery_at:null` to the usual atomic-add receipt. It does not choose, reserve
+or book an hour. Legacy explicit-time requests `{session,plan,delivery_at}`
+remain supported with `date_only:false` (the default), still limited to the
+returned slots and rechecked before applying. New explicit-time receipts also
+include date and the false flag. Repeat requests are idempotent for the same
+plan and selection type; a receipt cannot be reinterpreted later as the other
+type or a different selected hour. Browser validation checks receipt type/date
+as well as quantities and exact quote arithmetic.
+
+The shared delivery preference can now store a day-only record in the existing
+account/basket/fulfilment scope. It pre-fills the basket/checkout preferred day
+without selecting an hour. A same-day explicit choice already belonging to that
+unchanged basket is retained. Day records must be real Malaysia calendar dates
+between today and +90 days and are ignored after expiry or a scope change. Old
+time records remain readable. Optional browser storage failure still permits
+in-memory navigation. Basket time selection stays optional: customers can choose
+there, or at checkout if skipped. Once a time is chosen, checkout shows its
+summary and Change time rather than another mandatory search. Quote/checkout
+still recheck availability, and no order is created by adding recommendations.
+
+No database migration, demand-model retraining, reminder scheduler or mail
+configuration change is involved. The intended scheduler remains the shared
+GitHub Actions workflow; this release does not invoke a live email worker.
+
 ## Finder recovery and search context — 28 October 2026
 
 The mixed-basket response/API schema and server ranking are unchanged. The
@@ -33,10 +83,10 @@ continue to recheck actual availability. No migration or model retraining.
 
 ## Delivery-choice handoff — 28 October 2026
 
-This client-only follow-up preserves one advisory delivery choice across menu
-suggestions, basket and checkout. A successful mixed-basket add stores the returned
-time against the refreshed basket, with exact-time (zero-minute window) semantics.
-A completed-basket review and the shopping assistant use the same context action.
+The shared delivery preference preserves an advisory day or time across menu
+suggestions, basket and checkout. A finder addition stores the searched day
+against the refreshed basket without selecting an hour. A completed-basket review uses the same day action.
+The shopping assistant can still carry a time explicitly selected by the customer.
 The basket no longer overwrites a previously chosen time with empty route state.
 Checkout reads the shared choice and still calls `/api/orders/quote/` for current
 capacity; order placement remains authoritative under the existing server locks.
@@ -47,7 +97,7 @@ local-minute value and a scope composed of account, stable basket row identities
 quantities/menu settings, fulfilment terms, area and arrival-window duration.
 Malformed/expired values and scope mismatches are ignored. Account changes clear
 the record; fulfilment/window changes clear it explicitly. An unchanged same-user
-reload restores it after current basket/pricing reads. Legacy unscoped
+reload restores the day or time after current basket/pricing reads. Legacy unscoped
 `preferredDelivery` and navigation-history values are no longer used to initialise
 checkout, preventing stale choices from returning through old route entries.
 Storage failure still allows in-memory preferences during same-page navigation;
@@ -67,7 +117,7 @@ basket items count toward that target and are preserved. For an empty basket,
 quantity 3 can mean one rice meal, one noodle meal and one box of cookies. A box
 or pack is one selling item, not its contents or a diner count.
 
-Input: `{date, quantity, budget?, budget_mode?, category?, delivery_method?,
+Input: `{date, quantity, menu_mode?, budget?, budget_mode?, category?, delivery_method?,
 delivery_area?}`. Date uses Malaysia calendar days, today through +90 inclusive;
 quantity is integer 1–100. Optional budget is a positive two-decimal money value.
 `budget_mode` is `within` (default, total <= budget), `above` (total > budget), or
@@ -75,7 +125,7 @@ quantity is integer 1–100. Optional budget is a positive two-decimal money val
 is the **whole-order total after current bulk discounts and delivery fees**,
 including existing basket items, using the same quote rules as checkout.
 
-The response contains `{session, version, date, quantity, delivery_method,
+The response contains `{session, version, date, quantity, menu_mode, delivery_method,
 basket_known, current_quantity, basket_before, budget, plans, empty_reason,
 price_evidence, checked_baskets, pool_limit, checked_limit, message}`. Budget is
 null or `{amount, mode, basis:"whole_order_after_discount_and_delivery"}`. Each
@@ -98,30 +148,33 @@ with `considered_baskets`, `within_count`, `above_count`, and minimum/maximum
 order totals (null for an empty candidate set). It describes generated candidates,
 not every possible catalogue combination or verified capacity.
 
-Empty reasons are `quantity_below_basket`, `basket_needs_review`, `no_price_match`,
+Empty reasons are `quantity_below_basket`, `existing_menu_mix`, `basket_needs_review`, `no_price_match`,
 `no_kitchen_times` and `no_menu_match`. An already complete target returns a
 review-only basket. A target below existing quantity never removes items.
 Guests preview an empty basket and must sign in and search again before adding.
 
-`POST /api/menu/basket-guide/add/` accepts only `{session, plan, delivery_at}`.
+`POST /api/menu/basket-guide/add/` accepts `{session, plan, delivery_at}` or
+`{session, plan, date_only:true}` as detailed above.
 Authenticated session/CSRF and the discovery browser key are required. A new
-application must be within 15 minutes; the chosen time must belong to that saved
-complete plan. A user-row lock serializes cart changes; storefront, recommendation
+application must be within 15 minutes; an explicit chosen time must belong to
+that saved complete plan, while date-only additions recheck the whole searched
+day. A user-row lock serializes cart changes; storefront, recommendation
 session and product rows are also locked. Current basket, menu/price, promotion,
 fulfilment terms and whole-basket capacity are rechecked before an atomic write
 of additions only. Stale quotes/capacity return 409 without partial additions.
-The session stores a committed receipt. Repeating the same plan/time within the
+The session stores a committed receipt. Repeating the same plan/selection type (and
+explicit time, where supplied) within the
 24-hour retained session is idempotent; a different option/time is rejected.
 A replay after later cart changes reports `basket_changed:true` without rewriting
 it. Success returns `{added,session,plan,already_applied,basket_changed,quantity,
-added_quantity,delivery_at,totals}`. Requests cannot provide prices or quantities.
+added_quantity,date_only,date,delivery_at,totals}`. Requests cannot provide prices or quantities.
 
 The browser verifies item counts, unit/line/quote arithmetic, requested budget
 relation and add receipts. Basket/account/fulfilment changes invalidate displayed
 results. An unconfirmed add response refreshes the basket and requires a fresh
 search, preventing a blind repeat. Compact food cards show a unit price and one
-reason, then a single shared basket breakdown, delivery-time selector and Add
-action. The full catalogue and instant recommendations remain independent.
+reason, then a single shared basket breakdown, date-availability note and Add
+action. The hour is chosen in the basket or checkout. The full catalogue and instant recommendations remain independent.
 
 The earlier `/api/menu/guide/` per-menu API below remains available for compatibility;
 its food-only budget semantics do not describe the new storefront finder. No

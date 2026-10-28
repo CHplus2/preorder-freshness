@@ -191,6 +191,94 @@ class BasketGuideTests(TestCase):
         self.assertEqual(sum(CartItem.objects.values_list('quantity',flat=True)),4)
 
 
+    def test_same_menu_choice_returns_repeated_units_with_whole_order_quotes(self):
+        data=self.guide(menu_mode='same');self.assertEqual(data['menu_mode'],'same')
+        self.assertEqual(RecommendationSession.objects.get(pk=data['session']).context['menu_mode'],'same')
+        self.assertEqual(len(data['plans']),3)
+        for plan in data['plans']:
+            self.assertEqual(len(plan['items']),1);row=plan['items'][0]
+            self.assertEqual((row['quantity'],row['add_quantity']),(3,3))
+            self.assertEqual(Decimal(plan['totals']['total']),Decimal(row['price'])*3+5)
+        self.assertEqual(data['plans'][0]['totals']['subtotal'],'36.00')
+        self.assertEqual(data['plans'][0]['totals']['total'],'41.00')
+        self.assertEqual(self.guide()['menu_mode'],'mixed')
+
+    def test_same_menu_completes_existing_menu_without_duplicate_additions(self):
+        CartItem.objects.create(user=self.user,product=self.menus[0],quantity=1)
+        data=self.guide(menu_mode='same');self.assertEqual(len(data['plans']),1)
+        row=data['plans'][0]['items'][0];self.assertEqual(row['id'],self.menus[0].pk)
+        self.assertEqual((row['existing_quantity'],row['add_quantity'],row['quantity']),(1,2,3))
+        payload=self.body(data)
+        self.assertEqual(self.client.post(self.url+'add/',payload,format='json').status_code,200)
+        repeated=self.client.post(self.url+'add/',payload,format='json')
+        self.assertTrue(repeated.data['already_applied']);self.assertEqual(CartItem.objects.get(user=self.user).quantity,3)
+        self.assertFalse(Order.objects.exists());self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,1000)
+
+    def test_existing_mixed_basket_is_preserved_and_cannot_be_called_same_menu(self):
+        for menu in self.menus[:2]:CartItem.objects.create(user=self.user,product=menu,quantity=1)
+        with patch('myapp.views.basket_guide.slots') as capacity:
+            result=self.client.post(self.url,dict(date=str(self.day),quantity=3,menu_mode='same'),format='json')
+        self.assertEqual(result.status_code,200,result.data);self.assertEqual(result.data['plans'],[])
+        self.assertEqual(result.data['empty_reason'],'existing_menu_mix');capacity.assert_not_called()
+        self.assertEqual(sum(CartItem.objects.values_list('quantity',flat=True)),2)
+        allowed=self.guide(menu_mode='mixed');self.assertTrue(allowed['plans'])
+        self.assertEqual(sum(row['add_quantity'] for row in allowed['plans'][0]['items']),1)
+
+    def test_same_menu_respects_capacity_category_and_full_basket_rules(self):
+        menu=self.menus[0];menu.daily_capacity=2;menu.save()
+        data=self.guide(menu_mode='same');self.assertTrue(all(p['items'][0]['id']!=menu.pk for p in data['plans']))
+        CartItem.objects.create(user=self.user,product=menu,quantity=1)
+        data=self.guide(menu_mode='same');self.assertEqual(data['plans'],[])
+        menu.daily_capacity=20;menu.save();other=Category.objects.create(name='Another fixture category')
+        data=self.guide(menu_mode='same',category=other.pk);self.assertEqual(data['plans'],[])
+        data=self.guide(menu_mode='same',quantity=1,category=other.pk)
+        self.assertEqual(data['plans'][0]['items'][0]['add_quantity'],0)
+
+    def test_same_menu_budget_filter_and_mixed_fallback_are_explicit(self):
+        data=self.guide(menu_mode='same',budget='100.00',budget_mode='above')
+        self.assertEqual(data['empty_reason'],'no_price_match');self.assertEqual(data['plans'],[])
+        self.one_menu();data=self.guide(menu_mode='mixed')
+        self.assertEqual(data['menu_mode'],'mixed');self.assertEqual(len(data['plans'][0]['items']),1)
+        self.assertEqual(data['plans'][0]['items'][0]['quantity'],3)
+        invalid=self.client.post(self.url,dict(date=str(self.day),quantity=3,menu_mode='invalid'),format='json')
+        self.assertEqual(invalid.status_code,400)
+
+
+    def test_date_only_add_checks_day_without_selecting_or_reserving_an_hour(self):
+        data=self.guide(menu_mode='same');payload=dict(session=data['session'],plan=data['plans'][0]['id'],date_only=True)
+        later=dict(delivery_at=str(self.day)+'T18:00:00+08:00')
+        with patch('myapp.views.basket_guide.slots',return_value=[later]) as capacity:
+            first=self.client.post(self.url+'add/',payload,format='json')
+        self.assertEqual(first.status_code,200,first.data)
+        self.assertTrue(first.data['date_only']);self.assertIsNone(first.data['delivery_at']);self.assertEqual(first.data['date'],str(self.day))
+        self.assertEqual(capacity.call_args.args[1],self.day);self.assertEqual(sum(item.quantity for item in capacity.call_args.args[0]),3)
+        repeated=self.client.post(self.url+'add/',payload,format='json');self.assertTrue(repeated.data['already_applied'])
+        self.assertEqual(CartItem.objects.get(user=self.user).quantity,3);self.assertFalse(Order.objects.exists())
+        self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,1000)
+
+    def test_date_only_add_refuses_a_date_with_no_current_capacity_without_partial_items(self):
+        data=self.guide()
+        with patch('myapp.views.basket_guide.slots',return_value=[]):
+            result=self.client.post(self.url+'add/',dict(session=data['session'],plan=data['plans'][0]['id'],date_only=True),format='json')
+        self.assertEqual(result.status_code,409);self.assertFalse(CartItem.objects.exists())
+        self.assertNotIn('applied',RecommendationSession.objects.get(pk=data['session']).context)
+
+    def test_date_only_and_returned_time_requests_are_unambiguous(self):
+        data=self.guide();point=self.body(data);bare=dict(session=data['session'],plan=point['plan'])
+        self.assertEqual(self.client.post(self.url+'add/',bare,format='json').status_code,400)
+        self.assertEqual(self.client.post(self.url+'add/',dict(point,date_only=True),format='json').status_code,400)
+        self.assertFalse(CartItem.objects.exists())
+
+    def test_applied_add_cannot_be_reinterpreted_as_another_selection_type(self):
+        for date_only in [True,False]:
+            CartItem.objects.all().delete();data=self.guide();point=self.body(data)
+            day=dict(session=data['session'],plan=point['plan'],date_only=True)
+            first,other=(day,point) if date_only else (point,day)
+            self.assertEqual(self.client.post(self.url+'add/',first,format='json').status_code,200)
+            self.assertEqual(self.client.post(self.url+'add/',other,format='json').status_code,409)
+            self.assertEqual(sum(CartItem.objects.values_list('quantity',flat=True)),3)
+
+
 class BasketGuideConcurrencyTests(TransactionTestCase):
     @skipUnlessDBFeature('has_select_for_update')
     def test_overlapping_confirmations_add_the_complete_basket_once(self):

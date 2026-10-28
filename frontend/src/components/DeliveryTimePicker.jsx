@@ -6,9 +6,9 @@ import BasketSlots from './BasketSlots';
 import {basketAvailabilityKey} from '../utils/deliverySlots';
 import {deliveryDayIssue} from '../utils/deliveryDays';
 
-export default function DeliveryTimePicker({cart,value='',onSelect,disabled=false,allowRequest=false,requestMode=false,onRequestMode,refreshKey='',selectionUnavailable=false,method='standard',windowMinutes=0,onWindowChange}) {
+export default function DeliveryTimePicker({cart,value='',day='',onSelect,disabled=false,allowRequest=false,requestMode=false,onRequestMode,refreshKey='',selectionUnavailable=false,method='standard',windowMinutes=0,onWindowChange}) {
  const [editing,setEditing]=useState(()=>!value);
- const [preferredDay,setPreferredDay]=useState(()=>value.slice(0,10));
+ const [preferredDay,setPreferredDay]=useState(()=>value.slice(0,10) || day);
  const [openedAt]=useState(()=>Date.now());
  const dateId=useId(),customId=useId();
  const localInput=stamp=>new Date(stamp+8*3600000).toISOString().slice(0,16);

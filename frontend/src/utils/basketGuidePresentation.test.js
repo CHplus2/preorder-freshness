@@ -24,3 +24,7 @@ assert.equal(basketRangeNotice({...all,plans:[{budget_relation:'above'},{budget_
 assert.equal(basketRangeNotice({...all,plans:[]}),'');
 assert.equal(basketRangeNotice({...all,budget:{amount:100,mode:'within'}}),'');
 console.log('Basket recovery: submitted date/budget context, relevant explicit actions, bounded price evidence and missing-range explanations passed.');
+
+assert.match(basketSearchDescription({...base,menu_mode:'same'},'',money).details,/One menu only/);
+assert.match(basketSearchDescription({...base,menu_mode:'mixed'},'',money).details,/Allow a mix/);
+assert.deepEqual(basketRecoveryActions({...base,empty_reason:'existing_menu_mix',menu_mode:'same'},''),['allow_mix']);

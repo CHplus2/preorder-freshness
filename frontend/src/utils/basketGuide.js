@@ -15,15 +15,18 @@ export function basketGuideResponse(data,request){
   || typeof data.basket_known!=='boolean' || !['standard','express','pickup'].includes(data.delivery_method)
   || (request.delivery_method && data.delivery_method!==request.delivery_method) || !Array.isArray(data.plans) || data.plans.length>3
   || new Set(data.plans.map(plan=>plan?.id)).size!==data.plans.length || typeof data.message!=='string')throw invalidResponse();
+ const menuMode=data.menu_mode ?? 'mixed';
+ if(!['mixed','same'].includes(menuMode) || menuMode!==(request.menu_mode ?? 'mixed'))throw invalidResponse();
  orderQuote(data.basket_before,data.current_quantity);
  const budget=request.budget?moneyCents(request.budget):null,mode=request.budget_mode || 'within';
  if((request.budget && (budget===null || budget<1)) || !['within','above','all'].includes(mode) || (mode!=='within' && budget===null) || (!data.basket_known && data.current_quantity!==0))throw invalidResponse();
  if(budget!==null && (budget<1 || !data.budget || data.budget.basis!=='whole_order_after_discount_and_delivery' || moneyCents(data.budget.amount)!==budget || data.budget.mode!==mode))throw invalidResponse();
  if(budget===null && data.budget!==null)throw invalidResponse();
- if(data.empty_reason!=null && !['quantity_below_basket','basket_needs_review','no_price_match','no_kitchen_times','no_menu_match'].includes(data.empty_reason))throw invalidResponse();
+ if(data.empty_reason!=null && !['quantity_below_basket','existing_menu_mix','basket_needs_review','no_price_match','no_kitchen_times','no_menu_match'].includes(data.empty_reason))throw invalidResponse();
  if((data.plans.length>0)!==(data.empty_reason===null))throw invalidResponse();
  for(const plan of data.plans){
   if(!/^bp_[0-9a-f]{16}$/.test(plan.id) || !Array.isArray(plan.items) || !plan.items.length || new Set(plan.items.map(item=>item?.id)).size!==plan.items.length || !responseSlots(plan).length)throw invalidResponse();
+  if(menuMode==='same' && plan.items.length!==1)throw invalidResponse();
   const slots=responseSlots(plan);
   if(slots.length>3 || new Set(slots.map(slot=>Date.parse(slot.delivery_at))).size!==slots.length
    || slots.some(slot=>deliveryInput(slot.delivery_at).slice(0,10)!==data.date || slot.arrival_window!=null))throw invalidResponse();
@@ -53,17 +56,21 @@ export function basketGuideResponse(data,request){
 export function basketPlanAdded(value,expected){
  if(!value || value.added!==true || value.session!==expected.session || value.plan!==expected.plan.id || value.quantity!==expected.quantity
   || value.added_quantity!==expected.plan.items.reduce((sum,item)=>sum+item.add_quantity,0)
-  || typeof value.already_applied!=='boolean' || typeof value.basket_changed!=='boolean' || !Number.isFinite(Date.parse(value.delivery_at))
-  || Date.parse(value.delivery_at)!==Date.parse(expected.delivery_at))throw invalidResponse();
+  || typeof value.already_applied!=='boolean' || typeof value.basket_changed!=='boolean')throw invalidResponse();
+ if(expected.date_only){
+  if(value.date_only!==true || value.delivery_at!==null || value.date!==expected.date)throw invalidResponse();
+ }else if(value.date_only===true || !Number.isFinite(Date.parse(value.delivery_at)) || Date.parse(value.delivery_at)!==Date.parse(expected.delivery_at))throw invalidResponse();
  orderQuote(value.totals,expected.quantity);
  if(['subtotal','discount','shipping','total'].some(key=>moneyCents(value.totals[key])!==moneyCents(expected.plan.totals[key])))throw invalidResponse();
  return value;
 }
-export function basketGuideEmpty(reason,quantity,current){
+export function basketGuideEmpty(reason,quantity,current,menuMode='mixed'){
+ if(reason==='existing_menu_mix')return 'Your basket already contains different menus. Allow a mix to keep these items, or edit your basket to use one menu only.';
  if(reason==='quantity_below_basket' && current>100)return `Your basket already has ${current} items. This finder supports up to 100 total items; edit your basket to use it.`;
  if(reason==='quantity_below_basket')return `Your basket already has ${current} items. Choose a total of at least ${current}, or edit your basket first.`;
  if(reason==='basket_needs_review')return 'An existing basket item needs review for this date. Review your basket before building a complete order.';
  if(reason==='no_price_match')return 'No proposed basket matches this budget range. Try another budget or compare both ranges.';
  if(reason==='no_kitchen_times')return 'No common kitchen time was found for these complete baskets. Try another date, quantity or preference.';
+ if(menuMode==='same')return `No one-menu option was found for ${quantity} total items. Try another preference, date or quantity.`;
  return `No combination was found for ${quantity} total items. Try another preference, date or quantity.`;
 }
