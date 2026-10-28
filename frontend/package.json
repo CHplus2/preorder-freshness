@@ -20,7 +20,7 @@
     "prebuild": "npm run images",
     "predev": "npm run images",
     "test:images": "node --test scripts/menu-photos.test.mjs",
-    "test:recommendations": "node src/utils/menuSuggestions.test.js && node src/utils/guideResponse.test.js && node src/utils/guidePresentation.test.js && node src/components/MenuRecommendations.test.js",
+    "test:recommendations": "node src/utils/basketGuide.test.js && node src/utils/menuSuggestions.test.js && node src/utils/guideResponse.test.js && node src/utils/guidePresentation.test.js && node src/components/MenuRecommendations.test.js",
     "test:escrow": "node --test src/utils/escrowState.test.js src/utils/escrowRecovery.test.js src/utils/escrowOrder.test.js && node src/components/EscrowPayment.test.js"
   },
   "dependencies": {

@@ -3,6 +3,75 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Mixed whole-order finder — 28 October 2026
+
+The storefront date finder now uses `POST /api/menu/basket-guide/`, version
+`mixed-basket-guide-v1`. Quantity is the **final total item count for one basket**,
+not a count per recommended menu. Different menus can be mixed. Existing signed-in
+basket items count toward that target and are preserved. For an empty basket,
+quantity 3 can mean one rice meal, one noodle meal and one box of cookies. A box
+or pack is one selling item, not its contents or a diner count.
+
+Input: `{date, quantity, budget?, budget_mode?, category?, delivery_method?,
+delivery_area?}`. Date uses Malaysia calendar days, today through +90 inclusive;
+quantity is integer 1–100. Optional budget is a positive two-decimal money value.
+`budget_mode` is `within` (default, total <= budget), `above` (total > budget), or
+`all`; above/all require a budget. Category applies to **new additions**. Budget
+is the **whole-order total after current bulk discounts and delivery fees**,
+including existing basket items, using the same quote rules as checkout.
+
+The response contains `{session, version, date, quantity, delivery_method,
+basket_known, current_quantity, basket_before, budget, plans, empty_reason,
+price_evidence, checked_baskets, pool_limit, checked_limit, message}`. Budget is
+null or `{amount, mode, basis:"whole_order_after_discount_and_delivery"}`. Each
+of at most three alternative complete plans contains `{id, items, totals,
+budget_relation, slots}`. Item rows include current unit price, line total,
+final quantity, existing quantity and add quantity. `totals` contains Decimal
+money strings `subtotal`, `discount`, `shipping`, `total`, and final `quantity`.
+Slots are checked with every item together, never by combining independent
+per-menu availability. Nothing reserves a preparation slot, creates an order,
+deducts stock, charges payment or sends a notification.
+
+Search is intentionally bounded: up to 12 candidate menus seeded by history/
+popularity and price extremes; common mixed distributions and larger balanced
+groups; at most 30 whole-basket capacity checks. This is not an exhaustive
+combination search or an optimal spending guarantee. Budget filtering happens
+before top-three selection. Both mode alternates the two price partitions when
+available; it cannot promise a capacity-feasible result in both ranges.
+Optional `price_evidence` uses scope `generated_combinations_before_capacity`,
+with `considered_baskets`, `within_count`, `above_count`, and minimum/maximum
+order totals (null for an empty candidate set). It describes generated candidates,
+not every possible catalogue combination or verified capacity.
+
+Empty reasons are `quantity_below_basket`, `basket_needs_review`, `no_price_match`,
+`no_kitchen_times` and `no_menu_match`. An already complete target returns a
+review-only basket. A target below existing quantity never removes items.
+Guests preview an empty basket and must sign in and search again before adding.
+
+`POST /api/menu/basket-guide/add/` accepts only `{session, plan, delivery_at}`.
+Authenticated session/CSRF and the discovery browser key are required. A new
+application must be within 15 minutes; the chosen time must belong to that saved
+complete plan. A user-row lock serializes cart changes; storefront, recommendation
+session and product rows are also locked. Current basket, menu/price, promotion,
+fulfilment terms and whole-basket capacity are rechecked before an atomic write
+of additions only. Stale quotes/capacity return 409 without partial additions.
+The session stores a committed receipt. Repeating the same plan/time within the
+24-hour retained session is idempotent; a different option/time is rejected.
+A replay after later cart changes reports `basket_changed:true` without rewriting
+it. Success returns `{added,session,plan,already_applied,basket_changed,quantity,
+added_quantity,delivery_at,totals}`. Requests cannot provide prices or quantities.
+
+The browser verifies item counts, unit/line/quote arithmetic, requested budget
+relation and add receipts. Basket/account/fulfilment changes invalidate displayed
+results. An unconfirmed add response refreshes the basket and requires a fresh
+search, preventing a blind repeat. Compact food cards show a unit price and one
+reason, then a single shared basket breakdown, delivery-time selector and Add
+action. The full catalogue and instant recommendations remain independent.
+
+The earlier `/api/menu/guide/` per-menu API below remains available for compatibility;
+its food-only budget semantics do not describe the new storefront finder. No
+schema migration, model artifact change or retraining is required.
+
 ## Private email delivery check — 27 October 2026
 
 `GET /api/admin/reminder-status/` additionally returns `email_delivery`:
@@ -35,7 +104,7 @@ migration is needed. Receiving the check is evidence of that message's delivery,
 not proof of future customer delivery. Provider delivery/bounce evidence remains
 necessary to diagnose a provider-accepted message missing from the inbox.
 
-## Date-guide budget comparison — 27 October 2026
+## Legacy per-menu date-guide budget comparison — 27 October 2026
 
 `POST /api/menu/guide/` adds `budget_mode`: `within` (default), `above`, or `all`.
 The supplied `budget` is the **total food amount for the requested quantity of
@@ -73,7 +142,7 @@ capacity. Above-budget filtering already preceded the top-three limit and remain
 unchanged. A menu outside the first three recommendations can be returned by an
 above-budget search if it meets the filters and has a workable kitchen time.
 
-The UI labels quantity per menu, identifies results as alternatives, and shows
+The earlier per-menu UI labelled quantity per menu, identified results as alternatives, and showed
 this range to explain empty above-budget results when every matching menu total
 is within the threshold. Client validation checks partition counts, requested
 quantity, range ordering/budget boundaries, and consistency with returned rows.

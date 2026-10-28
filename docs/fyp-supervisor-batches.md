@@ -139,3 +139,46 @@ at 1440, 768, 390 and 320 pixels. The real local API/browser journey covers all
 three modes, empty-result recovery, wrong-total response rejection, clearing
 stale results and explicitly adding three above-budget units. No order was placed,
 no live worker was called and no real customer data/email/provider was used.
+
+
+## Mixed whole-order recommendations — 28 October 2026
+
+The owner clarified that RM100 is a whole-order budget and quantity 3 means
+three items total, allowing different menus. The date finder now proposes up
+to three complete basket alternatives. It includes existing basket items,
+current bulk discounts and delivery fees in both quantities and budget checks.
+Existing items are preserved; only the remaining quantity is added. Above and
+within comparisons happen before the result limit, with equality within budget.
+
+The selected option uses small food photos, unit prices, one explanation per
+menu, a shared order breakdown, one common delivery-time selector and one Add
+action. This replaces repeated three-unit menu offers and per-menu time buttons.
+The catalogue and instant personalised recommendations stay independently usable.
+
+The bounded candidate search checks the entire basket together with the existing
+checkout scheduler. It uses up to 12 menus and 30 capacity checks; it does not
+promise every possible combination or optimise spending to exhaust a budget.
+Application is session-bound, CSRF-protected, atomic and idempotent. Concurrent
+or repeated confirmation cannot add the same option twice. Basket/price/rule or
+capacity changes require a new search. Adding does not reserve capacity, place
+an order, deduct stock or initiate payment/email. No migration or retraining.
+
+Validation: the full backend suite passes 782 tests (22 platform-specific skips);
+55 focused PostgreSQL tests also pass, including simultaneous confirmations and
+interrupted-write rollback. Frontend lint, unit, checkout, shopping, UX and
+recommendation suites pass, with a production build. Local browser checks cover
+real mixed additions, existing items, completed/oversized targets, lost-response
+recovery, both budget ranges, stale basket rejection, malformed responses and
+guest sign-in. Eight full-page WCAG/overflow checks pass across 1440, 390 and
+320 pixels, with visual inspection of compact desktop/mobile cards. These checks
+use fictional local records only, with external browser requests blocked. No
+production customer records, email worker, courier or payment service is used.
+
+Manual acceptance after the deployment is Ready: sign in, start with an empty
+basket, enter a future offered date, quantity 3 and budget RM100. Choose one
+basket option: the item quantities must sum to 3 and the displayed whole-order
+total must match food minus discount plus delivery. Add once, then search again
+with target 3: it should offer review rather than another three additions. With
+one existing item, the Add action must add only two. Above mode needs a feasible
+three-item basket whose complete total is strictly greater than RM100; it should
+show no match when no generated basket meets that condition.

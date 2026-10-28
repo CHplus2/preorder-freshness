@@ -12,7 +12,7 @@ try{
  const render=component=>renderToStaticMarkup(h(MemoryRouter,null,h(AuthContext.Provider,{value:{isAuthenticated:false}},h(CartContext.Provider,{value:{cart:[]}},h(ProductContext.Provider,{value:{categories:[]}},h(UIContext.Provider,{value:{formatPrice:value=>'RM '+Number(value).toFixed(2)}},component))))));
  const initial=render(h(Recommendations));assert.match(initial,/Recommended for you/);assert.match(initial,/Get suggestions for a date/);assert.match(initial,/Finding a few suggestions/);assert.doesNotMatch(initial,/No suggestions are available/);
  const card=render(h(Card,{menu:{id:4,name:'Rice meal',image_url:'',reasons:['Popular recently']},priceLabel:'RM 12.00 each'},h('button',null,'Add 1')));assert.match(card,/Photo coming soon/);assert.match(card,/\/products\/4/);assert.match(card,/Popular recently/);assert.match(card,/RM 12.00 each/);
- const guide=render(h(Guide));assert.match(guide,/Menu suggestions for your date/);assert.match(guide,/Get up to three menu suggestions/);assert.match(guide,/Find my options/);assert.doesNotMatch(guide,/class="guide-results"/);
+ const guide=render(h(Guide));assert.match(guide,/Menu suggestions for your date/);assert.match(guide,/Build one order with a mix of menus/);assert.match(guide,/Find my options/);assert.doesNotMatch(guide,/class="guide-results"/);
  const {default:Catalogue}=await server.ssrLoadModule('/src/components/MenuCatalogue.jsx');
  const menus=Array.from({length:12},(_,index)=>({id:index+1,name:`Browse meal ${index+1}`,price:12,lead_hours:24,daily_capacity:50,delivery_weekdays:[]}));
  const catalogue=render(h(Catalogue,{menus,recommendations:h('div',null,'SUPPORTING_SUGGESTIONS')}));
@@ -21,8 +21,8 @@ try{
  assert.doesNotMatch(render(h(Catalogue,{menus,recommendations:null})),/SUPPORTING_SUGGESTIONS|menu-recommendations-inset/);
  const compact=render(h(Card,{compact:true,maxReasons:1,menu:{id:4,name:'Rice meal',image_url:'',reasons:['Reason one','Reason two']},priceLabel:'RM 12.00 each'}));
  assert.match(compact,/menu-recommendation-card--compact/);assert.match(compact,/Reason one/);assert.doesNotMatch(compact,/Reason two/);
- assert.match(guide,/1–100 selling units/);assert.match(guide,/max="100"/);assert.match(guide,/max="99999999.99"/);
- assert.match(guide,/Compare food total/);assert.match(guide,/Above this budget/);assert.match(guide,/Within and above budget/);assert.match(guide,/before discounts\. Delivery and existing basket items are extra/);
- assert.match(guide,/Quantity per menu/);assert.match(guide,/Each suggestion is an alternative purchase of one menu/);
+ assert.match(guide,/1–100 total items/);assert.match(guide,/max="100"/);assert.match(guide,/max="99999999.99"/);
+ assert.match(guide,/Budget preference/);assert.match(guide,/Above this budget/);assert.match(guide,/Within and above budget/);assert.match(guide,/Totals include the current discount and delivery fee/);
+ assert.match(guide,/Total items in this order/);assert.match(guide,/Whole-order budget/);
  console.log('Recommendation UI: visible entry point, loading distinction, shared evidence/photo cards and optional date refinement passed.');
 }finally{await server.close();}

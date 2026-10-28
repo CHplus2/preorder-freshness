@@ -10,6 +10,7 @@ import { useUI } from "./UIContext";
 import axios from "axios";
 import { useStorefront } from "./StorefrontContext";
 import {methodsFor} from '../utils/fulfilment';
+import {basketPlanAdded} from '../utils/basketGuide';
 
 export default function CartProvider({ children }) {
   const { store: promotion,error:pricingError } = useStorefront();
@@ -168,6 +169,24 @@ export default function CartProvider({ children }) {
       return false;
     }finally{cartMutation.current=false;if(isSessionCurrent())setCartUpdating(false);}
   };
+  const addSuggestedBasket=async (selection,expected)=>{
+    if(!isSessionCurrent())return false;
+    if(!isAuthenticated){setShowLogin(true);return false;}
+    if(cartMutation.current || cartLoading || cartError)return false;
+    cartMutation.current=true;setCartUpdating(true);
+    try{
+      const response=await axios.post('/api/menu/basket-guide/add/',selection,{withCredentials:true,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+      if(!isSessionCurrent())return false;
+      const result=basketPlanAdded(response.data,expected);
+      await refreshCart();
+      return result;
+    }catch(error){
+      if(!isSessionCurrent())return false;
+      const uncertain=!error.response || error.response.status>=500 || error.code==='INVALID_RESPONSE';
+      setAlert({type:'error',message:uncertain?'The basket addition could not be confirmed. Review your basket before searching or trying again.':apiError(error,'Could not add this basket option.')});
+      await refreshCart();return false;
+    }finally{cartMutation.current=false;if(isSessionCurrent())setCartUpdating(false);}
+  };
   const removeFromCart=id=>changeCart(id,0);
   const updateQuantity=(id,quantity)=>changeCart(id,Math.max(0,quantity));
 
@@ -183,6 +202,7 @@ export default function CartProvider({ children }) {
         SHIPPING_FEE,
         refreshCart,
         addToCart,
+        addSuggestedBasket,
         removeFromCart,
         updateQuantity,
         wallet, walletLoading, walletError, refreshWallet,

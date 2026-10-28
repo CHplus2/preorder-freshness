@@ -1,4 +1,5 @@
 from .views.handover import order_handover
+from .views.basket_guide import basket_guide, add_basket_plan
 from .views.order_progress import confirm_order_progress
 from .views.escrow import escrow_config, escrow_payment
 from .views.menu_photos import upload_menu_photo, menu_photo
@@ -42,6 +43,8 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path('menu/basket-guide/', basket_guide),
+    path('menu/basket-guide/add/', add_basket_plan),
     path('admin/orders/progress/', confirm_order_progress),
     path('orders/<int:pk>/handover/', order_handover),
     path('account/order-email/', order_email),
