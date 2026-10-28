@@ -25,5 +25,17 @@ try{
  assert.match(guide,/Budget preference/);assert.match(guide,/Above this budget/);assert.match(guide,/Within and above budget/);assert.match(guide,/Totals include the current discount and delivery fee/);
  assert.match(guide,/<legend>Menu choice<\/legend>/);assert.match(guide,/Allow a mix/);assert.match(guide,/One menu only/);assert.match(guide,/type="radio"/);
  assert.match(guide,/Total items in this order/);assert.match(guide,/Whole-order budget/);
+ const {default:Results}=await server.ssrLoadModule('/src/components/GuideBasketResults.jsx');
+ const fixtureItem=(id,name,price,quantity=3)=>({id,name,price,image_url:'',quantity,existing_quantity:0,add_quantity:quantity,line_total:(price*quantity).toFixed(2),reasons:['Popular recently']});
+ const fixturePlan=(id,name,price)=>({id,items:[fixtureItem(id,name,price)],totals:{subtotal:(price*3).toFixed(2),discount:'0.00',shipping:'5.00',total:(price*3+5).toFixed(2),quantity:3},budget_relation:'within'});
+ const data={quantity:3,current_quantity:0,delivery_method:'standard',menu_mode:'same',budget:{amount:'100.00',mode:'within'},plans:[fixturePlan(1,'Rice meal',12),fixturePlan(2,'Noodles',9),fixturePlan(3,'Cookies',10)]};
+ const results=(patch={},props={})=>render(h(Results,{data:{...data,...patch},formatPrice:value=>'RM '+Number(value).toFixed(2),authenticated:true,onAdd:()=>{},onSelect:()=>{},...props}));
+ const singles=results();assert.equal((singles.match(/class="menu-recommendation-card /g)||[]).length,3);assert.equal((singles.match(/class="menu-recommendation-add"/g)||[]).length,3);assert.doesNotMatch(singles,/Alternative complete baskets|guide-mixed-order|Basket 1/);assert.match(singles,/RM 41.00/);assert.match(singles,/RM 32.00/);assert.match(singles,/Add 3 items of Noodles to basket/);
+ const busy=results({}, {busyId:2});assert.equal((busy.match(/ disabled=""/g)||[]).length,3);assert.match(busy,/Adding…/);
+ const mixed={...data.plans[0],items:[fixtureItem(1,'Rice meal',12,1),fixtureItem(2,'Noodles',9,1),fixtureItem(3,'Cookies',10,1)]};
+ const mixedHtml=results({menu_mode:'mixed',plans:[mixed,{...mixed,id:4}]});assert.match(mixedHtml,/Alternative complete baskets/);assert.match(mixedHtml,/guide-mixed-order/);assert.equal((mixedHtml.match(/class="guide-add-basket"/g)||[]).length,1);assert.doesNotMatch(mixedHtml,/class="menu-recommendation-add"/);
+ const one=results({menu_mode:'mixed',quantity:1,plans:data.plans.map(option=>({...option,items:[{...option.items[0],quantity:1,add_quantity:1,line_total:String(option.items[0].price)}],totals:{...option.totals,subtotal:String(option.items[0].price),total:String(option.items[0].price+5),quantity:1}}))});assert.doesNotMatch(one,/Alternative complete baskets/);assert.equal((one.match(/class="menu-recommendation-add"/g)||[]).length,3);
+ const full=results({current_quantity:3,plans:[{...data.plans[0],items:[{...data.plans[0].items[0],add_quantity:0,existing_quantity:3}]}]});assert.match(full,/Review basket/);assert.doesNotMatch(full,/Add 3 items of/);
+ assert.match(results({}, {authenticated:false}),/Sign in to add Noodles/);
  console.log('Recommendation UI: visible entry point, loading distinction, shared evidence/photo cards and optional date refinement passed.');
 }finally{await server.close();}

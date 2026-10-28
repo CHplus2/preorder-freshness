@@ -311,3 +311,35 @@ delivery are distinct owner events and can legitimately produce separate
 messages for one order; queue polling does not create a new reminder every five
 minutes. This source/test review does not identify the trigger of an individual
 live email or verify a particular external scheduler account.
+
+
+## Single-menu cards and mixed-basket action bar — 28 October 2026
+
+The one-menu finder previously reused the mixed-basket comparison layout,
+showing only one menu at a time behind numbered options and a large separate
+Add footer. It now shows the returned menus together as normal cards, each with
+its quantity, food and whole-order totals, fee/discount information, budget
+comparison and an Add button. One-item searches use this card view as well.
+Existing quantities are retained and only the remaining items are added; completed
+targets show a Review basket link. Mixed baskets retain one shared Add action,
+with a compact full-width total bar rather than a floating, oversized summary.
+The menu-choice radios now look like a segmented control while keeping native
+keyboard and assistive-technology behavior.
+
+The Add handler resolves the clicked plan against the current validated response,
+so clicking a second card cannot accidentally add the first suggestion. All Add
+buttons wait while one request is running. Existing date-only handoff, budget,
+capacity and server idempotency safeguards are unchanged. No backend endpoint,
+model, migration, scheduler, price rule or forecast artifact changes are needed.
+
+Validation: frontend lint, recommendation, checkout, UX and unit suites and
+production build pass. UI coverage checks individual versus shared actions,
+completed targets, guest access and busy controls. The real local API/browser
+journey adds the second single-menu card and a different selected mixed basket,
+verifies exact cart identities/quantities and date carryover, and exercises an
+existing item, a completed target and guest sign-in. Ten full-page WCAG/overflow
+checks pass across 1440, 390 and 320 pixels, including both budget ranges. A
+one-item mixed-mode search also shows direct menu cards. Visual review covers
+both layouts and the segmented control. All browser data is fictional and
+external requests are blocked; no live order, email, payment or stock deduction
+is performed.

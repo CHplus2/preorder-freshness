@@ -3,6 +3,29 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Recommendation result presentation — 28 October 2026
+
+This is a frontend-only presentation change; API payloads, session binding,
+pricing, ranking, capacity and atomic-add rules are unchanged. One-menu searches
+show all returned menu alternatives together. Each card contains final quantity,
+food subtotal, whole-order total, current discount/delivery, budget comparison
+and its own Add action. There is no numbered basket selector or separate Add
+footer in this view. A one-item request uses this direct-card view too, since
+one item cannot form a multi-menu basket. Existing items count toward the target;
+only the remaining quantity is added. A completed target has a Review basket
+link instead of an Add button.
+
+Mixed baskets keep one selected complete option and one shared Add action in a
+compact, full-width order bar. Basket selectors show whole-order prices. Native
+radio behavior remains for Menu choice, with a segmented visual control and
+visible keyboard focus. No delivery-hour selection is introduced in the finder.
+
+Every card action passes its own plan ID, which the parent resolves against the
+current validated response before sending the existing `{session,plan,date_only:true}`
+request. All alternative Add actions are disabled while one is in flight. The
+server's existing fingerprint and idempotency checks remain authoritative; no
+order, preparation reservation, stock deduction or payment occurs at this step.
+
 ## Menu choice and a single delivery-time decision — 28 October 2026
 
 The finder now accepts optional `menu_mode: "mixed" | "same"`, default `mixed`

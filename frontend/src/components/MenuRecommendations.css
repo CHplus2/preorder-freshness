@@ -74,12 +74,10 @@
 .guide-basket-options{display:flex;gap:6px;flex-wrap:wrap}.guide-basket-options button{min-height:44px;margin:0;border:1px solid #bfceba;border-radius:8px;background:#fff;color:#315a3d;padding:9px 12px;font-size:12px;box-shadow:none}
 .guide-basket-options button[aria-pressed=true]{background:#285a3e;color:#fff;border-color:#285a3e}
 .guide-plan-item-quantity{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0;font:400 13px/1.6 system-ui,sans-serif;color:#50664a}.guide-plan-item-quantity strong{font-weight:600}.guide-plan-item-quantity span{white-space:nowrap}
-.guide-order-footer{max-width:560px;margin:20px 0 0 auto;padding:18px;border:1px solid #d4dfcf;border-radius:12px;background:#fff;min-width:0}
-.guide-order-breakdown{margin:0}.guide-order-breakdown>div{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin:9px 0;font:400 14px/1.6 system-ui,sans-serif;color:#50664a}.guide-order-breakdown dt,.guide-order-breakdown dd{margin:0}.guide-order-breakdown dd{white-space:nowrap}.guide-order-breakdown>.guide-order-total{border-top:1px solid #e0e6da;padding-top:14px;margin-top:14px;color:#294d35;font-weight:650;font-size:16px}
-.guide-order-budget{font:500 13px/1.6 system-ui,sans-serif;color:#315a3d;margin:12px 0}.guide-order-budget[data-relation=above]{color:#80521a}
-.menu-storefront .guide-add-basket,.guide-review-basket{display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:48px;width:100%;padding:12px 16px;background:#285a3e;color:#fff;border:1px solid #285a3e;border-radius:8px;font:600 14px/1.5 system-ui,sans-serif;white-space:normal;text-align:center;text-decoration:none;margin:0;box-shadow:none}
+.guide-order-budget{font:500 12px/1.6 system-ui,sans-serif;color:#315a3d;margin:0}.guide-order-budget[data-relation=above]{color:#80521a}
+.menu-storefront .guide-add-basket{display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:46px;width:100%;padding:12px 16px;background:#285a3e;color:#fff;border:1px solid #285a3e;border-radius:8px;font:600 14px/1.5 system-ui,sans-serif;white-space:normal;text-align:center;text-decoration:none;margin:0;box-shadow:none}
 .guide-success{padding:14px;border:1px solid #bfceba;border-radius:8px;background:#f0f6ea;font-size:14px;line-height:1.6}
-@media(max-width:600px){.guide-order-footer{padding:14px}.guide-order-breakdown>.guide-order-total{font-size:15px}.guide-basket-heading{gap:10px}.guide-basket-options{width:100%}.guide-basket-options button{flex:1}.menu-storefront .guide-results{gap:12px}}
+@media(max-width:600px){.guide-basket-heading{gap:10px}.guide-basket-options{width:100%}.guide-basket-options button{flex:1}.menu-storefront .guide-results{gap:12px}}
 .guide-basket-options button{display:grid;gap:3px;justify-items:center;min-width:0}.guide-basket-options button strong{font-size:14px;font-weight:600;white-space:nowrap}.guide-basket-options button small{font-size:12px;font-weight:400;line-height:1.5;color:inherit}
 
 /* Keep the submitted date, quantity and budget beside their results. */
@@ -92,13 +90,32 @@
 .guide-recovery-actions a{font-size:13px;color:#2c5438;padding:10px 0;min-height:44px;box-sizing:border-box}
 @media(max-width:480px){.menu-storefront .guide-search-summary{padding:12px}.guide-recovery-actions{align-items:stretch}.guide-recovery-actions button{flex:1 1 140px}}
 
-/* Native radios distinguish a mixed order from repeated items of one menu. */
+/* Native radio behavior with a compact segmented appearance. */
 .menu-storefront .guided-menu .guide-menu-choice{grid-column:1/-1;min-width:0;padding:0;margin:0 0 4px;border:0;background:transparent;box-shadow:none}
 .guide-menu-choice legend{font:600 13px/1.5 system-ui,sans-serif;color:#31563c;margin-bottom:8px;padding:0}
-.guide-menu-choice>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-width:360px;gap:8px}
-.menu-storefront .guided-menu .guide-menu-choice label{display:flex;flex-direction:row;align-items:center;gap:8px;min-height:44px;box-sizing:border-box;padding:10px;margin:0;border:1px solid #b7cbb4;border-radius:8px;background:#fff;color:#31563c;font:500 13px/1.5 system-ui,sans-serif;cursor:pointer}
-.menu-storefront .guided-menu .guide-menu-choice label[data-selected=true]{background:#eaf3e5;border-color:#527c56;color:#244b30}
-.menu-storefront .guided-menu .guide-menu-choice input[type=radio]{appearance:auto;accent-color:#285a3e;width:16px;height:16px;min-height:0;padding:0;margin:0;flex:0 0 16px}
+.guide-menu-choice>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-width:360px;gap:4px;padding:4px;border:1px solid #d1ddca;border-radius:10px;background:#edf2e8}
+.menu-storefront .guided-menu .guide-menu-choice label{position:relative;display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box;padding:10px 8px;margin:0;border:1px solid transparent;border-radius:7px;background:transparent;color:#36533c;font:500 13px/1.5 system-ui,sans-serif;cursor:pointer;text-align:center}
+.menu-storefront .guided-menu .guide-menu-choice label[data-selected=true]{background:#285a3e;border-color:#285a3e;color:#fff}
+.menu-storefront .guided-menu .guide-menu-choice input[type=radio]{position:absolute;width:1px;height:1px;min-height:0;padding:0;margin:-1px;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .guide-menu-choice label:focus-within{outline:3px solid #477b4f;outline-offset:3px}
+.guide-menu-choice:disabled{opacity:.65}
+@media(forced-colors:active){.guide-menu-choice label[data-selected=true]{outline:2px solid Highlight}}
 
-.menu-storefront .guide-date-availability{font:500 13px/1.65 system-ui,sans-serif;color:#36573e;margin:16px 0}
+/* Individual menu alternatives keep their price and Add action together. */
+.menu-storefront .guide-results-intro,.menu-storefront .guide-next-step{font:400 13px/1.7 system-ui,sans-serif;color:#53694c;margin:10px 0 16px}
+.menu-storefront .guide-next-step{margin:14px 0 0}
+.guide-existing-items{font:400 12px/1.6 system-ui,sans-serif;color:#53694c;margin:0}
+.guide-card-purchase{display:grid;gap:8px;margin-top:auto;padding-top:12px;border-top:1px solid #e1e8dc}
+.guide-card-order-total{display:flex;align-items:baseline;justify-content:space-between;gap:12px;color:#294d35;font:500 13px/1.6 system-ui,sans-serif}
+.guide-card-order-total strong{font-weight:650;font-size:18px;white-space:nowrap}
+.guide-card-fees{font:400 12px/1.65 system-ui,sans-serif;color:#53694c;margin:0}
+.guide-one-menu-cards .menu-recommendation-add{box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none}
+.guide-one-menu-cards .menu-recommendation-add:disabled,.guide-add-basket:disabled{opacity:.65;cursor:wait}
+.guide-one-menu-cards .guide-order-budget{font-size:12px}
+/* A mixed basket uses one compact full-width order bar. */
+.guide-mixed-order{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,260px);align-items:center;gap:20px;padding:18px 20px;margin-top:18px;border:1px solid #cbdac4;border-radius:10px;background:#f3f7ee}
+.guide-mixed-total{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;font:500 14px/1.6 system-ui,sans-serif;color:#294d35}
+.guide-mixed-total strong{font-size:23px;font-weight:650;white-space:nowrap}
+.guide-mixed-costs{font:400 12px/1.7 system-ui,sans-serif;color:#53694c;margin:6px 0}
+.guide-mixed-action{min-width:0}
+@media(max-width:700px){.guide-mixed-order{grid-template-columns:1fr;gap:14px;padding:16px}.guide-mixed-total{justify-content:space-between}.guide-card-order-total strong{font-size:17px}}
