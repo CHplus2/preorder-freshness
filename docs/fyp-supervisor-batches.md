@@ -343,3 +343,15 @@ one-item mixed-mode search also shows direct menu cards. Visual review covers
 both layouts and the segmented control. All browser data is fictional and
 external requests are blocked; no live order, email, payment or stock deduction
 is performed.
+
+### Follow-up: explain a single same-menu result
+
+The user confirmed their basket already contained the returned menu. Same-menu
+mode preserves it and offers only the remaining quantity of that menu, rather
+than replacing basket contents. Results now show the option count and explain
+this constraint with a Review basket link. An empty-basket search returning one
+match explains that up to three appear when more match. Form help explicitly
+states that a blank optional budget imposes no price limit. Pricing, candidate
+selection and reminder behavior are unchanged. Regression coverage checks
+three same-menu alternatives without a budget, existing-menu top-ups and the
+corresponding result explanations.

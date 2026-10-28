@@ -29,8 +29,10 @@ export default function GuideBasketResults({data,selectedId,onSelect,onAdd,onRev
  const actionProps={onAdd,onReview,authenticated,busyId,disabled};
  const cardFor=(item,children,key=item.id)=><MenuRecommendationCard compact key={key} menu={item} priceLabel={`${formatPrice(item.price)} / ${unitLabel(item.selling_details)}`} onView={()=>onView?.(item.id)}>{children}</MenuRecommendationCard>;
  if(same)return <section className="guide-one-menu-results" aria-labelledby={title}>
-  <div className="guide-basket-heading"><h3 id={title}>{count===1?'Choose a menu':'Choose one menu for your order'}</h3></div>
+  <div className="guide-basket-heading"><h3 id={title}>{count===1?'Choose a menu':'Choose one menu for your order'}</h3><span>{data.plans.length} {data.plans.length===1?'option':'alternatives'}</span></div>
   <p className="guide-results-intro">{data.current_quantity===count?`Your ${count}-item basket is complete. Review it to continue.`:`Choose one card for your ${count}-item order. Prices include ${data.delivery_method==='pickup'?'collection':'delivery'}.`}</p>
+  {data.current_quantity>0 && data.current_quantity<count && <p className="guide-input-help">Your basket already contains {plan.items[0].name}. Keeping every item the same menu means topping up this menu only. <Link to="/cart">Review your basket</Link> to remove it before searching for other menus, or choose “Allow a mix”.</p>}
+  {!data.current_quantity && data.plans.length===1 && <p className="guide-input-help">Only one alternative was found for this date, quantity and preferences. Up to three appear when more menus match.</p>}
   {rangeNotice && <p className="guide-range-notice" role="status">{rangeNotice}</p>}
   <div className="guide-results guide-one-menu-cards">{data.plans.map(option=>{
    const item=option.items[0];

@@ -70,7 +70,7 @@ export default function GuidedMenu(){
  };
  return <details id="menu-finder" className="dk-panel guided-menu" onToggle={event=>setExpanded(event.currentTarget.open)}>
   <summary>Menu suggestions for your date</summary>
-  <p>Find a mix of menus or several items of one menu. Choose the total item count and a budget for the whole basket.</p>
+  <p>Find a mix of menus or several items of one menu. Choose the total item count and, optionally, a budget for the whole basket.</p>
   <form className="fyp-form inline" onSubmit={search} aria-describedby={helpId}>
    <fieldset className="guide-menu-choice" disabled={!!adding}><legend>Menu choice</legend><div>{[['mixed','Allow a mix'],['same','One menu only']].map(([value,label])=><label key={value} data-selected={form.menu_mode===value}><input type="radio" name={helpId+'-menu-choice'} value={value} checked={form.menu_mode===value} onChange={()=>updateForm({...form,menu_mode:value})}/><span>{label}</span></label>)}</div></fieldset>
    <label>Delivery date<input ref={dateRef} type="date" required min={bounds.first} max={bounds.last} disabled={!!adding} value={form.date} onChange={event=>updateForm({...form,date:event.target.value})}/></label>
@@ -80,7 +80,7 @@ export default function GuidedMenu(){
    <label>Preference for new items<select disabled={!!adding} value={form.category} onChange={event=>updateForm({...form,category:event.target.value})}><option value="">Any category</option>{(Array.isArray(categories)?categories:[]).map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
    <button disabled={working || adding || cartLoading || cartUpdating || !!cartError}>{working?'Checking complete baskets…':'Find my options'}</button>
   </form>
-  <p id={helpId} className="guide-input-help">1–100 total items, including anything already in your basket. A meal, box or pack counts as one item. Totals include the current discount and delivery fee. Choose a date within 90 days.</p>
+  <p id={helpId} className="guide-input-help">1–100 total items, including anything already in your basket. A meal, box or pack counts as one item. Totals include the current discount and delivery fee. Leave the budget blank for no price limit. Choose a date within 90 days.</p>
   {cartError && <p role="alert">Your basket could not be checked. <Link to="/cart">Review your basket</Link> before requesting suggestions.</p>}
   {working && <p role="status">Checking prices and one shared kitchen time for each complete basket…</p>}
   {visibleError && <p className="guide-error" role="alert" tabIndex={-1} ref={errorRef}>{visibleError}</p>}

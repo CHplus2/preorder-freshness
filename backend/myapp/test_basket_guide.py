@@ -214,6 +214,14 @@ class BasketGuideTests(TestCase):
         self.assertTrue(repeated.data['already_applied']);self.assertEqual(CartItem.objects.get(user=self.user).quantity,3)
         self.assertFalse(Order.objects.exists());self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,1000)
 
+    def test_same_menu_without_budget_returns_alternatives_without_price_restriction(self):
+        with patch('myapp.views.basket_guide.slots',return_value=[self.slot]):
+            result=self.client.post(self.url,dict(date=str(self.day),quantity=3,menu_mode='same'),format='json')
+        self.assertEqual(result.status_code,200,result.data)
+        self.assertIsNone(result.data['budget']);self.assertEqual(len(result.data['plans']),3)
+        self.assertEqual({plan['items'][0]['id'] for plan in result.data['plans']},{menu.pk for menu in self.menus})
+        self.assertTrue(all(plan['budget_relation'] is None for plan in result.data['plans']))
+
     def test_existing_mixed_basket_is_preserved_and_cannot_be_called_same_menu(self):
         for menu in self.menus[:2]:CartItem.objects.create(user=self.user,product=menu,quantity=1)
         with patch('myapp.views.basket_guide.slots') as capacity:
