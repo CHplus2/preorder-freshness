@@ -7,5 +7,10 @@ export function menuSuggestions(data){
 }
 export function openMenuFinder(){
  const finder=document.getElementById('menu-finder');
- if(finder){finder.open=true;finder.scrollIntoView({block:'start'});finder.querySelector('input')?.focus({preventScroll:true});}
+ if(finder){
+  finder.open=true;
+  const date=finder.querySelector('input[type="date"]');
+  (date || finder).scrollIntoView({block:date?'center':'start'});
+  date?.focus({preventScroll:true});
+ }
 }

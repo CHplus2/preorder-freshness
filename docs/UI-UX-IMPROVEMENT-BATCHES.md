@@ -1,5 +1,9 @@
 # Home-kitchen UX improvement batches
 
+The follow-up review requested after later feature additions is tracked in
+[the 28 October review](UI-UX-REVIEW-2026-10-28.md). The completed batches below
+remain the record of the earlier review.
+
 ## Direction
 
 The supplied Talabat, Swiggy and OpenTable screenshots inform food discovery,

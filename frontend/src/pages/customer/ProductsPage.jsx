@@ -21,7 +21,7 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const { categories } = useProduct();
-  const {store}=useStorefront();
+  const {store,error:storeError}=useStorefront();
   const searchInput=useRef(null);
 
   const [listing,setListing]=useState({rows:[],count:0,next:false});
@@ -41,31 +41,32 @@ export default function ProductsPage() {
   },[searchTerm,selectedCategory,page,retry]);
   const changeFilters=(search,category)=>{if(search===searchTerm && category===selectedCategory)return;generation.current++;setSearchTerm(search);setSelectedCategory(category);setPage(1);setListing({rows:[],count:0,next:false});setLoading(true);setError('')};
   const filteredProducts=listing.rows;
+  const categoryName=(Array.isArray(categories)?categories:[]).find(category=>String(category.id)===selectedCategory)?.name;
 
   return (
     <main className="products-page menu-storefront">
       <PageMeta title="The menu" description="Explore this kitchen’s current food menu, prices and preorder notice. Choose a favourite and schedule your delivery."/>
-      <MenuKitchenHeader store={store}/>
+      <MenuKitchenHeader store={store} error={storeError}/>
       <section id="menu-browse" className="menu-toolbar" aria-label="Browse the menu">
         <div className="menu-search"><Search size={19} aria-hidden="true"/><input ref={searchInput} type="search" aria-label="Search the menu" placeholder="Find your next favourite…" value={searchTerm} onChange={e=>changeFilters(e.target.value,selectedCategory)}/>{searchTerm && <button type="button" aria-label="Clear menu search" onClick={()=>{changeFilters('',selectedCategory);searchInput.current?.focus();}}><X size={17}/></button>}</div>
-        <button type="button" className="menu-date-shortcut" onClick={openMenuFinder}><CalendarDays size={17} aria-hidden="true"/>Suggestions for a date</button>
+        <button type="button" className="menu-date-shortcut" aria-label="Get menu suggestions for a date" onClick={openMenuFinder}><CalendarDays size={17} aria-hidden="true"/><span className="menu-date-label-wide">Suggestions for a date</span><span className="menu-date-label-short" aria-hidden="true">For a date</span></button>
         <div className="menu-category-tabs" role="group" aria-label="Menu categories"><button type="button" aria-pressed={selectedCategory===''} onClick={()=>changeFilters(searchTerm,'')}>All food</button>{(Array.isArray(categories)?categories:[]).map(c=><button type="button" key={c.id} aria-pressed={String(selectedCategory)===String(c.id)} onClick={()=>changeFilters(searchTerm,String(c.id))}>{c.name}</button>)}</div>
       </section>
 
-      <div className="menu-list-meta"><MenuListingStatus loading={loading} error={error} count={listing.count} shown={listing.rows.length}/>{(searchTerm || selectedCategory) && <button type="button" className="menu-reset-filters" onClick={()=>changeFilters('','')}>Reset filters</button>}</div>
+      <div className="menu-list-meta"><div><h2 id="menu-results-title" className="menu-results-title">{searchTerm?`Results for “${searchTerm}”`:categoryName || 'Explore the menu'}</h2><MenuListingStatus loading={loading} error={error} count={listing.count} shown={listing.rows.length}/></div>{(searchTerm || selectedCategory) && <button type="button" className="menu-reset-filters" onClick={()=>changeFilters('','')}>Reset filters</button>}</div>
       {/* Products Grid */}
-      <div className="products-container" aria-busy={loading}>
+      <div className="products-container" role="region" aria-labelledby="menu-results-title" aria-busy={loading}>
         {loading && !filteredProducts.length && Array.from({length:6},(_,i)=><div className="menu-skeleton" aria-hidden="true" key={i}><div/><span/><span/></div>)}
         {filteredProducts.length > 0 ? (
           <MenuCatalogue menus={filteredProducts} recommendations={!searchTerm && !selectedCategory?<MenuRecommendations/>:null}/>
         ) : !loading && !error ? (
-          <div className="menu-empty-result"><h2>{searchTerm || selectedCategory?'No meals match these filters':'No menus available right now'}</h2><p>{searchTerm || selectedCategory?'Try another name or category.':'Check back soon or ask the kitchen about preorders.'}</p>{searchTerm || selectedCategory?<button type="button" onClick={()=>changeFilters('','')}>Show all food</button>:<Link to="/contact">Contact the kitchen</Link>}</div>
+          <div className="menu-empty-result"><h2>{searchTerm || selectedCategory?'No food matches these filters':'No menus available right now'}</h2><p>{searchTerm || selectedCategory?'Try another name or category.':'Check back soon or ask the kitchen about preorders.'}</p>{searchTerm || selectedCategory?<button type="button" onClick={()=>changeFilters('','')}>Show all food</button>:<Link to="/contact">Contact the kitchen</Link>}</div>
         ) : null}
       </div>
       <div className="menu-load-more">
         {error && <p role="alert">{error} <button onClick={()=>{setLoading(true);setError('');setRetry(n=>n+1)}}>Try again</button></p>}
-        {listing.rows.length>0 && <p role="status">Showing {listing.rows.length} of {listing.count} meals</p>}
-        {listing.next && !error && <button className="dk-primary" disabled={loading} onClick={()=>{if(!loading){setLoading(true);setPage(n=>n+1)}}}>{loading?'Loading meals...':'Load more meals'}</button>}
+        {listing.rows.length>0 && <p role="status">Showing {listing.rows.length} of {listing.count} items</p>}
+        {listing.next && !error && <button className="dk-primary" disabled={loading} onClick={()=>{if(!loading){setLoading(true);setPage(n=>n+1)}}}>{loading?'Loading items…':'Load more food'}</button>}
       </div>
       <GuidedMenu/>
       <InventoryFreshness/>

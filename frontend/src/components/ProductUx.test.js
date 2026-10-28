@@ -18,9 +18,14 @@ try{
  assert.match(tracking,/does not book a courier or mark the order dispatched/);assert.match(tracking,/Tracking reference/);
  assert.equal(renderToStaticMarkup(createElement(CourierTrackingEditor,{order:{delivery_method:'pickup'}})),'');
  const {default:MenuKitchenHeader}=await server.ssrLoadModule('/src/components/MenuKitchenHeader.jsx');
- const kitchenHeader=store=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(MenuKitchenHeader,{store:{name:'Local home kitchen',...store}})));
- assert.match(kitchenHeader({}),/What sounds good/);assert.doesNotMatch(kitchenHeader({}),/% off|Free delivery|15.minutes/);
+ const kitchenHeader=(store,error='')=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(MenuKitchenHeader,{store:{name:'Local home kitchen',...store},error})));
+ assert.match(kitchenHeader({}),/The menu/);assert.doesNotMatch(kitchenHeader({}),/% off|Free delivery|15.minutes/);
  assert.match(kitchenHeader({bulk_discount_percent:10,bulk_minimum:12}),/10% off food from 12 items/);
+ const kitchenCollection=kitchenHeader({delivery_enabled:false,pickup_enabled:true,pickup_location:'Fictional counter',pickup_open_hour:7,pickup_close_hour:14,service_area:'Kuching'});
+ assert.match(kitchenCollection,/Kitchen details/);assert.match(kitchenCollection,/Self-collection/);assert.match(kitchenCollection,/7am–2pm/);assert.match(kitchenCollection,/Fictional counter/);
+ assert.doesNotMatch(kitchenCollection,/<strong>Delivery<\/strong>/);assert.doesNotMatch(kitchenCollection,/<details[^>]*\sopen/);
+ assert.match(kitchenHeader({delivery_enabled:false,pickup_enabled:false}),/role="status"[^>]*>This kitchen is not accepting/);
+ const failedKitchen=kitchenHeader({bulk_discount_percent:10,bulk_minimum:12,service_area:'Stale area'},'Unavailable');assert.match(failedKitchen,/Kitchen details could not be loaded/);assert.doesNotMatch(failedKitchen,/10% off|Stale area/);
  const {default:ProductOrderPanel}=await server.ssrLoadModule('/src/components/ProductOrderPanel.jsx');
  const {CartContext}=await server.ssrLoadModule('/src/contexts/CartContext.js');
  const {AuthContext}=await server.ssrLoadModule('/src/contexts/AuthContext.js');

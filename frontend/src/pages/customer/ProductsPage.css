@@ -444,3 +444,39 @@ body {
 .menu-food-days{display:block;font-size:11px;line-height:1.6;color:#53694c;margin:-10px 0 14px}
 .menu-storefront .guided-menu{margin-top:24px;scroll-margin-top:260px}
 @media(max-width:480px){.menu-storefront .menu-list-meta{padding:8px 0}.menu-food-days{font-size:11px;margin:-5px 0 12px}.menu-storefront .menu-category-tabs button{padding-inline:14px}}
+
+/* October review, batch 1: readable choices and labelled navigation. */
+.menu-storefront .menu-list-meta .menu-results-title{font:600 20px/1.4 system-ui,sans-serif;color:#294b35;margin:0 0 4px;overflow-wrap:anywhere}
+.menu-date-label-short{display:none}
+.menu-toolbar{scroll-margin-top:110px}
+@media(max-width:480px){
+ .menu-storefront{padding:14px 16px 34px}
+ .menu-toolbar{gap:8px;top:74px;padding:8px 0}
+ .menu-storefront .menu-date-shortcut{width:auto;min-width:112px;gap:6px;font-size:12px;padding:0 10px}
+ .menu-date-label-wide{display:none}.menu-date-label-short{display:inline}
+ .menu-search button{width:44px;min-width:44px}
+ .menu-storefront .menu-list-meta{padding:12px 0;margin-bottom:8px}
+ .menu-storefront .menu-list-meta .menu-results-title{font-size:18px}
+ .menu-storefront .products-container{grid-template-columns:minmax(0,1fr);gap:14px}
+ .menu-food-card{border-radius:12px}
+ .menu-food-link{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:14px;align-items:start;padding:14px 14px 0}
+ .menu-food-image{grid-column:2;grid-row:1;width:112px;height:112px;border-radius:9px;aspect-ratio:1}
+ .menu-food-copy{grid-column:1;grid-row:1;padding:0}
+ .menu-food-copy h3{font-size:15px;line-height:1.45;margin:0 0 10px}
+ .menu-food-category{font-size:10px;letter-spacing:.7px;margin-bottom:6px}
+ .menu-food-bottom{padding:12px 14px 14px;flex-direction:row;align-items:center;gap:12px}
+ .menu-food-price strong{font-size:16px}.menu-food-price>span{font-size:12px;line-height:1.5}
+ .menu-food-bottom>.menu-add{width:112px;min-width:112px;font-size:13px}
+ .menu-food-bottom>.menu-quantity{width:112px;min-width:112px;box-sizing:content-box}
+ .menu-quantity>span{min-width:24px}.menu-quantity button{width:44px;min-width:44px}
+ .menu-notice-badge{left:6px;right:6px;bottom:6px;justify-content:center;padding:5px 3px;font-size:10px}
+ .menu-food-days{margin:0 0 8px;font-size:12px}
+ .menu-photo-empty{font-size:11px;line-height:1.4;text-align:center;padding:6px;box-sizing:border-box}
+ .menu-photo-empty svg{width:26px;height:26px}
+ .menu-food-video{font-size:12px;margin:0 14px 6px}
+ .menu-skeleton{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:12px;min-height:160px;padding:14px}
+ .menu-skeleton>div{grid-column:2;grid-row:1/4;height:112px;margin:0}.menu-skeleton>span{grid-column:1;width:100%}
+ .menu-storefront .guided-menu{scroll-margin-top:220px}
+}
+.menu-food-bottom{flex-wrap:wrap}.menu-food-price{flex:1 1 96px}.menu-food-bottom>.menu-add{flex-shrink:0}
+.menu-quantity button{width:44px;min-width:44px}.menu-quantity>span{min-width:24px}
