@@ -45,3 +45,19 @@ Until that adapter exists, the owner books through the courier's normal service,
 records its actual reference, uses the grouped handover actions and contacts the
 customer or rider when arrangements change. This remains useful for a small
 kitchen without claiming automatic courier coordination.
+
+## Website follow-up — 28 October 2026
+
+The owner confirmed that no approved API account is available yet. Settings →
+Courier delivery now makes the manual connection status visible and links to
+Planner's collection and delivery runs. Provider onboarding information starts
+at https://developer.grab.com/; no undocumented generic webhook has been added.
+Customers without a recorded courier reference see that kitchen-entered tracking
+will appear when available. Existing tracking links and bulk handover actions
+remain functional. Email scheduling is separate from live tracking.
+
+Settings → Collection & delivery now has a direct navigation shortcut and
+explains that enabling self-collection requires saving a public location and
+collection hours. Basket and checkout then offer it; collection has no delivery
+fee, travel buffer or delivery-address requirement. Incomplete locations are not
+shown as bookable collection options. Existing orders retain accepted terms.

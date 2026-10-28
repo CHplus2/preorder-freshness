@@ -14,7 +14,7 @@ import GuideBasketResults from './GuideBasketResults';
 import {guideDateBounds} from '../utils/guidePresentation';
 
 export default function GuidedMenu(){
- const [form,setForm]=useState({date:'',quantity:3,menu_mode:'mixed',budget:'',budget_mode:'within',category:''});
+ const [form,setForm]=useState({date:'',quantity:1,menu_mode:'mixed',budget:'',budget_mode:'within',category:''});
  const [data,setData]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[addingPlan,setAddingPlan]=useState(''),[expanded,setExpanded]=useState(false),[selected,setSelected]=useState(''),[success,setSuccess]=useState(null);
  const adding=!!addingPlan;
  const [requestScope,setRequestScope]=useState('');
@@ -49,11 +49,12 @@ export default function GuidedMenu(){
   pending.current=true;setAddingPlan(picked.id);
   const session=shown.session;
   try{
-   const result=await addSuggestedBasket({session,plan:picked.id,date_only:true},{session,plan:picked,quantity:shown.quantity,date_only:true,date:shown.date});
+   const replace=shown.replaces_basket===true;
+   const result=await addSuggestedBasket({session,plan:picked.id,date_only:true,replace_basket:replace},{session,plan:picked,quantity:shown.quantity,date_only:true,date:shown.date,replace_basket:replace});
    if(result){
     for(const item of picked.items.filter(item=>item.add_quantity>0))void recommendationEvent(session,'added',item.id);
     const first=picked.items.find(item=>item.add_quantity>0);if(first)selectRecommendation(session,first.id);
-    setSuccess({account:accountKey,message:result.basket_changed?'This option was already added; review your basket’s current total.':result.already_applied?'This option was already added. No duplicate items were added.':'Suggested items added. Choose or review your time in the basket.'});
+    setSuccess({account:accountKey,message:result.basket_changed?'This option was already applied; review your basket’s current total.':result.already_applied?'This option was already applied. No duplicate items were added.':result.replaced_basket?'Basket replaced with your selected menu. Choose or review your time in the basket.':'Suggested items added. Choose or review your time in the basket.'});
    }
    if(result || isAuthenticated)setData(null);
   }finally{pending.current=false;setAddingPlan('');}
@@ -76,11 +77,11 @@ export default function GuidedMenu(){
    <label>Delivery date<input ref={dateRef} type="date" required min={bounds.first} max={bounds.last} disabled={!!adding} value={form.date} onChange={event=>updateForm({...form,date:event.target.value})}/></label>
    <label>Total items in this order<input type="number" required min="1" max="100" step="1" disabled={!!adding} value={form.quantity} onChange={event=>updateForm({...form,quantity:event.target.value})}/></label>
    <label>Whole-order budget (RM, optional)<input type="number" min="0.01" max="99999999.99" step="0.01" disabled={!!adding} value={form.budget} onChange={event=>updateForm({...form,budget:event.target.value})}/></label>
-   <label>Budget preference<select disabled={adding || !form.budget} value={form.budget_mode} onChange={event=>updateForm({...form,budget_mode:event.target.value})}><option value="within">Within this budget</option><option value="above">Above this budget</option><option value="all">Within and above budget</option></select></label>
+   <label>Budget preference<select aria-label="Budget preference" aria-describedby={!form.budget?helpId+'-budget':undefined} disabled={adding || !form.budget} value={form.budget_mode} onChange={event=>updateForm({...form,budget_mode:event.target.value})}><option value="within">Within this budget</option><option value="above">Above this budget</option><option value="all">Within and above budget</option></select>{!form.budget && <small id={helpId+'-budget'}>Enter a budget to compare within or above it.</small>}</label>
    <label>Preference for new items<select disabled={!!adding} value={form.category} onChange={event=>updateForm({...form,category:event.target.value})}><option value="">Any category</option>{(Array.isArray(categories)?categories:[]).map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
    <button disabled={working || adding || cartLoading || cartUpdating || !!cartError}>{working?'Checking complete baskets…':'Find my options'}</button>
   </form>
-  <p id={helpId} className="guide-input-help">1–100 total items, including anything already in your basket. A meal, box or pack counts as one item. Totals include the current discount and delivery fee. Leave the budget blank for no price limit. Choose a date within 90 days.</p>
+  <p id={helpId} className="guide-input-help">1–100 total items. Allow a mix keeps your basket items; One menu only offers alternatives and asks before replacing your basket. A meal, box or pack counts as one item. Totals include the current discount and delivery fee. Leave the budget blank for no price limit. Choose a date within 90 days.</p>
   {cartError && <p role="alert">Your basket could not be checked. <Link to="/cart">Review your basket</Link> before requesting suggestions.</p>}
   {working && <p role="status">Checking prices and one shared kitchen time for each complete basket…</p>}
   {visibleError && <p className="guide-error" role="alert" tabIndex={-1} ref={errorRef}>{visibleError}</p>}

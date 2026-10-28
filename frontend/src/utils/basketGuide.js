@@ -17,6 +17,8 @@ export function basketGuideResponse(data,request){
   || new Set(data.plans.map(plan=>plan?.id)).size!==data.plans.length || typeof data.message!=='string')throw invalidResponse();
  const menuMode=data.menu_mode ?? 'mixed';
  if(!['mixed','same'].includes(menuMode) || menuMode!==(request.menu_mode ?? 'mixed'))throw invalidResponse();
+ const replaces=data.replaces_basket ?? false;
+ if(typeof replaces!=='boolean' || (replaces && (menuMode!=='same' || !data.basket_known || data.current_quantity<1)))throw invalidResponse();
  orderQuote(data.basket_before,data.current_quantity);
  const budget=request.budget?moneyCents(request.budget):null,mode=request.budget_mode || 'within';
  if((request.budget && (budget===null || budget<1)) || !['within','above','all'].includes(mode) || (mode!=='within' && budget===null) || (!data.basket_known && data.current_quantity!==0))throw invalidResponse();
@@ -40,7 +42,8 @@ export function basketGuideResponse(data,request){
    if(price===null || line===null || price*item.quantity!==line)throw invalidResponse();
    quantity+=item.quantity;old+=item.existing_quantity;added+=item.add_quantity;subtotal+=line;
   }
-  if(quantity!==data.quantity || old!==data.current_quantity || added!==data.quantity-data.current_quantity || subtotal!==moneyCents(plan.totals.subtotal))throw invalidResponse();
+  const kept=replaces?0:data.current_quantity;
+  if(quantity!==data.quantity || old!==kept || added!==data.quantity-kept || subtotal!==moneyCents(plan.totals.subtotal))throw invalidResponse();
   const relation=budget===null?null:moneyCents(plan.totals.total)<=budget?'within':'above';
   if(plan.budget_relation!==relation || (budget!==null && mode!=='all' && relation!==mode))throw invalidResponse();
  }
@@ -54,6 +57,7 @@ export function basketGuideResponse(data,request){
  return data;
 }
 export function basketPlanAdded(value,expected){
+ if((value?.replaced_basket ?? false)!==(expected.replace_basket ?? false))throw invalidResponse();
  if(!value || value.added!==true || value.session!==expected.session || value.plan!==expected.plan.id || value.quantity!==expected.quantity
   || value.added_quantity!==expected.plan.items.reduce((sum,item)=>sum+item.add_quantity,0)
   || typeof value.already_applied!=='boolean' || typeof value.basket_changed!=='boolean')throw invalidResponse();

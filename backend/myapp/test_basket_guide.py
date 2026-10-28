@@ -203,15 +203,21 @@ class BasketGuideTests(TestCase):
         self.assertEqual(data['plans'][0]['totals']['total'],'41.00')
         self.assertEqual(self.guide()['menu_mode'],'mixed')
 
-    def test_same_menu_completes_existing_menu_without_duplicate_additions(self):
+    def test_same_menu_offers_alternatives_and_requires_explicit_replacement(self):
         CartItem.objects.create(user=self.user,product=self.menus[0],quantity=1)
-        data=self.guide(menu_mode='same');self.assertEqual(len(data['plans']),1)
-        row=data['plans'][0]['items'][0];self.assertEqual(row['id'],self.menus[0].pk)
-        self.assertEqual((row['existing_quantity'],row['add_quantity'],row['quantity']),(1,2,3))
-        payload=self.body(data)
-        self.assertEqual(self.client.post(self.url+'add/',payload,format='json').status_code,200)
+        data=self.guide(menu_mode='same');self.assertEqual(len(data['plans']),3)
+        self.assertTrue(data['replaces_basket']);self.assertEqual(data['current_quantity'],1)
+        option=next(p for p in data['plans'] if p['items'][0]['id']==self.menus[1].pk)
+        row=option['items'][0];self.assertEqual((row['existing_quantity'],row['add_quantity'],row['quantity']),(0,3,3))
+        self.assertEqual(list(CartItem.objects.values_list('product_id','quantity')),[(self.menus[0].pk,1)])
+        payload=self.body(data,option)
+        self.assertEqual(self.client.post(self.url+'add/',payload,format='json').status_code,400)
+        payload['replace_basket']=True
+        first=self.client.post(self.url+'add/',payload,format='json');self.assertEqual(first.status_code,200,first.data)
+        self.assertTrue(first.data['replaced_basket'])
         repeated=self.client.post(self.url+'add/',payload,format='json')
-        self.assertTrue(repeated.data['already_applied']);self.assertEqual(CartItem.objects.get(user=self.user).quantity,3)
+        self.assertTrue(repeated.data['already_applied'])
+        self.assertEqual(list(CartItem.objects.values_list('product_id','quantity')),[(self.menus[1].pk,3)])
         self.assertFalse(Order.objects.exists());self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,1000)
 
     def test_same_menu_without_budget_returns_alternatives_without_price_restriction(self):
@@ -222,25 +228,63 @@ class BasketGuideTests(TestCase):
         self.assertEqual({plan['items'][0]['id'] for plan in result.data['plans']},{menu.pk for menu in self.menus})
         self.assertTrue(all(plan['budget_relation'] is None for plan in result.data['plans']))
 
-    def test_existing_mixed_basket_is_preserved_and_cannot_be_called_same_menu(self):
-        for menu in self.menus[:2]:CartItem.objects.create(user=self.user,product=menu,quantity=1)
-        with patch('myapp.views.basket_guide.slots') as capacity:
-            result=self.client.post(self.url,dict(date=str(self.day),quantity=3,menu_mode='same'),format='json')
-        self.assertEqual(result.status_code,200,result.data);self.assertEqual(result.data['plans'],[])
-        self.assertEqual(result.data['empty_reason'],'existing_menu_mix');capacity.assert_not_called()
-        self.assertEqual(sum(CartItem.objects.values_list('quantity',flat=True)),2)
-        allowed=self.guide(menu_mode='mixed');self.assertTrue(allowed['plans'])
-        self.assertEqual(sum(row['add_quantity'] for row in allowed['plans'][0]['items']),1)
+    def test_same_menu_search_does_not_require_clearing_existing_mixed_basket(self):
+        for menu in self.menus[:2]:CartItem.objects.create(user=self.user,product=menu,quantity=2)
+        data=self.guide(menu_mode='same',quantity=1)
+        self.assertTrue(data['replaces_basket']);self.assertEqual(len(data['plans']),3)
+        self.assertEqual(sum(CartItem.objects.values_list('quantity',flat=True)),4)
+        self.assertTrue(all(len(p['items'])==1 and p['items'][0]['quantity']==1 for p in data['plans']))
+        kept=self.guide(menu_mode='mixed',quantity=5)
+        self.assertFalse(kept['replaces_basket'])
+        self.assertEqual(sum(row['existing_quantity'] for row in kept['plans'][0]['items']),4)
+
+    def test_replacement_stale_basket_or_availability_cannot_remove_existing_items(self):
+        CartItem.objects.create(user=self.user,product=self.menus[0],quantity=2)
+        data=self.guide(menu_mode='same',quantity=1);payload=dict(self.body(data),replace_basket=True)
+        CartItem.objects.filter(user=self.user).update(quantity=3)
+        self.assertEqual(self.client.post(self.url+'add/',payload,format='json').status_code,409)
+        self.assertEqual(CartItem.objects.get(user=self.user).quantity,3)
+        data=self.guide(menu_mode='same',quantity=1);payload=dict(session=data['session'],plan=data['plans'][0]['id'],date_only=True,replace_basket=True)
+        with patch('myapp.views.basket_guide.slots',return_value=[]):
+            self.assertEqual(self.client.post(self.url+'add/',payload,format='json').status_code,409)
+        self.assertEqual(CartItem.objects.get(user=self.user).quantity,3)
+
+    def test_replacement_write_failure_rolls_back_deleted_basket_and_receipt(self):
+        CartItem.objects.create(user=self.user,product=self.menus[0],quantity=2)
+        data=self.guide(menu_mode='same');payload=dict(self.body(data),replace_basket=True)
+        with patch.object(CartItem.objects,'update_or_create',side_effect=IntegrityError('Fixture write interrupted')):
+            self.assertEqual(self.client.post(self.url+'add/',payload,format='json').status_code,409)
+        self.assertEqual(list(CartItem.objects.values_list('product_id','quantity')),[(self.menus[0].pk,2)])
+        self.assertNotIn('applied',RecommendationSession.objects.get(pk=data['session']).context)
+
+    def test_addition_session_cannot_be_escalated_to_replacement(self):
+        CartItem.objects.create(user=self.user,product=self.menus[0],quantity=1)
+        data=self.guide();payload=dict(self.body(data),replace_basket=True)
+        self.assertEqual(self.client.post(self.url+'add/',payload,format='json').status_code,400)
+        self.assertEqual(CartItem.objects.get(user=self.user).quantity,1)
+
+    def test_replacement_can_remove_an_unavailable_old_menu_but_not_skip_new_rules(self):
+        CartItem.objects.create(user=self.user,product=self.menus[0],quantity=2)
+        self.menus[0].selling_status='paused';self.menus[0].save()
+        data=self.guide(menu_mode='same',quantity=1)
+        self.assertEqual(len(data['plans']),2)
+        payload=dict(self.body(data),replace_basket=True)
+        self.assertEqual(self.client.post(self.url+'add/',payload,format='json').status_code,200)
+        self.assertNotEqual(CartItem.objects.get(user=self.user).product_id,self.menus[0].pk)
+        data=self.guide(menu_mode='same',quantity=2)
+        chosen=data['plans'][0];Product.objects.filter(pk=chosen['items'][0]['id']).update(selling_status='paused')
+        self.assertEqual(self.client.post(self.url+'add/',dict(self.body(data),replace_basket=True),format='json').status_code,409)
+        self.assertEqual(CartItem.objects.get(user=self.user).quantity,1)
 
     def test_same_menu_respects_capacity_category_and_full_basket_rules(self):
         menu=self.menus[0];menu.daily_capacity=2;menu.save()
         data=self.guide(menu_mode='same');self.assertTrue(all(p['items'][0]['id']!=menu.pk for p in data['plans']))
         CartItem.objects.create(user=self.user,product=menu,quantity=1)
-        data=self.guide(menu_mode='same');self.assertEqual(data['plans'],[])
+        data=self.guide(menu_mode='same');self.assertTrue(data['plans']);self.assertTrue(data['replaces_basket'])
         menu.daily_capacity=20;menu.save();other=Category.objects.create(name='Another fixture category')
         data=self.guide(menu_mode='same',category=other.pk);self.assertEqual(data['plans'],[])
         data=self.guide(menu_mode='same',quantity=1,category=other.pk)
-        self.assertEqual(data['plans'][0]['items'][0]['add_quantity'],0)
+        self.assertEqual(data['plans'],[])
 
     def test_same_menu_budget_filter_and_mixed_fallback_are_explicit(self):
         data=self.guide(menu_mode='same',budget='100.00',budget_mode='above')
@@ -288,6 +332,42 @@ class BasketGuideTests(TestCase):
 
 
 class BasketGuideConcurrencyTests(TransactionTestCase):
+    @skipUnlessDBFeature('has_select_for_update')
+    def test_two_replacement_sessions_cannot_overwrite_each_other(self):
+        user=User.objects.create_user('parallel-replacement-buyer');Storefront.objects.create(pk=1)
+        raw=RawMaterial.objects.create(name='Replacement fixture rice',unit='g');menus=[]
+        for n in range(3):
+            menu=Product.objects.create(name=f'Replacement meal {n}',price=10);menus.append(menu)
+            ProductIngredient.objects.create(product=menu,raw_material=raw,quantity_required=10)
+        CartItem.objects.create(user=user,product=menus[0],quantity=1)
+        client=APIClient();client.force_authenticate(user);day=timezone.localdate()+timedelta(days=3)
+        delivery=str(day)+'T15:00:00+08:00';payloads=[]
+        with patch('myapp.views.basket_guide.slots',return_value=[dict(delivery_at=delivery)]):
+            for selected in menus[1:]:
+                data=client.post('/api/menu/basket-guide/',dict(date=str(day),quantity=2,menu_mode='same'),format='json').data
+                option=next(p for p in data['plans'] if p['items'][0]['id']==selected.pk)
+                payloads.append(dict(session=data['session'],plan=option['id'],delivery_at=delivery,replace_basket=True))
+        entered,release=Event(),Event()
+        def scheduled(*args,**kwargs):
+            entered.set()
+            if not release.wait(5):raise RuntimeError('Fixture synchronization timeout')
+            return {}
+        def confirm(payload):
+            close_old_connections()
+            try:
+                actor=APIClient();actor.force_authenticate(user);actor.cookies=client.cookies.copy()
+                return actor.post('/api/menu/basket-guide/add/',payload,format='json')
+            finally:close_old_connections()
+        with patch('myapp.services.scheduling.schedule_order',side_effect=scheduled) as scheduler,ThreadPoolExecutor(max_workers=2) as pool:
+            first=pool.submit(confirm,payloads[0])
+            try:
+                self.assertTrue(entered.wait(5));second=pool.submit(confirm,payloads[1])
+            finally:release.set()
+            results=[first.result(timeout=10),second.result(timeout=10)]
+        self.assertEqual([r.status_code for r in results],[200,409],[r.data for r in results])
+        self.assertEqual(scheduler.call_count,1)
+        self.assertEqual(list(CartItem.objects.values_list('product_id','quantity')),[(menus[1].pk,2)])
+
     @skipUnlessDBFeature('has_select_for_update')
     def test_overlapping_confirmations_add_the_complete_basket_once(self):
         user=User.objects.create_user('parallel-basket-buyer');Storefront.objects.create(pk=1)

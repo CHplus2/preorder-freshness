@@ -38,6 +38,8 @@ try{
  const full=results({current_quantity:3,plans:[{...data.plans[0],items:[{...data.plans[0].items[0],add_quantity:0,existing_quantity:3}]}]});assert.match(full,/Review basket/);assert.doesNotMatch(full,/Add 3 items of/);
  const topUp=results({current_quantity:1,plans:[{...data.plans[0],items:[{...data.plans[0].items[0],add_quantity:2,existing_quantity:1}]}]});assert.match(topUp,/1 option/);assert.match(topUp,/Your basket already contains Rice meal/);assert.match(topUp,/topping up this menu only/);assert.match(topUp,/Add 2 items of Rice meal/);
  const soleMatch=results({plans:[data.plans[0]]});assert.match(soleMatch,/Only one alternative was found/);assert.doesNotMatch(soleMatch,/Your basket already contains/);assert.match(singles,/3 alternatives/);assert.match(guide,/Leave the budget blank for no price limit/);
+ const replacement=results({replaces_basket:true,current_quantity:2});assert.match(replacement,/alternatives to your current 2-item basket/);assert.match(replacement,/then confirm replacement/);assert.equal((replacement.match(/Choose this menu/g)||[]).length,3);assert.doesNotMatch(replacement,/topping up this menu only/);
+ assert.match(guide,/Enter a budget to compare within or above it/);assert.match(guide,/type="number"[^>]*value="1"/);
  assert.match(results({}, {authenticated:false}),/Sign in to add Noodles/);
  console.log('Recommendation UI: visible entry point, loading distinction, shared evidence/photo cards and optional date refinement passed.');
 }finally{await server.close();}

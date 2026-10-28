@@ -5,8 +5,8 @@ export function basketSearchDescription(data,category,formatPrice){
  const budget=data.budget;
  const price=budget?`${budget.mode==='above'?'Above':budget.mode==='all'?'Within and above':'Up to'} ${formatPrice(budget.amount)} whole-order total`:'No budget limit';
  return {title:`${deliveryDateLabel(data.date)} · ${data.quantity} ${data.quantity===1?'item':'items'} total`,
-  details:`${price} · ${data.menu_mode==='same'?'One menu only':'Allow a mix'} · ${category?`New items: ${category}`:'Any category for new items'}`,
-  existing:data.current_quantity?`${data.current_quantity} ${data.current_quantity===1?'item already':'items already'} in your basket`:''};
+  details:`${price} · ${data.menu_mode==='same'?'One menu only':'Allow a mix'} · ${category?`${data.replaces_basket?'Menu category':'New items'}: ${category}`:data.replaces_basket?'Any category':'Any category for new items'}`,
+  existing:data.current_quantity?`${data.current_quantity} ${data.current_quantity===1?'item already':'items already'} in your basket${data.replaces_basket?' · replaced only after you confirm':''}`:''};
 }
 
 export function basketRecoveryActions(data,category){

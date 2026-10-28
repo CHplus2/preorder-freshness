@@ -34,7 +34,7 @@
 @media(max-width:700px){
  .checkout-submit-dock{position:fixed;z-index:112;left:0;right:0;bottom:0;display:flex;align-items:center;gap:14px;background:#fffef8;border-top:1px solid #dbe2d3;padding:12px 18px max(12px,env(safe-area-inset-bottom));box-shadow:0 -5px 25px #2940240c}
  .checkout-submit-dock .checkout-mobile-total{display:grid;gap:4px;min-width:85px;color:#2b4d33}
- .checkout-mobile-total>span{font-size:10px;color:#697b5d}.checkout-mobile-total>strong{font-size:18px}
+ .checkout-mobile-total>span{font-size:12px;color:#52634f}.checkout-mobile-total>strong{font-size:18px}
  .checkout-submit-dock>.checkout-submit{font-size:12px;flex:1;width:auto;min-height:48px;margin:0;padding:12px}
  .checkout-container .checkout-title{font-size:36px}
 }

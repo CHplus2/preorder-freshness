@@ -28,6 +28,16 @@ assert.throws(()=>basketGuideResponse({...response,menu_mode:'same'},{...request
 assert.throws(()=>basketGuideResponse(response,{...request,menu_mode:'same'}));
 const same={...response,menu_mode:'same',plans:[{...plan,items:[{...item(1,'12.00'),quantity:3,add_quantity:3,line_total:'36.00'}],totals:{...totals,subtotal:'36.00',total:'41.00'}}]};
 assert.equal(basketGuideResponse(same,{...request,menu_mode:'same'}).menu_mode,'same');
+const replacement={...same,replaces_basket:true,current_quantity:1,basket_before:existing.basket_before};
+assert.equal(basketGuideResponse(replacement,{...request,menu_mode:'same'}).plans.length,1);
+assert.throws(()=>basketGuideResponse({...replacement,menu_mode:'mixed'},request));
+assert.throws(()=>basketGuideResponse({...replacement,current_quantity:0},{...request,menu_mode:'same'}));
+assert.throws(()=>basketGuideResponse({...replacement,basket_known:false},{...request,menu_mode:'same'}));
+const replacementExpected={...expected,plan:same.plans[0],replace_basket:true};
+const replacementReceipt={...added,totals:same.plans[0].totals,replaced_basket:true};
+assert.equal(basketPlanAdded(replacementReceipt,replacementExpected),replacementReceipt);
+assert.throws(()=>basketPlanAdded({...replacementReceipt,replaced_basket:false},replacementExpected));
+assert.throws(()=>basketPlanAdded(replacementReceipt,{...replacementExpected,replace_basket:false}));
 assert.throws(()=>basketGuideResponse(same,{...request,menu_mode:'mixed'}));
 assert.match(basketGuideEmpty('existing_menu_mix',3,2,'same'),/already contains different menus/);
 

@@ -355,3 +355,43 @@ states that a blank optional budget imposes no price limit. Pricing, candidate
 selection and reminder behavior are unchanged. Regression coverage checks
 three same-menu alternatives without a budget, existing-menu top-ups and the
 corresponding result explanations.
+
+### Independent same-menu alternatives and collection visibility
+
+The user subsequently asked to implement the alternatives while retaining an
+existing basket. Same-menu searches now evaluate up to three independent menus,
+instead of being restricted to the basket's existing menu. A nonempty basket is
+changed only after the customer chooses a card and confirms an inline replacement
+showing menu, quantity and total. Cancel leaves the basket alone. The server
+requires a matching consent flag, rechecks the whole original basket, current
+quote and kitchen availability, and replaces rows atomically. Failure rolls back
+both deletion and the new receipt; retry remains idempotent. Mixed-mode additions
+continue to preserve existing items. Smaller replacement quantities and removing
+an unavailable old menu are supported without bypassing the new menu's rules.
+
+The default quantity is one, and the optional budget's disabled comparison field
+now explains how to enable it. Settings has direct collection/delivery and
+courier shortcuts. Collection help explains saving the location and hours;
+customer options exclude an incomplete collection location and explain when
+collection is not offered. The actual settings, quote, zero-fee, no-address and
+timing behavior are tested through basket and checkout.
+
+The owner confirmed no approved GrabExpress API account is available and asked
+to finish website work first. Settings explicitly shows manual courier status,
+links to the existing delivery-run/bulk-action workflow and describes required
+provider access. Customer tracking still uses owner-entered references/links;
+there is no automatic booking or fabricated event endpoint. Implementation
+requirements remain in `docs/courier-integration-readiness.md`.
+
+Validation: the full backend suite passes (797 tests, 23 platform-specific
+skips); 50 focused PostgreSQL recommendation/fulfilment tests and both
+PostgreSQL concurrency tests pass without skips. Frontend lint, recommendation,
+checkout, UX, unit and planner suites plus the production build pass. The real
+local API/browser journey verifies three alternatives with an existing basket,
+confirmation/cancel focus, exact replacement and idempotent retry, a smaller
+replacement for a mixed basket, stale-cart rejection, preserved mixed additions,
+owner-enabled pickup through basket and checkout, and the courier status panel.
+Seven full-page WCAG/overflow checks pass at 1440, 390 and 320 pixels. Mobile
+checkout's small total label was enlarged and darkened after a contrast failure.
+Only fictional isolated database records were used; no production order,
+payment, email or courier booking was created. No migration is required.

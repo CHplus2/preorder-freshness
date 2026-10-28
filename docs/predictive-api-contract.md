@@ -5,15 +5,16 @@ Dashboard branch: `feature/ai-dashboard`.
 
 ## Recommendation result presentation — 28 October 2026
 
-This is a frontend-only presentation change; API payloads, session binding,
-pricing, ranking, capacity and atomic-add rules are unchanged. One-menu searches
+The original card-layout change was presentation-only. The independent
+same-menu replacement flow documented below adds an explicit consent flag;
+pricing, ranking and capacity rules remain unchanged. One-menu searches
 show all returned menu alternatives together. Each card contains final quantity,
 food subtotal, whole-order total, current discount/delivery, budget comparison
 and its own Add action. There is no numbered basket selector or separate Add
 footer in this view. A one-item request uses this direct-card view too, since
 one item cannot form a multi-menu basket. Existing items count toward the target;
-only the remaining quantity is added. A completed target has a Review basket
-link instead of an Add button.
+only the remaining quantity is added in mixed mode. Same-menu alternatives with
+an existing basket use the explicit replacement flow below.
 
 Mixed baskets keep one selected complete option and one shared Add action in a
 compact, full-width order bar. Basket selectors show whole-order prices. Native
@@ -22,7 +23,8 @@ visible keyboard focus. No delivery-hour selection is introduced in the finder.
 
 Every card action passes its own plan ID, which the parent resolves against the
 current validated response before sending the existing `{session,plan,date_only:true}`
-request. All alternative Add actions are disabled while one is in flight. The
+request, plus `replace_basket:true` when replacement is confirmed. All alternative
+Add actions are disabled while one is in flight. The
 server's existing fingerprint and idempotency checks remain authoritative; no
 order, preparation reservation, stock deduction or payment occurs at this step.
 
@@ -32,15 +34,23 @@ The finder now accepts optional `menu_mode: "mixed" | "same"`, default `mixed`
 for existing clients. Mixed means a mix is allowed, including repeated items;
 it prefers variety but does not promise multiple distinct menus when choices
 are limited. Same requires the **entire final basket** to contain one menu,
-with the requested total quantity. It preserves an existing single-menu basket
-and adds only the remainder, respecting category, date, budget and daily limits.
-If existing items contain different menus, it returns `existing_menu_mix` with
-no plan or mutation. The UI offers explicit Allow a mix or basket review. A
-completed one-menu basket stays review-only. The response and saved session
+with the requested total quantity. It searches independently of existing basket
+contents and can return up to three alternatives, respecting category, date,
+budget and daily limits. With a nonempty basket, `replaces_basket:true` requires
+explicit replacement confirmation. Searching never changes the basket. Existing
+mixed baskets and quantities above the requested target do not block this search. The response and saved session
 context echo `menu_mode`; the browser refuses a different mode or a same-mode
 plan with multiple menu rows. Responses omitting mode remain compatible only
 with default mixed requests. Ranking and the existing bounded search limits
 are unchanged.
+
+The customer form starts at one item. Budget remains optional; its comparison
+selector is disabled with an explanation until a budget is entered. If
+`replaces_basket:true`, choosing a card opens an inline confirmation naming the
+replacement menu, final count and total. Cancel keeps the basket and restores
+focus; confirmation sends the explicit replacement flag. Mixed mode never
+silently removes existing items. The backend rejects a missing or mismatched
+replacement flag and validates the original basket fingerprint before deletion.
 
 The finder previews **date availability** without asking the customer to choose
 an hour. `POST /api/menu/basket-guide/add/` additionally supports
@@ -136,7 +146,8 @@ request/response schemas, database models and forecast artifacts are unchanged.
 The storefront date finder now uses `POST /api/menu/basket-guide/`, version
 `mixed-basket-guide-v1`. Quantity is the **final total item count for one basket**,
 not a count per recommended menu. Different menus can be mixed. Existing signed-in
-basket items count toward that target and are preserved. For an empty basket,
+basket items count toward that target and are preserved in mixed mode. Same mode
+can replace the basket only after confirmation. For an empty basket,
 quantity 3 can mean one rice meal, one noodle meal and one box of cookies. A box
 or pack is one selling item, not its contents or a diner count.
 
@@ -144,12 +155,12 @@ Input: `{date, quantity, menu_mode?, budget?, budget_mode?, category?, delivery_
 delivery_area?}`. Date uses Malaysia calendar days, today through +90 inclusive;
 quantity is integer 1–100. Optional budget is a positive two-decimal money value.
 `budget_mode` is `within` (default, total <= budget), `above` (total > budget), or
-`all`; above/all require a budget. Category applies to **new additions**. Budget
+`all`; above/all require a budget. Category applies to **new additions** in mixed mode and the full alternative in same mode. Budget
 is the **whole-order total after current bulk discounts and delivery fees**,
 including existing basket items, using the same quote rules as checkout.
 
 The response contains `{session, version, date, quantity, menu_mode, delivery_method,
-basket_known, current_quantity, basket_before, budget, plans, empty_reason,
+basket_known, current_quantity, basket_before, replaces_basket, budget, plans, empty_reason,
 price_evidence, checked_baskets, pool_limit, checked_limit, message}`. Budget is
 null or `{amount, mode, basis:"whole_order_after_discount_and_delivery"}`. Each
 of at most three alternative complete plans contains `{id, items, totals,
@@ -173,7 +184,8 @@ not every possible catalogue combination or verified capacity.
 
 Empty reasons are `quantity_below_basket`, `existing_menu_mix`, `basket_needs_review`, `no_price_match`,
 `no_kitchen_times` and `no_menu_match`. An already complete target returns a
-review-only basket. A target below existing quantity never removes items.
+review-only basket in mixed mode. A target below existing quantity never removes
+items during search; same-menu replacement requires explicit confirmation.
 Guests preview an empty basket and must sign in and search again before adding.
 
 `POST /api/menu/basket-guide/add/` accepts `{session, plan, delivery_at}` or
@@ -184,13 +196,21 @@ that saved complete plan, while date-only additions recheck the whole searched
 day. A user-row lock serializes cart changes; storefront, recommendation
 session and product rows are also locked. Current basket, menu/price, promotion,
 fulfilment terms and whole-basket capacity are rechecked before an atomic write
-of additions only. Stale quotes/capacity return 409 without partial additions.
+of additions, or an explicitly confirmed replacement. Stale quotes/capacity return
+409 without changing the basket. For replacement sessions, the request must include
+`replace_basket:true`; an addition session cannot be escalated into replacement.
+Replacement ignores old menu eligibility when choosing new food, but fingerprints
+the entire old basket and deletes/recreates its rows only inside the successful
+locked transaction after price/capacity checks. A failed write rolls back the
+original basket and the session receipt together.
 The session stores a committed receipt. Repeating the same plan/selection type (and
 explicit time, where supplied) within the
 24-hour retained session is idempotent; a different option/time is rejected.
 A replay after later cart changes reports `basket_changed:true` without rewriting
 it. Success returns `{added,session,plan,already_applied,basket_changed,quantity,
-added_quantity,date_only,date,delivery_at,totals}`. Requests cannot provide prices or quantities.
+added_quantity,replaced_basket,date_only,date,delivery_at,totals}`. Replacement
+plans use `existing_quantity:0` and `add_quantity:quantity`, with the real old
+quantity retained in `current_quantity` and `basket_before`. Requests cannot provide prices or quantities.
 
 The browser verifies item counts, unit/line/quote arithmetic, requested budget
 relation and add receipts. Basket/account/fulfilment changes invalidate displayed

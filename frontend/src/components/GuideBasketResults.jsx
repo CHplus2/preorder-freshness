@@ -1,4 +1,4 @@
-import {useId} from 'react';
+import {useEffect,useId,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {quantityLabel,unitLabel} from '../utils/sellingDetails';
 import {moneyCents} from '../utils/guideBudget';
@@ -14,11 +14,26 @@ function Fees({data,plan,formatPrice}){
  const delivery=data.delivery_method==='pickup'?'Collection':Number(plan.totals.shipping)===0?'Free delivery':`${formatPrice(plan.totals.shipping)} delivery`;
  return <p className="guide-card-fees">{discount && <>−{formatPrice(plan.totals.discount)} discount · </>}{delivery}{data.delivery_method==='pickup' && ` · ${formatPrice(plan.totals.shipping)}`}</p>;
 }
-function Action({plan,onAdd,onReview,authenticated,busyId,disabled,card=false}){
+function Action({plan,onAdd,onReview,authenticated,busyId,disabled,card=false,replace=false,currentQuantity=0,formatPrice}){
+ const [confirming,setConfirming]=useState(false);
+ const confirmId=useId();
+ const chooseRef=useRef(null),confirmRef=useRef(null),wasConfirming=useRef(false);
+ useEffect(()=>{
+  if(confirming)confirmRef.current?.focus();
+  else if(wasConfirming.current)chooseRef.current?.focus();
+  wasConfirming.current=confirming;
+ },[confirming]);
  const count=plan.items.reduce((sum,item)=>sum+item.add_quantity,0);
  const className=card?'menu-recommendation-add':'guide-add-basket';
  if(!count)return <Link className={className} to="/cart" onClick={onReview}>Review basket</Link>;
  const name=card?plan.items[0].name:'';
+ if(replace && authenticated)return <div className="guide-replace-action">
+  {!confirming?<button ref={chooseRef} className={className} type="button" disabled={disabled || !!busyId} onClick={()=>setConfirming(true)} aria-label={`Review replacing basket with ${count} items of ${name}`}>Choose this menu</button>:<div className="guide-replace-confirm" role="group" aria-labelledby={confirmId}>
+   <p id={confirmId}>Replace your current {currentQuantity}-item basket with {count} {count===1?'item':'items'} of <strong>{name}</strong> for <strong>{formatPrice(plan.totals.total)}</strong>? Nothing is ordered or paid yet.</p>
+   <button ref={confirmRef} className={className} type="button" disabled={disabled || !!busyId} onClick={()=>onAdd(plan)}>{busyId===plan.id?'Replacing…':'Confirm replacement'}</button>
+   <button type="button" disabled={!!busyId} onClick={()=>setConfirming(false)}>Keep current basket</button>
+  </div>}
+ </div>;
  return <button className={className} type="button" disabled={disabled || !!busyId} onClick={()=>onAdd(plan)} aria-label={authenticated?`Add ${count} ${count===1?'item':'items'}${name?` of ${name}`:''} to basket`:`Sign in to add${name?` ${name}`:' this basket'}`}>{busyId===plan.id?'Adding…':!authenticated?'Sign in to add':`Add ${count} ${count===1?'item':'items'} to basket`}</button>;
 }
 export default function GuideBasketResults({data,selectedId,onSelect,onAdd,onReview,onView,authenticated=false,busyId='',disabled=false,formatPrice,rangeNotice=''}){
@@ -26,13 +41,13 @@ export default function GuideBasketResults({data,selectedId,onSelect,onAdd,onRev
  if(!plan)return null;
  const count=data.quantity,same=data.menu_mode==='same' || count===1;
  const nextStep=`Choose your ${data.delivery_method==='pickup'?'collection':'delivery'} time in the basket or at checkout. Availability is checked again before ordering.`;
- const actionProps={onAdd,onReview,authenticated,busyId,disabled};
+ const actionProps={onAdd,onReview,authenticated,busyId,disabled,replace:data.replaces_basket===true,currentQuantity:data.current_quantity,formatPrice};
  const cardFor=(item,children,key=item.id)=><MenuRecommendationCard compact key={key} menu={item} priceLabel={`${formatPrice(item.price)} / ${unitLabel(item.selling_details)}`} onView={()=>onView?.(item.id)}>{children}</MenuRecommendationCard>;
  if(same)return <section className="guide-one-menu-results" aria-labelledby={title}>
   <div className="guide-basket-heading"><h3 id={title}>{count===1?'Choose a menu':'Choose one menu for your order'}</h3><span>{data.plans.length} {data.plans.length===1?'option':'alternatives'}</span></div>
-  <p className="guide-results-intro">{data.current_quantity===count?`Your ${count}-item basket is complete. Review it to continue.`:`Choose one card for your ${count}-item order. Prices include ${data.delivery_method==='pickup'?'collection':'delivery'}.`}</p>
-  {data.current_quantity>0 && data.current_quantity<count && <p className="guide-input-help">Your basket already contains {plan.items[0].name}. Keeping every item the same menu means topping up this menu only. <Link to="/cart">Review your basket</Link> to remove it before searching for other menus, or choose “Allow a mix”.</p>}
-  {!data.current_quantity && data.plans.length===1 && <p className="guide-input-help">Only one alternative was found for this date, quantity and preferences. Up to three appear when more menus match.</p>}
+  <p className="guide-results-intro">{!data.replaces_basket && data.current_quantity===count?`Your ${count}-item basket is complete. Review it to continue.`:`Choose one card for your ${count}-item order. Prices include ${data.delivery_method==='pickup'?'collection':'delivery'}.`}</p>
+  {data.replaces_basket?<p className="guide-input-help">These are alternatives to your current {data.current_quantity}-item basket. Choose a menu, then confirm replacement. To keep your existing items and add others, choose “Allow a mix”.</p>:data.current_quantity>0 && data.current_quantity<count && <p className="guide-input-help">Your basket already contains {plan.items[0].name}. Keeping every item the same menu means topping up this menu only. <Link to="/cart">Review your basket</Link> to remove it before searching for other menus, or choose “Allow a mix”.</p>}
+  {data.plans.length===1 && (!data.current_quantity || data.replaces_basket) && <p className="guide-input-help">Only one alternative was found for this date, quantity and preferences. Up to three appear when more menus match.</p>}
   {rangeNotice && <p className="guide-range-notice" role="status">{rangeNotice}</p>}
   <div className="guide-results guide-one-menu-cards">{data.plans.map(option=>{
    const item=option.items[0];

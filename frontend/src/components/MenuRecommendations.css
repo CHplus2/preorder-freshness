@@ -109,6 +109,7 @@
 .guide-card-order-total{display:flex;align-items:baseline;justify-content:space-between;gap:12px;color:#294d35;font:500 13px/1.6 system-ui,sans-serif}
 .guide-card-order-total strong{font-weight:650;font-size:18px;white-space:nowrap}
 .guide-card-fees{font:400 12px/1.65 system-ui,sans-serif;color:#53694c;margin:0}
+.guide-replace-action{width:100%}.guide-replace-action>button{width:100%}.guide-replace-confirm{display:grid;gap:10px;padding:12px;border:1px solid #bfceb9;border-radius:10px;background:#f5f8f1}.menu-storefront .guide-replace-confirm p{margin:0;font:400 13px/1.65 system-ui,sans-serif;overflow-wrap:anywhere}.guide-replace-confirm>button{min-height:44px;white-space:normal}.guide-replace-confirm>button:last-child{background:#fff;color:#28543a;border:1px solid #bfceb9;border-radius:8px;padding:10px}
 .guide-one-menu-cards .menu-recommendation-add{box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none}
 .guide-one-menu-cards .menu-recommendation-add:disabled,.guide-add-basket:disabled{opacity:.65;cursor:wait}
 .guide-one-menu-cards .guide-order-budget{font-size:12px}

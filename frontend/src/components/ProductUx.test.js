@@ -72,6 +72,11 @@ try{
  assert.doesNotMatch(choice({value:'pickup'}),/Choose your area/);
  assert.match(choice({value:'standard'}),/Choose your area/);
  assert.match(choice({store:{delivery_enabled:false,pickup_enabled:false}}),/not accepting delivery or collection/);
+ const deliveryOnly=choice({store:{delivery_enabled:true,pickup_enabled:false}});assert.match(deliveryOnly,/Self-collection is not currently offered/);assert.doesNotMatch(deliveryOnly,/>Self-collection<\/strong>/);
+ assert.match(choice({value:'standard'}),/>Self-collection<\/strong>/);
+ assert.doesNotMatch(choice({store:{delivery_enabled:true,pickup_enabled:true,pickup_location:'   '}}),/>Self-collection<\/strong>/);
+ const {default:CourierStatus}=await server.ssrLoadModule('/src/components/CourierConnectionStatus.jsx');
+ const courierStatus=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(CourierStatus)));assert.match(courierStatus,/no courier API connected/);assert.match(courierStatus,/verified courier events/);assert.match(courierStatus,/\/admin\/planner\?view=handover/);
  const {default:OrderFulfilment}=await server.ssrLoadModule('/src/components/OrderFulfilment.jsx');
  const collection=renderToStaticMarkup(createElement(OrderFulfilment,{order:{delivery_method:'pickup',fulfilment_snapshot:{pickup_location:'Accepted location'}}}));
  assert.match(collection,/Accepted location/);
