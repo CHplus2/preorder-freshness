@@ -225,3 +225,42 @@ without another search. Change it in the basket, continue and verify the new
 time. Change an item quantity: the previous choice should no longer be used, and
 fresh available times should be offered. All displayed totals must still match
 food minus discount plus current delivery.
+
+
+## Finder budget/category recovery — 28 October 2026
+
+The finder previously offered Compare both budget ranges for every empty result,
+even a category miss, an unavailable kitchen date or an existing basket exceeding
+the requested quantity. It also omitted a clear submitted-date summary beside
+results. Recovery is now specific to the failure: try Any category, focus another
+date, use the existing basket count (up to the supported 100-item total), or
+explicitly compare both price ranges. Existing items and the numerical budget
+are preserved. No alternative is automatically added or accepted.
+
+Results repeat date, total count, budget mode, new-item category and existing
+count. Price-only explanations use generated basket ranges, not claims about
+every possible combination. A combined budget search which finds only one range
+states that limitation plainly. Cart updates block new searches, and errors
+from a different basket scope are hidden. Client validation refuses duplicate,
+wrong-Malaysia-day, ranged or oversized slot lists for the exact-time finder.
+The API, ranking, forecast models, checkout and database schema are unchanged.
+
+Validation: frontend lint, recommendation, checkout and unit suites and production
+build pass. Focused tests exercise the action matrix, budget/category/date copy,
+price-evidence boundaries and exact-date/unique-slot guards. The real local API/
+browser journey covers an impossible above-budget search, explicit range
+comparison, an empty category and Any-category recovery without budget relaxation,
+focus-only date changes, an existing four-item basket against a three-item target,
+a date blocked by lead time, malformed next-day slots, stale-error hiding and a
+successful two-item addition completing a three-item mixed basket with its chosen
+time. Eight full-page WCAG/overflow checks pass at 1440, 390 and 320 pixels.
+Fictional local records and blocked external browser requests isolate these tests;
+no real order, payment, email or courier action is performed.
+
+Manual acceptance after deployment is Ready: request an above-budget basket that
+has no match and check that the proposed price range explains it. Comparing both
+ranges must clearly show the broadened preference. An empty category should offer
+Any category while keeping date, quantity and budget. With four items already in
+the basket, a target of three should offer Use 4 total items or Review basket,
+without adding anything. Kitchen-time misses should offer another date rather
+than an irrelevant budget button.

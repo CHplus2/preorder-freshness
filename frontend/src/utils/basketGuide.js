@@ -1,5 +1,6 @@
 import {invalidResponse,responseSlots} from './apiResponse.js';
 import {moneyCents} from './guideBudget.js';
+import {deliveryInput} from './deliverySlots.js';
 import {validSellingDetails} from './sellingDetails.js';
 const count=value=>Number.isSafeInteger(value) && value>=0;
 export function orderQuote(value,quantity=null){
@@ -23,6 +24,9 @@ export function basketGuideResponse(data,request){
  if((data.plans.length>0)!==(data.empty_reason===null))throw invalidResponse();
  for(const plan of data.plans){
   if(!/^bp_[0-9a-f]{16}$/.test(plan.id) || !Array.isArray(plan.items) || !plan.items.length || new Set(plan.items.map(item=>item?.id)).size!==plan.items.length || !responseSlots(plan).length)throw invalidResponse();
+  const slots=responseSlots(plan);
+  if(slots.length>3 || new Set(slots.map(slot=>Date.parse(slot.delivery_at))).size!==slots.length
+   || slots.some(slot=>deliveryInput(slot.delivery_at).slice(0,10)!==data.date || slot.arrival_window!=null))throw invalidResponse();
   orderQuote(plan.totals,data.quantity);
   let quantity=0,old=0,added=0,subtotal=0;
   for(const item of plan.items){
@@ -56,6 +60,7 @@ export function basketPlanAdded(value,expected){
  return value;
 }
 export function basketGuideEmpty(reason,quantity,current){
+ if(reason==='quantity_below_basket' && current>100)return `Your basket already has ${current} items. This finder supports up to 100 total items; edit your basket to use it.`;
  if(reason==='quantity_below_basket')return `Your basket already has ${current} items. Choose a total of at least ${current}, or edit your basket first.`;
  if(reason==='basket_needs_review')return 'An existing basket item needs review for this date. Review your basket before building a complete order.';
  if(reason==='no_price_match')return 'No proposed basket matches this budget range. Try another budget or compare both ranges.';

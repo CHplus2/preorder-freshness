@@ -82,3 +82,13 @@
 .guide-success{padding:14px;border:1px solid #bfceba;border-radius:8px;background:#f0f6ea;font-size:14px;line-height:1.6}
 @media(max-width:600px){.guide-order-footer{padding:14px}.guide-order-breakdown>.guide-order-total{font-size:15px}.guide-basket-heading{gap:10px}.guide-basket-options{width:100%}.guide-basket-options button{flex:1}.menu-storefront .guide-results{gap:12px}}
 .guide-basket-options button{display:grid;gap:3px;justify-items:center;min-width:0}.guide-basket-options button strong{font-size:14px;font-weight:600;white-space:nowrap}.guide-basket-options button small{font-size:12px;font-weight:400;line-height:1.5;color:inherit}
+
+/* Keep the submitted date, quantity and budget beside their results. */
+.menu-storefront .guide-search-summary{display:grid;gap:5px;padding:14px 16px;margin:20px 0 16px;border:1px solid #d4dfcf;border-radius:10px;background:#f3f7ee;font:400 13px/1.65 system-ui,sans-serif;color:#405b42;overflow-wrap:anywhere}
+.guide-search-summary strong{font-size:14px;font-weight:600;color:#294d35}
+.guide-search-summary span{display:block}
+.menu-storefront .guide-price-explanation,.menu-storefront .guide-range-notice{font:400 13px/1.7 system-ui,sans-serif;color:#4b6047;margin:12px 0}
+.guide-recovery-actions{align-items:center;margin-top:14px}
+.menu-storefront .guide-recovery-actions button{min-height:44px;margin:0;padding:10px 14px;border:1px solid #b8cbb4;border-radius:8px;background:#fff;color:#2c5438;font:600 13px/1.5 system-ui,sans-serif;box-shadow:none;transform:none;white-space:normal}
+.guide-recovery-actions a{font-size:13px;color:#2c5438;padding:10px 0;min-height:44px;box-sizing:border-box}
+@media(max-width:480px){.menu-storefront .guide-search-summary{padding:12px}.guide-recovery-actions{align-items:stretch}.guide-recovery-actions button{flex:1 1 140px}}

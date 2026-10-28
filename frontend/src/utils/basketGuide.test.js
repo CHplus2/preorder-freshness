@@ -6,6 +6,9 @@ const item=(id,price)=>({id,name:`Fixture meal ${id}`,image_url:'',price,quantit
 const plan={id:'bp_1234567890abcdef',items:[item(1,'12.00'),item(2,'8.50'),item(3,'10.00')],totals,budget_relation:'within',slots:[{delivery_at:'2026-11-01T15:00:00+08:00'}]};
 const response={session:'fixture-session',version:'mixed-basket-guide-v1',date:request.date,quantity:3,delivery_method:'standard',basket_known:true,current_quantity:0,basket_before:{quantity:0,subtotal:'0.00',discount:'0.00',shipping:'0.00',total:'0.00'},budget:{amount:'100.00',mode:'within',basis:'whole_order_after_discount_and_delivery'},plans:[plan],empty_reason:null,price_evidence:{scope:'generated_combinations_before_capacity',considered_baskets:3,within_count:3,above_count:0,minimum_order_total:'30.50',maximum_order_total:'41.00'},message:'Fixture bounded search'};
 assert.equal(basketGuideResponse(response,request),response);
+for(const slots of [[...plan.slots,...plan.slots],[{delivery_at:'2026-11-02T15:00:00+08:00'}],[{delivery_at:'2026-11-01T15:00:00+08:00',arrival_window:{minutes:60}}],[{delivery_at:'2026-11-01T15:00:00+08:00',arrival_window:{minutes:0}}],Array.from({length:4},(_,i)=>({delivery_at:`2026-11-01T${String(12+i).padStart(2,'0')}:00:00+08:00`}))])assert.throws(()=>basketGuideResponse({...response,plans:[{...plan,slots}]},request));
+assert.equal(basketGuideResponse({...response,plans:[{...plan,slots:[{delivery_at:'2026-11-01T07:00:00Z'}]}]},request).plans[0].slots.length,1);
+
 for(const value of [null,{}, {...response,quantity:9},{...response,budget:{...response.budget,basis:'per_menu'}},{...response,current_quantity:1},{...response,plans:[],empty_reason:null}, {...response,price_evidence:{...response.price_evidence,above_count:1}}])assert.throws(()=>basketGuideResponse(value,request));
 for(const changes of [{quantity:3},{line_total:'36.00'},{add_quantity:3},{price:'36.00'}])assert.throws(()=>basketGuideResponse({...response,plans:[{...plan,items:[{...plan.items[0],...changes},...plan.items.slice(1)]}]},request));
 assert.throws(()=>orderQuote({...totals,total:'30.50'},3));
@@ -16,7 +19,7 @@ const expected={session:response.session,plan,quantity:3,delivery_at:plan.slots[
 const added={added:true,session:response.session,plan:plan.id,already_applied:false,basket_changed:false,quantity:3,added_quantity:3,delivery_at:expected.delivery_at,totals};
 assert.equal(basketPlanAdded(added,expected),added);
 for(const value of [{...added,quantity:9},{...added,added_quantity:9},{...added,session:'different'},{...added,totals:{...totals,total:'100.00'}},{...added,delivery_at:'2026-11-01T16:00:00+08:00'}])assert.throws(()=>basketPlanAdded(value,expected));
-assert.match(basketGuideEmpty('quantity_below_basket',3,4),/already has 4/);
+assert.match(basketGuideEmpty('quantity_below_basket',3,4),/already has 4/);assert.match(basketGuideEmpty('quantity_below_basket',3,101),/supports up to 100/);
 assert.match(basketGuideEmpty('no_kitchen_times',3,0),/common kitchen time/);
 assert.match(basketGuideEmpty('no_price_match',3,0),/budget range/);
 console.log('Mixed basket response: total quantity, existing items, whole-order arithmetic, price evidence and atomic-add receipt validation passed.');

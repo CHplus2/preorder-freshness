@@ -3,6 +3,34 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Finder recovery and search context — 28 October 2026
+
+The mixed-basket response/API schema and server ranking are unchanged. The
+storefront now repeats the submitted Malaysia date, final total item count,
+whole-order budget mode, new-item category preference and existing item count
+beside results, including empty results. A within-and-above search which returns
+only one range explicitly says that no option in the other range was found in
+this bounded search; it does not claim the catalogue has no such combination.
+
+Empty-result actions depend on `empty_reason`. A price mismatch offers explicit
+comparison of both budget ranges. A category/menu or kitchen-time miss offers
+another date and, when a category was selected, Any category. A quantity below
+existing basket count offers that current count only when <=100, otherwise the
+basket must be edited. A basket-rule issue directs the customer to review their
+basket. Recovery never removes items, changes the budget amount, adds products
+or places an order. A date action focuses the field without issuing a request;
+category/budget/count actions issue one new search for the explicitly selected
+change. Price-range explanations refer only to generated candidates before
+capacity checks, never all possible catalogue baskets. The form's whole-order
+budget remains food minus current discount plus delivery.
+
+Search/recovery are disabled during a cart update and errors from a different
+basket/fulfilment scope are hidden. Before display, each mixed-basket plan must
+contain one to three distinct exact-time slots on the requested Malaysia day;
+non-null arrival-window objects are refused for this exact-time API. A malformed
+or different-day response cannot expose an Add action. Checkout and atomic add
+continue to recheck actual availability. No migration or model retraining.
+
 ## Delivery-choice handoff — 28 October 2026
 
 This client-only follow-up preserves one advisory delivery choice across menu
