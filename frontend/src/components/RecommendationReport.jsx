@@ -17,7 +17,7 @@ export default function RecommendationReport(){
       setTimeout(()=>URL.revokeObjectURL(url),1000);
     }catch{setError('The export could not be created. Refresh the report and try again.');}
   };
-  return <section className="dk-panel recommendation-report" aria-label="Recommendation engagement"><div className="recommendation-report-heading"><h2>Recommendation engagement</h2><button type="button" disabled={loading} onClick={refresh}>{loading?'Loading…':'Refresh recommendations'}</button></div>
+  return <section id="recommendation-engagement" tabIndex={-1} className="dk-panel recommendation-report" aria-label="Recommendation engagement"><div className="recommendation-report-heading"><h2>Recommendation engagement</h2><button type="button" disabled={loading} onClick={refresh}>{loading?'Loading…':'Refresh recommendations'}</button></div>
     <p>Rolling last {data?.days ?? 28} days, based on when suggestions were requested. This window is separate from the contribution report’s date filter.</p>
     {error && <p role="alert">{error}</p>}
     {loading && <p role="status">Loading recommendation activity…</p>}

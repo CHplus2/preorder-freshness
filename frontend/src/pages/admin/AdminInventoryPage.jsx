@@ -10,7 +10,7 @@ import ExpiryFields from "../../components/ExpiryFields";
 import StorageGuidanceEditor from "../../components/StorageGuidanceEditor";
 import {changeBatchMaterial,validStorageGuidance} from "../../utils/storageGuidance";
 import axios from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getCookie } from "../../utils/cookieUtils";
 import {useSearchParams} from 'react-router-dom';
 import FreshCastWorkflowContext from '../../components/FreshCastWorkflowContext';
@@ -50,6 +50,9 @@ export default function AdminInventoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRawMaterial, setSelectedRawMaterial] = useState(()=>/^\d+$/.test(params.get('material')||'')?params.get('material'):"");
   const [freshnessFilter, setFreshnessFilter] = useState("");
+  const [visibleCount,setVisibleCount]=useState(12);
+  const batchHeading=useRef(null);
+  const chooseStatus=status=>{setFreshnessFilter(status);setSearchQuery('');setSelectedRawMaterial('');setVisibleCount(12);batchHeading.current?.scrollIntoView({block:"start"});batchHeading.current?.focus({preventScroll:true});};
 
   const [newRawMaterial, setNewRawMaterial] = useState(null);
   const [newInventoryItem, setNewInventoryItem] = useState(null);
@@ -423,37 +426,13 @@ export default function AdminInventoryPage() {
       )}
 
       {/* Summary */}
-      <div className="inventory-summary">
-
-        <div className="summary-card warning">
-          <span>Expiry within 3 days</span>
-          <strong>
-            {
-              inventoryItems.filter(
-                (item) => Number(item.quantity)>0 &&
-                  inventoryCategory(item,today) === "expiring"
-              ).length
-            }
-          </strong>
-        </div>
-
-        <div className="summary-card danger">
-          <span>Past recorded expiry</span>
-          <strong>
-            {
-              inventoryItems.filter(
-                (item) => Number(item.quantity)>0 &&
-                  inventoryCategory(item,today) === "expired"
-              ).length
-            }
-          </strong>
-        </div>
-
+      <div className="inventory-summary" role="group" aria-label="Filter batches by recorded status">
+        {[["expiring","Expiry within 3 days"],["expired","Past recorded deadline"],["held","On hold"]].map(([status,label])=><button type="button" className="summary-card" key={status} disabled={refreshing || !!refreshError} aria-pressed={freshnessFilter===status} onClick={()=>chooseStatus(freshnessFilter===status?'':status)}><span>{label}</span><strong>{inventoryItems.filter(item=>inventoryCategory(item,today)===status).length}</strong><small>View batches</small></button>)}
       </div>
 
       <InventoryAttention disabled={refreshing || !!refreshError} items={inventoryItems} today={today} onReview={id=>openInventory(inventoryItems.find(item=>item.id===id))}/>
 
-      <h2 className="inventory-batch-heading">All stock batches · {inventoryItems.length}</h2>
+      <h2 ref={batchHeading} tabIndex={-1} className="inventory-batch-heading">All stock batches · {inventoryItems.length}</h2>
       {/* Filters */}
       <div className="inventory-controls">
 
@@ -462,14 +441,14 @@ export default function AdminInventoryPage() {
           placeholder="Ingredient, batch or location"
           value={searchQuery}
           onChange={(e) =>
-            setSearchQuery(e.target.value)
+            {setSearchQuery(e.target.value);setVisibleCount(12);}
           }
         /></label>
 
         <label>Ingredient<select
           value={selectedRawMaterial}
           onChange={(e) =>
-            setSelectedRawMaterial(e.target.value)
+            {setSelectedRawMaterial(e.target.value);setVisibleCount(12);}
           }
         >
           <option value="">
@@ -489,7 +468,7 @@ export default function AdminInventoryPage() {
         <label>Recorded status<select
           value={freshnessFilter}
           onChange={(e) =>
-            setFreshnessFilter(e.target.value)
+            {setFreshnessFilter(e.target.value);setVisibleCount(12);}
           }
         >
           <option value="">
@@ -507,7 +486,7 @@ export default function AdminInventoryPage() {
 
       </div>
       <p className="inventory-date-rules">Recorded status uses Malaysia’s current date and the earliest saved deadline: past date = past recorded deadline; today–3 days = attention due; more than 3 days = within recorded date. On hold overrides the date status. These are planning rules, not a physical food-safety test.</p>
-      <p className="inventory-list-status" role="status">{filteredInventory.length} of {inventoryItems.length} batches shown{(searchQuery || selectedRawMaterial || freshnessFilter)?' · filters applied':''}. {(searchQuery || selectedRawMaterial || freshnessFilter) && <button type="button" onClick={()=>{setSearchQuery('');setSelectedRawMaterial('');setFreshnessFilter('')}}>Reset filters</button>}</p>
+      <p className="inventory-list-status" role="status">{Math.min(visibleCount,filteredInventory.length)} of {filteredInventory.length} matching batches shown · {inventoryItems.length} recorded{(searchQuery || selectedRawMaterial || freshnessFilter)?' · filters applied':''}. {(searchQuery || selectedRawMaterial || freshnessFilter) && <button type="button" onClick={()=>{setSearchQuery('');setSelectedRawMaterial('');setFreshnessFilter('');setVisibleCount(12)}}>Reset filters</button>}</p>
 
       {/* Inventory table */}
       <div className="admin-table-scroll responsive-records"><table className="admin-table inventory-table">
@@ -529,7 +508,7 @@ export default function AdminInventoryPage() {
 
           {filteredInventory.length > 0 ? (
 
-            filteredInventory.map((item) => {
+            filteredInventory.slice(0,visibleCount).map((item) => {
 
               const freshness =
                 inventoryCategory(item,today);
@@ -621,18 +600,12 @@ export default function AdminInventoryPage() {
 
       </table></div>
 
-      {/* Raw Material Management */}
-      <div className="raw-material-section">
+      {visibleCount<filteredInventory.length && <div className="inventory-load-more"><button type="button" onClick={()=>setVisibleCount(count=>count+12)}>Show {Math.min(12,filteredInventory.length-visibleCount)} more batches</button></div>}
 
-        <div className="section-header">
-          <div>
-            <h2>Ingredient directory · {rawMaterials.length}</h2>
-            <p>
-              Master list of ingredients used by your
-              products.
-            </p>
-          </div>
-        </div>
+      {/* Raw Material Management */}
+      <details className="raw-material-section"><summary>Ingredient directory · {rawMaterials.length}</summary>
+
+        <p>Manage ingredient units and reusable storage guidance. Stock is recorded separately in batches above.</p>
 
         <div className="admin-table-scroll responsive-records"><table className="admin-table">
 
@@ -691,11 +664,11 @@ export default function AdminInventoryPage() {
 
         </table></div>
 
-      </div>
+      </details>
 
       {/* CREATE RAW MATERIAL MODAL */}
       {newRawMaterial && (
-        <ModalDialog label="Create Raw Material" onDismiss={() => closeForm(setNewRawMaterial)}>
+        <ModalDialog label="Add ingredient" onDismiss={() => closeForm(setNewRawMaterial)}>
 <div
           className="modal-overlay"
           onClick={() =>
@@ -709,7 +682,7 @@ export default function AdminInventoryPage() {
             }
           >
 
-            <h2>Create Raw Material</h2>
+            <h2>Add ingredient</h2>
             <InventoryFeedback message={error}/>
 
             <label htmlFor="admininventorypage-field-1">Name</label>
@@ -778,7 +751,7 @@ export default function AdminInventoryPage() {
 
       {/* EDIT RAW MATERIAL MODAL */}
       {editingRawMaterial && (
-        <ModalDialog label="Edit Raw Material" onDismiss={() => closeForm(setEditingRawMaterial)}>
+        <ModalDialog label="Edit ingredient" onDismiss={() => closeForm(setEditingRawMaterial)}>
 <div
           className="modal-overlay"
           onClick={() =>
@@ -792,7 +765,7 @@ export default function AdminInventoryPage() {
             }
           >
 
-            <h2>Edit Raw Material</h2>
+            <h2>Edit ingredient</h2>
             <InventoryFeedback message={error}/>
 
             <label htmlFor="admininventorypage-field-3">Name</label>
@@ -862,26 +835,27 @@ export default function AdminInventoryPage() {
 
       {/* CREATE INVENTORY MODAL */}
       {newInventoryItem && (
-        <ModalDialog label="Add Inventory Item" onDismiss={() => closeForm(setNewInventoryItem)}>
+        <ModalDialog label="Add stock batch" onDismiss={() => closeForm(setNewInventoryItem)}>
 <div
           className="modal-overlay"
           onClick={() =>
             closeForm(setNewInventoryItem)
           }
         >
-          <div
+          <form
+            onSubmit={e=>{e.preventDefault();if(!loading)handleCreateInventory();}}
             className="modal-content form-modal inventory-form"
             onClick={(e) =>
               e.stopPropagation()
             }
           >
 
-            <h2>Add Inventory Item</h2>
+            <h2>Add stock batch</h2>
             <InventoryFeedback message={error}/>
 
             <label htmlFor="admininventorypage-field-5">Raw Material</label>
 
-            <select id="admininventorypage-field-5"
+            <select id="admininventorypage-field-5" required
               value={
                 newInventoryItem.raw_material
               }
@@ -911,7 +885,7 @@ export default function AdminInventoryPage() {
                 )})`}
             </label>
 
-            <input id="admininventorypage-field-6"
+            <input id="admininventorypage-field-6" required
               type="number"
               min="0"
               step="0.001"
@@ -959,8 +933,8 @@ export default function AdminInventoryPage() {
 
             <label htmlFor="admininventorypage-field-9">Received on (when this batch reached you)</label>
 
-            <input id="admininventorypage-field-9"
-              type="date"
+            <input id="admininventorypage-field-9" required
+              type="date" max={today}
               value={
                 newInventoryItem.received_date
               }
@@ -979,18 +953,16 @@ export default function AdminInventoryPage() {
             <div className="modal-actions">
 
               <button
-                onClick={
-                  handleCreateInventory
-                }
+                type="submit"
                 disabled={loading}
               >
                 {loading
                   ? "Adding..."
-                  : "Add Inventory"}
+                  : "Add stock batch"}
               </button>
 
               <button
-                disabled={loading}
+                type="button" disabled={loading}
                 onClick={() =>
                   closeForm(setNewInventoryItem)
                 }
@@ -1000,28 +972,29 @@ export default function AdminInventoryPage() {
 
             </div>
 
-          </div>
+          </form>
         </div>
 </ModalDialog>
       )}
 
       {/* EDIT INVENTORY MODAL */}
       {editingInventoryItem && (
-        <ModalDialog label="Edit Inventory Item" onDismiss={() => closeForm(setEditingInventoryItem)}>
+        <ModalDialog label="Edit stock batch" onDismiss={() => closeForm(setEditingInventoryItem)}>
 <div
           className="modal-overlay"
           onClick={() =>
             closeForm(setEditingInventoryItem)
           }
         >
-          <div
+          <form
+            onSubmit={e=>{e.preventDefault();if(!loading)handleUpdateInventory();}}
             className="modal-content form-modal inventory-form"
             onClick={(e) =>
               e.stopPropagation()
             }
           >
 
-            <h2>Edit Inventory Item</h2>
+            <h2>Edit stock batch</h2>
             <InventoryFeedback message={error}><button type="button" disabled={loading} onClick={async () => {
               setLoading(true);
               try {
@@ -1041,7 +1014,7 @@ export default function AdminInventoryPage() {
               )
             </label>
 
-            <input id="admininventorypage-field-12"
+            <input id="admininventorypage-field-12" required
               type="number"
               min="0"
               step="0.001"
@@ -1088,8 +1061,8 @@ export default function AdminInventoryPage() {
 
             <label htmlFor="admininventorypage-field-15">Received on (when this batch reached you)</label>
 
-            <input id="admininventorypage-field-15"
-              type="date"
+            <input id="admininventorypage-field-15" required
+              type="date" max={today}
               value={
                 editingInventoryItem.received_date
               }
@@ -1108,9 +1081,7 @@ export default function AdminInventoryPage() {
             <div className="modal-actions">
 
               <button
-                onClick={
-                  handleUpdateInventory
-                }
+                type="submit"
                 disabled={loading}
               >
                 {loading
@@ -1119,7 +1090,7 @@ export default function AdminInventoryPage() {
               </button>
 
               <button
-                disabled={loading}
+                type="button" disabled={loading}
                 onClick={() =>
                   closeForm(setEditingInventoryItem)
                 }
@@ -1129,7 +1100,7 @@ export default function AdminInventoryPage() {
 
             </div>
 
-          </div>
+          </form>
         </div>
 </ModalDialog>
       )}

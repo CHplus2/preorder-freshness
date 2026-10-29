@@ -20,7 +20,7 @@ export default function StockFlowEvidence({risk, window}) {
         <div className="local-stock-bar" role="img" aria-label={`Batch ${b.batch_id}: ${qty(b.confirmed_allocated)} confirmed use, ${qty(b.forecast_consumed)} forecast use, ${qty(b.projected_remaining)} remaining ${risk.unit}`}>
           {[['confirmed', b.confirmed_allocated], ['forecast', b.forecast_consumed], ['unused', b.projected_remaining]].map(([name, value]) => <span key={name} className={name} style={{width: `${b.opening_quantity > 0 ? 100 * value / b.opening_quantity : 0}%`}} />)}
         </div>
-        <p className="local-stock-legend">Confirmed use · Forecast use · Unused at expiry</p>
+        <ul className="local-stock-legend" aria-label="Batch allocation amounts">{[['confirmed','Confirmed use',b.confirmed_allocated],['forecast','Forecast use',b.forecast_consumed],['unused','Unused at expiry',b.projected_remaining]].map(([kind,label,value])=><li key={kind}><span className={kind} aria-hidden="true"/>{label}: <strong>{qty(value)} {risk.unit}</strong></li>)}</ul>
         <details><summary>Batch identity &amp; recorded cost</summary><p>Batch reference: <code>{b.batch_code || `Batch ${b.batch_id}`}</code>.</p>
           <p>Recorded unit cost: {b.unit_cost == null ? 'Unknown cost' : `RM ${new Intl.NumberFormat('en-MY', {maximumFractionDigits: 6}).format(b.unit_cost)} / ${risk.unit}`}.</p>
           <p>Batch references identify individual deliveries of stock. A demo batch is a fictional scenario input.</p>
@@ -48,7 +48,7 @@ export default function StockFlowEvidence({risk, window}) {
         <div><span>Remaining stock expiring by {window.end_date}</span><strong>{qty(flow.projected_expiring_unused)} {risk.unit}</strong><small>Projected waste within this window</small></div>
         <div><span>Remaining stock dated after {window.end_date}</span><strong>{qty(flow.projected_carried_stock)} {risk.unit}</strong><small>Carried beyond this window</small></div>
       </div>
-      <div className="pd-table-wrap"><table>
+      <div className="pd-table-wrap" tabIndex={0} role="region" aria-label="Whole-stock allocation table"><table>
         <caption>Earliest expiry first · native ingredient units · projected allocation, no stock deducted</caption>
         <thead><tr><th>Batch</th><th>Expiry</th><th>After confirmed orders</th><th>Forecast use</th><th>Remaining</th><th>Treatment</th><th>Estimated unit cost</th></tr></thead>
         <tbody>{flow.batches.map(b => <tr key={b.batch_id}><th>{b.batch_code || `Batch ${b.batch_id}`}</th><td>{b.expiry_date}</td><td>{qty(b.after_confirmed)} {risk.unit}</td><td>{qty(b.forecast_consumed)} {risk.unit}</td><td>{qty(b.projected_remaining)} {risk.unit}</td><td>{b.expires_in_window ? 'Unused remainder counts as projected waste' : 'Remaining stock carries forward'}</td><td>{b.unit_cost === null ? 'Unknown' : `RM ${new Intl.NumberFormat('en-MY', {maximumFractionDigits: 6}).format(b.unit_cost)} / ${risk.unit}`}</td></tr>)}</tbody>

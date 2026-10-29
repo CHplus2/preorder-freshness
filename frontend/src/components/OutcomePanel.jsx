@@ -25,7 +25,7 @@ export default function OutcomePanel(){
   useEffect(()=>{const c=new AbortController();
     axios.get('/api/admin/contribution/',{params:applied,signal:c.signal})
       .then(a=>setReport(contributionReport(a.data))).catch(e=>{if(!axios.isCancel(e))setError(readApiError(e))});return()=>c.abort();},[applied]);
-  return <section className="dk-panel"><h2>Order contribution</h2>
+  return <section id="order-contribution" tabIndex={-1} className="dk-panel"><h2>Order contribution</h2>
     <p>Recorded food revenue minus recorded batch ingredient costs and accepted packaging estimates. This is an order outcome, not a current-recipe estimate or net profit.</p>
     <form className="fyp-form inline" onSubmit={e=>{e.preventDefault();setReport(null);setError('');setExportError('');setApplied({...range})}}>
       <label>Orders placed from<input type="date" required value={range.start} onChange={e=>setRange({...range,start:e.target.value})}/></label>

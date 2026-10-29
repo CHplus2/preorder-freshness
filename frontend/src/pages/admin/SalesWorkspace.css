@@ -1,0 +1,10 @@
+.sales-workspace .admin-page-heading p{font-size:14px;line-height:1.65;max-width:75ch}
+.admin-shell nav.sales-section-links{position:static;display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:8px;width:auto;min-height:0;margin:20px 0;padding:0;box-shadow:none;backdrop-filter:none;background:none;z-index:auto}
+.admin-shell .sales-workspace .sales-section-links a[href]{display:inline-flex;align-items:center;min-height:44px;padding:10px 14px;border:1px solid #cad8c8;border-radius:8px;color:#31573d;background:#fff;text-decoration:none;font:500 14px/1.5 system-ui,sans-serif;white-space:normal;margin:0}
+.admin-shell .sales-section-links a::after{display:none}
+.sales-section-links a:hover{background:#edf4e8}
+.sales-section-links a:focus-visible{outline:3px solid #446f4f;outline-offset:3px}
+.sales-workspace [id]{scroll-margin-top:110px}
+.sales-workspace>.inventory-summary strong{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.sales-workspace .dk-sales-row{min-width:0;overflow-wrap:anywhere}
+@media(max-width:600px){.sales-workspace .inventory-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.sales-workspace .summary-card{min-width:0;padding:14px}.sales-workspace .summary-card span{font-size:13px;line-height:1.5}.sales-workspace .summary-card strong{font-size:22px}.sales-section-links a{flex:1 1 135px}}

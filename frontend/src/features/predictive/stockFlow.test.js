@@ -27,6 +27,10 @@ try {
  assert.match(html,/forecast use before expiry/);
  assert.match(html,/Mee Goreng Telur/);
  assert.match(html,/additional portions ×/);
+ assert.match(html,/aria-label="Batch allocation amounts"/);
+ assert.match(html,/Forecast use: <strong>1,603.109 g/);
+ assert.match(html,/Unused at expiry: <strong>196.891 g/);
+ assert.match(html,/tabindex="0" role="region" aria-label="Whole-stock allocation table"/);
  assert.match(html,/Demand after 2026-10-19 cannot rescue this batch/);
  assert.ok(html.indexOf('Use by 2026-10-19') < html.indexOf('Whole-stock balance'));
  assert.match(html,/<details><summary>Batch identity &amp; recorded cost<\/summary>/);

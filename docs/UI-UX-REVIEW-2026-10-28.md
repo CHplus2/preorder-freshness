@@ -186,3 +186,50 @@ isolated SQLite backend and in-memory email.
 No production data, model, backend API, schema, scheduler, email or courier
 provider is changed. No migration is required. Bulk and individual statuses still
 require owner confirmation of actual work; they do not infer courier events.
+
+## Batch 5 — inventory, FreshCast and sales
+
+- Inventory initially renders 12 matching batches, with a labelled action to
+  reveal the next 12 and counts distinguishing displayed, matching and recorded
+  batches. Filters reset that display limit. Recorded-status shortcuts show
+  expiring, past-deadline and held batch counts; selecting one clears other
+  filters and focuses the batch list. The separate attention panel still counts
+  only batches with quantity remaining. These counts describe records, not waste.
+- The ingredient directory is secondary to stock work and expands when needed.
+  Add/edit labels consistently name ingredients or stock batches. Batch dialogs
+  use native forms so required ingredient, quantity, received/expiry fields and
+  adjustment reasons are checked before submission. Received dates cannot be in
+  the future. Existing server validation, documented shelf-life modes, handling
+  limits and hold rules remain authoritative.
+- Sales uses the same owner heading pattern and has keyboard-accessible section
+  links to sales totals, menu performance, recommendation engagement, recorded
+  order contribution and costs/wastage. These preserve each section's own dates
+  and definitions; they do not imply that revenue or estimated contribution is
+  net profit. Summary cards and links fit narrow screens.
+- All FreshCast sources share readable control labels, notice typography,
+  planning navigation and a visible refresh label on phones. Kitchen expiry
+  evidence labels bar colours with exact confirmed use, forecast use and unused
+  quantities. Its whole-stock table is keyboard-focusable for horizontal review.
+  Different source charts remain where their actual data differs. Sample mode
+  stays explicitly model-free; external operational stock remains simulated.
+
+Frontend lint, UX, unit, checkout, Planner, recommendation and predictive suites
+and the production build pass. Predictive rendering tests verify the numeric
+allocation legend and labelled keyboard table access. Local Chromium exercises
+batch pagination/filter focus, directory expansion, incomplete-form prevention,
+an actual fictional received-date batch creation, deadline calculation and a
+quantity edit requiring an adjustment reason. It also checks report section
+focus and failed-read recovery, including disabled stock changes and no implicit
+switch from a failed kitchen read to sample data.
+
+Full-page WCAG A/AA and overflow checks cover stock lists, forms and Sales at
+1440, 768, 390 and 320 pixels, plus decisions, stock and demand views for kitchen,
+sample and Genpact layouts. Screenshots are visually reviewed. Kitchen uses an
+isolated SQLite database; Genpact network responses are explicit UI fixtures,
+so these checks do not verify a deployed Genpact model or production data.
+No production stock, order, email, payment, provider, model or schema is changed.
+No migration or retraining is required.
+
+The five planned batches are implemented. This closes this review pass, not all
+possible usability work. Live provider connections and actual customer studies
+remain separate from local functional and accessibility checks.
