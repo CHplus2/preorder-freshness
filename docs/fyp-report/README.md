@@ -32,6 +32,21 @@ The original uploaded PDF, senior's example and briefing are not republished her
 
 Word theme overrides have been removed from defaults, headings, linked character styles,
 contents/figure/table lists and all report text. All report text now explicitly uses
-Times New Roman. Figure-image fonts remain unchanged. The local PDF retains the
+Times New Roman. Original figure and website screenshot fonts remain unchanged. The local PDF retains the
 documented Liberation Serif substitution when Microsoft Times New Roman is unavailable.
-Objectives, report wording, images and application source are unchanged by this correction.
+Objectives, report wording and application source are unchanged by this correction.
+
+## Structured diagram revision — 30 October 2026
+
+All 23 technical diagrams are redrawn with aligned UML shapes, straight / right-angle
+connectors, standard arrowheads and clearer spacing. The Word and PDF use these new
+figures; the five objectives and implemented workflow scope are preserved. Wider
+use-case, class, ERD and architecture figures use landscape pages.
+
+The ZIP contains native `.drawio` files with individually editable shapes, labels
+and connectors, plus SVG, high-resolution PNG, full semantic JSON and regeneration
+sources. Open a `.drawio` file in diagrams.net. Original screenshots, the proposal
+Gantt/literature map and the model-evaluation figure remain unchanged.
+
+Layout checks covered all 23 technical diagrams and the final 148-page report.
+The report retains 41 figures, 89 editable tables and populated contents/figure lists.

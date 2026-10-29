@@ -1,6 +1,6 @@
 # Revision and submission notes
 
-This is a newly assembled editable Word master, not a modification to the original PDF file. The original uploaded report remains unchanged. Source baseline: `ab1a97684dbf5d8b992b9f74fd07580b59d4636d` (29 October 2026). No website source, remote branch or production database was changed by this report-writing task.
+This is a newly assembled editable Word master, not a modification to the original PDF file. The original uploaded report remains unchanged. Source baseline: `ab1a97684dbf5d8b992b9f74fd07580b59d4636d` (29 October 2026). No website source, website branch or production database was changed by this report-writing task.
 
 ## What changed
 
@@ -16,9 +16,9 @@ This is a newly assembled editable Word master, not a modification to the origin
 
 The supplied briefing is a collage of selected marking/submission guidance, not a complete university style manual. The senior's Word file contains mixed margins, orientations and spacing. The original PDF uses Letter pages with Times New Roman 12-point body text and approximately 1.5 spacing. The senior uses A4 and typically a wider binding margin.
 
-This master normalises those conventions to **A4; Times New Roman 12-point; 1.5 body spacing; justified paragraphs; 4 cm left/binding margin and 2 cm top/right/bottom**. Headings are black/bold, chapter titles 14-point, ordinary headings 12-point; tables use 10-point single-spaced text and captions 11-point. Selected class/ERD pages are landscape with 2 cm margins to keep labels readable. Front matter uses Roman page numbers and main text restarts at 1. The Word file requests Times New Roman; the local PDF renderer may substitute the metrically similar Liberation Serif because the Microsoft font is not installed here.
+This master normalises those conventions to **A4; Times New Roman 12-point; 1.5 body spacing; justified paragraphs; 4 cm left/binding margin and 2 cm top/right/bottom**. Headings are black/bold, chapter titles 14-point, ordinary headings 12-point; tables use 10-point single-spaced text and captions 11-point. Use-case, class, ERD and architecture pages are landscape with 2 cm margins to keep labels readable. Front matter uses Roman page numbers and main text restarts at 1. The Word file requests Times New Roman; the local PDF renderer may substitute the metrically similar Liberation Serif because the Microsoft font is not installed here.
 
-Font consistency correction: all document text styles, linked heading styles, contents fields, table text, headers/footers and defaults now explicitly use Times New Roman, with theme font overrides removed. Fonts inside the original Gantt/literature-map images, newly generated diagrams and website screenshots remain part of those figure images; they are not editable report text. The local PDF still uses the documented serif substitute when Microsoft Times New Roman is unavailable.
+Font consistency correction: all document text styles, linked heading styles, contents fields, table text, headers/footers and defaults now explicitly use Times New Roman, with theme font overrides removed. The 23 redrawn technical diagrams also declare Times New Roman. Original Gantt/literature-map images and website screenshots retain their original lettering. Diagram lettering is editable in the included native draw.io sources, separately from report text. The local PDF still uses the documented serif substitute when Microsoft Times New Roman is unavailable.
 
 The contents, figure and table lists contain editable Word fields with populated page references. If you change the document in Microsoft Word, select all and press F9 to refresh fields, then review pagination. Do not insert the original PDF's old contents pages or old Chapters 4–6 on top of this new master.
 
@@ -39,3 +39,11 @@ The contents, figure and table lists contain editable Word fields with populated
 - Chapter 5: traceable expected/actual checks; negative/retry/security/concurrency cases; discussion related to objectives/literature; UAT questions mapped to objectives.
 - Chapter 6: objective-by-objective conclusion, challenges, advantages, limitations and prioritised suggestions.
 - Submission: genuine consultation records, similarity report, integrity paperwork and the student's final review remain separate from software evidence. The collage is not treated as the full marking scheme or a guarantee of marks.
+
+## Diagram layout revision — 30 October 2026
+
+All 23 technical diagrams have been redrawn on explicit grids: two use-case diagrams, four activity diagrams, one domain class diagram, four ERD views, the architecture view and eleven sequence diagrams. Use cases use stick actors, system boundaries, oval goals and straight associations. Activities use rounded actions, guarded decisions and explicit merge diamonds. Class/ERD relationships follow right-angle routes around entity boxes. Sequence messages are horizontal, lifelines vertical/dashed, return arrows dashed/open, and self-calls rectangular. Transaction regions and explanatory UML notes are separated from message labels. These revisions change presentation and clarify notation, not the five objectives or implemented workflow claims.
+
+The ZIP includes a native `.drawio` file for each technical diagram, with separately editable shapes, labels and connectors. Open these in diagrams.net or import into a compatible diagram editor. Vector SVG, high-resolution PNG and the full semantic-source JSON are included too. Concise on-diagram labels retain the fuller meanings in the JSON/tooltips and chapter explanation. There is no claim that the diagrams were produced by Visual Paradigm or Lucidchart.
+
+The generator and renderer are included for reproducibility. They require Python, Pillow and the headless Inkscape command. Original screenshots, the original Gantt/literature map and the model-evaluation figure are unchanged.
