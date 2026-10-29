@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
+from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework import serializers
@@ -22,7 +23,36 @@ class OrderList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).select_related("user", "address").prefetch_related("items").order_by("-created_at")
+        return Order.objects.filter(user=self.request.user).select_related("user", "address").prefetch_related("items").order_by("-id")
+
+    def list(self, request, *args, **kwargs):
+        params = request.query_params
+        if set(params)-{'view', 'before'} or any(len(params.getlist(key)) != 1 for key in params):
+            raise ValidationError('Use one order view and an optional before order ID.')
+        view = params.get('view', 'all')
+        if view not in ('auto', 'all', 'current', 'history'):
+            raise ValidationError('Choose current, history or all orders.')
+        before = params.get('before')
+        if before is not None and (not before.isascii() or not before.isdigit() or not 1 <= len(before) <= 16
+                or not 1 <= int(before) <= 9007199254740991):
+            raise ValidationError('Use a valid before order ID.')
+        own = Order.objects.filter(user=request.user)
+        closed = Q(status__in=['delivered', 'cancelled'])
+        counts = own.aggregate(all=Count('pk'), history=Count('pk', filter=closed))
+        counts['current'] = counts['all']-counts['history']
+        if view == 'auto':
+            view = 'current' if counts['current'] else 'history'
+        rows = self.get_queryset()
+        if view != 'all':
+            rows = rows.filter(closed) if view == 'history' else rows.exclude(closed)
+        if before is not None:
+            rows = rows.filter(pk__lt=int(before))
+        # Seek by immutable ID, so new orders do not shift later pages.
+        page = list(rows[:11])
+        more = len(page) > 10
+        page = page[:10]
+        return Response(dict(results=self.get_serializer(page, many=True).data, view=view,
+            count=counts[view], counts=counts, next_before=page[-1].pk if more else None))
 
 def usable_stock():
     today = timezone.localdate()

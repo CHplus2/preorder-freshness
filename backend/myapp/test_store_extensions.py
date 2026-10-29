@@ -127,7 +127,7 @@ class StoreExtensionsTests(TestCase):
         self.assertEqual(order.fulfilment_snapshot['courier']['reference'],'ABC-123')
         self.assertEqual(order.amendments.get().after['kind'],'courier_tracking')
         self.client.force_authenticate(self.buyer)
-        self.assertEqual(self.client.get('/api/orders/').data[0]['fulfilment_snapshot']['courier']['carrier'],'Fixture courier')
+        self.assertEqual(self.client.get('/api/orders/').data['results'][0]['fulfilment_snapshot']['courier']['carrier'],'Fixture courier')
         self.assertEqual(self.client.post(f'/api/admin/orders/{order.pk}/tracking/',{},format='json').status_code,403)
 
     def test_courier_tracking_rejects_unsafe_links_stale_versions_and_collection(self):
@@ -151,7 +151,7 @@ class StoreExtensionsTests(TestCase):
         self.assertEqual(OrderAmendment.objects.count(),2)
         self.assertEqual((a.payment_status,b.payment_status),('unpaid','unpaid'))
         self.client.force_authenticate(self.buyer)
-        row = next(o for o in self.client.get('/api/orders/').data if o['id'] == a.pk)
+        row = next(o for o in self.client.get('/api/orders/').data['results'] if o['id'] == a.pk)
         self.assertNotIn('order_ids', row['preparation_plan']['shared_batch'])
         self.assertEqual(row['preparation_plan']['shared_batch']['order_count'], 2)
 

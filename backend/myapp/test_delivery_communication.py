@@ -69,7 +69,7 @@ class DeliveryCommunicationTests(TestCase):
         self.assertEqual(result.data['order']['fulfilment_snapshot']['courier']['contact_phone'],'+60123456789')
         self.order.refresh_from_db();self.assertEqual(self.order.status,'cooked');self.assertNotIn('dispatch_notice',self.order.fulfilment_snapshot)
         self.client.force_authenticate(self.buyer)
-        courier=self.client.get('/api/orders/').data[0]['fulfilment_snapshot']['courier']
+        courier=self.client.get('/api/orders/').data['results'][0]['fulfilment_snapshot']['courier']
         self.assertNotIn('contact_phone',courier);self.assertEqual(courier['reference'],'REF-123')
 
     @patch('myapp.services.reminders.send_mail',return_value=1)
@@ -83,7 +83,7 @@ class DeliveryCommunicationTests(TestCase):
         mail.assert_called_once();self.assertIn('out for delivery',mail.call_args.args[0]);self.assertIn('not provide a live arrival estimate',mail.call_args.args[1])
         self.assertEqual(mail.call_args.args[3],[self.buyer.email]);self.assertEqual(OrderReminder.objects.count(),1)
         self.client.force_authenticate(self.buyer)
-        self.assertNotIn('dispatch_notice',self.client.get('/api/orders/').data[0]['fulfilment_snapshot'])
+        self.assertNotIn('dispatch_notice',self.client.get('/api/orders/').data['results'][0]['fulfilment_snapshot'])
 
     @patch('myapp.services.reminders.send_mail',return_value=1)
     def test_legacy_reminder_consent_does_not_subscribe_to_dispatch_emails(self,mail):

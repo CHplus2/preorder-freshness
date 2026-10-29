@@ -42,7 +42,7 @@ class ArrivalWindowTests(TestCase):
         self.assertEqual(parse_datetime(quote.data['arrival_window']['start']),self.target-timedelta(hours=1))
         order=self.place();self.assertEqual(order.delivery_at,self.target)
         self.assertLessEqual(order.preparation_end_at,self.target-timedelta(minutes=self.store.delivery_buffer_minutes))
-        row=self.client.get('/api/orders/').data[0]
+        row=self.client.get('/api/orders/').data['results'][0]
         self.assertEqual(row['arrival_window']['minutes'],60)
         self.assertEqual(parse_datetime(row['dispatch_by']),self.target-timedelta(minutes=90))
         self.assertEqual(order.payment_status,'unpaid');self.assertFalse(order.inventory_deducted)
@@ -77,7 +77,7 @@ class ArrivalWindowTests(TestCase):
         body=self.payload();body.update(delivery_method='pickup',arrival_window_minutes=0)
         result=self.client.post('/api/orders/place/',body,format='json');self.assertEqual(result.status_code,201,result.data)
         order=Order.objects.get(pk=result.data['order_id']);self.assertEqual(order.fulfilment_snapshot['buffer_minutes'],0)
-        row=self.client.get('/api/orders/').data[0];self.assertIsNone(row['arrival_window']);self.assertIsNone(row['dispatch_by'])
+        row=self.client.get('/api/orders/').data['results'][0];self.assertIsNone(row['arrival_window']);self.assertIsNone(row['dispatch_by'])
 
     def test_delivery_days_and_daily_capacity_still_apply_to_windows(self):
         self.product.delivery_weekdays=[(self.target.weekday()+1)%7];self.product.save()
@@ -116,7 +116,7 @@ class ArrivalWindowTests(TestCase):
         order.refresh_from_db();self.assertEqual(order.delivery_at,self.target);self.assertEqual(order.fulfilment_snapshot['arrival_window_minutes'],30)
         self.assertEqual(order.total_amount,12);self.assertFalse(order.inventory_deducted)
         self.assertEqual(send_due_reminders(include_owner=False)['sent'],1);self.assertIn('Updated order time',mail.call_args.args[0])
-        self.assertNotIn('time_notice',self.client.get('/api/orders/').data[0]['fulfilment_snapshot'])
+        self.assertNotIn('time_notice',self.client.get('/api/orders/').data['results'][0]['fulfilment_snapshot'])
         again=self.client.post(url,{'confirm':token},format='json');self.assertTrue(again.data['already_applied'])
         self.assertEqual(send_due_reminders(include_owner=False)['sent'],0)
         history=self.client.get(url).data['history'][0];self.assertEqual(history['previous_window']['minutes'],60)

@@ -1,9 +1,10 @@
 import {OrderContext} from './OrderContext';
 import {readCheckout,checkoutAttempt} from '../utils/checkoutStorage';
 import {responseList,invalidResponse} from '../utils/apiResponse';
+import {orderHistoryPage} from '../utils/orderHistory';
 import {useUI} from './UIContext';
 import {apiError} from '../utils/apiError';
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { getCookie } from "../utils/cookieUtils";
 import { useCart } from "./CartContext";
 import axios from "axios";
@@ -17,27 +18,48 @@ export default function OrderProvider({ children }) {
     const [adminOrders, setAdminOrders] = useState([]);
     const [ordersLoading, setOrdersLoading] = useState(true);
     const [ordersError, setOrdersError] = useState('');
+    const [orderPage,setOrderPage]=useState(null),[ordersMoreLoading,setOrdersMoreLoading]=useState(false),[ordersMoreError,setOrdersMoreError]=useState('');
+    const orderView=useRef('auto'),orderPageRef=useRef(null),orderRead=useRef(null),orderGeneration=useRef(0);
+    useEffect(()=>()=>orderRead.current?.abort(),[]);
     const [adminOrdersLoading, setAdminOrdersLoading] = useState(true);
     const [adminOrdersError, setAdminOrdersError] = useState('');
     const { refreshCart, cart } = useCart();
     
-    const fetchOrders = useCallback(async () => {
+    const readOrders = useCallback(async (append=false) => {
         if(!isAuthenticated || !isSessionCurrent())return;
-        setOrdersLoading(true); setOrdersError('');
+        const before=append?orderPageRef.current?.nextBefore:null;
+        if(append && !before)return;
+        const view=append?orderPageRef.current.view:orderView.current;
+        const version=++orderGeneration.current;
+        orderRead.current?.abort();const controller=new AbortController();orderRead.current=controller;
+        const current=()=>!controller.signal.aborted && version===orderGeneration.current && isSessionCurrent();
+        setOrdersLoading(!append);setOrdersMoreLoading(append);setOrdersMoreError('');
+        if(!append)setOrdersError('');
         try {
             const res = await axios.get("/api/orders/", { 
                 withCredentials: true,
-                headers: { "X-CSRFToken": getCookie("csrftoken") }, 
+                headers: { "X-CSRFToken": getCookie("csrftoken") },
+                signal:controller.signal,params:{view,...(before?{before}:{})},
             });
-            const data = res.data;
-            
-            if(isSessionCurrent())setOrders(responseList(data));
+            const page=orderHistoryPage(res.data,view,before);
+            if(current()){
+                orderPageRef.current=page;setOrderPage(page);
+                setOrders(old=>append?[...old,...page.rows.filter(row=>!old.some(previous=>previous.id===row.id))]:page.rows);
+            }
         } catch (err) {
-            if(isSessionCurrent())setOrdersError(apiError(err));
+            if(current())(append?setOrdersMoreError:setOrdersError)(apiError(err));
         } finally {
-            if(isSessionCurrent())setOrdersLoading(false);
+            if(current()){setOrdersLoading(false);setOrdersMoreLoading(false);}
         }
     }, [isAuthenticated,isSessionCurrent]);
+    const fetchOrders=useCallback(()=>readOrders(false),[readOrders]);
+    const loadMoreOrders=()=>readOrders(true);
+    const chooseOrderView=view=>{
+        if(!['current','history','all'].includes(view))return;
+        orderView.current=view;setOrders([]);
+        setOrderPage(current=>current?{...current,view,count:current.counts[view]}:current);
+        return readOrders(false);
+    };
 
     const fetchAdminOrders = useCallback(async () => {
         if(!isAdmin || !isSessionCurrent())return;
@@ -104,6 +126,7 @@ export default function OrderProvider({ children }) {
 
     const value = {
         orders, adminOrders, ordersLoading, ordersError, adminOrdersLoading, adminOrdersError,
+        orderPage,chooseOrderView,loadMoreOrders,ordersMoreLoading,ordersMoreError,
         setOrders, setAdminOrders, fetchOrders, fetchAdminOrders, placeOrder, updateOrder
     }
     

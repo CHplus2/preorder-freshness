@@ -156,6 +156,8 @@ class CheckoutAmountBoundaryTests(TestCase):
         for _ in range(19):add()
         with CaptureQueriesContext(connection) as larger:
             response=self.client.get('/api/orders/')
-        self.assertEqual(len(response.data),20)
+        self.assertEqual(len(response.data['results']),10)
+        self.assertEqual(response.data['counts']['all'],20)
+        self.assertIsNotNone(response.data['next_before'])
         self.assertEqual(len(small),len(larger))
         self.assertLessEqual(len(larger),3)

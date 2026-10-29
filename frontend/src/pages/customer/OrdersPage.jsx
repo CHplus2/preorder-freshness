@@ -25,12 +25,14 @@ export default function OrdersPage() {
   const location = useLocation();
   const orderEmail=useOrderEmail();
   const { formatOrderNumber, setAlert } = useUI();
-  const { orders, fetchOrders, ordersLoading, ordersError } = useOrder();
+  const { orders, fetchOrders, ordersLoading, ordersError, orderPage, chooseOrderView, loadMoreOrders, ordersMoreLoading=false, ordersMoreError='' } = useOrder();
 
   const [filter,setFilter]=useState(null),[limit,setLimit]=useState(10);
   const groups=customerOrderGroups(orders);
-  const selected=filter || (groups.current.length?'current':'history');
+  const selected=orderPage?.view || filter || (groups.current.length?'current':'history');
   const visible=groups[selected];
+  const counts=orderPage?.counts || Object.fromEntries(Object.entries(groups).map(([key,rows])=>[key,rows.length]));
+  const displayed=orderPage?visible:visible.slice(0,limit);
 
   useEffect(() => {
     if (location.state?.formPayment) {
@@ -51,9 +53,9 @@ export default function OrdersPage() {
 
       {ordersError && <p role="alert">{ordersError} <button disabled={ordersLoading} onClick={fetchOrders}>Retry loading orders</button></p>}
       {ordersLoading && <p role="status">Loading your orders…</p>}
-      {!ordersLoading && !ordersError && orders.length>0 && <><div className="customer-order-filters" role="group" aria-label="Show orders">{[['current','Current'],['history','History'],['all','All orders']].map(([key,label])=><button key={key} type="button" aria-pressed={selected===key} onClick={()=>{setFilter(key);setLimit(10);}}>{label}<span>{groups[key].length}</span></button>)}</div><p className="customer-order-count" role="status">{visible.length?`Showing ${Math.min(limit,visible.length)} of ${visible.length} ${selected==='all'?'orders':selected==='current'?'current orders':'past orders'}.`:selected==='current'?'No current orders. Completed and cancelled orders are in History.':'No orders in this view.'}</p></>}
+      {!ordersError && (counts.all>0 || orders.length>0) && <><div className="customer-order-filters" role="group" aria-label="Show orders">{[['current','Current'],['history','History'],['all','All orders']].map(([key,label])=><button key={key} type="button" aria-pressed={selected===key} disabled={ordersLoading || ordersMoreLoading} onClick={()=>{if(orderPage)chooseOrderView(key);else{setFilter(key);setLimit(10);}}}>{label}<span>{counts[key]}</span></button>)}</div><p className="customer-order-count" role="status">{ordersLoading?'Loading this order view…':visible.length?`Showing ${displayed.length} of ${orderPage?.count ?? visible.length} ${selected==='all'?'orders':selected==='current'?'current orders':'past orders'}.`:selected==='current'?'No current orders. Completed and cancelled orders are in History.':'No orders in this view.'}</p></>}
       {ordersLoading || ordersError ? null : visible.length > 0 ? (
-        visible.slice(0,limit).map((order) => (
+        displayed.map((order) => (
           <article key={order.id} className="order-card" aria-label={`Order ${formatOrderNumber(order.id)}`}>
 
             {/* HEADER */}
@@ -106,9 +108,10 @@ export default function OrdersPage() {
           </article>
         ))
       ) : (
-        !ordersLoading && !orders.length && <div className="customer-empty"><h2>Your next meal starts here</h2><p>Choose something from the menu. Your orders and delivery updates will appear here.</p><Link className="dk-primary" to="/menu">Browse the menu</Link></div>
+        !ordersLoading && counts.all===0 && <div className="customer-empty"><h2>Your next meal starts here</h2><p>Choose something from the menu. Your orders and delivery updates will appear here.</p><Link className="dk-primary" to="/menu">Browse the menu</Link></div>
       )}
-      {!ordersLoading && !ordersError && visible.length>limit && <button className="customer-show-more" type="button" onClick={()=>setLimit(n=>n+10)}>Show 10 more orders</button>}
+      {!ordersLoading && !ordersError && orderPage && <>{ordersMoreError && <p role="alert">{ordersMoreError}</p>}{orderPage.nextBefore && <button className="customer-show-more" type="button" disabled={ordersMoreLoading} onClick={loadMoreOrders}>{ordersMoreLoading?'Loading more orders…':ordersMoreError?'Retry loading more orders':'Load 10 more orders'}</button>}</>}
+      {!orderPage && !ordersLoading && !ordersError && visible.length>limit && <button className="customer-show-more" type="button" onClick={()=>setLimit(n=>n+10)}>Show 10 more orders</button>}
     </main>
   );
 }
