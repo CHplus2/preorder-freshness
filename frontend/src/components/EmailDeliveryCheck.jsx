@@ -22,18 +22,18 @@ export default function EmailDeliveryCheck({configuration}){
   }finally{setBusy(false);}
  };
  return <section className="email-delivery-check" aria-labelledby="email-delivery-check-title">
-  <h3 id="email-delivery-check-title">Check email delivery</h3>
-  <p>These are the current owner-email settings. Earlier worker totals combine owner and customer messages and do not identify their recipient.</p>
-  <dl><dt>Owner recipient · OWNER_NOTIFICATION_EMAIL</dt><dd>{configuration.owner_recipient || 'Missing or invalid'}</dd><dt>Sender · DEFAULT_FROM_EMAIL</dt><dd>{configuration.sender_address || 'Missing or invalid — use a provider-approved sender'}</dd></dl>
-  {!configuration.transport_ready && <p>Configure the SMTP host and SMTP email backend before sending.</p>}
-  <button type="button" disabled={busy || wait>0 || !configuration.test_available} onClick={send}>{busy?'Sending one test…':'Send one test email to owner'}</button>
-  <p>This button sends one message to the owner recipient shown above. It does not process orders or start the reminder worker. One attempt per staff account every five minutes.</p>
-  {wait>0 && <p>Another test is available after the cooldown. Check the current result first.</p>}
+  <h3 id="email-delivery-check-title">Test email</h3>
+  <p>Send a test to check your kitchen’s email connection.</p>
+  <dl><dt>Your reminders go to</dt><dd>{configuration.owner_recipient || 'Not set'}</dd><dt>Sent from</dt><dd>{configuration.sender_address || 'Not set — add a sender approved by your email provider'}</dd></dl>
+  {!configuration.transport_ready && <p>Email sending needs setup before you can run a test.</p>}
+  <button type="button" disabled={busy || wait>0 || !configuration.test_available} onClick={send}>{busy?'Sending test…':'Send test email'}</button>
+  <p>Sends one message to the address above. Wait five minutes between tests.</p>
+  {wait>0 && <p>Check your inbox before sending another test.</p>}
   {message && <p role="alert">{message}</p>}
-  {result && <div role="status" className="email-check-result"><strong>{result.outcome==='accepted'?'Test accepted by the email provider':result.outcome==='not_accepted'?'Test was not accepted':'Test result is unconfirmed'}</strong>
-   <p>{result.outcome==='accepted'?'Search the owner recipient’s Inbox, Spam and All Mail for this reference. Provider acceptance is not proof of inbox receipt.':emailCheckReason(result.reason)}</p>
+  {result && <div role="status" className="email-check-result"><strong>{result.outcome==='accepted'?'Test email accepted for sending':result.outcome==='not_accepted'?'Test was not accepted':'Test result is unconfirmed'}</strong>
+   <p>{result.outcome==='accepted'?'Search your Inbox, Spam and All Mail for this reference. Inbox delivery is not confirmed.':emailCheckReason(result.reason)}</p>
    <p>Recipient: {result.recipient}</p><p>Search reference: <code>{result.reference}</code></p>
-   <p>If it is still missing, check your sending provider’s delivery or bounce records. Rerunning an order reminder will not normally resend an event already recorded as accepted.</p>
+   <p>Still missing? Check delivery or bounce records with your email provider.</p>
   </div>}
  </section>;
 }

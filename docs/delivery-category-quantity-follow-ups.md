@@ -247,3 +247,47 @@ The FreshCast quantity-formatting batch, broader Settings language/technical
 layout and notification auto-dismiss review remain queued. This fix addresses
 the reported checkout font/duplicate-heading issue; it does not claim those
 other review batches are complete.
+
+## Delivery labels and owner email settings review
+
+Standard delivery and an express request currently use the same scheduling,
+opening hours, travel buffer and shop fee. Express records a customer preference;
+it does not book a courier or guarantee faster service. Both remain recorded in
+order history because they are saved fulfilment choices. No planning rule,
+payment, method code or stored snapshot was changed by this UI review.
+
+Customer/owner labels now say **Delivery** and **Delivery · express requested**.
+The checkout preference says **Ask about express delivery** and explains its
+limits. Historical snapshot labels such as Owner delivery are rendered using
+the current method label without modifying the original records. Express order
+details and the owner handover view make the requested nature explicit. The
+menu suggestion hint also now correctly directs time selection to checkout.
+
+The Order email reminders overview now shows kitchen/customer email setup,
+latest check and eligible customer queue counts. Readiness is explicitly email
+setup readiness, not proof of an active automatic schedule or inbox delivery.
+Missing setup, stale checks, failures and unknown results remain distinguishable.
+A single closed **Email settings & history** disclosure holds test email controls,
+recipient/sender addresses, sending setup, the schedule/history link and detailed
+eligibility information. Routine UI uses **Your reminders go to**, **Sent from**
+and **Send test email**, instead of environment-variable names and worker jargon.
+The recipient is where kitchen reminders arrive; the sender is the website's
+sending identity and may be a different address. Technical setup remains in the
+linked developer guide. Backend configuration, consent, receipts, rate limits,
+email payloads and scheduler behaviour are unchanged.
+
+Frontend lint, UX, checkout, planner and recommendation suites and build passed.
+Fifty-two backend diagnostic/activity/integration/fulfilment tests passed; one
+PostgreSQL-only test was skipped on isolated SQLite (53 discovered). Sixteen
+local Chromium WCAG A/AA and overflow checks cover open/closed Settings, stale,
+failed and missing setup, and standard/express history at desktop/tablet/phone
+sizes. Tests verify that refreshing or expanding details never sends email,
+one explicit test click makes one mocked empty POST with a cooldown, and the
+private status API rejects customers and anonymous requests. UI states and
+legacy history labels use explicit fixtures; no real diagnostic email, reminder
+worker, order mutation or production setting was used. Phone layout was visually
+reviewed. No migration is required; live Vercel/email operation was not verified.
+
+The broader notification auto-dismiss and FreshCast quantity presentation
+reviews remain pending; this batch completes the reported reminder-panel wording
+and delivery-label review.

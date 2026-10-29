@@ -11,8 +11,8 @@ export default function FulfilmentChoices({store,value='standard',area='',onChan
   <p className="fulfilment-hours">{pickup?'Collection':'Delivery'} hours: {hourLabel(first)}–{hourLabel(last)} · Malaysia time. Preparation availability is checked separately.</p>
   {pickup?<div className="fulfilment-location"><strong>Collection location</strong><p>{store?.pickup_location}</p>{store?.pickup_instructions && <p>{store.pickup_instructions}</p>}</div>:!detailsAtCheckout && <>
    {store?.delivery_areas?.length>0 && <label>Delivery area<select required value={area} onChange={e=>onChange(value,e.target.value)}><option value="">Choose your area</option>{store.delivery_areas.map(name=><option key={name} value={name}>{name}</option>)}</select><small>Outside these areas? Contact the kitchen before ordering.</small></label>}
-   <label className="fulfilment-express"><input type="checkbox" checked={value==='express'} onChange={e=>onChange(e.target.checked?'express':'standard',area)}/>Request express delivery</label>
-   {value==='express' && <p>Courier availability needs kitchen confirmation. The delivery fee shown in your total is the shop’s charge; this does not book a courier.</p>}
+   <label className="fulfilment-express"><input type="checkbox" checked={value==='express'} onChange={e=>onChange(e.target.checked?'express':'standard',area)}/>Ask about express delivery</label>
+   {value==='express' && <p>This records a request for the kitchen. It uses the same planning rules and delivery fee; a faster service is not reserved.</p>}
   </>}
   </>}
  </fieldset>{onRefresh && <button className="fulfilment-refresh" type="button" disabled={disabled || refreshing} onClick={onRefresh}>{refreshing?'Refreshing options…':'Refresh delivery & pickup options'}</button>}</div>;

@@ -226,7 +226,8 @@ supplier ordering system.
 - **PayPal:** optional Sandbox checkout with server-verified MYR captures and saved-order recovery. Requires Sandbox credentials; no live payments. See [setup](PAYPAL-SANDBOX.md).
 - **Testnet/crypto demonstration:** separate demo functionality, not real-money
   settlement or a substitute for verified food-order payment.
-- **Express delivery:** a request/arrangement for the owner, not automatic
+- **Express delivery:** records a request for the kitchen, with the same fee and
+  planning rules as delivery. It does not reserve faster service or provide automatic
   GrabExpress booking, courier tracking or a guaranteed traffic-aware ETA.
 
 Cancellation does not automatically mean a refund has completed. Use Payment

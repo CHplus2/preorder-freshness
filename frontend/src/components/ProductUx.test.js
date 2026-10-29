@@ -89,6 +89,10 @@ try{
  const {default:OrderFulfilment}=await server.ssrLoadModule('/src/components/OrderFulfilment.jsx');
  const collection=renderToStaticMarkup(createElement(OrderFulfilment,{order:{delivery_method:'pickup',fulfilment_snapshot:{pickup_location:'Accepted location'}}}));
  assert.match(collection,/Accepted location/);
+ const deliveryRecord=method=>renderToStaticMarkup(createElement(OrderFulfilment,{order:{delivery_method:method,fulfilment_snapshot:{label:method==='express'?'Express request':'Owner delivery'}}}));
+ assert.match(deliveryRecord('standard'),/<strong>Delivery<\/strong>/);assert.doesNotMatch(deliveryRecord('standard'),/Owner delivery/);
+ assert.match(deliveryRecord('express'),/Delivery · express requested/);assert.match(deliveryRecord('express'),/does not confirm a faster courier service/);
+
  const {default:BasketDeliveryDays}=await server.ssrLoadModule('/src/components/BasketDeliveryDays.jsx');
  const basket=(cart,value='')=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(BasketDeliveryDays,{cart,value})));
  const meal=(name,delivery_weekdays)=>({product:{name,delivery_weekdays}});

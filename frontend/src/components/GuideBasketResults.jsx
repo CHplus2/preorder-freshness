@@ -40,7 +40,7 @@ export default function GuideBasketResults({data,selectedId,onSelect,onAdd,onRev
  const title=useId(),plan=data.plans.find(option=>option.id===selectedId) || data.plans[0];
  if(!plan)return null;
  const count=data.quantity,same=data.menu_mode==='same' || count===1;
- const nextStep=`Choose your ${data.delivery_method==='pickup'?'collection':'delivery'} time in the basket or at checkout. Availability is checked again before ordering.`;
+ const nextStep=`Choose your ${data.delivery_method==='pickup'?'collection':'delivery'} time at checkout. Availability is checked again before ordering.`;
  const actionProps={onAdd,onReview,authenticated,busyId,disabled,replace:data.replaces_basket===true,currentQuantity:data.current_quantity,formatPrice};
  const cardFor=(item,children,key=item.id)=><MenuRecommendationCard compact key={key} menu={item} priceLabel={`${formatPrice(item.price)} / ${unitLabel(item.selling_details)}`} onView={()=>onView?.(item.id)}>{children}</MenuRecommendationCard>;
  if(same)return <section className="guide-one-menu-results" aria-labelledby={title}>

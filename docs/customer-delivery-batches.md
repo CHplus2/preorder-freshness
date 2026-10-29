@@ -2,8 +2,8 @@
 
 ## Email delivery diagnosis — 27 October 2026
 
-Settings → Order email reminders now shows current owner-recipient and sender
-addresses to staff only, and offers **Send one test email to owner**. Opening the
+Settings → Order email reminders → **Email settings & history** shows current
+recipient and sender addresses to staff only, and offers **Send test email**. Opening the
 page or refreshing status never sends. A requested check has a searchable
 `FCMAIL-...` reference and a five-minute per-staff cooldown; it does not process
 orders, modify reminder receipts or count as a scheduler run. No migration.

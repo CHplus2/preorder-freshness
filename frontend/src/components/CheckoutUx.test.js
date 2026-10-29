@@ -41,7 +41,7 @@ try{
  const pricing=cart({pricingReady:false,pricingError:'Pricing unavailable'});assert.match(pricing,/Retry pricing/);assert.doesNotMatch(pricing,/RM 14.05|Bulk discount/);
  assert.match(cart({cart:[]}),/Your basket is empty/);assert.match(cart({}),/RM 14.05/);
  const basketOnly=cart({});assert.match(basketOnly,/Choose your delivery time at checkout/);assert.doesNotMatch(basketOnly,/Preferred day|Arrival timing|delivery-time-picker|Optional here/);
- assert.doesNotMatch(cart({promotion:{delivery_areas:['Kuala Lumpur']}}),/Choose your area|Request express delivery/);
+ assert.doesNotMatch(cart({promotion:{delivery_areas:['Kuala Lumpur']}}),/Choose your area|Ask about express delivery/);
  assert.match(cart({fulfilmentMethod:'pickup'}),/Choose your collection time at checkout/);
  const address=patch=>renderToStaticMarkup(h(MemoryRouter,null,h(CheckoutAddress,{value:{address:null,draft:{country:'Malaysia'},editing:false,addressLoading:false,saving:false,error:'',...patch}})));
  const addressError=address({error:'Invalid response'});assert.match(addressError,/Retry saved address/);assert.doesNotMatch(addressError,/Save delivery address|Add delivery address/);
@@ -85,7 +85,7 @@ try{
  assert.match(disabledPickup,/<fieldset class="fulfilment-settings-fields" disabled/);
  const {default:FulfilmentChoices}=await server.ssrLoadModule('/src/components/FulfilmentChoices.jsx');
  const express=renderToStaticMarkup(h(FulfilmentChoices,{store:{delivery_enabled:true},value:'express',onChange:()=>{}}));
- assert.match(express,/delivery fee shown in your total is the shop/);assert.doesNotMatch(express,/any additional charge/);
+ assert.match(express,/same planning rules and delivery fee/);assert.match(express,/faster service is not reserved/);assert.doesNotMatch(express,/any additional charge/);
  const receive=store=>renderToStaticMarkup(h(FulfilmentChoices,{store,onChange:()=>{}}));
  assert.match(receive({pickup_enabled:true,pickup_location:'Fictional counter'}),/<strong>Self-collection<\/strong>/);
  assert.doesNotMatch(receive({pickup_enabled:false,pickup_location:'Fictional counter'}),/<strong>Self-collection<\/strong>/);
