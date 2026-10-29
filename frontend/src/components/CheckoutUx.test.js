@@ -64,8 +64,19 @@ try{
  assert.match(settings,/Flat delivery fee per order \(RM\)/);assert.match(settings,/not calculated from order history/);
  assert.match(settings,/existing orders keep their recorded delivery fee/);assert.match(settings,/Check a courier cost/);
  assert.match(settings,/<details class="delivery-cost-check"><summary>/);
+ assert.match(settings,/<section[^>]*aria-labelledby="fulfilment-settings-title"><h2 id="fulfilment-settings-title">Collection &amp; delivery<\/h2>/);
+ assert.match(settings,/Self-collection is switched off/);
+ assert.match(settings,/saved location alone does not enable pickup/);
+ assert.match(settings,/<label>Collection location<input(?![^>]*required)/);
+ const enabledPickup=renderToStaticMarkup(h(FulfilmentSettings,{store:{pickup_enabled:true,pickup_location:'Fictional counter'},onChange:()=>{}}));
+ assert.match(enabledPickup,/<label>Collection location<input[^>]*required/);
+ const disabledPickup=renderToStaticMarkup(h(FulfilmentSettings,{store:{pickup_enabled:false,pickup_location:'Fictional counter'},disabled:true,onChange:()=>{}}));
+ assert.match(disabledPickup,/<fieldset class="fulfilment-settings-fields" disabled/);
  const {default:FulfilmentChoices}=await server.ssrLoadModule('/src/components/FulfilmentChoices.jsx');
  const express=renderToStaticMarkup(h(FulfilmentChoices,{store:{delivery_enabled:true},value:'express',onChange:()=>{}}));
  assert.match(express,/delivery fee shown in your total is the shop/);assert.doesNotMatch(express,/any additional charge/);
+ const receive=store=>renderToStaticMarkup(h(FulfilmentChoices,{store,onChange:()=>{}}));
+ assert.match(receive({pickup_enabled:true,pickup_location:'Fictional counter'}),/<strong>Self-collection<\/strong>/);
+ assert.doesNotMatch(receive({pickup_enabled:false,pickup_location:'Fictional counter'}),/<strong>Self-collection<\/strong>/);
  console.log('Checkout UX: stale basket actions hidden, update/pricing guards, address read recovery and disabled payment groups passed.');
 }finally{await server.close();}

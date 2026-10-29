@@ -246,6 +246,7 @@
 .cart-page-heading>a{display:inline-flex;align-items:center;gap:9px;min-height:44px;font-size:13px;color:#426444;text-underline-offset:4px}
 .cart-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:28px;align-items:start}
 .cart-main{display:grid;gap:22px;min-width:0}
+.cart-main>*{min-width:0;max-width:100%;box-sizing:border-box}
 .cart-choices,.cart-storefront .cart-availability{background:#fff;border:1px solid #dce3d7;border-radius:16px;padding:24px;margin:0}
 .cart-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
 .cart-section-heading h2{display:flex;align-items:center;gap:10px;font:650 17px/1.5 system-ui,sans-serif;color:#2d4c35;margin:0}

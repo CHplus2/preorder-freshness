@@ -53,3 +53,32 @@ checkout at 1440, 768, 390 and 320 pixels. The phone layout was visually reviewe
 Only fictional local SQLite records were used. No production setting, fee,
 customer order, payment, email, courier booking or forecast was changed. No new
 database migration is required. This is not live Vercel or courier verification.
+
+## Pickup and layout correction before batch 2
+
+- The collection/delivery settings title is now an ordinary heading inside its
+  bordered section, with a separate invisible fieldset legend for accessibility.
+  Disabled-field behaviour is preserved.
+- Pickup location, instructions and hours remain visible while pickup is off.
+  The explicit status explains that a saved location alone does not enable the
+  option. The owner must switch on Offer self-collection and save. Location is
+  required only when pickup is enabled; a location does not silently opt the
+  business into offering collection.
+- Basket time choices allow text wrapping, prevent intrinsic-width grid growth
+  and use wider responsive columns. Nine hour-range choices and the fallback
+  help link stay within the availability card. No clipping or hidden overflow
+  is used to conceal labels.
+
+Frontend lint, checkout and UX checks and the production build passed. Fourteen
+local browser WCAG A/AA and page-overflow checks passed. Additional rectangle
+checks verify the Settings heading, every time button and fallback help text
+inside their respective cards at 1440, 1060, 768, 650, 390 and 320 pixels. This
+extends the earlier page-wide overflow checks to the actual component bounds.
+
+The long nine-window response is an explicit UI fixture matching the reported
+labels. Separately, real isolated backend calls verify the full pickup setup:
+saved location with pickup off hides the customer choice; enabling it through
+the Settings UI and saving exposes it after customer refresh; real collection
+slots can be selected and carried to checkout with no address or delivery fee.
+No production setting or record was changed, and no order/payment was submitted.
+Category CRUD and FreshCast precision remain the next requested batches.

@@ -6,14 +6,15 @@
 
 .slot-suggestions button[aria-pressed=true]{background:#285a3e;color:#fff;border-color:#285a3e}
 .basket-slot-empty>button{min-height:44px;margin-top:12px}
-.delivery-time-picker{margin:12px 0 24px;color:#304b37}
+.delivery-time-picker{margin:12px 0 24px;color:#304b37;min-width:0;max-width:100%;box-sizing:border-box}
+.basket-slot-search{min-width:0;max-width:100%;box-sizing:border-box}
 .delivery-time-picker .delivery-picker-intro{font-size:14px;line-height:1.65;margin:0 0 18px;font-weight:400}
 .delivery-time-picker>label{display:block;font-size:13px;font-weight:600;line-height:1.5;margin-bottom:8px}
 .delivery-time-picker>label span{font-weight:400;color:#596b5c}
 .delivery-time-picker>input{display:block;width:100%;max-width:320px;min-height:48px;background:#fff;color:#293e30;border:1px solid #aebbab;border-radius:8px;padding:11px 12px;font:inherit}
 .delivery-time-picker .delivery-picker-hint{font-size:12px;font-weight:400;line-height:1.65;color:#586b5b;margin:8px 0 14px}
-.delivery-time-picker .slot-suggestions{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:12px 0 18px}
-.delivery-time-picker .slot-suggestions button{min-height:46px;margin:0;padding:10px 12px;border:1px solid #b6c8ba;border-radius:8px;background:#fff;color:#285a3e;font-size:14px;font-weight:600;box-shadow:none;transform:none;white-space:nowrap}
+.delivery-time-picker .slot-suggestions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:8px;margin:12px 0 18px;min-width:0;max-width:100%}
+.delivery-time-picker .slot-suggestions button{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;min-height:46px;margin:0;padding:10px 12px;border:1px solid #b6c8ba;border-radius:8px;background:#fff;color:#285a3e;font-size:14px;font-weight:600;line-height:1.5;box-sizing:border-box;box-shadow:none;transform:none;white-space:normal;overflow-wrap:anywhere;text-align:center}
 .delivery-time-picker .slot-suggestions button[aria-pressed=true]{background:#285a3e;border-color:#285a3e;color:#fff;box-shadow:inset 0 0 0 1px #fff}
 .delivery-time-picker .slot-suggestions button:focus-visible{outline:3px solid #477b4f;outline-offset:3px}
 .delivery-time-picker .delivery-selected{display:grid;gap:4px;background:#eef5ee;border:1px solid #c3d8c8;border-radius:8px;padding:14px;font-size:12px;line-height:1.5;font-weight:400;color:#375840}
@@ -24,7 +25,7 @@
 .delivery-custom-request p,.basket-slot-empty p,.basket-slot-empty details{font-size:13px;font-weight:400;line-height:1.65}
 .basket-slot-empty summary{cursor:pointer;padding:8px 0;font-weight:500}
 .basket-slot-loading{padding:16px;border-radius:8px;background:#f1f6f0;color:#36563e;font-size:13px;line-height:1.6}
-@media(max-width:480px){.delivery-time-picker .slot-suggestions{grid-template-columns:repeat(2,minmax(0,1fr))}.delivery-time-picker>input{max-width:none}}
+@media(max-width:480px){.delivery-time-picker>input{max-width:none}}
 
 .delivery-time-picker .delivery-selected-unavailable{background:#f4f4ed;border-color:#d6d9cc;color:#5b6049}
 
