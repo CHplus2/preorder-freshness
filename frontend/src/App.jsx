@@ -290,7 +290,7 @@ function AppContent() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {alert?.message && <AppNotification key={alert.message+alert.type} alert={alert} onDismiss={dismissNotification}/>}
+        {alert?.message && <AppNotification key={alert.id ?? alert.message+alert.type} alert={alert} onDismiss={dismissNotification}/>}
 
       </AnimatePresence>
 

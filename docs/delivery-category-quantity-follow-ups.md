@@ -320,3 +320,32 @@ rollback if audit writing fails. Frontend lint, UX, checkout and planner suites
 and build passed. Local Chromium checks one delivery choice, legacy history
 notes and sample storage presentation on desktop/tablet/phone; production rows
 remain unchanged until the SQL is run. Notification timing is the next batch.
+
+## Batch: timed popup notifications
+
+All global popup severities now hide automatically: success after four seconds,
+information after six, errors after ten. Manual dismissal remains available.
+Mouse hover and keyboard focus pause independently; leaving hover does not
+restart a timer while the popup still has keyboard focus. Timers resume their
+remaining duration instead of starting another full interval. Touch interaction
+does not create a sticky mouse-hover pause.
+
+UIProvider gives each newly raised notification an identity, including repeated
+messages with the same text. App keys the popup by that identity, so a repeated
+Add to cart message starts visible with a fresh timer after an earlier one faded.
+Functional setAlert callbacks that return the current value retain its identity.
+Auto-hide changes only popup visibility: form errors using the shared alert
+source remain available inside the form. Inline validation and saved-state text
+are not transient popups and are not erased on a timer.
+
+Frontend lint, UX and checkout suites and build passed. Local Playwright clock
+checks exercise real UIProvider/AppNotification/DialogFeedback modules: 4/6/10
+second timing, repeated identical messages, pause/resume, focus surviving mouse
+leave, touch behaviour, manual dismissal and retained inline errors. Four
+WCAG A/AA and page-overflow checks cover 1440, 768, 390 and 320 pixels. Separate
+production-bundle browser checks verify two repeated actual local Add to cart
+notices and Settings saved each disappear without a click, while inline saved
+confirmation stays. Only a fictional local basket/settings fixture was used;
+no customer order, payment, email or production record was created or changed.
+No migration is required. FreshCast quantity presentation is the next remaining
+batch; the separate production storage SQL step still requires owner execution.
