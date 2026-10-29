@@ -349,3 +349,28 @@ confirmation stays. Only a fictional local basket/settings fixture was used;
 no customer order, payment, email or production record was created or changed.
 No migration is required. FreshCast quantity presentation is the next remaining
 batch; the separate production storage SQL step still requires owner execution.
+
+## Batch: FreshCast quantity summaries
+
+FreshCast summary quantities use up to two decimal places for kilograms and
+litres. Large gram/millilitre amounts use kg/l, while quantities below one kg/l
+use g/ml so small stock gaps stay visible. Native ingredient summaries retain up
+to three decimal places; a nonzero amount smaller than that resolution is shown
+as a bound rather than zero. Exact zero remains zero, and invalid values remain
+unavailable. The detailed stock-flow evidence and native inventory ledger retain
+their existing precision. No forecast calculation, allocation, costs, model or
+stored quantity changes.
+
+The shared presentation applies to kitchen stock stories, inspectors and
+Genpact/sample decision summaries and comparisons. Boundary tests cover unit
+conversion, two-decimal summaries, small positive/negative values, negative zero
+and invalid inputs. Frontend lint, all 55 predictive tests and the production
+build passed. Twelve local Chromium accessibility and page-overflow checks cover
+all three sources in decision, inventory and demand views at phone width, plus
+desktop decision views. Kitchen fixtures, the restored original Genpact model
+running locally, and the explicit model-free sample were checked separately.
+No production database records, payments or emails were touched. The existing
+sample-location SQL correction remains a separate owner-executed step.
+Six additional phone-width checks cover steps 2–4 for kitchen and Genpact,
+including stock explanations, action options and tradeoff quantities. All passed;
+no new browser runtime errors were observed.

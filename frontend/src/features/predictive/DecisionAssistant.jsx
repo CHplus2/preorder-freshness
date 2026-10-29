@@ -1,3 +1,4 @@
+import {stockQuantity} from './kitchenPresentation.js';
 import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import PantryScene from "./PantryScene";
@@ -13,8 +14,8 @@ import { rankRisks } from "./api";
 import { estimateTradeoff } from "./decisionMath";
 import {DecisionSteps, ZeroWasteNotice} from './FreshCastChrome';
 import {selectedDecisionStep, genpactCarriedStock, decisionSteps as steps} from './decisionNavigation';
-const qty = (n) =>
-  new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
+const kg = value => stockQuantity(value, 'kg');
+
 const money = (n) =>
   n === null
     ? "Unknown cost"
@@ -228,7 +229,7 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
       id: "purchasing",
       title: "Adjust purchasing",
       detail: risk.action,
-      limit: `Backend illustrative reorder: ${qty(risk.illustrative_reorder_kg)} kg. Supplier prices and lead times remain unverified.`,
+      limit: `Backend illustrative reorder: ${kg(risk.illustrative_reorder_kg)}. Supplier prices and lead times remain unverified.`,
     },
     {
       id: "menu",
@@ -267,11 +268,11 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
             <div className="fc-facts">
               <div>
                 <span>Expiring unused</span>
-                <strong>{qty(risk.expiring_unused_kg)} kg</strong>
+                <strong>{kg(risk.expiring_unused_kg)}</strong>
               </div>
               <div>
                 <span>Expected shortfall</span>
-                <strong>{qty(risk.shortfall_kg)} kg</strong>
+                <strong>{kg(risk.shortfall_kg)}</strong>
               </div>
               <div>
                 <span>Potential waste exposure</span>
@@ -373,28 +374,28 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
                 <tbody>
                   <tr>
                     <td>Ingredient demand</td>
-                    <td>{qty(risk.forecast_demand_kg)} kg</td>
+                    <td>{kg(risk.forecast_demand_kg)}</td>
                     <td>
                       {scenarioRisk
-                        ? `${qty(scenarioRisk.forecast_demand_kg)} kg`
+                        ? `${kg(scenarioRisk.forecast_demand_kg)}`
                         : "Not calculated"}
                     </td>
                   </tr>
                   <tr>
                     <td>Expiring unused</td>
-                    <td>{qty(risk.expiring_unused_kg)} kg</td>
+                    <td>{kg(risk.expiring_unused_kg)}</td>
                     <td>
                       {scenarioRisk
-                        ? `${qty(scenarioRisk.expiring_unused_kg)} kg`
+                        ? `${kg(scenarioRisk.expiring_unused_kg)}`
                         : "Not calculated"}
                     </td>
                   </tr>
                   <tr>
                     <td>Shortfall</td>
-                    <td>{qty(risk.shortfall_kg)} kg</td>
+                    <td>{kg(risk.shortfall_kg)}</td>
                     <td>
                       {scenarioRisk
-                        ? `${qty(scenarioRisk.shortfall_kg)} kg`
+                        ? `${kg(scenarioRisk.shortfall_kg)}`
                         : "Not calculated"}
                     </td>
                   </tr>
@@ -410,7 +411,7 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
                 </tbody>
               </table>
             </div>
-            {!scenario && <button onClick={onPromotion}>Calculate promotion what-if</button>}</> : <section className="local-action-review"><span className="pd-eyebrow">WORKFLOW REVIEW · OUTCOME NOT SIMULATED</span><h3>{action==='purchasing'?'Review purchasing guidance':'Check menu and preparation feasibility'}</h3><p>{actions.find(a=>a.id===action).limit}</p><div className="fc-facts"><div><span>Current forecast shortfall</span><strong>{qty(risk.shortfall_kg)} kg</strong></div><div><span>Current unused at expiry</span><strong>{qty(risk.expiring_unused_kg)} kg</strong></div><div><span>After this action</span><strong>Not simulated</strong></div></div><p>These are baseline quantities. No revised purchase, kitchen schedule, cost or sales benefit is calculated for this option. Genpact meal IDs are not mapped to your kitchen menus.</p><button onClick={()=>{setAction('promotion');setCost('');setPercent('');}}>Explore a promotion comparison instead</button></section>}
+            {!scenario && <button onClick={onPromotion}>Calculate promotion what-if</button>}</> : <section className="local-action-review"><span className="pd-eyebrow">WORKFLOW REVIEW · OUTCOME NOT SIMULATED</span><h3>{action==='purchasing'?'Review purchasing guidance':'Check menu and preparation feasibility'}</h3><p>{actions.find(a=>a.id===action).limit}</p><div className="fc-facts"><div><span>Current forecast shortfall</span><strong>{kg(risk.shortfall_kg)}</strong></div><div><span>Current unused at expiry</span><strong>{kg(risk.expiring_unused_kg)}</strong></div><div><span>After this action</span><strong>Not simulated</strong></div></div><p>These are baseline quantities. No revised purchase, kitchen schedule, cost or sales benefit is calculated for this option. Genpact meal IDs are not mapped to your kitchen menus.</p><button onClick={()=>{setAction('promotion');setCost('');setPercent('');}}>Explore a promotion comparison instead</button></section>}
             <p>{actions.find((a) => a.id === action).limit}</p>
             <p className="pd-note">
               Purchasing and preparation action outcomes are not supplied by API
@@ -483,7 +484,7 @@ function DecisionJourney({ risk, baseline, scenario, onPromotion, isFixture }) {
               <h3>{risk.action}</h3>
               <p>{risk.explanation}</p>
               <strong>
-                Illustrative reorder: {qty(risk.illustrative_reorder_kg)} kg
+                Illustrative reorder: {kg(risk.illustrative_reorder_kg)}
               </strong>
             </div>
             <p>{risk.risk_inputs_note}</p>

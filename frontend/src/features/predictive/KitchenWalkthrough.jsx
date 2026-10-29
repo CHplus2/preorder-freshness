@@ -1,3 +1,4 @@
+import {stockQuantity} from './kitchenPresentation.js';
 import { useState } from "react";
 import { NavLink, useSearchParams } from "react-router-dom";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
@@ -245,19 +246,13 @@ export default function KitchenWalkthrough({
               <div>
                 <dt>May expire unused</dt>
                 <dd>
-                  {new Intl.NumberFormat("en-MY", {
-                    maximumFractionDigits: 3,
-                  }).format(info.waste)}{" "}
-                  {info.unit}
+                  {stockQuantity(info.waste, info.unit)}
                 </dd>
               </div>
               <div>
                 <dt>Expected shortfall</dt>
                 <dd>
-                  {new Intl.NumberFormat("en-MY", {
-                    maximumFractionDigits: 3,
-                  }).format(info.shortage)}{" "}
-                  {info.unit}
+                  {stockQuantity(info.shortage, info.unit)}
                 </dd>
               </div>
             </dl>

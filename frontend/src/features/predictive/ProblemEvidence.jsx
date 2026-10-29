@@ -1,3 +1,4 @@
+import {stockQuantity} from './kitchenPresentation.js';
 import { useState } from "react";
 import {
   ShoppingBasket,
@@ -5,14 +6,14 @@ import {
   ArrowRight,
   AlertTriangle,
 } from "lucide-react";
-const qty = (n) =>
-  new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
+const kg = value => stockQuantity(value, 'kg');
+
 export default function ProblemEvidence({ risk }) {
   const [selected, setSelected] = useState("need");
   const insights = {
-    need: `${qty(risk.forecast_demand_kg)} kg is the ingredient need calculated from forecast orders and simulated recipes. It is an estimate, not a confirmed order.`,
-    stock: `${qty(risk.available_kg)} kg is included by the stock eligibility rules. Expiry timing matters: having enough stock overall does not guarantee it is usable when needed.`,
-    outcome: `${qty(risk.expiring_unused_kg)} kg may expire unused; ${qty(risk.shortfall_kg)} kg of expected need may go uncovered. Both can happen when stock expires before later demand.`,
+    need: `${kg(risk.forecast_demand_kg)} is the ingredient need calculated from forecast orders and simulated recipes. It is an estimate, not a confirmed order.`,
+    stock: `${kg(risk.available_kg)} is included by the stock eligibility rules. Expiry timing matters: having enough stock overall does not guarantee it is usable when needed.`,
+    outcome: `${kg(risk.expiring_unused_kg)} may expire unused; ${kg(risk.shortfall_kg)} of expected need may go uncovered. Both can happen when stock expires before later demand.`,
   };
   const maximum = Math.max(
     1,
@@ -52,7 +53,7 @@ export default function ProblemEvidence({ risk }) {
           >
             <Icon size={24} aria-hidden="true" />
             <span className="fc-evidence-title">{title}</span>
-            <strong>{qty(value)} kg</strong>
+            <strong>{kg(value)}</strong>
             <div className="fc-evidence-bar" aria-hidden="true">
               <span style={{ width: `${(value / maximum) * 100}%` }} />
             </div>
@@ -73,14 +74,14 @@ export default function ProblemEvidence({ risk }) {
         >
           <AlertTriangle size={24} aria-hidden="true" />
           <span className="fc-evidence-title">3 · Possible outcome</span>
-          <strong>{qty(risk.expiring_unused_kg)} kg</strong>
+          <strong>{kg(risk.expiring_unused_kg)}</strong>
           <span>May expire unused</span>
           <div className="fc-evidence-bar" aria-hidden="true">
             <span
               style={{ width: `${(risk.expiring_unused_kg / maximum) * 100}%` }}
             />
           </div>
-          <strong>{qty(risk.shortfall_kg)} kg</strong>
+          <strong>{kg(risk.shortfall_kg)}</strong>
           <span>Expected need not covered</span>
           <div className="fc-evidence-bar" aria-hidden="true">
             <span

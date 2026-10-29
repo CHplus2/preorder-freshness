@@ -1,7 +1,6 @@
+import {stockQuantity} from './kitchenPresentation.js';
 import { useId, useState } from "react";
 import { ingredientPresentation } from "./ingredientPresentation";
-const qty = (value) =>
-  new Intl.NumberFormat("en-MY", { maximumFractionDigits: 3 }).format(value);
 export default function StockNeedInspection({ risk, local = false }) {
   const [selected, setSelected] = useState("stock");
   const insightId = useId();
@@ -77,7 +76,7 @@ export default function StockNeedInspection({ risk, local = false }) {
               <rect x="9" y="9" width="82" height="14" rx="5" fill="#446c55" />
             </svg>
             <strong>
-              {qty(value)} {view.unit}
+              {stockQuantity(value, view.unit)}
             </strong>
             <span>{label}</span>
           </button>
@@ -89,8 +88,8 @@ export default function StockNeedInspection({ risk, local = false }) {
       <details>
         <summary>How to read this illustration</summary>
         <p className="pd-note">
-          Illustrated amounts share a {view.unit} scale. Containers are
-          decorative. Waste and shortage use the backend’s separate results
+          Containers compare the same quantities; labels use convenient units.
+          Containers are decorative. Waste and shortage use the backend’s separate results
           below.{" "}
           {local
             ? "Need comes from included paid bookings and accepted recipe snapshots, not a forecast of extra customers. Recorded inputs do not establish food safety."

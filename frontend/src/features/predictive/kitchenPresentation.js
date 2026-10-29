@@ -1,10 +1,19 @@
 // Presentation of the backend ledger only; never rerun demand forecasting or FEFO.
-const number = value => new Intl.NumberFormat('en-MY', {maximumFractionDigits: 3}).format(value);
+const number = (value, digits) => {
+  if(value !== 0 && Math.round(Math.abs(value) * 10 ** digits) === 0) {
+    const threshold = (10 ** -digits).toFixed(digits);
+    return value < 0 ? `> -${threshold}` : `<${threshold}`;
+  }
+  return new Intl.NumberFormat('en-MY', {maximumFractionDigits: digits}).format(value === 0 ? 0 : value);
+};
 export function stockQuantity(value, unit) {
   if (value == null || !Number.isFinite(value)) return 'Unavailable';
-  if (unit === 'g' && Math.abs(value) >= 1000) return `${number(value / 1000)} kg`;
-  if (unit === 'ml' && Math.abs(value) >= 1000) return `${number(value / 1000)} l`;
-  return `${number(value)} ${unit}`;
+  const absolute = Math.abs(value);
+  if (unit === 'g' && absolute >= 1000) return `${number(value / 1000, 2)} kg`;
+  if (unit === 'ml' && absolute >= 1000) return `${number(value / 1000, 2)} l`;
+  if (unit === 'kg' && absolute > 0 && absolute < 1) return `${number(value * 1000, 3)} g`;
+  if (unit === 'l' && absolute > 0 && absolute < 1) return `${number(value * 1000, 3)} ml`;
+  return `${number(value, unit === 'kg' || unit === 'l' ? 2 : 3)} ${unit}`;
 }
 export function stockStory(risk) {
   const flow = risk.stock_flow;

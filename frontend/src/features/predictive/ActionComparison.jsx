@@ -1,3 +1,4 @@
+import {stockQuantity} from './kitchenPresentation.js';
 import { useState } from "react";
 import RiskMap from "./RiskMap";
 import "./actionComparison.css";
@@ -60,7 +61,7 @@ export default function ActionComparison({ risk, scenarioRisk, isFixture }) {
             <article key={field}>
               <span>{label}</span>
               <strong>
-                {value == null ? "Unavailable" : `${number(value)} ${unit}`}
+                {value == null ? "Unavailable" : unit === 'kg' ? stockQuantity(value, 'kg') : `${number(value)} ${unit}`}
               </strong>
               <div className="fc-comparison-track" aria-hidden="true">
                 <i
@@ -74,7 +75,7 @@ export default function ActionComparison({ risk, scenarioRisk, isFixture }) {
                   ? "Reference estimate"
                   : delta === null
                     ? "Difference unavailable"
-                    : `${delta > 0 ? "+" : ""}${number(delta)} ${unit} versus baseline`}
+                    : `${delta > 0 && !(unit === 'kg' && stockQuantity(delta, 'kg').startsWith('<')) ? '+' : ''}${unit === 'kg' ? stockQuantity(delta, 'kg') : `${number(delta)} ${unit}`} versus baseline`}
               </small>
             </article>
           );

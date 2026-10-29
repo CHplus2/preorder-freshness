@@ -36,6 +36,7 @@ export default function KitchenStockStory({risk, window, compact = false}) {
         ['= Forecast stock gap', story.gap, 'Review this estimate before purchasing', 'gap'],
       ].map(([label, value, hint, name]) => <article key={name} className={name}><span>{label}</span><strong>{amount(value)}</strong>{!compact && <small>{hint}</small>}</article>)}
     </div>
+    {!compact && <p className="pd-note">Summary amounts are rounded. The stock breakdown retains native ingredient units.</p>}
     {!compact && <p className="local-stock-explanation">After using {amount(story.nearUsed)} of expiring stock, {amount(story.afterNear)} is still needed. Later stock covers {amount(story.laterUsed)}, leaving <strong>{amount(story.gap)} uncovered</strong>{story.firstGap ? ` from ${story.firstGap}` : ''}. Only stock usable on the demand date counts.</p>}
     <div className="local-stock-outcome"><span>Expected unused at expiry</span><strong>{amount(story.waste)}</strong>{story.waste>0 && <span>Review a safe use before expiry.</span>}</div>
     <ZeroWasteNotice waste={story.waste} carried={story.carried} unit={risk.unit}/>

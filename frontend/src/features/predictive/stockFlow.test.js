@@ -110,7 +110,7 @@ try {
  const renderReview=action=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(KitchenWorkflowReview,{action,risk:reviewedRisk,links})));
  const preparationReview=renderReview('menu');
  assert.match(preparationReview,/OUTCOME NOT SIMULATED/);
- assert.match(preparationReview,/1.234 kg/);
+ assert.match(preparationReview,/1.23 kg/);
  assert.match(preparationReview,/Not simulated/);
  assert.match(preparationReview,/No new schedule, sales uplift, cost or benefit/);
  assert.doesNotMatch(preparationReview,/assumed action cost, with the same/);

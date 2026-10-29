@@ -1,3 +1,4 @@
+import {stockQuantity} from './kitchenPresentation.js';
 import { useState } from "react";
 import KitchenWalkthrough from "./KitchenWalkthrough";
 import {
@@ -8,8 +9,8 @@ import {
 } from "lucide-react";
 import "./pantry.css";
 import { problemSummary } from "./problemSummary";
-const qty = (n) =>
-  new Intl.NumberFormat("en-MY", { maximumFractionDigits: 2 }).format(n);
+const kg = value => stockQuantity(value, 'kg');
+
 const money = (n) =>
   n === null
     ? "Cost unknown"
@@ -267,8 +268,8 @@ export default function PantryScene({
                     <strong>{r.ingredient_id}</strong>
                     <span>
                       {r.expiring_unused_kg > 0
-                        ? `${qty(r.expiring_unused_kg)} kg expiring unused`
-                        : `${qty(r.shortfall_kg)} kg shortfall`}
+                        ? `${kg(r.expiring_unused_kg)} expiring unused`
+                        : `${kg(r.shortfall_kg)} shortfall`}
                     </span>
                     <small>
                       {money(r.potential_waste_cost_myr)} · potential waste

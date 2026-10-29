@@ -55,7 +55,7 @@ test('chicken shortage story separates expiring supply, later supply and uncover
   assert.equal(story.need-story.nearUsed-story.laterUsed,story.gap);
   assert.equal(story.firstGap,'2026-10-19');
   assert.equal(kitchenCase(risk).kind,'shortage');
-  assert.equal(caseQuantity(risk),'16.082 kg forecast gap');
+  assert.equal(caseQuantity(risk),'16.08 kg forecast gap');
   assert.equal(kitchenCase({...risk,forecast_expiring_unused:100}).kind,'mixed');
   assert.equal(kitchenCase({...risk,forecast_shortfall:0,forecast_expiring_unused:100}).kind,'waste');
   assert.equal(stockQuantity(196.891,'g'),'196.891 g');
@@ -160,4 +160,22 @@ test("forecast readiness keeps zero estimates distinct from absent history and d
     evaluated: 0,
     missingRecipes: 0,
   });
+});
+
+
+test('summary mass/volume are concise without presenting a positive amount as zero',()=>{
+ assert.equal(stockQuantity(21841.927,'g'),'21.84 kg');
+ assert.equal(stockQuantity(5760,'g'),'5.76 kg');
+ assert.equal(stockQuantity(1234.567,'kg'),'1,234.57 kg');
+ assert.equal(stockQuantity(999.999,'g'),'999.999 g');
+ assert.equal(stockQuantity(1000,'g'),'1 kg');
+ assert.equal(stockQuantity(0.004,'kg'),'4 g');
+ assert.equal(stockQuantity(0.0000001,'kg'),'<0.001 g');
+ assert.equal(stockQuantity(-0.0001,'g'),'> -0.001 g');
+ assert.equal(stockQuantity(1234.567,'ml'),'1.23 l');
+ assert.equal(stockQuantity(0.004,'l'),'4 ml');
+ assert.equal(stockQuantity(0,'g'),'0 g');
+ assert.equal(stockQuantity(-0,'kg'),'0 kg');
+ assert.equal(stockQuantity(NaN,'g'),'Unavailable');
+ assert.equal(stockQuantity('1','g'),'Unavailable');
 });
