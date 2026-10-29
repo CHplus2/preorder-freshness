@@ -154,3 +154,11 @@ minimum control heights. The phone confirmation layout was visually reviewed.
 Only fictional local SQLite records were changed. No production record, payment,
 email, courier booking or model was changed. Vercel deployment was not observed.
 No database migration is required. Batch 3 remains FreshCast quantity formatting.
+
+
+### Copy refinement
+
+The Delivery areas field now uses the short hint “One area per line. Leave blank
+to accept any area.” An overlong entry shows “Area 1: use 80 characters or fewer.”
+The same concise error is returned by the server. Area limits and validation
+behaviour are unchanged.

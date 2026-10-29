@@ -36,7 +36,7 @@ class StoreSerializer(serializers.ModelSerializer):
             if not isinstance(name, str) or not name.strip():
                 raise serializers.ValidationError('Enter a name for each delivery area, or leave the list empty.')
             if len(name.strip()) > 80:
-                raise serializers.ValidationError(f'Area {index + 1} is too long. Use a short place name of up to 80 characters, such as Kuala Lumpur. Put your longer description in Service area description.')
+                raise serializers.ValidationError(f'Area {index + 1}: use 80 characters or fewer.')
         names = [v.strip() for v in value]
         if len(set(v.casefold() for v in names)) != len(names):
             raise serializers.ValidationError('List each delivery area only once.')

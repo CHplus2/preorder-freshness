@@ -285,7 +285,7 @@ class FulfilmentTests(TestCase):
         description = 'The Klang Valley, with dedicated daily delivery coverage across Kuala Lumpur and Petaling Jaya.'
         response = self.client.patch('/api/storefront/', {'delivery_areas': [description]}, format='json')
         self.assertEqual(response.status_code, 400)
-        self.assertIn('Area 1 is too long', str(response.data['delivery_areas']))
+        self.assertIn('Area 1: use 80 characters or fewer', str(response.data['delivery_areas']))
         self.store.refresh_from_db()
         self.assertEqual(self.store.delivery_areas, ['Batu Kawa', 'Moyan'])
         response = self.client.patch('/api/storefront/', {'service_area': description, 'delivery_areas': ['Kuala Lumpur', 'Petaling Jaya']}, format='json')
