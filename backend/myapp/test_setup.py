@@ -58,6 +58,20 @@ class SetupChecklistTests(TestCase):
         self.assertEqual(data['steps'][2]['affected_count'],12)
         self.assertEqual(len(data['steps'][2]['examples']),10)
 
+    def test_paused_and_archived_menu_gaps_do_not_block_active_setup(self):
+        self.menu()
+        for state in ['paused', 'archived']:
+            Product.objects.create(name=f'Old {state}', price=10, selling_status=state)
+        data = self.client.get(self.url).data
+        self.assertEqual(data['menu_count'], 1)
+        for step in data['steps'][2:]:
+            self.assertTrue(step['complete'])
+            self.assertEqual(step['affected_count'], 0)
+        Product.objects.filter(selling_status='active').update(selling_status='paused')
+        data = self.client.get(self.url).data
+        self.assertEqual(data['menu_count'], 0)
+        self.assertFalse(data['steps'][2]['complete'])
+
     def test_invalid_legacy_tasks_do_not_break_checklist(self):
         product,_=self.menu();product.preparation_tasks=[{'name':'Invalid','resource':'unknown'}];product.save()
         data=self.client.get(self.url).data

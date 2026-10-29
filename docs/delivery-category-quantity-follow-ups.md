@@ -8,9 +8,9 @@ These are additional changes, not unfinished work from that earlier review.
 1. **Delivery pricing — implemented.** Make the existing editable shop fee
    understandable, explain the difference from courier cost, and keep customer
    totals clear. Add an optional owner-entered cost comparison.
-2. **Menu category management — next.** Review the category API and implement
-   appropriate owner creation, renaming and safe deletion controls. Preserve
-   menu references and provide clear inline validation and recovery.
+2. **Menu category management — implemented.** Owner creation, renaming and
+   safe deletion controls preserve menu references, with inline validation and
+   explicit recovery for uncertain requests.
 3. **FreshCast quantity formatting — pending.** Review two-decimal kilogram
    summaries while preserving precise ingredient amounts in calculations and
    detailed evidence. Avoid hiding small positive quantities through rounding.
@@ -82,3 +82,75 @@ the Settings UI and saving exposes it after customer refresh; real collection
 slots can be selected and carried to checkout with no address or delivery fee.
 No production setting or record was changed, and no order/payment was submitted.
 Category CRUD and FreshCast precision remain the next requested batches.
+
+
+## Batch 2: categories and Settings follow-up
+
+Menu management now has **Manage categories** beside Create menu. The dialog
+supports adding a category, renaming it, and deleting an empty category after a
+confirmation. Renaming preserves category IDs and menu links. Names are trimmed,
+repeated spaces are collapsed, and blank, overlong or case-insensitive duplicate
+names receive validation errors. Mutations are staff-only; public reads remain
+available. The existing category endpoints are used, without schema changes:
+
+- `GET /api/categories/` and `GET /api/categories/:id/` return sorted categories.
+  Staff responses include `menu_count` across active, paused and archived menus;
+  public responses do not expose these management counts.
+- `POST /api/categories/` creates; `PATCH /api/categories/:id/` renames.
+- `DELETE /api/categories/:id/` returns 204 only for an empty category. Otherwise
+  it returns 409 with `code: category_in_use`, preserving menu links. The server
+  rechecks under a category row lock, rather than relying on the displayed count.
+  Direct model/admin deletion retains the existing model behaviour; this guard
+  applies to the website API, not a new database constraint.
+
+The owner can move linked menus through Edit & steps before deleting a category.
+After changes, category choices, menu names and filters refresh in the current
+application; a removed selected category resets the menu filter. Other open
+browser tabs need refresh. The dialog uses the existing native modal with focus
+containment and opener restoration. Failed or uncertain requests retain the
+entries; a network/server uncertainty blocks another mutation until the owner
+refreshes and reviews the list. Unexpected mutation responses also require this
+recovery, instead of claiming success.
+
+An existing menu editor issue surfaced during this flow: PATCH previously
+re-submitted an unchanged legacy photo path and could reject an otherwise valid
+category edit. Unchanged image references are now omitted from edit payloads;
+new and changed references still pass the existing server validation.
+
+The additional Settings feedback in this batch is addressed as follows:
+
+- Courier delivery describes the supported app-booking, saved tracking link and
+  owner/bulk status workflow. The unused API setup disclosure and disconnected
+  API label were removed. A tracking link is still clearly distinguished from
+  automatic order-status updates; no provider integration was added.
+- Service area description is a separate, explicitly labelled multiline field.
+  Delivery areas explains short place names on separate lines, such as Kuala
+  Lumpur and Petaling Jaya. A long sentence gets one inline error at that field,
+  with focus returned there on save; the owner's entries are retained. The
+  server also identifies the overlong area and suggests using the description
+  field. No delivery restrictions are silently inferred from prose or changed
+  on the production database. Other Settings fields now have explicit labels.
+- Kitchen setup checks count only active menus accepting new orders. Paused
+  and archived menus remain in records and no longer block current-menu setup.
+  The checklist states this scope. Inventory follow-up and email worker
+  monitoring retain their recorded-data behaviour; no expired stock or reminder
+  receipts were deleted and no reminder worker was triggered.
+
+### Batch 2 verification
+
+Seventy backend tests passed, with three existing PostgreSQL-only tests skipped
+on isolated SQLite (73 discovered). Coverage includes staff permissions, public
+reads, name validation, rename/filter continuity, non-empty deletion protection
+across all selling states, reassignment before deletion, active-only setup and
+delivery-area validation. Frontend lint, UX and checkout suites and the production
+build passed.
+
+Local Chromium exercised the real owner create/rename/reassign/delete flow,
+customer category filtering, a stale delete confirmation after a menu was added
+by another editor, escape/opener focus, uncertain mutation recovery, and the
+actual Settings error/fix/save flow. Fourteen WCAG A/AA and overflow checks passed
+at 1440, 768, 390 and 320 pixels, including dialog control containment and 44px
+minimum control heights. The phone confirmation layout was visually reviewed.
+Only fictional local SQLite records were changed. No production record, payment,
+email, courier booking or model was changed. Vercel deployment was not observed.
+No database migration is required. Batch 3 remains FreshCast quantity formatting.

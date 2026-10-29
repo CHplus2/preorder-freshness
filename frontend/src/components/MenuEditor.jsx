@@ -10,6 +10,7 @@ import './MenuEditor.css';
 export default function MenuEditor({value,onChange,onDismiss}){
  const {categories,addProduct,updateProduct}=useProduct();
  const id=useId(),form=useRef(null),submitted=useRef(false);
+ const originalImage=useRef(value.image_url);
  const [errors,setErrors]=useState({}),[message,setMessage]=useState(''),[uncertain,setUncertain]=useState(false),[busy,setBusy]=useState(false),[photoBusy,setPhotoBusy]=useState(false);
  const editing=Boolean(value.id),locked=busy || photoBusy;
  const dismiss=()=>{if(!busy)onDismiss();};
@@ -25,6 +26,9 @@ export default function MenuEditor({value,onChange,onDismiss}){
   if(Object.keys(next).length)return;
   submitted.current=true;setBusy(true);
   const {selling_status:ignoredStatus,can_delete:ignoredDelete,...edits}=value;void ignoredStatus;void ignoredDelete;
+  // PATCH should retain an unchanged photo, including legacy catalogue paths.
+  // New or replacement references still pass the server's normal validation.
+  if(editing && edits.image_url===originalImage.current)delete edits.image_url;
   try{
    const saved=await (editing?updateProduct:addProduct)({...edits,name:edits.name.trim()},{onError:error=>{const issue=menuSaveError(error);setErrors(issue.fields);setMessage(issue.message);setUncertain(issue.uncertain);}});
    if(saved)onDismiss();

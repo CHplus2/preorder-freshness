@@ -46,6 +46,10 @@ try{
  const {default:MenuEditor}=await server.ssrLoadModule('/src/components/MenuEditor.jsx');
  const editor=renderToStaticMarkup(createElement(UIContext.Provider,{value:{setAlert:()=>{}}},createElement(ProductContext.Provider,{value:{categories:[{id:1,name:'Rice meals'}]}},createElement(MenuEditor,{value:{name:'',price:'',category:''},onChange:()=>{},onDismiss:()=>{}}))));
  assert.match(editor,/<form[^>]*noValidate/);assert.match(editor,/Price per selling unit/);assert.match(editor,/data-menu-field="category"/);assert.doesNotMatch(editor,/dialog-feedback/);
+ const {default:CategoryManager}=await server.ssrLoadModule('/src/components/CategoryManager.jsx');
+ const categoriesDialog=renderToStaticMarkup(createElement(UIContext.Provider,{value:{setAlert:()=>{}}},createElement(ProductContext.Provider,{value:{setCategories:()=>{},fetchProducts:async()=>{}}},createElement(CategoryManager,{onDismiss:()=>{}}))));
+ assert.match(categoriesDialog,/aria-label="Manage menu categories"/);assert.match(categoriesDialog,/New category name/);assert.match(categoriesDialog,/Loading categories/);
+ assert.match(categoriesDialog,/<button[^>]*disabled[^>]*>Add category/);assert.doesNotMatch(categoriesDialog,/dialog-feedback/);
  const {default:DeleteProduct}=await server.ssrLoadModule('/src/components/DeleteProductModal/DeleteProduct.jsx');
  const deletion=can_delete=>renderToStaticMarkup(createElement(UIContext.Provider,{value:{setAlert:()=>{}}},createElement(ProductContext.Provider,{value:{products:[{id:8,name:'Fixture menu',can_delete}],productIdToDelete:8}},createElement(DeleteProduct))));
  assert.match(deletion(true),/Delete menu<\/button>/);assert.match(deletion(true),/cannot be undone/);
@@ -81,7 +85,7 @@ try{
  assert.match(choice({value:'standard'}),/>Self-collection<\/strong>/);
  assert.doesNotMatch(choice({store:{delivery_enabled:true,pickup_enabled:true,pickup_location:'   '}}),/>Self-collection<\/strong>/);
  const {default:CourierStatus}=await server.ssrLoadModule('/src/components/CourierConnectionStatus.jsx');
- const courierStatus=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(CourierStatus)));assert.match(courierStatus,/no courier API connected/);assert.match(courierStatus,/verified courier events/);assert.match(courierStatus,/\/admin\/planner\?view=handover/);
+ const courierStatus=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(CourierStatus)));assert.doesNotMatch(courierStatus,/no courier API|Enable automatic courier|developer.grab/);assert.match(courierStatus,/does not change order status automatically/);assert.match(courierStatus,/\/admin\/planner\?view=handover/);
  const {default:OrderFulfilment}=await server.ssrLoadModule('/src/components/OrderFulfilment.jsx');
  const collection=renderToStaticMarkup(createElement(OrderFulfilment,{order:{delivery_method:'pickup',fulfilment_snapshot:{pickup_location:'Accepted location'}}}));
  assert.match(collection,/Accepted location/);

@@ -2,9 +2,10 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission, SAFE_METHODS
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from ..models import Category, Product, OrderItem, CartItem
-from django.db.models import Exists, OuterRef
-from django.db import transaction, OperationalError
+from django.db.models import Count, Exists, OuterRef
+from django.db import transaction, OperationalError, IntegrityError
 from django.shortcuts import get_object_or_404
 from ..serializers import CategorySerializer, ProductSerializer
 from ..services.recommendation import recommend_for_user
@@ -24,16 +25,45 @@ class IsAdminOrReadOnly(BasePermission):
 # CATEGORY 
 # ------------------------------------------
 
-class CategoryListCreate(generics.ListCreateAPIView):
-    queryset = Category.objects.all()
+class CategoryManagement:
+    def get_queryset(self):
+        rows = Category.objects.order_by('name', 'pk')
+        # Management counts include archived menus, but are not public catalogue data.
+        return rows.annotate(menu_count=Count('product')) if self.request.user.is_staff else rows
+
+    def perform_create(self, serializer):
+        self.save_category(serializer)
+
+    def perform_update(self, serializer):
+        self.save_category(serializer)
+
+    def save_category(self, serializer):
+        try:
+            with transaction.atomic():
+                serializer.save()
+        except IntegrityError:
+            raise ValidationError({'name': 'A category with this name already exists. Refresh categories and choose another name.'})
+
+
+class CategoryListCreate(CategoryManagement, generics.ListCreateAPIView):
     serializer_class = CategorySerializer
     permission_classes = [IsAdminOrReadOnly]
 
 
-class CategoryDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Category.objects.all()
+class CategoryDetail(CategoryManagement, generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    def destroy(self, request, *args, **kwargs):
+        with transaction.atomic():
+            category = get_object_or_404(Category.objects.select_for_update(), pk=kwargs['pk'])
+            if Product.objects.filter(category=category).exists():
+                return Response({
+                    'code': 'category_in_use',
+                    'detail': 'Move all menus to another category before deleting this one. Paused and archived menus count too.',
+                }, status=409)
+            category.delete()
+        return Response(status=204)
 
 
 # ------------------------------------------
@@ -86,7 +116,6 @@ def recommend(request):
 # A bounded public listing; management and product detail keep their full records.
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 class MenuPagination(PageNumberPagination):
     page_size = 12

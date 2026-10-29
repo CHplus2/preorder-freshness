@@ -40,4 +40,5 @@
 .delivery-cost-result dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0}
 .delivery-cost-result dt{font-size:13px;line-height:1.5}.delivery-cost-result dd{margin:7px 0 0;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
 .settings-page #shop-delivery-fee{scroll-margin-top:7rem}
+.fulfilment-settings .settings-field-error{color:#912d25;background:#fff2ef;border:1px solid #e2b6ae;border-radius:6px;padding:12px;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
 @media(max-width:600px){.delivery-cost-result dl{grid-template-columns:1fr;gap:14px}.delivery-cost-check,.delivery-fee-policy,.delivery-cost-result{padding-inline:12px}}

@@ -59,8 +59,16 @@ try{
  assert.match(bill,/<dt>Delivery fee<\/dt><dd>RM 5.00/);
  assert.match(bill,/does not automatically add another charge/);
  assert.doesNotMatch(summary({pickup:true,shipping:0}),/courier-price difference/);
+ const {deliveryAreasError}=await server.ssrLoadModule('/src/utils/deliveryAreas.js');
+ assert.equal(deliveryAreasError([]),'');assert.equal(deliveryAreasError(['Kuala Lumpur','Petaling Jaya']),'');
+ assert.match(deliveryAreasError(['a'.repeat(81)]),/Area 1 is too long/);
+ assert.match(deliveryAreasError(['Moyan','moyan']),/repeated/);
+ assert.match(deliveryAreasError(Array.from({length:31},(_,i)=>String(i))),/up to 30/);
+ assert.match(deliveryAreasError('Kuching'),/separate lines/);
  const {default:FulfilmentSettings}=await server.ssrLoadModule('/src/components/FulfilmentSettings.jsx');
  const settings=renderToStaticMarkup(h(FulfilmentSettings,{store:{delivery_fee_myr:'7.00',delivery_enabled:true},onChange:()=>{}}));
+ assert.match(settings,/delivery-areas-help/);assert.match(settings,/Put descriptive sentences in Service area description/);
+ const badAreas=renderToStaticMarkup(h(FulfilmentSettings,{store:{delivery_areas:['a'.repeat(81)]},onChange:()=>{}}));assert.match(badAreas,/aria-invalid="true"/);assert.match(badAreas,/Area 1 is too long/);
  assert.match(settings,/Flat delivery fee per order \(RM\)/);assert.match(settings,/not calculated from order history/);
  assert.match(settings,/existing orders keep their recorded delivery fee/);assert.match(settings,/Check a courier cost/);
  assert.match(settings,/<details class="delivery-cost-check"><summary>/);

@@ -7,9 +7,24 @@ from .models import (
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=100, trim_whitespace=True)
+    menu_count = serializers.IntegerField(read_only=True)
+
+    def validate_name(self, value):
+        value = ' '.join(value.split())
+        if not value:
+            raise serializers.ValidationError('Enter a category name.')
+        existing = Category.objects.filter(name__iexact=value)
+        if self.instance:
+            existing = existing.exclude(pk=self.instance.pk)
+        if existing.exists():
+            raise serializers.ValidationError('A category with this name already exists. Choose another name.')
+        return value
+
     class Meta:
         model = Category
-        fields = "__all__"
+        fields = ['id', 'name', 'created_at', 'menu_count']
+        read_only_fields = ['id', 'created_at']
 
 
 class RecipeSerializer(serializers.ModelSerializer):

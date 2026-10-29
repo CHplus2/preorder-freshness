@@ -28,8 +28,15 @@ class StoreSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_delivery_areas(self, value):
-        if not isinstance(value, list) or len(value) > 30 or any(not isinstance(v, str) or not v.strip() or len(v.strip()) > 80 for v in value):
-            raise serializers.ValidationError('Use up to 30 delivery area names, each 1–80 characters. An empty list leaves delivery areas unrestricted.')
+        if not isinstance(value, list):
+            raise serializers.ValidationError('Enter area names on separate lines.')
+        if len(value) > 30:
+            raise serializers.ValidationError('Keep up to 30 delivery areas. Put one area name on each line.')
+        for index, name in enumerate(value):
+            if not isinstance(name, str) or not name.strip():
+                raise serializers.ValidationError('Enter a name for each delivery area, or leave the list empty.')
+            if len(name.strip()) > 80:
+                raise serializers.ValidationError(f'Area {index + 1} is too long. Use a short place name of up to 80 characters, such as Kuala Lumpur. Put your longer description in Service area description.')
         names = [v.strip() for v in value]
         if len(set(v.casefold() for v in names)) != len(names):
             raise serializers.ValidationError('List each delivery area only once.')

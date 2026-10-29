@@ -1,4 +1,5 @@
 import MenuEditor from '../../components/MenuEditor';
+import CategoryManager from '../../components/CategoryManager';
 import {unitLabel} from '../../utils/sellingDetails';
 import MenuPhoto from '../../components/MenuPhoto';
 import {useSearchParams} from 'react-router-dom';
@@ -19,6 +20,7 @@ export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [newProduct, setNewProduct] = useState(false);
+  const [manageCategories, setManageCategories] = useState(false);
   const [updatedProduct, setUpdatedProduct] = useState(false);
   const editingProductId=updatedProduct?.id;
   useEffect(()=>{
@@ -29,6 +31,8 @@ export default function AdminProductsPage() {
 
   const { fallback_img, setAlert } = useUI();
   const { categories, products, fetchProducts, updateProduct, setProductIdToDelete } = useProduct();
+
+  const categoryFilter = categories.some(category => String(category.id) === selectedCategory) ? selectedCategory : '';
 
   useEffect(()=>{fetchProducts()},[fetchProducts]);
   const emptyForm = {
@@ -49,7 +53,7 @@ export default function AdminProductsPage() {
   // Filter products
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory ? p.category === Number(selectedCategory) : true;
+    const matchesCategory = categoryFilter ? p.category === Number(categoryFilter) : true;
     const matchesPreparation=review!=='preparation' || !missingStepsOnly || (p.selling_status==='active' && !p.preparation_tasks?.length);
     return matchesSearch && matchesCategory && matchesPreparation && (statusFilter==='all' || (statusFilter==='current'?p.selling_status!=='archived':p.selling_status===statusFilter));
   });
@@ -58,9 +62,10 @@ export default function AdminProductsPage() {
     <div className="admin-products-container">
       <div className="admin-header">
         <h1>Menu management</h1>
+        <div className="menu-header-actions"><button type="button" onClick={() => setManageCategories(true)}>Manage categories</button>
         <button className="add-product-btn" onClick={() => {setAlert({message:'',type:''});setNewProduct(emptyForm);}}>
           Create menu
-        </button>
+        </button></div>
       </div>
 
 {reviewTitles[review] && <p className="menu-state-feedback" role="status"><strong>Review: {reviewTitles[review]}</strong><br/>Choose a menu below. Its editor will open at the relevant section.</p>}
@@ -78,7 +83,7 @@ export default function AdminProductsPage() {
         />
         <select
           className="category-select" aria-label="Filter menu category"
-          value={selectedCategory}
+          value={categoryFilter}
           onChange={(e) => setSelectedCategory(e.target.value)}
         >
           <option value="">All Categories</option>
@@ -146,6 +151,7 @@ export default function AdminProductsPage() {
 
       {updatedProduct && <MenuEditor key={'edit-'+updatedProduct.id} value={updatedProduct} onChange={setUpdatedProduct} onDismiss={()=>setUpdatedProduct(null)}/>}
       {newProduct && <MenuEditor key="create" value={newProduct} onChange={setNewProduct} onDismiss={()=>setNewProduct(null)}/>}
+      {manageCategories && <CategoryManager onDismiss={() => setManageCategories(false)}/>}
     </div>
   );
 }

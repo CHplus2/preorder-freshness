@@ -12,7 +12,7 @@ from ..services.scheduling import validate_tasks
 @permission_classes([IsAdminUser])
 def setup_checklist(request):
     store = Storefront.objects.filter(pk=1).first()
-    products = list(Product.objects.prefetch_related('ingredients__raw_material').order_by('pk'))
+    products = list(Product.objects.filter(selling_status='active').prefetch_related('ingredients__raw_material').order_by('pk'))
     missing_recipes, missing_steps, missing_costs = [], [], []
     for product in products:
         ingredients = list(product.ingredients.all())
@@ -30,7 +30,7 @@ def setup_checklist(request):
 
     def menu_check(key, title, missing, detail):
         return {'id': key, 'title': title, 'complete': bool(products) and not missing,
-            'detail': detail if products else 'Add your first menu to start this step.',
+            'detail': detail if products else 'Add or resume a menu to start this step.',
             'href': f'/admin/products?review={key}', 'action': {'recipes':'Review menu ingredients', 'preparation':'Review preparation steps', 'costs':'Review menu costs'}[key],
             'affected_count': len(missing),
             'examples': [{'id': p.pk, 'name': p.name} for p in missing[:10]]}
@@ -44,7 +44,7 @@ def setup_checklist(request):
          'complete': bool(store and store.service_area.strip() and (store.contact_email.strip() or store.whatsapp_number.strip())),
          'detail': 'Add a service area and either an email or WhatsApp number. This describes your area; it does not enforce delivery zones.',
          'href': '/admin/settings#store-contact', 'action': 'Edit contact details'},
-        menu_check('recipes', 'Record ingredients for every menu', missing_recipes,
+        menu_check('recipes', 'Record ingredients for every active menu', missing_recipes,
                    'Each menu needs a recipe with positive quantities to support shopping and ingredient deductions.'),
         menu_check('preparation', 'Describe actual preparation steps', missing_steps,
                    'Add explicit tasks, equipment and timings for each menu. Menus without tasks use the simpler fallback schedule.'),

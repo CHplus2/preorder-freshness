@@ -23,7 +23,8 @@ export default function SetupChecklist() {
     {error && <p role="alert">{error} Use Refresh checks to try again.</p>}
     {loading && <p role="status">Reading saved settings and menus…</p>}
     {!loading && !error && data && <>
-      <p><strong>{data.completed} of {data.total} setup steps complete</strong> · {data.menu_count} menus</p>
+      <p><strong>{data.completed} of {data.total} setup steps complete</strong> · {data.menu_count} active {data.menu_count === 1 ? 'menu' : 'menus'}</p>
+      <p>Menu checks cover menus accepting new orders. Paused and archived menus remain in your records.</p>
       <progress value={data.completed} max={data.total} aria-label="Completed kitchen setup steps"/>
       <ol className="setup-steps">{data.steps.map(step=><li key={step.id}>
         <h3>{step.complete?'Complete':'To do'}: {step.title}</h3>
