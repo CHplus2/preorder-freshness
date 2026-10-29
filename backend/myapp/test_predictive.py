@@ -7,6 +7,7 @@ from unittest import skipUnless
 from pathlib import Path
 from unittest.mock import patch
 from types import SimpleNamespace
+from predictive_ai.service import paths
 
 BASE='/api/admin/predictive/'
 
@@ -52,7 +53,7 @@ class PredictiveTests(TestCase):
                     self.assertEqual(response.status_code,503)
                     self.assertEqual(response.data['code'],'model_unavailable')
 
-    @skipUnless((Path(__file__).resolve().parents[1]/'predictive_ai/artifacts/demand_model.cbm').is_file(), 'Requires provisioned real model bundle')
+    @skipUnless((paths()[1]/'demand_model.cbm').is_file(), 'Requires provisioned real model bundle')
     def test_real_model_endpoints_and_no_database_writes(self):
         client=APIClient(); client.force_authenticate(self.staff)
         response=client.get(BASE+'metrics/')

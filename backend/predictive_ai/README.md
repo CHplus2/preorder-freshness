@@ -22,6 +22,49 @@ tests a named-food alternative for a coherent demo shop. Its CatBoost candidate
 does not beat the seasonal baseline and is offline; existing models and store
 records are preserved.
 
+## Restore the saved original model without retraining
+
+The original runtime archive is also saved as a GitHub Release asset:
+[freshcast-model-backup-v1](https://github.com/CHplus2/preorder-freshness/releases/tag/freshcast-model-backup-v1).
+A source ZIP does not include this asset. Download `freshcast-runtime-bundle.tar.gz`
+separately and verify SHA-256
+`697f8e10ee6b2c1b794ee38ec81067477870315fb7c51a1280684e7f0601361a`.
+It contains the original CatBoost model, metrics, three historical source CSVs
+and three explicitly simulated operations CSVs. It contains no kitchen records.
+
+With the project's Python dependencies installed, provision it into a new empty
+directory outside the checkout. For example, from the repository root on Linux:
+
+```bash
+FRESHCAST_BUNDLE_SHA256=697f8e10ee6b2c1b794ee38ec81067477870315fb7c51a1280684e7f0601361a \
+  python backend/predictive_ai/provision_bundle.py \
+  --archive /private/backup/freshcast-runtime-bundle.tar.gz \
+  --destination /private/restored-genpact
+```
+
+Set `PREDICTIVE_DATA_DIR` and `PREDICTIVE_ARTIFACT_DIR` to that directory's `data`
+and `artifacts` subdirectories. These settings support restored bundles outside
+the repository. The real-model Django tests also use these configured paths;
+they do not require copying the restored model into the source tree.
+
+To check the restored API locally without using kitchen records:
+
+```bash
+PYTHON_DOTENV_DISABLED=1 SECRET_KEY=isolated-test-only \
+DATABASE_URL=sqlite:///:memory: DATABASE_SCHEMA=public \
+EMAIL_BACKEND=django.core.mail.backends.locmem.EmailBackend VERCEL=0 \
+PREDICTIVE_DATA_DIR=/private/restored-genpact/data \
+PREDICTIVE_ARTIFACT_DIR=/private/restored-genpact/artifacts \
+  python backend/manage.py test myapp.test_predictive \
+  myapp.test_predictive_backtest myapp.test_predictive_security --noinput --verbosity 2
+```
+
+The two `test_real_model...` tests must report `ok`, not `skipped`, for this to
+establish actual artifact coverage. The database above is disposable in-memory
+SQLite, not Supabase. See the [29 October restore verification](../../docs/evidence/20261029-genpact-restore/README.md)
+for the executed results and live-deployment limitations. This path restores the
+saved model; the reproduction script below trains a separate model.
+
 ## Reproduce after a reset
 
 Prerequisites: Linux Python 3.12, `uv`, `curl`, and HTTPS access to
@@ -51,9 +94,10 @@ previous-observation baseline WAPE. See `DORMATHON_REPORT.md` for limitations.
 
 ## Make artifacts available to Django locally
 
-The trained model exists only on disk, not in Git. Fetching this branch elsewhere
-does **not** fetch the CSVs, model, metrics or simulated operations. Either run
-the reproduction script there, or securely copy the complete verified bundle:
+The trained model is excluded from Git source history; the original is saved in
+the GitHub Release above. Fetching this branch does **not** download that release
+asset, its CSVs, model, metrics or simulated operations. Restore the saved archive,
+run the reproduction script to train a separate model, or copy the verified bundle:
 
 - `data/train.csv`, `data/meal_info.csv`, `data/fulfilment_center_info.csv`
 - `data/recipes_demo.csv`, `data/inventory_batches_demo.csv`, `data/supplier_settings_demo.csv`
@@ -119,7 +163,7 @@ From the repository root:
 /workspace/venv-ml/bin/python -m unittest discover -s backend/predictive_ai/tests -v
 /workspace/venv-ml/bin/python -m backend.predictive_ai.evaluate_model
 PYTHON_DOTENV_DISABLED=1 SECRET_KEY=local-test-only DATABASE_URL=sqlite:///:memory: \
-  /workspace/venv/bin/python manage.py test myapp --noinput
+  python backend/manage.py test myapp --noinput
 ```
 
 The real-artifact Django smoke test requires the provisioned bundle. Unit and

@@ -1,5 +1,4 @@
 """Held-out replay contract, access control and target-leakage regression checks."""
-from pathlib import Path
 from unittest import skipUnless
 from unittest.mock import patch
 
@@ -10,6 +9,7 @@ from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from predictive_ai.backtest import backtest
+from predictive_ai.service import paths
 
 BASE = '/api/admin/predictive/backtest/'
 
@@ -93,7 +93,7 @@ class PredictiveBacktestTests(TestCase):
         bundle.return_value = history[history.week != 136], LagModel(), METRICS, None
         self.assertEqual(self.client_for_staff().get(BASE + '?center_id=13&week=136').status_code, 422)
 
-    @skipUnless((Path(__file__).resolve().parents[1] / 'predictive_ai/artifacts/demand_model.cbm').is_file(),
+    @skipUnless((paths()[1] / 'demand_model.cbm').is_file(),
                 'Requires the evaluated model bundle')
     def test_real_model_and_missing_artifact(self):
         client = self.client_for_staff()
