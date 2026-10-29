@@ -62,3 +62,35 @@ Additional browser failure injection loses a successful selection response, then
 retries the same UUID; leaving My orders before a delayed selection response
 cannot navigate the customer away from their new page. This is not a live-provider
 or PostgreSQL-concurrency test. The existing bundle-size advisory remains.
+
+## Batches 2–4: menu, basket, checkout and Settings review
+
+Source review found that the catalogue already loads 12 rows per page with a
+250ms first-page search debounce, cancellation/generation checks, responsive
+photo assets and bounded rendering. Menu recommendation results remain separate
+from the date-based finder. Basket quantities and prices are server-validated;
+mutations are serialized and stale/read-failure states hide submission actions.
+Checkout uses a single time selection, authoritative quote/price checks,
+per-account request identities and retained same-order payment recovery. These
+flows were preserved, rather than adding speculative changes to working pages.
+
+Settings had two concrete recovery issues. Text inputs, textareas and the manual
+payment toggle stayed editable during a save; the eventual response could replace
+those newer edits. They are now disabled together with fulfilment controls until
+the operation finishes. A failed save previously offered Reload settings, which
+could discard the retained draft. A failed save now explains that edits remain
+and lets the owner save again. Initial loading failures still offer a read retry.
+Staff/session/CSRF checks on the actual PATCH endpoint remain authoritative;
+this interface change grants no permissions and reveals no credentials.
+
+My orders still fetched a customer's complete history even though only ten cards
+were initially displayed. Server-side paging is the final review batch.
+
+Batches 2–4 validation: frontend lint, UX tests and build pass. Nineteen local
+Chromium WCAG A/AA and page-overflow checks cover menu, basket, checkout and
+Settings at 1440/768/390/320 pixels, plus an empty escaped search, failed basket
+read and failed settings save. A deliberately delayed save disables every form
+control; a simulated server failure keeps the draft, and a retry saves it to the
+isolated fixture. A customer is denied the owner reminder API. No payment, email,
+courier or production data operation was performed. These checks cover the
+reviewed states, not every possible input or production load.
