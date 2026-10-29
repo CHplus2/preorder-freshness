@@ -22,7 +22,7 @@ class AdaptivePlanningTests(TestCase):
         clock.start(); self.addCleanup(clock.stop)
         self.buyer = User.objects.create_user('adaptive-buyer')
         self.client = APIClient(); self.client.force_authenticate(self.buyer)
-        self.store = Storefront.objects.create(pk=1)
+        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.menu = Product.objects.create(name='Flexible meal', price=10, lead_hours=24,
             daily_capacity=2, max_early_minutes=0, max_preparation_days=7,
             preparation_tasks=[dict(name='Prepare', minutes=20, worker=True, resource='prep_table', max_wait_minutes=0),
@@ -35,7 +35,7 @@ class AdaptivePlanningTests(TestCase):
         item = SimpleNamespace(product=self.menu, product_id=self.menu.pk, quantity=1)
         return schedule_order([item], self.delivery, self.store, now=self.now)
 
-    def place(self, delivery=None, payment='cod'):
+    def place(self, delivery=None, payment='manual'):
         return self.client.post('/api/orders/place/', dict(address_id=self.address.pk,
             delivery_at=(delivery or self.delivery).isoformat(), payment=payment), format='json')
 
@@ -70,7 +70,7 @@ class AdaptivePlanningTests(TestCase):
         result = self.place(delivery, payment='wallet')
         self.assertEqual(result.status_code, 201, result.data)
         order = Order.objects.get()
-        self.assertEqual(order.payment_method, 'cod'); self.assertEqual(order.payment_status, 'unpaid')
+        self.assertEqual(order.payment_method, 'deferred'); self.assertEqual(order.payment_status, 'unpaid')
         self.assertTrue(order.preparation_plan['needs_review']); self.assertFalse(order.preparation_plan['tasks'])
         self.assertIsNone(order.preparation_at); self.assertIsNone(order.preparation_end_at)
         wallet.refresh_from_db(); self.assertEqual(wallet.balance, Decimal('100'))

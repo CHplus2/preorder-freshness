@@ -13,12 +13,12 @@ class CheckoutFailureTests(TestCase):
     def setUp(self):
         self.buyer=User.objects.create_user('failure-buyer')
         self.client=APIClient();self.client.force_authenticate(self.buyer)
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         product=Product.objects.create(name='Test meal',price=12,lead_hours=1)
         CartItem.objects.create(user=self.buyer,product=product,quantity=1)
         address=Address.objects.create(user=self.buyer,line1='Test',city='KL',state='KL',postal_code='50000',phone='0100000000')
         delivery=(timezone.localtime()+timedelta(days=4)).replace(hour=16,minute=0,second=0)
-        self.body=dict(address_id=address.pk,payment='cod',delivery_at=delivery.isoformat(),request_id=str(uuid.uuid4()))
+        self.body=dict(address_id=address.pk,payment='manual',delivery_at=delivery.isoformat(),request_id=str(uuid.uuid4()))
 
     @patch('myapp.exceptions.logger.error')
     def test_failed_item_write_rolls_back_order_and_preserves_basket(self,log):

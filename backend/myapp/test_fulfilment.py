@@ -18,7 +18,7 @@ class FulfilmentTests(TestCase):
         cache.clear()
         self.now = timezone.make_aware(datetime(2030, 1, 7, 10))
         self.day = self.now+timedelta(days=3)
-        self.store = Storefront.objects.create(pk=1, pickup_enabled=True,
+        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, pickup_enabled=True,
             pickup_location='Fictional collection point, Kuching', pickup_instructions='Collect at the front counter.',
             pickup_open_hour=7, pickup_close_hour=14, delivery_open_hour=9, delivery_close_hour=12,
             delivery_areas=['Batu Kawa', 'Moyan'], delivery_fee_myr=7, free_delivery_minimum_myr=60)
@@ -41,7 +41,7 @@ class FulfilmentTests(TestCase):
 
     def body(self, method='pickup', hour=12, **extra):
         return dict(delivery_at=self.day.replace(hour=hour).isoformat(), delivery_method=method,
-            payment='cod', **extra)
+            payment='cod' if method == 'pickup' else 'manual', **extra)
 
     def place(self, **extra):
         return self.client.post('/api/orders/place/', self.body(**extra), format='json')

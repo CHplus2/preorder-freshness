@@ -126,8 +126,9 @@ class KitchenTests(TestCase):
 
     def checkout(self, delivery=None):
         self.client.force_authenticate(self.user)
+        Storefront.objects.get_or_create(pk=1, defaults=dict(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details'))
         CartItem.objects.get_or_create(user=self.user,product=self.product,defaults={'quantity':1})
-        return self.client.post('/api/orders/place/',{'address_id':self.address.id,'payment':'cod','delivery_at':(delivery or self.delivery).isoformat()},format='json')
+        return self.client.post('/api/orders/place/',{'address_id':self.address.id,'payment':'manual','delivery_at':(delivery or self.delivery).isoformat()},format='json')
 
     def test_preorder_does_not_deduct(self):
         batch=self.batch(200,6)
@@ -160,7 +161,7 @@ class KitchenTests(TestCase):
         self.assertIsNone(request.preparation_at)
 
     def test_bulk_discount(self):
-        Storefront.objects.create(pk=1,bulk_minimum=1,bulk_discount_percent=10)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1,bulk_minimum=1,bulk_discount_percent=10)
         self.assertEqual(self.checkout().status_code,201)
         order=Order.objects.get()
         self.assertEqual(order.discount_amount,Decimal('1.20'))
@@ -296,11 +297,12 @@ class SavedAddressTests(TestCase):
         self.assertEqual(updated.data['user'],other.id)
 
     def test_order_snapshot_survives_saved_address_edit(self):
+        Storefront.objects.get_or_create(pk=1, defaults=dict(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details'))
         saved=self.client.put('/api/address/',self.data,format='json').data
         product=Product.objects.create(name='Test meal',price=12)
         CartItem.objects.create(user=self.user,product=product,quantity=1)
         delivery=(timezone.localtime()+timedelta(days=4)).replace(hour=12,minute=0)
-        result=self.client.post('/api/orders/place/',dict(address_id=saved['id'],payment='cod',delivery_at=delivery.isoformat()),format='json')
+        result=self.client.post('/api/orders/place/',dict(address_id=saved['id'],payment='manual',delivery_at=delivery.isoformat()),format='json')
         self.assertEqual(result.status_code,201,result.data)
         self.data['line1']='New saved address'
         self.client.put('/api/address/',self.data,format='json')

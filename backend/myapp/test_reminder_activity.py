@@ -114,7 +114,7 @@ class DeliveryCommunicationJourneyTests(TestCase):
         now=timezone.make_aware(datetime(2030,1,7,9))
         with patch('django.utils.timezone.now',return_value=now) as clock:
             buyer=User.objects.create_user('journey-buyer',email='buyer@example.test');owner=User.objects.create_user('journey-owner',is_staff=True)
-            Storefront.objects.create(pk=1)
+            Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
             product=Product.objects.create(name='Journey rice box',price=12,lead_hours=1,batch_size=10,max_early_minutes=120,preparation_tasks=[dict(name='Cook and pack',minutes=30,resource='prep_table')])
             material=RawMaterial.objects.create(name='Fixture rice',unit='g')
             ProductIngredient.objects.create(product=product,raw_material=material,quantity_required=100)
@@ -122,7 +122,7 @@ class DeliveryCommunicationJourneyTests(TestCase):
             address=Address.objects.create(user=buyer,line1='Fixture street',city='KL',state='Kuala Lumpur',postal_code='50000',phone='0123456789')
             CartItem.objects.create(user=buyer,product=product,quantity=1)
             client=APIClient();client.force_authenticate(buyer);delivery=(now+timedelta(days=3)).replace(hour=15)
-            placed=client.post('/api/orders/place/',dict(address_id=address.pk,payment='cod',delivery_at=delivery.isoformat(),arrival_window_minutes=60,email_reminder=True,email_dispatch_updates=True,email_time_updates=True),format='json')
+            placed=client.post('/api/orders/place/',dict(address_id=address.pk,payment='manual',delivery_at=delivery.isoformat(),arrival_window_minutes=60,email_reminder=True,email_dispatch_updates=True,email_time_updates=True),format='json')
             self.assertEqual(placed.status_code,201,placed.data);order=Order.objects.get(pk=placed.data['order_id']);self.assertFalse(order.preparation_plan.get('needs_review'))
             changed=client.post(f'/api/orders/{order.pk}/reschedule/',dict(delivery_at=(delivery+timedelta(days=1,hours=1)).isoformat(),reason='Agreed later arrival window'),format='json')
             self.assertEqual(changed.status_code,200,changed.data)

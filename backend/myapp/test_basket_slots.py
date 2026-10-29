@@ -21,7 +21,7 @@ class BasketSlotTests(TestCase):
         self.customer = User.objects.create_user('slot-customer')
         self.client = APIClient()
         self.client.force_authenticate(self.customer)
-        self.store = Storefront.objects.create(pk=1)
+        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.cookies = Product.objects.create(name='Chocolate Chip Cookies - Pack of 6',
             price=10, lead_hours=24, daily_capacity=10, max_early_minutes=0,
             preparation_minutes=60, batch_size=5, additional_batch_minutes=30,
@@ -141,7 +141,7 @@ class BasketSlotTests(TestCase):
         from .models import Address
         address = Address.objects.create(user=self.customer, line1='Test', city='KL', state='KL', postal_code='50000', phone='0100000000')
         saved = self.client.post('/api/orders/place/', dict(delivery_at=found.data['slots'][0]['delivery_at'],
-            address_id=address.pk, payment='cod'), format='json')
+            address_id=address.pk, payment='manual'), format='json')
         self.assertEqual(saved.status_code, 201, saved.data)
         order = Order.objects.get()
         self.assertFalse(order.preparation_plan.get('needs_review', False))

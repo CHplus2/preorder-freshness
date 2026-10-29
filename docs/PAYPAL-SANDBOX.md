@@ -6,8 +6,8 @@ including the extra webhook setup needed for background recovery. The original
 checkout behavior below still applies.
 
 Dapur Kita supports PayPal **Sandbox only**, in MYR. No live payment host, automatic
-refund, chatbot ordering tool or webhook is enabled by this batch. Existing COD,
-manual transfers and demo credits keep their current behaviour.
+refund, chatbot ordering tool or webhook is enabled by this batch. Cash is offered for self-collection only. Courier delivery requires another
+payment choice. Existing historical payment records remain unchanged.
 
 ## Enable on Vercel
 
@@ -36,14 +36,13 @@ is needed: intent state uses `Order.payment_instructions`, and verified receipts
 ## Customer walkthrough
 
 1. Add menus, choose a delivery time and save the address as usual.
-2. When a preparation plan fits, select **PayPal Sandbox**, then **Save preorder &
-   continue to PayPal Sandbox**. This creates one unpaid local preorder, snapshots
+2. When a preparation plan fits, select **PayPal**, then **Save & continue to PayPal**. This creates one unpaid local preorder, snapshots
    its accepted terms and reserves its preparation booking. It clears the basket.
 3. Check the recorded MYR total and approve using a Sandbox buyer account in the
    PayPal window. Django creates/captures the payment; a browser callback cannot
    declare it paid.
 4. A verified completed capture produces **Payment confirmed**, a visible
-   **PayPal Sandbox** label, the no-real-money notice, and one
+   **PayPal** label, an explicit test-payment/no-real-money notice, and one
    `paypal_sandbox` receipt. Cooking status and inventory remain unchanged.
 5. If the window closes or the result is unclear, use **My orders → Continue to
    payment** (or **View payment details** for a recorded payment).
@@ -51,9 +50,13 @@ is needed: intent state uses `Order.payment_instructions`, and verified receipts
    never initiates a capture. **Recover payment session** retries an interrupted
    create with its original idempotency key, without charging.
 
-If automatic scheduling needs owner review, checkout creates the existing unpaid
-COD review request and does not start PayPal. Confirm the kitchen arrangement
-first. Batch 1 does not switch an existing COD request to PayPal automatically.
+If automatic scheduling needs owner review, checkout creates an unpaid request
+with `payment_method: "deferred"` and does not start PayPal or expose advance
+transfer instructions. After kitchen confirmation, My orders lets the customer
+choose a configured payment method through `orders/{id}/payment-choice/`. The
+selection is explicit, row-locked and retry-safe; it never takes payment itself.
+A PayPal selection resumes the existing verified payment flow. Legacy COD
+records are preserved for their historical evidence.
 
 Unpaid PayPal preorders reserve their saved preparation slots just like other
 accepted unpaid preorders. Closing PayPal does not cancel a local order. Ask the
@@ -115,3 +118,19 @@ Reference APIs: [Orders v2](https://developer.paypal.com/docs/api/orders/v2/),
 [Standard Checkout](https://developer.paypal.com/docs/checkout/standard/integrate/),
 [idempotency](https://developer.paypal.com/api/rest/reference/idempotency/),
 [supported currency codes](https://developer.paypal.com/api/rest/reference/currency-codes/).
+
+## Payment choice after kitchen confirmation — 29 October 2026
+
+`GET /api/orders/{id}/payment-choice/` returns `{order_id, options, reason}` for
+the owning customer’s deferred order. Options contain only id, label and note;
+there are no provider secrets. Ineligible plans return no options and a reason.
+
+`POST` accepts `{payment: "paypal" | "manual" | "cod" | "escrow", request_id}`.
+The server rechecks ownership, unpaid/future/confirmed preparation, enabled
+methods and payment evidence under the order lock. `cod` is pickup-only.
+A completed choice cannot be switched: a retry with the recorded UUID and method
+returns the same saved state, including after payment completes. Replies contain
+`{order_id, payment_method, payment_status}`. Session CSRF and private/no-store
+headers apply. This endpoint snapshots instructions; it never charges, marks an
+order paid, changes the agreed total, or contacts a payment provider. Manual
+receipts are blocked while payment is still deferred. No schema migration.

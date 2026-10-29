@@ -31,6 +31,7 @@ from .views.auth import signup_view, login_view, logout_view, check_auth
 from .views.products import CategoryListCreate, CategoryDetail, ProductListCreate, ProductDetail, recommend, MenuList
 from .views.cart import CartViewSet
 from .views.orders import OrderList, place_order, AddressListCreate, saved_address, preparation_quote
+from .views.order_payment_choice import order_payment_choice
 from .views.wallet import get_wallet, create_wallet, topup_wallet
 from .views.admin import admin_order_list, admin_order_detail, product_sales_report, AdminCustomerViewSet
 from .views.inventory import (
@@ -43,6 +44,7 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path('orders/<int:pk>/payment-choice/', order_payment_choice),
     path('menu/basket-guide/', basket_guide),
     path('menu/basket-guide/add/', add_basket_plan),
     path('admin/orders/progress/', confirm_order_progress),

@@ -23,7 +23,7 @@ class PreorderWindowTests(TestCase):
         cache.clear()
         self.now = timezone.make_aware(datetime(2030, 1, 7, 16, 59))
         self.delivery = (self.now+timedelta(days=1)).replace(hour=12, minute=0)
-        self.store = Storefront.objects.create(pk=1)
+        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.menu = Product.objects.create(name='Daily lunch', price=10, lead_hours=1,
             preparation_minutes=30, packing_minutes_per_portion=0, max_early_minutes=0)
         self.item = SimpleNamespace(product=self.menu, product_id=self.menu.pk, quantity=1)
@@ -116,7 +116,7 @@ class PreorderWindowTests(TestCase):
     def test_customer_cannot_bypass_rules_with_custom_request_or_stale_basket(self):
         self.menu.delivery_dates = [(self.delivery+timedelta(days=1)).date().isoformat()]
         self.menu.save()
-        body = dict(address_id=self.address.pk, delivery_at=self.delivery.isoformat(), payment='cod')
+        body = dict(address_id=self.address.pk, delivery_at=self.delivery.isoformat(), payment='manual')
         with patch('django.utils.timezone.now', return_value=self.now):
             quote = self.client.post('/api/orders/quote/', {'delivery_at': self.delivery.isoformat()}, format='json')
             saved = self.client.post('/api/orders/place/', body, format='json')
@@ -131,7 +131,7 @@ class PreorderWindowTests(TestCase):
         self.menu.save()
         with patch('django.utils.timezone.now', return_value=self.now):
             saved = self.client.post('/api/orders/place/', dict(address_id=self.address.pk,
-                delivery_at=self.delivery.isoformat(), payment='cod'), format='json')
+                delivery_at=self.delivery.isoformat(), payment='manual'), format='json')
         self.assertEqual(saved.status_code, 201, saved.data)
         order = Order.objects.get()
         self.assertEqual(order.payment_status, 'unpaid')

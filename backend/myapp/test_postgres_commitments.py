@@ -15,7 +15,7 @@ from .models import Storefront, Product, Address, CartItem, Order
 class PostgreSQLCommitmentTests(TransactionTestCase):
     def test_concurrent_plan_confirmations_save_one_reservation_and_amendment(self):
         from .models import OrderItem
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         owner = User.objects.create_user('plan-retry-owner', is_staff=True)
         buyer = User.objects.create_user('plan-retry-buyer')
         product = Product.objects.create(name='Plan retry meal', price=10, lead_hours=1,
@@ -50,7 +50,7 @@ class PostgreSQLCommitmentTests(TransactionTestCase):
         self.assertFalse(order.inventory_deducted)
 
     def test_two_buyers_cannot_reserve_the_last_portion_twice(self):
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         product=Product.objects.create(name='Last portion',price=10,daily_capacity=1,lead_hours=1)
         buyers=[]
         for name in ('first','second'):
@@ -65,7 +65,7 @@ class PostgreSQLCommitmentTests(TransactionTestCase):
             try:
                 client=APIClient();client.force_authenticate(User.objects.get(pk=buyer[0]))
                 barrier.wait(timeout=10)
-                return client.post('/api/orders/place/',{'address_id':buyer[1],'payment':'cod','delivery_at':delivery.isoformat()},format='json').status_code
+                return client.post('/api/orders/place/',{'address_id':buyer[1],'payment':'manual','delivery_at':delivery.isoformat()},format='json').status_code
             finally:
                 connections.close_all()
         with ThreadPoolExecutor(max_workers=2) as pool:
@@ -86,7 +86,7 @@ class PostgreSQLCommitmentTests(TransactionTestCase):
         import uuid
         from decimal import Decimal
         from .models import Wallet, WalletTransaction, PaymentEvent
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         product=Product.objects.create(name='Retry meal',price=10,lead_hours=1)
         user=User.objects.create_user('retry-buyer')
         address=Address.objects.create(user=user,line1='Test',city='KL',state='KL',postal_code='50000',phone='0100000000')
@@ -158,7 +158,7 @@ class PostgreSQLWalletIntegrityTests(TransactionTestCase):
         import uuid
         from decimal import Decimal
         from .models import WalletTransaction
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         product=Product.objects.create(name='Concurrent wallet meal',price=10,lead_hours=1)
         address=Address.objects.create(user=self.user,line1='Fixture',city='KL',state='KL',postal_code='50000',phone='0100000000')
         CartItem.objects.create(user=self.user,product=product,quantity=1)

@@ -46,7 +46,7 @@ function DemoWalletPage() {
             // Only a confirmed order response is treated as a completed demo debit.
             if (!success) return;
             try { localStorage.removeItem("addressId"); } catch { /* Order already accepted. */ }
-            setAlert({ message: success.needs_review ? "Request sent to the kitchen. No credits were deducted; payment is cash on delivery after confirmation." : success.payment_method==='wallet' && success.payment_status==='paid' ? "Order placed using demo credits. No real money was charged." : "Order saved. Check My orders for its payment and confirmation status.", type: "success" });
+            setAlert({ message: success.needs_review ? "Request sent to the kitchen. No credits were deducted. Choose payment in My orders after the kitchen confirms." : success.payment_method==='wallet' && success.payment_status==='paid' ? "Order placed using demo credits. No real money was charged." : "Order saved. Check My orders for its payment and confirmation status.", type: "success" });
             navigate("/orders", { state: { formPayment: true } });
         } catch(error) {
             setPaymentError(apiError(error));
@@ -83,7 +83,7 @@ function DemoWalletPage() {
             {method === "wallet" && (
             <div className="wallet-box">
                 <p className="payment-sub">These credits are for demonstration and have no monetary value.</p>
-                <details><summary>If preparation needs review</summary><p>The kitchen receives an unpaid request with cash on delivery. No demo credits are deducted.</p></details>
+                <details><summary>If preparation needs review</summary><p>The kitchen receives an unpaid request. Choose payment in My orders after confirmation. No demo credits are deducted.</p></details>
 
                 {!cartLoading && !cartError && pricingReady && cart.length>0 && <div className="payment-summary">
                 <p><strong>Total:</strong> {finalTotal.toFixed(2)} demo credits</p>

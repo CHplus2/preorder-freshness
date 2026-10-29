@@ -22,7 +22,7 @@ class CommitmentTests(TestCase):
         self.owner = User.objects.create_user('owner', is_staff=True)
         self.buyer = User.objects.create_user('buyer', email='buyer@example.test', password='Original-good-password!42')
         self.client = APIClient(); self.client.force_authenticate(self.owner)
-        self.store = Storefront.objects.create(pk=1)
+        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.material = RawMaterial.objects.create(name='Rice', unit='g')
         self.product = Product.objects.create(name='Rice meal', price=12, packaging_cost=Decimal('0.50'), lead_hours=1)
         ProductIngredient.objects.create(product=self.product, raw_material=self.material, quantity_required=100)
@@ -149,7 +149,7 @@ class CommitmentTests(TestCase):
     def test_checkout_retry_returns_original_order(self):
         self.client.force_authenticate(self.buyer)
         CartItem.objects.create(user=self.buyer,product=self.product,quantity=1)
-        body={'address_id':self.address.pk,'payment':'cod','delivery_at':self.delivery.isoformat(),'request_id':str(uuid.uuid4())}
+        body={'address_id':self.address.pk,'payment':'manual','delivery_at':self.delivery.isoformat(),'request_id':str(uuid.uuid4())}
         first=self.client.post('/api/orders/place/',body,format='json')
         second=self.client.post('/api/orders/place/',body,format='json')
         self.assertEqual(first.status_code,201,first.data)
@@ -205,7 +205,7 @@ class CommitmentTests(TestCase):
         self.assertEqual(self.client.post('/api/recommendation/events/',added,format='json').status_code,200)
         self.client.post('/api/recommendation/events/',{**added,'request_id':str(uuid.uuid4())},format='json')
         CartItem.objects.create(user=self.buyer,product=self.product,quantity=1)
-        placed=self.client.post('/api/orders/place/',{'address_id':self.address.pk,'payment':'cod','delivery_at':self.delivery.isoformat(),'recommendation_session':sid},format='json')
+        placed=self.client.post('/api/orders/place/',{'address_id':self.address.pk,'payment':'manual','delivery_at':self.delivery.isoformat(),'recommendation_session':sid},format='json')
         self.assertEqual(placed.status_code,201,placed.data)
         self.client.force_authenticate(self.owner)
         report=self.client.get('/api/admin/recommendation-metrics/').data

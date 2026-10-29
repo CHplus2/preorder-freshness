@@ -126,12 +126,14 @@ def place_order(request):
     if not cart_items.exists():
         return Response({"detail": "Cart empty"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if payment not in ('cod', 'wallet', 'paypal', 'manual', 'escrow'):
+    if payment not in ('cod', 'wallet', 'paypal', 'manual', 'escrow', 'deferred'):
         raise ValidationError('Choose a supported payment method.')
     # One lock serialises scheduling across different menus in this single kitchen.
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
     store, method, area = request_store(store, request.data, require_area=True)
+    if payment == 'cod' and method != 'pickup':
+        raise ValidationError('Cash is available for self-collection only. Choose another payment method for delivery.')
     address = None
     if method != 'pickup':
         address_id = serializers.IntegerField(min_value=1).run_validation(request.data.get('address_id'))
@@ -141,8 +143,6 @@ def place_order(request):
             return Response({'detail': 'Invalid address'}, status=status.HTTP_404_NOT_FOUND)
     if method == 'pickup' and payment == 'escrow':
         raise ValidationError('Escrow currently supports delivery orders. Choose another payment method for self-collection.')
-    if payment == 'manual' and not (store.manual_payment_enabled and (store.bank_transfer_instructions.strip() or store.duitnow_qr_url)):
-        raise ValidationError('Manual payment is unavailable. Choose another payment method.')
     # Lock menus so simultaneous bookings cannot exceed their daily capacity.
     list(Product.objects.select_for_update().filter(id__in=cart_items.values('product_id')).order_by('id'))
     delivery_at = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
@@ -151,11 +151,15 @@ def place_order(request):
     needs_review = plan.get('needs_review', False)
     if needs_review:
         # Review requests never debit credits or invite an advance transfer.
-        payment = 'cod'
+        payment = 'deferred'
+    elif payment == 'deferred':
+        raise ValidationError('This time can now be scheduled. Refresh availability and choose a payment method.')
+    if payment == 'manual' and not (store.manual_payment_enabled and (store.bank_transfer_instructions.strip() or store.duitnow_qr_url)):
+        raise ValidationError('Manual payment is unavailable. Choose another payment method.')
     if payment == 'paypal':
         from ..services.paypal import enabled
         if not enabled():
-            raise ValidationError('PayPal Sandbox is unavailable. Choose another payment method.')
+            raise ValidationError('PayPal is unavailable. Choose another payment method.')
     if payment == 'escrow':
         from ..services.escrow import config
         if not config():

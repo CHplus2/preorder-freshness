@@ -60,6 +60,8 @@ def payments(request, pk):
             raise serializers.ValidationError('PayPal receipts require server-verified capture. Use Check PayPal status; do not mark it paid manually.')
         if order.payment_method == 'wallet' and kind == 'receipt':
             raise serializers.ValidationError('Demo wallet receipts are created by checkout, not manually.')
+        if order.payment_method == 'deferred':
+            raise serializers.ValidationError('Confirm preparation first, then ask the customer to choose payment in My orders.')
         amount = order.total_amount + order.shipping_fee
         source = 'owner_verified'
         if order.payment_method == 'wallet' and kind == 'refund' and outcome == 'completed':

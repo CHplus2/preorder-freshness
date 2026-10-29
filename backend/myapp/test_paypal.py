@@ -182,11 +182,11 @@ class PayPalTests(TestCase):
         self.assertTrue(created.preparation_plan['tasks']);self.assertFalse(CartItem.objects.exists())
         self.assertEqual(self.client.post('/api/orders/place/',body,format='json').data['order_id'],created.pk)
         self.url=f'/api/orders/{created.pk}/paypal/';self.create();self.assertEqual(self.provider.creates[0]['amount'],'90.00')
-    def test_review_request_is_unpaid_cod_and_never_contacts_paypal(self):
+    def test_review_request_defers_payment_and_never_contacts_paypal(self):
         CartItem.objects.create(user=self.buyer,product=self.product,quantity=1)
         with patch('myapp.services.scheduling.schedule_order',return_value=dict(needs_review=True,start=None,end=None,tasks=[],minutes=0,hands_on_minutes=0,delivery_buffer_minutes=90,reason='Owner review')):
             r=self.client.post('/api/orders/place/',dict(address_id=self.address.pk,payment='paypal',delivery_at=self.delivery.isoformat()),format='json')
-        self.assertEqual(r.status_code,201,r.data);order=Order.objects.get(pk=r.data['order_id']);self.assertEqual(order.payment_method,'cod');self.assertEqual(order.payment_status,'unpaid');self.factory.assert_not_called()
+        self.assertEqual(r.status_code,201,r.data);order=Order.objects.get(pk=r.data['order_id']);self.assertEqual(order.payment_method,'deferred');self.assertEqual(order.payment_status,'unpaid');self.factory.assert_not_called()
     def test_disabled_checkout_preserves_basket(self):
         CartItem.objects.create(user=self.buyer,product=self.product,quantity=1)
         with override_settings(PAYPAL_SANDBOX_ENABLED=False):

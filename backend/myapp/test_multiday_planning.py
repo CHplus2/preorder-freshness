@@ -17,7 +17,7 @@ class MultiDayPlanningTests(TestCase):
     def setUp(self):
         self.owner=User.objects.create_user('multi-owner',is_staff=True)
         self.buyer=User.objects.create_user('multi-buyer')
-        self.store=Storefront.objects.create(pk=1)
+        self.store=Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.now=timezone.localtime().replace(hour=8,minute=0,second=0,microsecond=0)
         self.delivery=(self.now+timedelta(days=7)).replace(hour=18)
         self.client=APIClient();self.client.force_authenticate(self.buyer)
@@ -107,7 +107,7 @@ class MultiDayPlanningTests(TestCase):
         self.assertEqual(response.status_code,200,response.data)
         self.assertFalse(response.data.get('needs_review'));self.assertEqual(response.data['hands_on_days'],2)
         self.assertEqual(Order.objects.count(),0)
-        saved=self.client.post('/api/orders/place/',{'delivery_at':self.delivery.isoformat(),'address_id':self.address.pk,'payment':'cod'},format='json')
+        saved=self.client.post('/api/orders/place/',{'delivery_at':self.delivery.isoformat(),'address_id':self.address.pk,'payment':'manual'},format='json')
         self.assertEqual(saved.status_code,201,saved.data)
         order=Order.objects.get();self.assertFalse(order.preparation_plan.get('needs_review'))
         self.assertEqual(order.preparation_plan['hands_on_days'],2)

@@ -127,11 +127,12 @@ class CustomerReminderTests(TestCase):
 
 
     def test_checkout_snapshots_consent_and_rejects_missing_email_without_creating_an_order(self):
-        from .models import Address, Product, CartItem
+        from .models import Address, Product, CartItem, Storefront
+        Storefront.objects.update_or_create(pk=1, defaults=dict(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details'))
         address=Address.objects.create(user=self.user,line1='Fixture',city='KL',state='KL',postal_code='50000',phone='0123456789')
         menu=Product.objects.create(name='Fixture meal',price=12)
         CartItem.objects.create(user=self.user,product=menu,quantity=1)
-        payload={'payment':'cod','address_id':address.pk,'delivery_at':(timezone.localtime()+timedelta(days=5)).replace(hour=15,minute=0,second=0,microsecond=0).isoformat(),'email_reminder':True}
+        payload={'payment':'manual','address_id':address.pk,'delivery_at':(timezone.localtime()+timedelta(days=5)).replace(hour=15,minute=0,second=0,microsecond=0).isoformat(),'email_reminder':True}
         result=self.client.post('/api/orders/place/',payload,format='json')
         self.assertEqual(result.status_code,201,result.data)
         saved=Order.objects.get(pk=result.data['order_id'])

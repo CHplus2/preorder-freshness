@@ -28,7 +28,7 @@ class SellingDetailsTests(TestCase):
             batch_size=10, max_early_minutes=120)
         self.material = RawMaterial.objects.create(name='Flour for a whole box', unit='g')
         ProductIngredient.objects.create(product=self.menu, raw_material=self.material, quantity_required=120)
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
 
     def test_valid_offer_is_visible_on_public_cards_detail_and_discovery(self):
         self.assertEqual(ProductSerializer(self.menu).data['selling_details'], BOX)
@@ -72,7 +72,7 @@ class SellingDetailsTests(TestCase):
         now = timezone.make_aware(datetime(2030, 1, 7, 10))
         with patch('django.utils.timezone.now', return_value=now):
             response = self.client.post('/api/orders/place/', {'delivery_at': (now+timedelta(days=2)).replace(hour=15).isoformat(),
-                'address_id': address.pk, 'payment': 'cod'}, format='json')
+                'address_id': address.pk, 'payment': 'manual'}, format='json')
         self.assertEqual(response.status_code, 201, response.data)
         order = Order.objects.get(); item = order.items.get()
         self.assertEqual(item.quantity, 2)

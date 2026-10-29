@@ -1,0 +1,14 @@
+.deferred-order-payment{margin-top:20px;padding:18px;border:1px solid #cbd8c6;border-radius:10px;background:#f7faf3;color:#294b35;overflow-wrap:anywhere}
+.deferred-order-payment h3{margin:0 0 10px;font:600 16px/1.5 system-ui,sans-serif}
+.deferred-order-payment p{font-size:14px;line-height:1.65;margin:0 0 14px}
+.deferred-order-payment fieldset{padding:0;border:0;margin:0 0 14px;min-width:0}
+.deferred-order-payment legend{font:600 14px/1.5 system-ui,sans-serif;margin-bottom:10px}
+.deferred-payment-options{display:grid;gap:10px}
+.deferred-payment-options label{display:flex;gap:12px;align-items:flex-start;min-height:44px;padding:12px;border:1px solid #c3d1bd;border-radius:8px;background:#fff;cursor:pointer}
+.deferred-payment-options input{margin-top:5px;accent-color:#285a3e}
+.deferred-payment-options span{min-width:0}
+.deferred-payment-options strong,.deferred-payment-options small{display:block;font:600 14px/1.5 system-ui,sans-serif}
+.deferred-payment-options small{font-size:13px;font-weight:400;margin-top:4px;color:#50634b}
+.deferred-order-payment button{min-height:44px;max-width:100%;padding:10px 16px;background:#285a3e;color:#fff;border:1px solid #285a3e;border-radius:8px;font:600 14px/1.5 system-ui,sans-serif;white-space:normal}
+.deferred-order-payment button:disabled{opacity:.65;cursor:default}
+.deferred-order-payment :is(button,input):focus-visible{outline:3px solid #547d48;outline-offset:3px}

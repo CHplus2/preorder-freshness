@@ -17,7 +17,7 @@ class PlanningTests(TestCase):
     def setUp(self):
         self.owner=User.objects.create_user('owner',is_staff=True)
         self.user=User.objects.create_user('buyer')
-        self.store=Storefront.objects.create(pk=1)
+        self.store=Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.client=APIClient();self.client.force_authenticate(self.user)
         self.now=timezone.localtime().replace(hour=8,minute=0,second=0,microsecond=0)
         self.delivery=(self.now+timedelta(days=7)).replace(hour=16)
@@ -207,7 +207,7 @@ class PlanningTests(TestCase):
     def test_quote_is_advisory_and_snapshot_is_immutable(self):
         p=self.product(preparation_tasks=[self.task()])
         CartItem.objects.create(user=self.user,product=p,quantity=1)
-        data={'delivery_at':self.delivery.isoformat(),'address_id':self.address.id,'payment':'cod'}
+        data={'delivery_at':self.delivery.isoformat(),'address_id':self.address.id,'payment':'manual'}
         self.assertEqual(self.client.post('/api/orders/quote/',data).status_code,200)
         self.assertEqual(Order.objects.count(),0)
         self.assertEqual(self.client.post('/api/orders/place/',data).status_code,201)

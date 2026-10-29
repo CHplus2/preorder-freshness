@@ -14,7 +14,7 @@ class AccountWalletTests(TestCase):
         self.other = User.objects.create_user('other')
         self.client = APIClient()
         self.client.force_authenticate(self.user)
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.address = Address.objects.create(user=self.user, is_default=True, line1='Test', city='KL', state='Kuala Lumpur', postal_code='50000', phone='0123456789')
         self.wallet = Wallet.objects.create(user=self.user, wallet_address='synthetic-wallet', balance=Decimal('8836.48'))
         for name,price,quantity in [('Fresh Milk',5,1),('Granola Bar',10,3),('Cabbage',9,2),('Dark Chocolate',11,2)]:
@@ -56,7 +56,7 @@ class AccountWalletTests(TestCase):
         order = Order.objects.get()
         self.assertEqual(order.status, 'pending')
         self.assertEqual(order.payment_status, 'unpaid')
-        self.assertEqual(order.payment_method, 'cod')
+        self.assertEqual(order.payment_method, 'deferred')
         self.assertIsNone(order.preparation_at)
         self.assertIsNone(order.preparation_end_at)
         self.assertEqual(order.preparation_plan['tasks'], [])
@@ -83,7 +83,7 @@ class AccountWalletTests(TestCase):
         self.assertTrue(order.preparation_plan['needs_review'])
         self.assertFalse(order.preparation_plan['tasks'])
         self.assertIsNone(order.preparation_at)
-        self.assertEqual(order.payment_method,'cod')
+        self.assertEqual(order.payment_method,'deferred')
         self.assertEqual(order.payment_status,'unpaid')
         self.wallet.refresh_from_db()
         self.assertEqual(self.wallet.balance,Decimal('8836.48'))
@@ -97,9 +97,9 @@ class AccountWalletTests(TestCase):
         self.assertFalse(Order.objects.exists())
         self.assertTrue(CartItem.objects.exists())
 
-    def test_cod_review_request_for_unsplittable_step(self):
+    def test_manual_review_request_for_unsplittable_step(self):
         Product.objects.update(preparation_minutes=1440)
-        self.body['payment']='cod'
+        self.body['payment']='manual'
         response=self.client.post('/api/orders/place/',self.body,format='json')
         self.assertEqual(response.status_code,201,response.data)
         self.assertTrue(response.data['needs_review'])
@@ -107,7 +107,7 @@ class AccountWalletTests(TestCase):
 
     def test_review_request_delivery_change_preserves_pending_review(self):
         Product.objects.update(preparation_minutes=1440)
-        self.body['payment']='cod'
+        self.body['payment']='manual'
         placed=self.client.post('/api/orders/place/',self.body,format='json')
         order=Order.objects.get(pk=placed.data['order_id'])
         url=f'/api/orders/{order.pk}/reschedule/'

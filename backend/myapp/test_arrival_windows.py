@@ -19,7 +19,7 @@ class ArrivalWindowTests(TestCase):
         self.user=User.objects.create_user('window-buyer',email='buyer@example.test')
         self.owner=User.objects.create_user('window-owner',is_staff=True)
         self.client=APIClient();self.client.force_authenticate(self.user)
-        self.store=Storefront.objects.create(pk=1,pickup_enabled=True,pickup_location='Fixture counter')
+        self.store=Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1,pickup_enabled=True,pickup_location='Fixture counter')
         self.product=Product.objects.create(name='Window meal',price=12,lead_hours=1,batch_size=10,
             preparation_tasks=[dict(name='Cook',minutes=30,resource='stove'),dict(name='Pack',minutes=10,resource='packing_area')])
         material=RawMaterial.objects.create(name='Fixture rice',unit='g')
@@ -29,7 +29,7 @@ class ArrivalWindowTests(TestCase):
         self.target=(self.now+timedelta(days=3)).replace(hour=15)
 
     def payload(self,**extra):
-        return dict(address_id=self.address.pk,payment='cod',delivery_at=self.target.isoformat(),arrival_window_minutes=60,**extra)
+        return dict(address_id=self.address.pk,payment='manual',delivery_at=self.target.isoformat(),arrival_window_minutes=60,**extra)
 
     def place(self,**extra):
         result=self.client.post('/api/orders/place/',self.payload(**extra),format='json')

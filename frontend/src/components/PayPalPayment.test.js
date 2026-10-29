@@ -10,8 +10,8 @@ try{
  const {MemoryRouter}=await import('react-router-dom');
  const options=enabled=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(PaymentOptions,{value:'cod',onChange:()=>{},paypalEnabled:enabled})));
  assert.doesNotMatch(options(false),/value="paypal"/);
- assert.match(options(true),/PayPal Sandbox/);assert.match(options(true),/No real money is transferred/);
- assert.match(options(true),/Cash on delivery/);assert.match(options(true),/Demo credit wallet/);
+ assert.match(options(true),/<strong>PayPal<\/strong>/);assert.doesNotMatch(options(true),/PayPal Sandbox/);assert.match(options(true),/Test payment/);assert.match(options(true),/No real money is transferred/);
+ assert.doesNotMatch(options(true),/value="cod"/);assert.match(options(true),/Demo credit wallet/);
  const initial=renderToStaticMarkup(createElement(PayPalPayment,{orderId:147}));
  assert.match(initial,/Loading payment status/);assert.match(initial,/No real money is transferred/);
  assert.doesNotMatch(initial,/Payment confirmed|Your payment is verified/);
@@ -24,5 +24,11 @@ try{
  assert.match(panel({},'unpaid',true),/disabled=""/);
  assert.match(panel({checked_at:'2026-10-19T10:00:00Z',checked_via:'notification'}),/PayPal notification/);
  assert.match(panel({check_error:'provider_unavailable'}),/latest check needs follow-up/);
- console.log('PayPal UI: configured-only selection, Sandbox labelling, loading state and no premature success passed.');
+ const {default:DeferredOrderPayment}=await server.ssrLoadModule('/src/components/DeferredOrderPayment.jsx');
+ const {AuthContext}=await server.ssrLoadModule('/src/contexts/AuthContext.js');
+ const deferred=changes=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(AuthContext.Provider,{value:{isSessionCurrent:()=>true}},createElement(DeferredOrderPayment,{order:{id:147,payment_status:'unpaid',status:'pending',preparation_plan:{needs_review:true},...changes}}))));
+ assert.match(deferred({}),/must confirm your preparation plan first/);assert.doesNotMatch(deferred({}),/Choose payment<\/button>/);
+ assert.match(deferred({preparation_plan:{needs_review:false},preparation_at:'2030-01-01T12:00Z',preparation_end_at:'2030-01-01T13:00Z'}),/Choose payment<\/button>/);
+ assert.equal(deferred({status:'cancelled'}),'');assert.equal(deferred({payment_status:'paid'}),'');
+ console.log('PayPal UI: neutral primary label, explicit test disclosure, pickup-only cash, deferred-payment states and no premature success passed.');
 }finally{await server.close()}
