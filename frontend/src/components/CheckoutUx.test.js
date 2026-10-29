@@ -76,11 +76,11 @@ try{
  assert.match(settings,/existing orders keep their recorded delivery fee/);assert.match(settings,/Check a courier cost/);
  assert.match(settings,/<details class="delivery-cost-check"><summary>/);
  assert.match(settings,/<section[^>]*aria-labelledby="fulfilment-settings-title"><h2 id="fulfilment-settings-title">Collection &amp; delivery<\/h2>/);
- assert.match(settings,/Pickup is switched off/);assert.ok(settings.indexOf('id="offer-pickup"')<settings.indexOf('Flat delivery fee'));assert.match(settings,/id="pickup-setup"/);
- assert.match(settings,/address alone does not enable pickup/);
+ assert.match(settings,/Pickup is not offered/);assert.ok(settings.indexOf('id="offer-pickup"')<settings.indexOf('Flat delivery fee'));assert.match(settings,/id="pickup-setup"/);
+ assert.match(settings,/>Enable pickup<\/button>/);assert.doesNotMatch(settings,/Offer self-collection|type="checkbox"[^>]*id="offer-pickup"/);
  assert.match(settings,/<label>Collection location<input(?![^>]*required)/);
  const enabledPickup=renderToStaticMarkup(h(FulfilmentSettings,{store:{pickup_enabled:true,pickup_location:'Fictional counter'},onChange:()=>{}}));
- assert.match(enabledPickup,/<label>Collection location<input[^>]*required/);
+ assert.match(enabledPickup,/<label>Collection location<input[^>]*required/);assert.match(enabledPickup,/>Save pickup settings<\/button>/);assert.match(enabledPickup,/>Turn pickup off<\/button>/);
  const disabledPickup=renderToStaticMarkup(h(FulfilmentSettings,{store:{pickup_enabled:false,pickup_location:'Fictional counter'},disabled:true,onChange:()=>{}}));
  assert.match(disabledPickup,/<fieldset class="fulfilment-settings-fields" disabled/);
  const {default:FulfilmentChoices}=await server.ssrLoadModule('/src/components/FulfilmentChoices.jsx');

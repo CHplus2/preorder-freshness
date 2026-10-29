@@ -40,6 +40,7 @@ try{
  const value={contact_phone:'',contact_method:'phone',mode:'in_person',location:'',notes:''};
  const standard=render(Fields,{value,onChange:()=>{}});assert.match(standard,/Contact me; hand to a person/);assert.doesNotMatch(standard,/Place you authorise/);
  assert.doesNotMatch(render(Fields,{value,onChange:()=>{},pickup:true}),/If nobody answers/);
+ assert.match(render(Fields,{value,onChange:()=>{},hideLegend:true}),/<legend class="sr-only">Contact &amp; handover<\/legend>/);
  assert.match(render(Fields,{value:{...value,mode:'agreed_place'},onChange:()=>{}}),/Place you authorise/);
  const unsafe={...order,fulfilment_snapshot:{handover:{notes:'<script>alert(1)</script>'}}};assert.doesNotMatch(render(Details,{order:unsafe}),/<script>/);assert.match(render(Details,{order:unsafe}),/&lt;script&gt;/);
  assert.doesNotMatch(render(Actions,{order}),/WhatsApp buyer/);assert.match(render(Actions,{order:whatsapp}),/Review it and press Send/);

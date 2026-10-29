@@ -1,7 +1,7 @@
 import {useId} from 'react';
-export default function HandoverFields({value,onChange,pickup=false,disabled=false}){
+export default function HandoverFields({value,onChange,pickup=false,disabled=false,hideLegend=false}){
  const id=useId(),edit=(key,next)=>onChange({...value,[key]:next});
- return <fieldset className="handover-fields" disabled={disabled}><legend>Contact & handover</legend>
+ return <fieldset className="handover-fields" disabled={disabled}><legend className={hideLegend?'sr-only':undefined}>Contact & handover</legend>
   <div><label htmlFor={`${id}-phone`}>Phone for this order{value.contact_method==='whatsapp'?' (required for WhatsApp)':' (optional)'}</label><input id={`${id}-phone`} required={value.contact_method==='whatsapp'} type="tel" autoComplete="tel" maxLength={30} placeholder="+60123456789" value={value.contact_phone} onChange={e=>edit('contact_phone',e.target.value)}/></div>
   <div><label htmlFor={`${id}-contact`}>Preferred contact</label><select id={`${id}-contact`} value={value.contact_method} onChange={e=>edit('contact_method',e.target.value)}><option value="phone">Phone call</option><option value="whatsapp">WhatsApp message</option></select></div>
   {!pickup && <p>The kitchen may share your delivery address and contact details with the courier to fulfil this order. Give a number someone can answer around the arrival time.</p>}

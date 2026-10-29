@@ -206,3 +206,44 @@ The subsequent UI review queue is:
    Check related pages for the same presentation issues.
 3. Notification behaviour: inspect existing timers, auto-dismiss routine success
    notices, retain appropriate recovery/action notices and verify accessibility.
+
+## Dedicated pickup action and checkout typography
+
+This supersedes the earlier checkbox instructions. Settings → Pickup setup now
+has an explicit **Enable pickup** action. It saves the address, instructions,
+collection hours and `pickup_enabled: true` in one staff-authenticated PATCH.
+An enabled kitchen instead sees **Save pickup settings** and **Turn pickup off**.
+Disabling submits only `pickup_enabled: false`. No subsequent global Save is
+required. The availability status reflects the successful server response,
+rather than continuing to describe an unsaved checkbox choice.
+
+The pickup action does not submit unrelated delivery areas, prices or identity
+fields. Unfinished edits to those sections therefore cannot block pickup setup
+or accidentally become saved through this button. Missing address and invalid
+collection-hour errors stay in the pickup section; a failed request does not
+claim the option was enabled. The public basket/checkout still displays pickup
+only when the saved option is enabled with a nonblank address. This is an owner
+UI action, not a production database change made from this workspace.
+
+Checkout now uses a 14px system-font base, 18px primary section headings, 14px
+optional summaries/labels and 16px form controls. The handover summary is shortened
+to Contact & handover (optional). Its nested fieldset legend remains available
+to assistive technology but is visually hidden to remove the repeated heading.
+Order handover editors outside checkout retain their visible legend. Optional
+fields remain collapsed initially and conditional handover fields still work.
+
+Frontend lint, UX and checkout suites and production build passed; all 21
+backend fulfilment tests passed on isolated SQLite. Twelve local Chromium
+WCAG A/AA and overflow checks cover enabled pickup checkout, owner pickup setup
+and delivery with conditional contact/drop-off fields at 1440, 768, 390 and
+320 pixels. Additional computed-style assertions verify the actual font sizes,
+font family and hidden legend. Browser checks exercise blank-address prevention,
+server hour validation, exact partial payloads, preserving unrelated drafts,
+public pickup visibility and turning pickup off/on. Phone screenshots were
+visually reviewed. No production setting, order, email or payment was changed,
+and no migration is required.
+
+The FreshCast quantity-formatting batch, broader Settings language/technical
+layout and notification auto-dismiss review remain queued. This fix addresses
+the reported checkout font/duplicate-heading issue; it does not claim those
+other review batches are complete.

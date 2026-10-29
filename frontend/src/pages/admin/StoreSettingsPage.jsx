@@ -22,6 +22,7 @@ export default function StoreSettingsPage(){
  const [setupRevision,setSetupRevision]=useState(0);
  const [paymentError,setPaymentError]=useState('');
  const [areaError,setAreaError]=useState('');
+ const [pickupError,setPickupError]=useState(''),[pickupSaving,setPickupSaving]=useState(false);
  const [store,setStore]=useState(null),[message,setMessage]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);
  useEffect(()=>{const c=new AbortController();axios.get('/api/storefront/',{signal:c.signal}).then(r=>setStore(r.data)).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});return()=>c.abort()},[retry]);
  const settingsReady=Boolean(store);
@@ -31,12 +32,30 @@ export default function StoreSettingsPage(){
    if(!settingsReady && !['backups','reminders'].includes(id))return;
    if(!['store-identity','store-contact','promotions','backups','fulfilment','pickup-setup','shop-delivery-fee','reminders','courier'].includes(id))return;
    const target=document.getElementById(id);
-   if(target){if(target.id==='courier')target.setAttribute('tabindex','-1');if(target.tagName==='DETAILS')target.open=true;target.scrollIntoView({block:'start'});(['backups','reminders','courier'].includes(target.id)||target.matches('input,textarea')?target:target.querySelector('input,textarea'))?.focus({preventScroll:true});}
+   if(target){if(['courier','pickup-setup'].includes(target.id))target.setAttribute('tabindex','-1');if(target.tagName==='DETAILS')target.open=true;target.scrollIntoView({block:'start'});(['backups','reminders','courier','pickup-setup'].includes(target.id)||target.matches('input,textarea')?target:target.querySelector('input,textarea'))?.focus({preventScroll:true});}
   };
   reveal();window.addEventListener('hashchange',reveal);
   return()=>window.removeEventListener('hashchange',reveal);
  },[settingsReady]);
  const save=async e=>{e.preventDefault();if(busy)return;setPaymentError('');setAreaError('');const areaIssue=deliveryAreasError(store.delivery_areas || []);if(areaIssue){setMessage('');setAreaError(areaIssue);document.getElementById('delivery-area-names')?.focus();return;}if(store.manual_payment_enabled && !store.bank_transfer_instructions?.trim() && !store.duitnow_qr_url?.trim()){setMessage('');setPaymentError('Add bank-transfer instructions or a DuitNow QR image, or switch manual payments off. Nothing has been saved yet; your other entries are retained.');document.getElementById('manual-payment-toggle')?.focus();return;}setBusy(true);setError('');setMessage('');try{const r=await axios.patch('/api/storefront/',store,{headers:{'X-CSRFToken':getCookie('csrftoken')}});setStore(r.data);setSetupRevision(n=>n+1);window.dispatchEvent(new Event('storefront-updated'));setMessage('Settings saved. Existing order schedules and delivery fees are unchanged.');setAlert({type:'success',message:'Settings saved.'});}catch(e){if(e.response?.data?.delivery_areas){setAreaError(apiError(e));document.getElementById('delivery-area-names')?.focus();}else setError(apiError(e));}finally{setBusy(false)}};
+ const savePickup=async enabled=>{
+  if(busy)return;
+  setPickupError('');
+  if(enabled && !store.pickup_location?.trim()){
+   setPickupError('Enter a collection address to enable pickup.');document.getElementById('pickup-location')?.focus();return;
+  }
+  const keys=['pickup_enabled','pickup_location','pickup_instructions','pickup_open_hour','pickup_close_hour'];
+  const payload=enabled?Object.fromEntries(keys.map(key=>[key,key==='pickup_enabled'?true:store[key]])):{pickup_enabled:false};
+  setBusy(true);setPickupSaving(true);setMessage('');
+  try{
+   const {data}=await axios.patch('/api/storefront/',payload,{timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   if(data?.pickup_enabled!==enabled || enabled && !data.pickup_location?.trim())throw new Error('Unverified pickup settings');
+   setStore(current=>({...current,...Object.fromEntries((enabled?keys:['pickup_enabled']).map(key=>[key,data[key]]))}));
+   window.dispatchEvent(new Event('storefront-updated'));
+  }catch(error){
+   setPickupError(!error.response || error.response.status>=500?'Could not confirm the change. Reload Settings to check pickup availability.':apiError(error,'Pickup settings could not be saved.'));
+  }finally{setBusy(false);setPickupSaving(false);}
+ };
  const fields=g=><><p>{g.help}</p><div className="admin-fields">{g.fields.map(([key,label,type='text',min,max])=>{
   const fieldId=key==='service_area'?'store-contact':'setting-'+key;
   return <div className="settings-field" key={key} style={type==='textarea'?{gridColumn:'1 / -1'}:undefined}>
@@ -44,5 +63,5 @@ export default function StoreSettingsPage(){
   </div>;
  })}</div></>;
 
- return <main className="dk-workspace settings-page"><div className="admin-page-heading"><div><span className="admin-kicker">YOUR BUSINESS</span><h1>Settings</h1><p>Manage kitchen availability, storefront details, promotions and backups.</p><div className="settings-shortcuts" role="navigation" aria-label="Settings shortcuts"><a href="#setup">Kitchen setup checklist</a><a href="#fulfilment">Collection & delivery</a><a href="#pickup-setup">Pickup setup</a><a href="#shop-delivery-fee">Delivery pricing</a><a href="#courier">Courier delivery</a><a href="#reminders">Email reminders & worker activity</a></div></div></div>{error && <div role="alert" className="admin-notice error">{error}<button onClick={()=>{setError('');setRetry(n=>n+1)}}>Reload settings</button></div>}{!store && !error && <p role="status">Loading settings...</p>}{store && <form onSubmit={save} className="dk-settings">{groups.map(g=>g.collapse?<details className="settings-group" id={g.title==='Bulk promotion'?'promotions':undefined} key={g.title}><summary>{g.title}</summary>{fields(g)}</details>:<section className="settings-group" id={g.title==='Storefront identity'?'store-identity':undefined} key={g.title}><h2>{g.title}</h2>{fields(g)}</section>)}<FulfilmentSettings store={store} onChange={next=>{setStore(next);setAreaError('');}} disabled={busy} areaError={areaError}/><label className="settings-payment-toggle"><input id="manual-payment-toggle" aria-describedby={paymentError?"manual-payment-error":undefined} aria-invalid={!!paymentError} type="checkbox" checked={!!store.manual_payment_enabled} onChange={e=>setStore({...store,manual_payment_enabled:e.target.checked})}/> Enable manual DuitNow / bank transfer at checkout</label>{paymentError && <p id="manual-payment-error" role="alert" className="settings-payment-error">{paymentError}</p>}<div className="admin-toolbar settings-save-actions"><button className="admin-primary" disabled={busy}>{busy?'Saving...':'Save settings'}</button><span role="status">{message}</span></div></form>}<CourierConnectionStatus/><SetupChecklist key={setupRevision}/><ReminderStatus/><div className="settings-advanced"><h2>Advanced</h2><BackupDownloads/></div></main>;
+ return <main className="dk-workspace settings-page"><div className="admin-page-heading"><div><span className="admin-kicker">YOUR BUSINESS</span><h1>Settings</h1><p>Manage kitchen availability, storefront details, promotions and backups.</p><div className="settings-shortcuts" role="navigation" aria-label="Settings shortcuts"><a href="#setup">Kitchen setup checklist</a><a href="#fulfilment">Collection & delivery</a><a href="#pickup-setup">Pickup setup</a><a href="#shop-delivery-fee">Delivery pricing</a><a href="#courier">Courier delivery</a><a href="#reminders">Email reminders & worker activity</a></div></div></div>{error && <div role="alert" className="admin-notice error">{error}<button onClick={()=>{setError('');setRetry(n=>n+1)}}>Reload settings</button></div>}{!store && !error && <p role="status">Loading settings...</p>}{store && <form onSubmit={save} className="dk-settings">{groups.map(g=>g.collapse?<details className="settings-group" id={g.title==='Bulk promotion'?'promotions':undefined} key={g.title}><summary>{g.title}</summary>{fields(g)}</details>:<section className="settings-group" id={g.title==='Storefront identity'?'store-identity':undefined} key={g.title}><h2>{g.title}</h2>{fields(g)}</section>)}<FulfilmentSettings store={store} onChange={next=>{setStore(next);setAreaError('');setPickupError('');}} disabled={busy} areaError={areaError} onSavePickup={savePickup} pickupSaving={pickupSaving} pickupError={pickupError}/><label className="settings-payment-toggle"><input id="manual-payment-toggle" aria-describedby={paymentError?"manual-payment-error":undefined} aria-invalid={!!paymentError} type="checkbox" checked={!!store.manual_payment_enabled} onChange={e=>setStore({...store,manual_payment_enabled:e.target.checked})}/> Enable manual DuitNow / bank transfer at checkout</label>{paymentError && <p id="manual-payment-error" role="alert" className="settings-payment-error">{paymentError}</p>}<div className="admin-toolbar settings-save-actions"><button className="admin-primary" disabled={busy}>{busy?'Saving...':'Save settings'}</button><span role="status">{message}</span></div></form>}<CourierConnectionStatus/><SetupChecklist key={setupRevision}/><ReminderStatus/><div className="settings-advanced"><h2>Advanced</h2><BackupDownloads/></div></main>;
 }
