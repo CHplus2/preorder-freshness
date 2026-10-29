@@ -113,6 +113,27 @@ class FulfilmentTests(TestCase):
         self.assertEqual(response.status_code, 201, response.data)
         self.assertEqual(Order.objects.get().shipping_fee, 7)
 
+    def test_fee_change_only_affects_new_orders_and_never_debits_a_paid_order_again(self):
+        wallet=Wallet.objects.create(user=self.buyer,wallet_address='fictional-fixed-fee-wallet',balance=100)
+        body=self.body('standard',address_id=self.address.pk,delivery_area='Moyan')
+        body['payment']='wallet'
+        placed=self.client.post('/api/orders/place/',body,format='json')
+        self.assertEqual(placed.status_code,201,placed.data)
+        accepted=Order.objects.get();wallet.refresh_from_db()
+        self.assertEqual(accepted.shipping_fee,7)
+        self.assertEqual(accepted.payment_status,'paid');self.assertEqual(wallet.balance,81)
+        self.client.force_authenticate(self.owner)
+        changed=self.client.patch('/api/storefront/',{'delivery_fee_myr':'12.00','free_delivery_minimum_myr':None},format='json')
+        self.assertEqual(changed.status_code,200,changed.data)
+        accepted.refresh_from_db();wallet.refresh_from_db()
+        self.assertEqual(accepted.shipping_fee,7)
+        self.assertEqual(accepted.total_amount,12);self.assertEqual(wallet.balance,81)
+        self.client.force_authenticate(self.buyer)
+        CartItem.objects.create(user=self.buyer,product=self.menu,quantity=1)
+        response=self.place(method='standard',address_id=self.address.pk,delivery_area='Moyan')
+        self.assertEqual(response.status_code,201,response.data)
+        self.assertEqual(Order.objects.exclude(pk=accepted.pk).get().shipping_fee,12)
+
     def test_duplicate_pickup_checkout_is_idempotent_and_records_no_payment(self):
         body = self.body(request_id=str(uuid.uuid4()))
         first = self.client.post('/api/orders/place/', body, format='json')

@@ -22,9 +22,10 @@ export default function CheckoutSummary({cart,total,discount,shipping,finalTotal
      {item.product.image_url && <MenuPhoto className="checkout-summary-photo" src={item.product.image_url} sizes="48px" alt="" loading="lazy" onError={event=>{event.currentTarget.hidden=true;}}/>}
      <div><strong>{item.product.name}</strong><span>{formatPrice(item.product.price)} / {unitLabel(item.product.selling_details)} × {item.quantity}</span><SellingDetails details={item.product.selling_details} compact/>{item.product.delivery_weekdays?.length>0 && <span>{deliveryDaysText(item.product.delivery_weekdays)}</span>}</div><strong>{formatPrice(item.product.price*item.quantity)}</strong>
     </div>)}
-    <dl><div><dt>Food subtotal</dt><dd>{formatPrice(total)}</dd></div>{discount>0 && <div className="checkout-discount"><dt>Bulk discount</dt><dd>−{formatPrice(discount)}</dd></div>}<div><dt>{pickup?'Collection':'Delivery'}</dt><dd>{shipping?formatPrice(shipping):'Free'}</dd></div><div className="checkout-total"><dt>Total</dt><dd>{formatPrice(finalTotal)}</dd></div></dl>
+    <dl><div><dt>Food subtotal</dt><dd>{formatPrice(total)}</dd></div>{discount>0 && <div className="checkout-discount"><dt>Bulk discount</dt><dd>−{formatPrice(discount)}</dd></div>}<div><dt>{pickup?'Collection':'Delivery fee'}</dt><dd>{shipping?formatPrice(shipping):'Free'}</dd></div><div className="checkout-total"><dt>Total</dt><dd>{formatPrice(finalTotal)}</dd></div></dl>
     {!pickup && freeDeliveryMinimum!=null && total<Number(freeDeliveryMinimum) && <p className="checkout-hint">Add {formatPrice(Number(freeDeliveryMinimum)-total)} in food for free delivery.</p>}
     <p className="checkout-hint">This is the total for this basket, including the shown discount and {pickup?'collection':'delivery'} fee.</p>
+    {!pickup && <p className="checkout-hint">The kitchen arranges delivery. The shown fee is included in your order total; a courier-price difference does not automatically add another charge.</p>}
    </div>
   </details>
  </aside>;

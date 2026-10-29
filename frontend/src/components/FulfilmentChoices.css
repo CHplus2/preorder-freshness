@@ -24,3 +24,16 @@
 .courier-editor form { display: grid; gap: 12px; max-width: 520px; }
 .courier-editor label { display: grid; gap: 6px; }
 .courier-reference { margin-top: 12px; overflow-wrap: anywhere; }
+
+.delivery-fee-policy{margin:18px 0;padding:16px;border:1px solid #d3dfcc;border-radius:10px;background:#f4f8ef;font-size:14px;line-height:1.65}
+.delivery-fee-policy strong{font-weight:600}.delivery-fee-policy p{font-size:14px;margin:8px 0 0}
+.delivery-cost-check{margin:18px 0;border:1px solid #d7e0d2;border-radius:10px;padding:0 16px;min-width:0}
+.delivery-cost-check>summary{min-height:48px;padding:13px 0;cursor:pointer;font-size:14px;font-weight:600;line-height:1.5}
+.delivery-cost-check[open]{padding-bottom:16px}.delivery-cost-check p{font-size:14px;line-height:1.65}
+.delivery-cost-check>label{display:grid;gap:8px;max-width:340px;font-size:14px;font-weight:600}
+.delivery-cost-check input{font-size:16px;width:100%;min-width:0;margin:0}
+.delivery-cost-result{margin-top:16px;padding:16px;background:#f6f8f2;border-radius:8px;font-size:14px;overflow-wrap:anywhere}
+.delivery-cost-result dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0}
+.delivery-cost-result dt{font-size:13px;line-height:1.5}.delivery-cost-result dd{margin:7px 0 0;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.settings-page #shop-delivery-fee{scroll-margin-top:7rem}
+@media(max-width:600px){.delivery-cost-result dl{grid-template-columns:1fr;gap:14px}.delivery-cost-check,.delivery-fee-policy,.delivery-cost-result{padding-inline:12px}}

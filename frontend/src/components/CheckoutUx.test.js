@@ -4,6 +4,11 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {MemoryRouter} from 'react-router-dom';
 import {createServer} from 'vite';
 import {checkoutNextStep} from '../utils/checkoutNextStep.js';
+import {deliveryCostCheck} from '../utils/deliveryCost.js';
+assert.deepEqual(deliveryCostCheck('5.00','8.00'),{customer:5,courier:8,coveredByShop:3,remaining:0});
+assert.deepEqual(deliveryCostCheck('7.10','5.10'),{customer:7.1,courier:5.1,coveredByShop:0,remaining:2});
+assert.deepEqual(deliveryCostCheck('0.00','8.50'),{customer:0,courier:8.5,coveredByShop:8.5,remaining:0});
+for(const value of ['',null,-1,'1.001','NaN','Infinity','1000000.00'])assert.equal(deliveryCostCheck('5.00',value),null);
 const ready={hasAddress:true,deliveryAt:'2030-01-02T15:00',quote:{plan:{needs_review:false}}};
 assert.equal(checkoutNextStep(ready),null);
 assert.equal(checkoutNextStep({...ready,areaIssue:true}).href,'#checkout-receive');
@@ -51,5 +56,16 @@ try{
  const bill=summary({});assert.match(bill,/Your preorder/);assert.match(bill,/RM 10.05 \/ item × 1/);assert.match(bill,/Bulk discount/);assert.match(bill,/RM 14.05/);assert.match(bill,/Edit basket/);
  assert.match(summary({pickup:true,shipping:0,finalTotal:9.05}),/<dt>Collection<\/dt><dd>Free/);
  assert.match(summary({updating:true}),/aria-busy="true"/);assert.match(summary({updating:true}),/Updating…/);
+ assert.match(bill,/<dt>Delivery fee<\/dt><dd>RM 5.00/);
+ assert.match(bill,/does not automatically add another charge/);
+ assert.doesNotMatch(summary({pickup:true,shipping:0}),/courier-price difference/);
+ const {default:FulfilmentSettings}=await server.ssrLoadModule('/src/components/FulfilmentSettings.jsx');
+ const settings=renderToStaticMarkup(h(FulfilmentSettings,{store:{delivery_fee_myr:'7.00',delivery_enabled:true},onChange:()=>{}}));
+ assert.match(settings,/Flat delivery fee per order \(RM\)/);assert.match(settings,/not calculated from order history/);
+ assert.match(settings,/existing orders keep their recorded delivery fee/);assert.match(settings,/Check a courier cost/);
+ assert.match(settings,/<details class="delivery-cost-check"><summary>/);
+ const {default:FulfilmentChoices}=await server.ssrLoadModule('/src/components/FulfilmentChoices.jsx');
+ const express=renderToStaticMarkup(h(FulfilmentChoices,{store:{delivery_enabled:true},value:'express',onChange:()=>{}}));
+ assert.match(express,/delivery fee shown in your total is the shop/);assert.doesNotMatch(express,/any additional charge/);
  console.log('Checkout UX: stale basket actions hidden, update/pricing guards, address read recovery and disabled payment groups passed.');
 }finally{await server.close();}

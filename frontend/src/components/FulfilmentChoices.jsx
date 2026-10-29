@@ -12,7 +12,7 @@ export default function FulfilmentChoices({store,value='standard',area='',onChan
   {pickup?<div className="fulfilment-location"><strong>Collection location</strong><p>{store?.pickup_location}</p>{store?.pickup_instructions && <p>{store.pickup_instructions}</p>}</div>:<>
    {store?.delivery_areas?.length>0 && <label>Delivery area<select required value={area} onChange={e=>onChange(value,e.target.value)}><option value="">Choose your area</option>{store.delivery_areas.map(name=><option key={name} value={name}>{name}</option>)}</select><small>Outside these areas? Contact the kitchen before ordering.</small></label>}
    <label className="fulfilment-express"><input type="checkbox" checked={value==='express'} onChange={e=>onChange(e.target.checked?'express':'standard',area)}/>Request express delivery</label>
-   {value==='express' && <p>The kitchen must confirm the courier and any additional charge. This does not book a Grab service.</p>}
+   {value==='express' && <p>Courier availability needs kitchen confirmation. The delivery fee shown in your total is the shop’s charge; this does not book a courier.</p>}
   </>}
   </>}
  </fieldset></div>;
