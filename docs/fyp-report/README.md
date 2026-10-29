@@ -27,3 +27,11 @@ not evidence of the kitchen's real customer accuracy or conversion uplift.
 The private production database, credentials and Genpact model/data archive are
 not included. The model is a separate existing GitHub Release backup.
 The original uploaded PDF, senior's example and briefing are not republished here.
+
+## Font consistency correction
+
+Word theme overrides have been removed from defaults, headings, linked character styles,
+contents/figure/table lists and all report text. All report text now explicitly uses
+Times New Roman. Figure-image fonts remain unchanged. The local PDF retains the
+documented Liberation Serif substitution when Microsoft Times New Roman is unavailable.
+Objectives, report wording, images and application source are unchanged by this correction.

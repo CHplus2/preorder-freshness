@@ -18,6 +18,8 @@ The supplied briefing is a collage of selected marking/submission guidance, not 
 
 This master normalises those conventions to **A4; Times New Roman 12-point; 1.5 body spacing; justified paragraphs; 4 cm left/binding margin and 2 cm top/right/bottom**. Headings are black/bold, chapter titles 14-point, ordinary headings 12-point; tables use 10-point single-spaced text and captions 11-point. Selected class/ERD pages are landscape with 2 cm margins to keep labels readable. Front matter uses Roman page numbers and main text restarts at 1. The Word file requests Times New Roman; the local PDF renderer may substitute the metrically similar Liberation Serif because the Microsoft font is not installed here.
 
+Font consistency correction: all document text styles, linked heading styles, contents fields, table text, headers/footers and defaults now explicitly use Times New Roman, with theme font overrides removed. Fonts inside the original Gantt/literature-map images, newly generated diagrams and website screenshots remain part of those figure images; they are not editable report text. The local PDF still uses the documented serif substitute when Microsoft Times New Roman is unavailable.
+
 The contents, figure and table lists contain editable Word fields with populated page references. If you change the document in Microsoft Word, select all and press F9 to refresh fields, then review pagination. Do not insert the original PDF's old contents pages or old Chapters 4–6 on top of this new master.
 
 ## Evidence and remaining author input
