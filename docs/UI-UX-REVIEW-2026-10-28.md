@@ -148,3 +148,41 @@ Only isolated local test data is used. No production record, message, payment,
 courier booking, scheduler, model or backend API is changed. No migration is
 required. Provider status and availability still come from existing records;
 the UI does not infer progress from the planned clock time.
+
+## Batch 4 — implemented
+
+- Owner Orders exposes the next actual progress action on each open order,
+  alongside its existing planning and payment controls. The general status
+  dialog is labelled More status options. Fulfilment, buyer contact and courier
+  arrangement share a labelled Handover & contact details panel; timing warnings,
+  food, quantities and payment status remain visible.
+- Update several orders is also available directly above the filtered order
+  list. It uses only that list, resets selections when filters change and shows
+  eligible counts for food-ready, courier handover and actual receipt. Existing
+  selection review, unpaid warnings, version checks and all-or-nothing backend
+  updates remain. Conflicts require refreshing before another attempt.
+- Planner's daily updates are behind one labelled summary so a long list of
+  progress controls does not precede the visible task agenda. Individual daily
+  controls use compact actions; full review remains available per order. Planner
+  review cards put timing warnings and progress before supporting contact details.
+- Phones use an explicitly labelled Planner view selector instead of seven
+  horizontally hidden view buttons. Desktop view buttons wrap. Date navigation
+  fits narrow screens, summary metrics have readable type and the load timestamp
+  omits seconds while retaining Malaysia time. Planning, capacity, stock and
+  reminder rules are unchanged.
+
+Frontend lint, Planner, UX and unit regressions and the production build pass.
+Rendering coverage checks scoped eligible counts, pickup exclusion from courier
+handover and suppression of cached mutation controls after a failed read. Local
+Chromium checks filtered owner cards, courier detail access, selection review,
+conflict recovery, failed-refresh recovery on both pages and phone view changes.
+An actual local bulk food-ready update records ingredient use for two fictional
+orders while leaving payments unpaid and unconfirmed requests untouched.
+Thirteen full-page WCAG A/AA and overflow checks pass across 1440, 768, 390 and
+320 pixels, including expanded controls and Planner handovers; screenshots were
+visually reviewed. Browser checks use a built production frontend with an
+isolated SQLite backend and in-memory email.
+
+No production data, model, backend API, schema, scheduler, email or courier
+provider is changed. No migration is required. Bulk and individual statuses still
+require owner confirmation of actual work; they do not infer courier events.

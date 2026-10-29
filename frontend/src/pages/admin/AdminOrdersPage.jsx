@@ -10,6 +10,8 @@ import {Link,useSearchParams} from 'react-router-dom';
 import './OrderCardSpacing.css';
 import './OwnerWorkspace.css';
 import OwnerOrderShortcuts from '../../components/OwnerOrderShortcuts';
+import OrderWorkflowActions from '../../components/OrderWorkflowActions';
+import OrderProgressBatch from '../../components/OrderProgressBatch';
 import DialogFeedback from '../../components/DialogFeedback';
 import PaymentRecords from '../../components/PaymentRecords';
 import AcceptedRecipe from '../../components/AcceptedRecipe';
@@ -47,6 +49,7 @@ function OwnerOrders() {
   const [newStatus, setNewStatus] = useState("");
   const [paymentOrder, setPaymentOrder] = useState(null);
   const [planningOrder, setPlanningOrder] = useState(null);
+  const [actionNotice,setActionNotice]=useState('');
   const [saving, setSaving] = useState(false);
   const submitting = useRef(false);
   const { formatOrderNumber } = useUI();
@@ -59,6 +62,7 @@ function OwnerOrders() {
   const historyView=filters.historyScope==='generated';
   const resultKind=historyView?'history record':filters.historyScope==='all'?'record':'order';
   const clearFilters=()=>{const queue=filters.historyScope==='orders'?'open':'all';setFilters({...emptyFilters,queue,sort:historyView?'newest':'delivery',historyScope:filters.historyScope,includeArchived:historyView});setParams({source:filters.historyScope,queue});};
+  const progressSaved=async notice=>{if(typeof notice==='string')setActionNotice(notice);await fetchAdminOrders();};
 
   useEffect(() => {
     fetchAdminOrders();
@@ -112,8 +116,10 @@ function OwnerOrders() {
 
       {adminOrdersError && <p role="alert">{adminOrdersError} <button disabled={adminOrdersLoading} onClick={fetchAdminOrders}>Retry loading orders</button></p>}
       {adminOrdersLoading && <p role="status">Loading orders…</p>}
+      {actionNotice && <p className="admin-notice" role="status">{actionNotice}</p>}
       {adminOrdersError || adminOrdersLoading ? null : adminOrders.length > 0 ? (
         <>
+          {visibleOrders.some(order=>['pending','processing','cooked','shipped'].includes(order.status) && !closedGeneratedHistory(order)) && <details className="owner-bulk-updates"><summary>Update several orders in this list</summary><OrderProgressBatch key={JSON.stringify(filters)+review} orders={visibleOrders} onSaved={progressSaved} scope="in this filtered list"/></details>}
           {!visibleOrders.length && <div className="admin-empty"><h2>{filters.queue==='open' && !filters.search && !review?'No open orders to show':'No records match these filters'}</h2><p>Completed and cancelled orders remain available in All orders.</p><button type="button" onClick={()=>{setFilters({...emptyFilters,queue:'all'});if(params.size)setParams({queue:'all'});}}>View all orders</button></div>}
           {visibleOrders.map(order => closedGeneratedHistory(order) ? <GeneratedHistoryCard key={order.id} order={order} reference={formatOrderNumber(order.id)}/> : (
             <article key={order.id} className="order-card" aria-label={"Order "+formatOrderNumber(order.id)}>
@@ -155,11 +161,12 @@ function OwnerOrders() {
               </div>
 
               {/* FOOTER */}
+              <OrderWorkflowActions order={order} onSaved={progressSaved} compact/>
               <div className="order-footer owner-order-footer"><div className="owner-order-actions">
                 {order.status==='pending' && <button type="button" className="owner-workspace-link" aria-expanded={planningOrder===order.id} aria-controls={'order-planning-'+order.id} onClick={()=>setPlanningOrder(planningOrder===order.id?null:order.id)}>{planningOrder===order.id?'Close planning':order.preparation_at?'Update delivery & preparation':'Plan delivery & preparation'}</button>}
                 {order.status==='processing' && <Link className="owner-workspace-link" to={'/admin/planner?view=orders&order='+order.id}>View preparation plan</Link>}
                 <button className="edit-btn" onClick={() => startEdit(order)}>
-                  Update status
+                  More status options
                 </button>
                 {review==='missing-delivery' && order.status==='pending' && !order.inventory_deducted && <button onClick={()=>startEdit(order,'cancelled')}>Review closing request</button>}
                 <button onClick={()=>setPaymentOrder(paymentOrder?.id===order.id?null:order)}>Payment records</button>
@@ -170,7 +177,7 @@ function OwnerOrders() {
               </div>
               {order.payment_method==='escrow' && <p className="owner-order-note">Escrow · Sepolia <Link to={'/payment/escrow?order='+order.id}>Manage escrow payment</Link></p>}
               {order.items.some(i=>i.recipe_source?.startsWith('legacy')) && <p className="owner-order-note">Review this older order’s recipe in Planner before preparation.</p>}
-              <OrderFulfilment order={order} owner/><OrderContactActions order={order}/><CourierHandover key={'tracking-'+order.id+order.updated_at} order={order} onSaved={fetchAdminOrders}/>
+              <details className="owner-handover-details"><summary>Handover & contact details</summary><OrderFulfilment order={order} owner/><OrderContactActions order={order}/><CourierHandover key={'tracking-'+order.id+order.updated_at} order={order} onSaved={fetchAdminOrders}/></details>
               {paymentOrder?.id===order.id && <PaymentRecords order={order} onSaved={fetchAdminOrders}/>}
               <AcceptedRecipe order={order}/>
               {planningOrder===order.id && <div id={'order-planning-'+order.id}><PlanReview key={order.id+'-'+order.updated_at} order={order} onSaved={fetchAdminOrders}/></div>}

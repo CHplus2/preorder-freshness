@@ -119,6 +119,27 @@ try {
   assert.match(compactReady,/Handed to courier/);
   assert.match(progress('cooked'),/Mark delivered/);assert.match(progress('cooked'),/Handed to courier/);
   assert.match(progress('shipped'),/Mark delivered/);assert.equal(progress('delivered'),'');
+  const {default:OrderProgressBatch}=await server.ssrLoadModule('/src/components/OrderProgressBatch.jsx');
+  const batchOrders=[{id:20,status:'pending',updated_at:'2026-10-27T02:00:00Z',preparation_at:'2026-10-28T10:00:00+08:00',preparation_end_at:'2026-10-28T11:00:00+08:00',delivery_at:'2026-10-28T12:00:00+08:00'},
+    {id:21,status:'pending',updated_at:'2026-10-27T02:00:00Z',preparation_plan:{needs_review:true}},
+    {id:22,status:'cooked',delivery_method:'pickup',updated_at:'2026-10-27T02:00:00Z'},
+    {id:23,status:'cooked',delivery_method:'standard',updated_at:'2026-10-27T02:00:00Z'}];
+  const bulk=renderToStaticMarkup(createElement(OrderProgressBatch,{orders:batchOrders,scope:'in this filtered list'}));
+  assert.match(bulk,/in this filtered list/);assert.doesNotMatch(bulk,/on the selected day/);
+  assert.match(bulk,/Food ready<\/span><small>1 eligible/);
+  assert.match(bulk,/Handed to courier<\/span><small>1 eligible/);
+  assert.match(bulk,/Received \/ collected<\/span><small>2 eligible/);
+  const {default:AdminOrdersPage}=await server.ssrLoadModule('/src/pages/admin/AdminOrdersPage.jsx');
+  const {OrderContext}=await server.ssrLoadModule('/src/contexts/OrderContext.js');
+  const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
+  const ownerRender=state=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(UIContext.Provider,{value:{formatOrderNumber:id=>'ORD-'+id}},createElement(OrderContext.Provider,{value:{adminOrders:batchOrders.map(order=>({...order,items:[],payment_status:'unpaid',total_amount:'12',shipping_fee:'0'})),fetchAdminOrders:()=>{},...state}},createElement(AdminOrdersPage)))));
+  const owner=ownerRender({});
+  assert.match(owner,/Update several orders in this list/);assert.match(owner,/Mark food ready/);assert.match(owner,/More status options/);
+  assert.match(owner,/<details class="owner-handover-details"><summary>Handover &amp; contact details/);
+  for(const state of [{adminOrdersLoading:true},{adminOrdersError:'Read unavailable'}]){
+    const unavailable=ownerRender(state);
+    assert.doesNotMatch(unavailable,/Update several orders in this list|Mark food ready|More status options|<article/);
+  }
   console.log('Planner progress: scheduled pending orders, guarded unreviewed plans, optional intermediate stages and actual completion actions passed.');
   console.log('Planner snapshot: initial loading, refresh with cached data, failed refresh, missing response and ready state passed.');
 } finally {await server.close();}
