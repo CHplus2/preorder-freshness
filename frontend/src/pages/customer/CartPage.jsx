@@ -2,32 +2,31 @@ import {shippingEnquiry,shippingContact} from '../../utils/sellingDetails';
 import SellingDetails from '../../components/SellingDetails';
 import {quantityLabel,unitLabel} from '../../utils/sellingDetails';
 import FulfilmentChoices from '../../components/FulfilmentChoices';
-import {fulfilmentKey} from '../../utils/fulfilment';
 import MenuPhoto from '../../components/MenuPhoto';
 import {Link,useNavigate} from 'react-router-dom';
-import {ArrowLeft,ArrowRight,ShoppingBag,CalendarDays,Minus,Plus,Trash2} from 'lucide-react';
-import DeliveryTimePicker from '../../components/DeliveryTimePicker';
-import {basketAvailabilityKey} from '../../utils/deliverySlots';
+import {ArrowLeft,ArrowRight,ShoppingBag,Minus,Plus,Trash2} from 'lucide-react';
 import BasketDeliveryDays from '../../components/BasketDeliveryDays';
 import OrderJourney from '../../components/OrderJourney';
 import {PageMeta} from '../../components/BusinessLayout';
 import {deliveryDaysText,deliveryDayIssue} from '../../utils/deliveryDays';
+import {useEffect} from 'react';
 import {useUI} from '../../contexts/UIContext';
 import {useCart} from '../../contexts/CartContext';
 import './CartPage.css';
 
 export default function CartPage(){
  const {formatPrice}=useUI();
- const {cart,cartLoading,cartError,cartUpdating,pricingReady,pricingError,refreshPricing,refreshCart,removeFromCart,updateQuantity,total,discount,SHIPPING_FEE,finalTotal,promotion,fulfilmentMethod='standard',deliveryArea='',chooseFulfilment,arrivalWindowMinutes=0,chooseArrivalWindow,preferredDelivery='',preferredDeliveryDay='',chooseDeliveryTime}=useCart();
+ const {cart,cartLoading,cartError,cartUpdating,pricingReady,pricingError,refreshPricing,refreshCart,removeFromCart,updateQuantity,total,discount,SHIPPING_FEE,finalTotal,promotion,fulfilmentMethod='standard',deliveryArea='',chooseFulfilment,pricingRefreshing=false}=useCart();
  const navigate=useNavigate();
+ useEffect(()=>{refreshPricing?.();},[refreshPricing]);
  const updating=cartLoading || cartUpdating;
  const count=cart.reduce((n,i)=>n+i.quantity,0);
  const unavailable=cart.some(item=>shippingEnquiry(item.product.selling_details) || item.product.selling_status && item.product.selling_status!=='active');
  const incompatibleDays=Boolean(deliveryDayIssue(cart,''));
  return <main className="cart-container cart-storefront">
-  <PageMeta title="Your basket" description="Review your food, check delivery times and continue to preorder checkout."/>
+  <PageMeta title="Your basket" description="Review your food and continue to choose a time at checkout."/>
   <OrderJourney current="cart"/>
-  <div className="cart-page-heading"><div><h1 className="cart-title">Your basket</h1><p>Review your food and choose when to receive it.</p></div><Link to="/menu"><ArrowLeft size={16} aria-hidden="true"/>Keep exploring</Link></div>
+  <div className="cart-page-heading"><div><h1 className="cart-title">Your basket</h1><p>Review your food before checkout.</p></div><Link to="/menu"><ArrowLeft size={16} aria-hidden="true"/>Keep exploring</Link></div>
   {cartLoading && <p role="status">Loading your basket…</p>}
   {cartError && <p role="alert">{cartError} <button onClick={refreshCart}>Retry basket</button></p>}
   {!cartError && unavailable && <p role="alert" className="cart-unavailable">Some items need a separate shipping enquiry or are no longer accepting orders. Remove them from this basket to continue with local preorders.</p>}
@@ -38,10 +37,9 @@ export default function CartPage(){
      <div className="cart-right"><div className="qty-controls" role="group" aria-label={`Quantity of ${item.product.name}`}><button className="qty-btn" aria-label={`Decrease quantity of ${item.product.name}`} disabled={item.quantity<=1 || updating} onClick={()=>updateQuantity(item.id,Math.max(1,item.quantity-1))}><Minus size={15}/></button><span className="qty-number" aria-live="polite" aria-label={quantityLabel(item.product.selling_details,item.quantity)}>{item.quantity}</span><button className="qty-btn" aria-label={`Increase quantity of ${item.product.name}`} disabled={updating || shippingEnquiry(item.product.selling_details) || item.quantity>=10000 || Boolean(item.product.selling_status && item.product.selling_status!=='active')} onClick={()=>updateQuantity(item.id,item.quantity+1)}><Plus size={15}/></button></div><strong className="cart-line-total">{formatPrice(item.product.price*item.quantity)}</strong><button className="remove-btn" disabled={updating} aria-label={`Remove ${item.product.name} from basket`} onClick={()=>removeFromCart(item.id)}><Trash2 size={16} aria-hidden="true"/><span>Remove</span></button></div>
     </article>)}
    </section>
-   <FulfilmentChoices store={promotion} value={fulfilmentMethod} area={deliveryArea} onChange={chooseFulfilment} disabled={updating || !pricingReady}/>{!unavailable && <BasketDeliveryDays cart={cart} showBasketLink={false}/>}
-   {!unavailable && !incompatibleDays && <section className="cart-availability" aria-label="Basket delivery times"><div className="cart-section-heading"><h2><CalendarDays size={19} aria-hidden="true"/>{preferredDelivery?'Your':'Choose a'} {fulfilmentMethod==='pickup'?'collection':'delivery'} time</h2><span>{preferredDelivery?'Selected':'Optional here'}</span></div>
-    {!preferredDelivery && <p className="cart-time-note">Choose now or at checkout. Your selected time carries forward.</p>}<DeliveryTimePicker day={preferredDeliveryDay} method={fulfilmentMethod} windowMinutes={arrivalWindowMinutes} onWindowChange={chooseArrivalWindow} key={basketAvailabilityKey(cart)+fulfilmentKey(promotion,fulfilmentMethod,deliveryArea)} cart={cart} value={preferredDelivery} disabled={updating || !pricingReady} onSelect={chooseDeliveryTime}/>
-   </section>}
+   <FulfilmentChoices detailsAtCheckout store={promotion} value={fulfilmentMethod} area={deliveryArea} onChange={chooseFulfilment} onRefresh={refreshPricing} refreshing={pricingRefreshing} disabled={updating || !pricingReady}/>{!unavailable && <BasketDeliveryDays cart={cart} showBasketLink={false}/>}
+   {!unavailable && !incompatibleDays && <p className="cart-time-note">Choose your {fulfilmentMethod==='pickup'?'collection':'delivery'} time at checkout.</p>}
+
   </div><aside className="cart-summary" aria-busy={updating} aria-labelledby="cart-summary-title"><span className="cart-summary-icon"><ShoppingBag size={23} aria-hidden="true"/></span><h2 id="cart-summary-title">Order summary</h2><p>{cart.length} {cart.length===1?'choice':'choices'} · {count} {count===1?'item':'items'}</p>{!pricingReady?<div className="basket-pricing-status" role={pricingError?'alert':'status'}><p>{pricingError?'Kitchen pricing could not be loaded. Retry before checkout.':'Loading kitchen pricing…'}</p>{pricingError && <button type="button" onClick={refreshPricing}>Retry pricing</button>}</div>:<dl><div><dt>Food subtotal</dt><dd>{formatPrice(total)}</dd></div>{discount>0 && <div className="cart-discount"><dt>Bulk discount</dt><dd>−{formatPrice(discount)}</dd></div>}<div><dt>{fulfilmentMethod==='pickup'?'Collection':'Delivery fee'}</dt><dd>{SHIPPING_FEE?formatPrice(SHIPPING_FEE):'Free'}</dd></div><div className="cart-bill-total"><dt>Total</dt><dd>{formatPrice(finalTotal)}</dd></div></dl>}<p className="cart-summary-note">Confirm your fulfilment details, time and payment at checkout.</p>{fulfilmentMethod!=='pickup' && <p className="cart-summary-note">Delivery is arranged by the kitchen. The shown shop fee is included in the total; it is not a live courier quote.</p>}<div className="cart-checkout-action order-action-bar"><div className="cart-mobile-total"><span>Total</span><strong>{updating?'Updating…':pricingReady?formatPrice(finalTotal):'Checking…'}</strong></div><button className="checkout-btn" disabled={unavailable || incompatibleDays || updating || !pricingReady || Boolean(cartError)} onClick={()=>navigate('/checkout')}>Continue to checkout <ArrowRight size={18} aria-hidden="true"/></button></div><Link className="cart-add-more" to="/menu">Add something else</Link></aside></div>:!cartLoading && !cartError && <section className="cart-empty"><ShoppingBag size={42} aria-hidden="true"/><h2>A good meal is a few clicks away.</h2><p>Your basket is empty. Find something you fancy from the kitchen.</p><Link to="/menu" className="dk-primary">Explore the menu <ArrowRight size={17} aria-hidden="true"/></Link></section>}
  </main>;
 }

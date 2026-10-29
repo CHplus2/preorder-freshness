@@ -40,6 +40,9 @@ try{
  const updating=cart({cartUpdating:true});assert.match(updating,/Updating basket and totals/);assert.match(updating,/<button[^>]*disabled[^>]*>Continue to checkout/);
  const pricing=cart({pricingReady:false,pricingError:'Pricing unavailable'});assert.match(pricing,/Retry pricing/);assert.doesNotMatch(pricing,/RM 14.05|Bulk discount/);
  assert.match(cart({cart:[]}),/Your basket is empty/);assert.match(cart({}),/RM 14.05/);
+ const basketOnly=cart({});assert.match(basketOnly,/Choose your delivery time at checkout/);assert.doesNotMatch(basketOnly,/Preferred day|Arrival timing|delivery-time-picker|Optional here/);
+ assert.doesNotMatch(cart({promotion:{delivery_areas:['Kuala Lumpur']}}),/Choose your area|Request express delivery/);
+ assert.match(cart({fulfilmentMethod:'pickup'}),/Choose your collection time at checkout/);
  const address=patch=>renderToStaticMarkup(h(MemoryRouter,null,h(CheckoutAddress,{value:{address:null,draft:{country:'Malaysia'},editing:false,addressLoading:false,saving:false,error:'',...patch}})));
  const addressError=address({error:'Invalid response'});assert.match(addressError,/Retry saved address/);assert.doesNotMatch(addressError,/Save delivery address|Add delivery address/);
  const saving=address({editing:true,saving:true});assert.match(saving,/<fieldset[^>]*disabled/);assert.match(saving,/Saving…/);
@@ -73,8 +76,8 @@ try{
  assert.match(settings,/existing orders keep their recorded delivery fee/);assert.match(settings,/Check a courier cost/);
  assert.match(settings,/<details class="delivery-cost-check"><summary>/);
  assert.match(settings,/<section[^>]*aria-labelledby="fulfilment-settings-title"><h2 id="fulfilment-settings-title">Collection &amp; delivery<\/h2>/);
- assert.match(settings,/Self-collection is switched off/);
- assert.match(settings,/saved location alone does not enable pickup/);
+ assert.match(settings,/Pickup is switched off/);assert.ok(settings.indexOf('id="offer-pickup"')<settings.indexOf('Flat delivery fee'));assert.match(settings,/id="pickup-setup"/);
+ assert.match(settings,/address alone does not enable pickup/);
  assert.match(settings,/<label>Collection location<input(?![^>]*required)/);
  const enabledPickup=renderToStaticMarkup(h(FulfilmentSettings,{store:{pickup_enabled:true,pickup_location:'Fictional counter'},onChange:()=>{}}));
  assert.match(enabledPickup,/<label>Collection location<input[^>]*required/);

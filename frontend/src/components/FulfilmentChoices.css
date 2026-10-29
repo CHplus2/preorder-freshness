@@ -8,6 +8,7 @@
 .fulfilment-methods small,.fulfilment-choices small{font-size:.8rem;line-height:1.5;color:#50614c}
 .fulfilment-choices input[type=radio],.fulfilment-choices input[type=checkbox]{width:18px;height:18px;min-height:18px;padding:0;flex:0 0 18px;margin:3px 0 0}
 .fulfilment-hours{font-size:.85rem;color:#50614c;line-height:1.6;margin:14px 0}
+.fulfilment-panel .fulfilment-refresh{display:block;min-height:44px;max-width:100%;margin:12px 0 0;padding:8px 0;background:transparent;border:0;color:#285a3e;font:600 13px/1.5 system-ui,sans-serif;text-decoration:underline;text-underline-offset:3px;white-space:normal;cursor:pointer}
 .fulfilment-location{padding:14px;background:#f5f7f0;border-radius:10px;line-height:1.6;overflow-wrap:anywhere}
 .fulfilment-location p{margin:6px 0;white-space:pre-line}
 .fulfilment-choices label{display:grid;gap:8px;font-size:.9rem}.fulfilment-choices select{width:100%;min-width:0;box-sizing:border-box}
@@ -18,7 +19,8 @@
 .fulfilment-setting-toggle input[type=checkbox]{width:18px;height:18px;min-height:18px;padding:0;flex:0 0 18px;margin:0}
 .fulfilment-setting-section{padding:12px 0 20px;border-bottom:1px solid #dce3d6}.fulfilment-setting-section>label{display:grid;gap:8px;margin:16px 0}
 .admin-shell .fulfilment-settings-fields{border:0;padding:0;margin:0;min-width:0;width:100%;box-sizing:border-box}
-.fulfilment-settings>.fulfilment-settings-fields>.pickup-availability-status{padding:14px 16px;border:1px solid #d4dfd0;border-radius:9px;background:#f5f8f0;font-size:14px;line-height:1.65}
+.fulfilment-settings .pickup-availability-status{padding:14px 16px;border:1px solid #d4dfd0;border-radius:9px;background:#f5f8f0;font-size:14px;line-height:1.65}
+.pickup-setup{min-width:0;scroll-margin-top:7rem}.pickup-setup>h3{font-size:18px;line-height:1.4;margin:18px 0 8px}
 .pickup-availability-status strong{display:block;margin-bottom:6px;font-weight:600}
 .fulfilment-settings .pickup-setting-section{min-width:0;overflow-wrap:anywhere}
 .order-fulfilment{padding:14px 16px;margin:16px 0;border:1px solid #dce3d6;border-radius:10px;line-height:1.6;overflow-wrap:anywhere}.order-fulfilment p{margin:8px 0;white-space:pre-line}

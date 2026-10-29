@@ -162,3 +162,47 @@ The Delivery areas field now uses the short hint “One area per line. Leave bla
 to accept any area.” An overlong entry shows “Area 1: use 80 characters or fewer.”
 The same concise error is returned by the server. Area limits and validation
 behaviour are unchanged.
+
+## Pickup discovery and one checkout time step
+
+- Pickup setup now precedes delivery pricing in Collection & delivery. A direct
+  Settings shortcut focuses Offer self-collection. Location alone still does not
+  opt the business into collection; the owner must enable it and save successfully.
+- Storefront options refresh on returning to a visible browser tab, on entering
+  the basket/checkout and through an explicit Refresh delivery & pickup options
+  control. Focus/visibility events are debounced and obsolete reads are aborted.
+  This fixes an already-mounted basket retaining old pickup availability after
+  Settings was saved elsewhere. The current basket method falls back when its
+  saved option is no longer offered.
+- The basket reviews food and lets customers choose delivery or pickup to see
+  the appropriate fee. It no longer contains a date/time picker, delivery-area
+  field or express-request checkbox. Required area, address, time and payment
+  details are completed and validated at checkout. No basket slot search is sent.
+  A previously chosen valid checkout time remains stored when reviewing the
+  basket and returning; it need not be entered a second time. Basket quantity,
+  method and kitchen-rule changes still invalidate incompatible choices.
+
+Frontend lint, UX/checkout suites and build passed. Isolated Chromium checks
+cover the actual owner toggle/save, pickup appearing in the same open buyer
+basket after a focus refresh, free collection/no address, one checkout picker,
+real collection slots, retained checkout time on back/forward navigation and
+fallback after pickup is disabled. Twelve WCAG A/AA and overflow audits cover
+basket, Settings and checkout at 1440, 768, 390 and 320 pixels. No production
+setting, booking, order, payment or email was changed; no migration is needed.
+The build reports the bundle-size advisory after common chunks were regrouped;
+this is a successful build, not a deployment verification.
+
+## Additional UI batches requested after this fix
+
+The previously requested FreshCast quantity-formatting batch is still pending.
+The subsequent UI review queue is:
+
+1. Checkout hierarchy and typography, including duplicated Contact & handover
+   headings and optional-field complexity. Keep the basket a clear review step
+   and validate required details at checkout.
+2. Owner Settings language and technical disclosure: review email-reminder
+   status, recipient/sender labels and diagnostics. Keep operational facts clear
+   and move implementation details out of the normal setup flow where appropriate.
+   Check related pages for the same presentation issues.
+3. Notification behaviour: inspect existing timers, auto-dismiss routine success
+   notices, retain appropriate recovery/action notices and verify accessibility.

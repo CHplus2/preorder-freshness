@@ -14,7 +14,7 @@ import {chosenDeliveryInput,chosenDeliveryDay,deliveryChoiceScope,activeDelivery
 import {basketPlanAdded} from '../utils/basketGuide';
 
 export default function CartProvider({ children }) {
-  const { store: promotion,error:pricingError } = useStorefront();
+  const { store: promotion,error:pricingError,refreshing:pricingRefreshing=false } = useStorefront();
   const pricingReady=pricingConfigured(promotion) && !pricingError;
   const refreshPricing=useCallback(()=>window.dispatchEvent(new Event('storefront-updated')),[]);
   const [wallet, setWallet] = useState(null);
@@ -219,7 +219,7 @@ export default function CartProvider({ children }) {
     <CartContext.Provider
       value={{
         fulfilmentMethod,deliveryArea,chooseFulfilment,arrivalWindowMinutes,chooseArrivalWindow,preferredDelivery,chooseDeliveryTime,preferredDeliveryDay,chooseDeliveryDay,
-        discount, promotion, pricingReady, pricingError, refreshPricing,
+        discount, promotion, pricingReady, pricingError, pricingRefreshing, refreshPricing,
         cart,
         cartLoading, cartError, cartUpdating,
         total,
