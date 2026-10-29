@@ -31,7 +31,10 @@ class PostgreSQLOperationsTests(TransactionTestCase):
             received_date=self.today,expiry_date=self.today+timedelta(days=2))
 
     def order(self,products):
-        order=Order.objects.create(user=self.buyer,status='processing')
+        start=timezone.now()+timedelta(hours=1)
+        order=Order.objects.create(user=self.buyer,status='processing',
+            preparation_at=start,preparation_end_at=start+timedelta(hours=1),
+            delivery_at=start+timedelta(hours=2))
         for product in products:
             OrderItem.objects.create(order=order,product=product,product_name=product.name,
                 quantity=1,unit_price=10,subtotal=10)
@@ -57,6 +60,7 @@ class PostgreSQLOperationsTests(TransactionTestCase):
         with ThreadPoolExecutor(max_workers=2) as pool:
             results=list(pool.map(cook,[o.pk for o in orders]))
         self.assertEqual(sorted(code for code,_ in results),[200,400],results)
+        self.assertIn('Insufficient',str(next(data for code,data in results if code==400)))
         for lot in lots:
             lot.refresh_from_db();self.assertEqual(lot.quantity,Decimal('40'))
         self.assertEqual(Order.objects.filter(inventory_deducted=True,status='cooked').count(),1)

@@ -20,7 +20,11 @@ def main():
     npm=shutil.which('npm')
     if not npm:raise SystemExit('npm is required; no tests executed.')
     steps=[('backend',[sys.executable,'manage.py','test','myapp','--noinput','--verbosity','2'],ROOT/'backend'),('release',[sys.executable,'-m','unittest','discover','-s','tests','-v'],ROOT)]
-    steps += [(name,[npm,'run',name],ROOT/'frontend') for name in ['test','test:ux','test:checkout','test:planner','lint','build']]
+    steps += [(name,[npm,'run',name],ROOT/'frontend') for name in [
+        'test','test:ux','test:checkout','test:planner','test:recommendations',
+        'test:predictive','test:paypal','test:escrow','test:shopping','test:images',
+        'lint','build',
+    ]]
     sha=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     dirty=bool(subprocess.check_output(['git','status','--porcelain','--untracked-files=normal'],cwd=ROOT,text=True).strip())
     source_files=subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard'],cwd=ROOT,text=True).splitlines()
@@ -37,7 +41,7 @@ def main():
             if isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef)) and node.name.startswith('test_'):
                 inventory.append({'file':file.relative_to(ROOT).as_posix(),'test':node.name,'line':node.lineno})
     (output/'test-inventory.json').write_text(json.dumps(inventory,indent=2)+'\n',encoding='utf-8')
-    manifest={'started_utc':stamp,'base_commit':sha,'working_tree_dirty':dirty,'database':'isolated in-memory SQLite','email':'in-memory; no delivery','limitations':['PostgreSQL locking tests skip on SQLite','No real user study, external payments or email delivery tested','Lint failures remain failures, not overridden'],'steps':[]}
+    manifest={'started_utc':stamp,'base_commit':sha,'working_tree_dirty':dirty,'database':'isolated in-memory SQLite','email':'in-memory; no delivery','limitations':['PostgreSQL locking tests skip on SQLite','Real-model smoke tests require a provisioned bundle; inspect skipped-test output','No real user study, external payments or email delivery tested','Lint failures remain failures, not overridden'],'steps':[]}
     for name,command,cwd in steps:
         print('Running '+name,flush=True)
         try:

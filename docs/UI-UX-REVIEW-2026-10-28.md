@@ -233,3 +233,9 @@ No migration or retraining is required.
 The five planned batches are implemented. This closes this review pass, not all
 possible usability work. Live provider connections and actual customer studies
 remain separate from local functional and accessibility checks.
+
+The subsequent [application-wide regression](evidence/20261029-final-regression/README.md)
+exercised all 797 backend tests across isolated SQLite and PostgreSQL, 34 release
+tests and all ten frontend suites. It also corrected outdated concurrency-test
+setup and expanded the reusable verification command; no application rule was
+weakened to obtain a passing result.
