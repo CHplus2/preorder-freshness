@@ -54,7 +54,7 @@ export default function GuidedMenu(){
    if(result){
     for(const item of picked.items.filter(item=>item.add_quantity>0))void recommendationEvent(session,'added',item.id);
     const first=picked.items.find(item=>item.add_quantity>0);if(first)selectRecommendation(session,first.id);
-    setSuccess({account:accountKey,message:result.basket_changed?'This option was already applied; review your basket’s current total.':result.already_applied?'This option was already applied. No duplicate items were added.':result.replaced_basket?'Basket replaced with your selected menu. Choose or review your time in the basket.':'Suggested items added. Choose or review your time in the basket.'});
+    setSuccess({account:accountKey,message:result.basket_changed?'This option was already applied; review your basket’s current total.':result.already_applied?'This option was already applied. No duplicate items were added.':result.replaced_basket?'Basket replaced with your selected menu. Choose or review your time at checkout.':'Suggested items added. Choose or review your time at checkout.'});
    }
    if(result || isAuthenticated)setData(null);
   }finally{pending.current=false;setAddingPlan('');}

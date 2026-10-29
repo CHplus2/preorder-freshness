@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {preparationEstimate} from './preparationEstimate.js';
+import {preparationEstimate,defaultPreviewQuantity} from './preparationEstimate.js';
+import {readFileSync} from 'node:fs';
 const step={name:'Mix',minutes:20,additional_batch_minutes:25,worker:true,overnight:false};
 const menu={batch_size:1,preparation_tasks:[step,{...step,name:'Bake',minutes:100,additional_batch_minutes:15,worker:false}]};
 const store={kitchen_open_hour:8,kitchen_close_hour:20};
@@ -16,4 +17,21 @@ test('resumable prep reports workday lower bound without treating it as one unin
  assert.equal(result.total,1000);assert.equal(result.minimumWorkDays,2);assert.equal(result.steps[0].splittable,true);
  assert.equal(result.warnings.length,0);
  for(const change of [{max_pause_minutes:0},{resource:'stove'},{worker:false},{pause_resource:'oven'}])assert.ok(preparationEstimate({...m,preparation_tasks:[{...m.preparation_tasks[0],...change}]},1,store).error);
+});
+test('banana cake preview distinguishes the daily quantity limit from a long recipe',()=>{
+ const catalogue=JSON.parse(readFileSync(new URL('../../../docs/DAPUR-KITA-STARTER-DATA.json',import.meta.url),'utf8'));
+ const banana=catalogue.menus.find(menu=>menu.name==='Banana Cake - Box of 4 Slices');
+ const above=preparationEstimate(banana,10,store);
+ assert.equal(above.total,540);assert.equal(above.handsOn,180);assert.equal(above.dailyMinutes,720);
+ assert.deepEqual(above.capacityExceeded,{quantity:10,limit:8,excess:2});
+ assert.equal(above.warnings.length,1);assert.match(above.warnings[0],/10 exceeds the daily limit of 8/);
+ assert.equal(defaultPreviewQuantity(banana),'8');
+ assert.equal(preparationEstimate(banana,defaultPreviewQuantity(banana),store).capacityExceeded,null);
+ assert.equal(banana.daily_capacity,8);
+});
+test('initial quantity respects a valid daily cap without masking a later larger sample',()=>{
+ assert.equal(defaultPreviewQuantity({daily_capacity:3}),'3');
+ assert.equal(defaultPreviewQuantity({daily_capacity:100}),'10');
+ assert.equal(defaultPreviewQuantity({daily_capacity:''}),'10');
+ assert.equal(preparationEstimate({...menu,daily_capacity:3},5,store).capacityExceeded.excess,2);
 });

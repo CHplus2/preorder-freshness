@@ -58,6 +58,21 @@ class AdaptivePlanningTests(TestCase):
         self.assertLess(timezone.localtime(plan['end']).date(), timezone.localtime(self.delivery).date())
         self.assertGreaterEqual(plan['end'], self.delivery-timedelta(minutes=90, days=1))
 
+    def test_preparation_can_continue_after_delivery_closes_for_an_allowed_later_order(self):
+        self.store.delivery_open_hour = 9; self.store.delivery_close_hour = 12
+        self.menu.max_early_minutes = 1440  # Explicit fixture holding assumption.
+        self.delivery = self.delivery.replace(hour=10)
+        plan = self.plan()
+        end = timezone.localtime(plan['end'])
+        self.assertLess(end.date(), self.delivery.date())
+        self.assertGreater(end.hour, self.store.delivery_close_hour)
+        for task in plan['tasks']:
+            start = timezone.localtime(parse_datetime(task['start']))
+            finish = timezone.localtime(parse_datetime(task['end']))
+            self.assertGreaterEqual(start.hour, self.store.kitchen_open_hour)
+            self.assertLessEqual(finish.hour, self.store.kitchen_close_hour)
+        self.assertFalse(plan.get('needs_review'))
+
     def test_short_notice_request_is_unpaid_and_reserves_no_tasks(self):
         delivery = self.now.replace(hour=18)
         strict = self.client.post('/api/orders/slots/', {'date': str(timezone.localdate(delivery))}, format='json')

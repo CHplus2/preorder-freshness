@@ -480,3 +480,9 @@ body {
 }
 .menu-food-bottom{flex-wrap:wrap}.menu-food-price{flex:1 1 96px}.menu-food-bottom>.menu-add{flex-shrink:0}
 .menu-quantity button{width:44px;min-width:44px}.menu-quantity>span{min-width:24px}
+
+/* Distinguish a basket quantity from the initial Add action. */
+.menu-food-bottom>.menu-quantity{width:128px;min-width:128px;box-sizing:border-box}
+.menu-quantity>span{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:38px;line-height:1.25}
+.menu-quantity>span>strong{font-size:13px;line-height:1.25;color:inherit}
+.menu-quantity>span>small{font-size:10px;font-weight:500;line-height:1.35;color:inherit;white-space:nowrap}

@@ -158,8 +158,9 @@ export default function CartProvider({ children }) {
           withCredentials:true,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}
         });
         if(!isSessionCurrent())return false;
-        setAlert({message:'Item added to cart',type:'success'});
-        await refreshCart();
+        const rows=await refreshCart();
+        if(!isSessionCurrent())return false;
+        setAlert(rows?{message:'Item added to cart',type:'success'}:{message:'Your item was added. Reload your basket to see the updated total before adding again.',type:'info'});
         return true;
       }catch(error){
         if(!isSessionCurrent())return false;
@@ -181,7 +182,10 @@ export default function CartProvider({ children }) {
       if(quantity===0)await axios.delete(`/api/cart/${cartItemId}/`,{withCredentials:true,timeout:30000,headers});
       else await axios.patch(`/api/cart/${cartItemId}/`,{quantity},{withCredentials:true,timeout:30000,headers});
       if(!isSessionCurrent())return false;
-      await refreshCart();return true;
+      const rows=await refreshCart();
+      if(!isSessionCurrent())return false;
+      setAlert(rows?{type:'success',message:quantity===0?'Item removed from basket.':'Basket quantity updated.'}:{type:'info',message:'Your basket change was saved. Reload your basket before making another change.'});
+      return true;
     }catch(error){
       if(isSessionCurrent()){
         setAlert({type:'error',message:!error.response || error.response.status>=500?'The basket change could not be confirmed. Refresh your basket before trying again.':apiError(error)});
@@ -204,6 +208,8 @@ export default function CartProvider({ children }) {
         if(result.date_only)chooseDeliveryDay(result.date,{rows});
         else chooseDeliveryTime(result.delivery_at,{rows,windowMinutes:0});
       }
+      if(!isSessionCurrent())return false;
+      setAlert(!rows?{type:'info',message:'Your suggested items were saved. Reload your basket to check the updated total.'}:result.already_applied || result.basket_changed?{type:'info',message:'This suggestion was already applied. Review your current basket.'}:{type:'success',message:result.replaced_basket?'Basket replaced with your selected menu.':'Suggested items added to your basket.'});
       return result;
     }catch(error){
       if(!isSessionCurrent())return false;

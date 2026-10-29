@@ -143,3 +143,50 @@ inspection also checked a phone order card. Together these complete this request
 five-page source/UI review. The main bundle-size advisory is unchanged; no live
 Core Web Vitals, production load, courier integration or provider configuration
 claim is made. The integration and main branches receive the same tested code.
+
+## Follow-up: visible basket feedback and preparation quantity preview
+
+The global popup component and 4/6/10-second success/information/error timers were
+still present. A baseline production-bundle browser check confirmed repeated
+first Add and Settings saved notices. Source review found that Add started its
+success notice before awaiting the basket refresh, so a slow refresh could consume
+the visible interval while the button still showed Adding. Quantity changes and
+removals also had no success popup. Confirmations now follow the refresh; a
+confirmed write followed by a failed read explicitly says it was saved and asks
+for a basket reload instead of implying that the addition should be repeated.
+Per-account guards still prevent a late result from notifying another session.
+Suggested-basket writes get the same feedback, preserving already-applied and
+changed-basket distinctions. Global timers, hover/focus pause and retained inline
+form errors remain unchanged. The menu quantity control adds an explicit
+in basket caption; Add remains the initial action for a menu not yet in the cart.
+The finder success copy now points to checkout for time selection.
+
+The supplied banana-cake example is a quantity limit: the starter menu permits
+eight selling units per day, while the preview previously always started at ten.
+Ten units calculate 540 minutes of recipe steps, including 180 attended minutes,
+within the configured 720-minute kitchen day. The preview now starts at up to ten
+within the current daily cap and identifies an excess by requested quantity,
+limit and difference. A Use daily limit button changes only the sample quantity.
+Explicit larger inputs remain visible for review, and recipe/daily-limit edits
+are never silently changed. The preview still does not confirm availability,
+book kitchen time or override the planner.
+
+Settings also explains that kitchen preparation hours are independent of delivery
+and collection hours. A new scheduling regression demonstrates that work after
+delivery closes can prepare a later order when its explicit preparation and early
+finish rules allow it; work still fits kitchen hours. Existing checks cover
+handover after kitchen closing and strict delivery/pickup time bounds. No planner
+algorithm, menu handling allowance or production data was changed.
+
+Validation: frontend lint, core utilities (including nine preparation-preview
+cases), UX and recommendation suites and build pass. Thirty-six focused backend
+scheduling/fulfilment/multiday checks pass. Seven local Chromium accessibility and
+overflow checks cover menu quantity feedback at 1440/768/390/320 and the preview
+at 1440/390/320 pixels. Failure injection holds a confirmed Add refresh for five
+seconds, verifies a fresh success interval after release, repeats identical
+quantity notices, removes a row, fails a post-write read without duplicating the
+addition, and confirms information/error notices hide after their intervals.
+The native menu editor starts at eight, explains ten versus eight, reduces only
+the preview, preserves explicit edits and leaves the saved menu unchanged when
+cancelled. These checks use isolated fixture data; no real orders, payments or
+emails were created. No migration is required.

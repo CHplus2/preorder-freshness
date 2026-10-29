@@ -1,5 +1,7 @@
 const whole = (value, minimum) => value !== '' && value !== null && value !== undefined && Number.isSafeInteger(Number(value)) && Number(value)>=minimum;
 
+export const defaultPreviewQuantity=menu=>String(Math.min(10,whole(menu.daily_capacity,1)?Number(menu.daily_capacity):10));
+
 export function preparationEstimate(menu, quantity, store={}) {
   if(!whole(quantity,1) || Number(quantity)>10000)return {error:'Enter a sample quantity from 1 to 10,000 selling units.'};
   if(!whole(menu.batch_size ?? 1,1))return {error:'Enter a valid selling-units-per-batch value first.'};
@@ -28,8 +30,10 @@ export function preparationEstimate(menu, quantity, store={}) {
   const warnings=[];
   if(handsOn===0)warnings.push('No step reserves worker time. Check whether setup, mixing, loading or packing needs an attended step.');
   if(independent && batches>100)warnings.push('This quantity exceeds the automatic planner’s limit of 100 independent batches per menu.');
-  if(whole(menu.daily_capacity,1) && portions>Number(menu.daily_capacity))warnings.push('The sample quantity exceeds this menu’s daily selling-unit limit, even before existing orders.');
+  const capacityExceeded=whole(menu.daily_capacity,1) && portions>Number(menu.daily_capacity)
+    ? {quantity:portions,limit:Number(menu.daily_capacity),excess:portions-Number(menu.daily_capacity)} : null;
+  if(capacityExceeded)warnings.push(`Sample quantity ${portions} exceeds the daily limit of ${capacityExceeded.limit} selling units by ${capacityExceeded.excess}. Reduce this preview quantity, or review the daily limit only if the kitchen can support more.`);
   for(const t of steps)if(dailyMinutes!==null && !t.overnight && !t.splittable && t.uninterrupted>dailyMinutes)warnings.push(`${t.name} requires ${t.uninterrupted} uninterrupted minutes; the kitchen day has ${dailyMinutes}. Review batch size, duration or batch mode.`);
   const minimumWorkDays=dailyMinutes!==null?Math.ceil(handsOn/dailyMinutes):null;
-  return {portions,batches,size,partial:portions%size,independent,detailed,steps,total,handsOn,dailyMinutes,minimumWorkDays,warnings};
+  return {portions,batches,size,partial:portions%size,independent,detailed,steps,total,handsOn,dailyMinutes,minimumWorkDays,capacityExceeded,warnings};
 }
