@@ -85,7 +85,7 @@ try{
  assert.match(disabledPickup,/<fieldset class="fulfilment-settings-fields" disabled/);
  const {default:FulfilmentChoices}=await server.ssrLoadModule('/src/components/FulfilmentChoices.jsx');
  const express=renderToStaticMarkup(h(FulfilmentChoices,{store:{delivery_enabled:true},value:'express',onChange:()=>{}}));
- assert.match(express,/same planning rules and delivery fee/);assert.match(express,/faster service is not reserved/);assert.doesNotMatch(express,/any additional charge/);
+ assert.doesNotMatch(express,/Ask about express delivery|Request express delivery/);assert.doesNotMatch(express,/any additional charge/);
  const receive=store=>renderToStaticMarkup(h(FulfilmentChoices,{store,onChange:()=>{}}));
  assert.match(receive({pickup_enabled:true,pickup_location:'Fictional counter'}),/<strong>Self-collection<\/strong>/);
  assert.doesNotMatch(receive({pickup_enabled:false,pickup_location:'Fictional counter'}),/<strong>Self-collection<\/strong>/);

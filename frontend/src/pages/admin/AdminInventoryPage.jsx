@@ -381,7 +381,7 @@ export default function AdminInventoryPage() {
       <div className="admin-header">
         <div>
           <span className="admin-kicker">KITCHEN OPERATIONS</span><h1>Inventory</h1>
-          {inventoryItems.some(item=>item.batch_code?.startsWith('DEMO-FC-INV-')) && <p role="status"><strong>Demo stock included.</strong> These batches use fictional quantities and dates for availability and planning.</p>}
+          {inventoryItems.some(item=>/^(DEMO-FC-INV-|FRESHCAST-DEMO-)/.test(item.batch_code || '')) && <p role="status"><strong>Sample inventory included.</strong> Quantities, dates and storage positions in these batches are scenario data.</p>}
           <p>
             Review expiry priorities and record received stock.
           </p>

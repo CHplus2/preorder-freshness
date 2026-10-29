@@ -6,13 +6,12 @@ export default function FulfilmentChoices({store,value='standard',area='',onChan
  const [first,last]=fulfilmentHours(store,value);
  return <div className="fulfilment-panel"><fieldset className="fulfilment-choices" disabled={disabled}><legend>Receive your preorder</legend>
   {!options.length?<p role="status">This kitchen is not accepting delivery or collection orders right now.</p>:<>
-  <div className="fulfilment-methods">{options.filter(m=>m!=='express').map(method=><label key={method} className={pickup===(method==='pickup')?'selected':''}><input type="radio" name="fulfilment" checked={pickup===(method==='pickup')} onChange={()=>onChange(method,'')}/><span><strong>{method==='pickup'?'Self-collection':'Delivery'}</strong><small>{method==='pickup'?'Collect from the kitchen · no delivery fee':'Delivered to your saved address'}</small></span></label>)}</div>
+  <div className="fulfilment-methods">{options.map(method=><label key={method} className={pickup===(method==='pickup')?'selected':''}><input type="radio" name="fulfilment" checked={pickup===(method==='pickup')} onChange={()=>onChange(method,'')}/><span><strong>{method==='pickup'?'Self-collection':'Delivery'}</strong><small>{method==='pickup'?'Collect from the kitchen · no delivery fee':'Delivered to your saved address'}</small></span></label>)}</div>
   {!options.includes('pickup') && <p className="fulfilment-hours">Self-collection is not currently offered by this kitchen.</p>}
   <p className="fulfilment-hours">{pickup?'Collection':'Delivery'} hours: {hourLabel(first)}–{hourLabel(last)} · Malaysia time. Preparation availability is checked separately.</p>
   {pickup?<div className="fulfilment-location"><strong>Collection location</strong><p>{store?.pickup_location}</p>{store?.pickup_instructions && <p>{store.pickup_instructions}</p>}</div>:!detailsAtCheckout && <>
    {store?.delivery_areas?.length>0 && <label>Delivery area<select required value={area} onChange={e=>onChange(value,e.target.value)}><option value="">Choose your area</option>{store.delivery_areas.map(name=><option key={name} value={name}>{name}</option>)}</select><small>Outside these areas? Contact the kitchen before ordering.</small></label>}
-   <label className="fulfilment-express"><input type="checkbox" checked={value==='express'} onChange={e=>onChange(e.target.checked?'express':'standard',area)}/>Ask about express delivery</label>
-   {value==='express' && <p>This records a request for the kitchen. It uses the same planning rules and delivery fee; a faster service is not reserved.</p>}
+
   </>}
   </>}
  </fieldset>{onRefresh && <button className="fulfilment-refresh" type="button" disabled={disabled || refreshing} onClick={onRefresh}>{refreshing?'Refreshing options…':'Refresh delivery & pickup options'}</button>}</div>;

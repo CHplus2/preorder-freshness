@@ -26,7 +26,7 @@ export function handoverBoard(orders,date,now=Date.now()){
  const groups=new Map();
  for(const order of confirmed){
   const hour=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',hourCycle:'h23'}).format(new Date(arrivalStart(order)));
-  const method=order.delivery_method || 'standard',key=hour+'-'+method;
+  const method=order.delivery_method==='pickup'?'pickup':'standard',key=hour+'-'+method;
   const group=groups.get(key) || {key,hour:Number(hour),method,orders:[]};group.orders.push(order);groups.set(key,group);
  }
  return {groups:[...groups.values()].sort((a,b)=>a.hour-b.hour || a.method.localeCompare(b.method)),confirmed,

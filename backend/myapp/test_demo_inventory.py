@@ -46,6 +46,9 @@ class DemoInventoryTests(TestCase):
             result = self.apply(preview, path)
             self.assertEqual(len(json.loads(path.read_text())['stock']), 1)
         self.assertEqual(len(result['created_batch_ids']), 2)
+        for row in InventoryItem.objects.filter(pk__in=result['created_batch_ids']):
+            self.assertNotIn('fictional', row.storage_location.lower())
+            self.assertTrue(row.storage_location.startswith(('Fridge A', 'Freezer A', 'Pantry A')))
         self.assertEqual(InventoryLog.objects.count(), 2)
         old.refresh_from_db(); self.assertTrue(old.quarantined); self.assertEqual(old.quantity, 500)
         near = InventoryItem.objects.get(batch_code__endswith='-NEAR')

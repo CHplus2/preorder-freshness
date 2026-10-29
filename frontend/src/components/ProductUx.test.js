@@ -91,7 +91,7 @@ try{
  assert.match(collection,/Accepted location/);
  const deliveryRecord=method=>renderToStaticMarkup(createElement(OrderFulfilment,{order:{delivery_method:method,fulfilment_snapshot:{label:method==='express'?'Express request':'Owner delivery'}}}));
  assert.match(deliveryRecord('standard'),/<strong>Delivery<\/strong>/);assert.doesNotMatch(deliveryRecord('standard'),/Owner delivery/);
- assert.match(deliveryRecord('express'),/Delivery · express requested/);assert.match(deliveryRecord('express'),/does not confirm a faster courier service/);
+ assert.match(deliveryRecord('express'),/<strong>Delivery<\/strong>/);assert.match(deliveryRecord('express'),/Order note: express handling was requested/);
 
  const {default:BasketDeliveryDays}=await server.ssrLoadModule('/src/components/BasketDeliveryDays.jsx');
  const basket=(cart,value='')=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(BasketDeliveryDays,{cart,value})));

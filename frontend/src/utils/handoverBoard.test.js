@@ -29,3 +29,11 @@ test('overdue follow-up spans dates without including missing dates or completed
 test('quantities keep accepted selling units instead of multiplying servings or pieces',()=>{
  assert.equal(unitTotals([order,{...order,items:[{quantity:6,selling_details:{unit:'portion',serves_min:2,serves_max:3}}]}]),'2 boxes · 6 portions');
 });
+
+test('legacy express requests share the delivery run category without rewriting orders',()=>{
+ const rows=[{...order,id:2,delivery_method:'standard'},{...order,id:3,delivery_method:'express'}];
+ const result=handoverBoard(rows,'2030-01-09',now);
+ assert.equal(result.groups.length,1);assert.equal(result.groups[0].method,'standard');
+ assert.deepEqual(result.groups[0].orders.map(o=>o.delivery_method),['standard','express']);
+ assert.equal(rows[1].delivery_method,'express');
+});

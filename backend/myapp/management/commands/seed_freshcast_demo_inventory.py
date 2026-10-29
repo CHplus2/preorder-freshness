@@ -15,6 +15,7 @@ from django.utils import timezone
 from myapp.models import InventoryItem, InventoryLog, Order, Product, ProductIngredient, RawMaterial, Storefront
 from myapp.services.kitchen_decisions import decision_support
 from myapp.services.local_planning import local_plan
+from myapp.services.sample_stock_storage import sample_storage_location
 from .prepare_freshcast_demo import ROOT, reviewed_snapshot
 
 PREFIX = 'DEMO-FC-INV-'
@@ -87,6 +88,7 @@ class Command(BaseCommand):
                 skipped.append({'product_id': product_id, 'reason': 'active_menu_has_no_recipe'})
             for material_id, portion in sorted(per_portion.items()):
                 material = materials[material_id]
+                storage_type = storage.get(material.name, 'chilled' if 'chicken' in material.name.casefold() else 'ambient')
                 for kind, multiplier, days in [('NEAR', 10, 2), ('RESERVE', 20, 14)]:
                     code = f'{PREFIX}{material_id}-{kind}'
                     existing = [row for row in stock if row['batch_code'] == code]
@@ -102,7 +104,8 @@ class Command(BaseCommand):
                     proposals.append({'raw_material_id': material_id, 'ingredient': material.name, 'unit': material.unit,
                         'quantity': quantity, 'batch_code': code, 'received_date': today,
                         'expiry_date': today+timedelta(days=days), 'shelf_life_days': days,
-                        'storage_type': storage.get(material.name, 'ambient'),
+                        'storage_type': storage_type,
+                        'storage_location': sample_storage_location(material.name, storage_type),
                         'unit_cost': material.estimated_unit_cost})
             fingerprint = hashlib.sha256(encode({'context': context, 'proposals': proposals}).encode()).hexdigest()
             report = {'mode': 'preview', 'fingerprint': fingerprint, 'as_of': today,
@@ -111,7 +114,7 @@ class Command(BaseCommand):
                 'assumptions': [
                     'All added stock is fictional. No real receiving, supplier payment or customer sale is recorded.',
                     'Per ingredient, quantities equal its largest active-recipe per-portion use times 10 (near expiry) or 20 (reserve); not model-predicted purchases.',
-                    'Expiry offsets of 2 and 14 days and guide-based storage categories (ambient for unmatched materials) are illustrative inputs, not verified shelf-life or storage guidance.',
+                    'Expiry offsets of 2 and 14 days and guide-based storage categories (chilled for unmatched chicken names, ambient for other unmatched materials) are illustrative inputs, not verified shelf-life or storage guidance.',
                     'Unit costs copy existing raw-material estimates; missing costs remain unknown. No profit or actual savings is established.',
                     'Existing stock is additive and never overwritten, topped up, unquarantined or redated. Repeat runs preserve consumed/expired demo batches.',
                     'Stock does not create sales history. Menus lacking eligible paid delivered history remain unavailable; limited-history projections remain review signals.',
@@ -138,7 +141,7 @@ class Command(BaseCommand):
                     fields = {k: v for k, v in row.items() if k not in {'ingredient', 'unit'}}
                     item = InventoryItem.objects.create(**fields, supplier='FICTIONAL FreshCast inventory scenario',
                         source_type='other', label_date_type='not_recorded', expiry_basis='storage',
-                        storage_location='FICTIONAL DEMO stock - storage unverified', handling_history='not_recorded',
+                        handling_history='not_recorded',
                         handling_note='FICTIONAL scenario. No receipt, storage history or food safety is verified.',
                         guidance_note='FICTIONAL quantities, storage and expiry dates for workflow demonstration only.')
                     InventoryLog.objects.create(inventory_item=item, change=item.quantity, admin=actor,

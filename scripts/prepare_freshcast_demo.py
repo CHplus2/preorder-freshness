@@ -10,11 +10,16 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 import json
 import os
+import sys
 from pathlib import Path
 import uuid
 from zoneinfo import ZoneInfo
 
 from import_dapur_kita import StaffAPI, require
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'backend'))
+from myapp.services.sample_stock_storage import sample_storage_location
 
 
 def main():
@@ -59,8 +64,11 @@ def main():
     delivery_day = today + timedelta(days=2)
     delivery = datetime.combine(delivery_day, datetime.min.time()).replace(hour=17, tzinfo=ZoneInfo(plan['timezone']))
     stock = []
+    guide = json.loads((ROOT/'docs/DAPUR-KITA-STARTER-DATA.json').read_text())
+    storage = {row['raw_material']: row['storage_type'] for row in guide['inventory_templates']}
     for ingredient in menu['ingredients']:
         material = materials[ingredient['raw_material']]
+        storage_type = storage.get(material['name'], 'chilled' if 'chicken' in material['name'].casefold() else 'ambient')
         need = Decimal(ingredient['quantity_required']) * portions
         multiplier = Decimal('0.5') if material['name'] == 'Chicken boneless trimmed' else Decimal('1.5') if material['name'] == 'Rice' else Decimal('1')
         expiry = delivery_day if material['name'] == 'Rice' else today + timedelta(days=14)
@@ -69,7 +77,8 @@ def main():
                       'expiry_basis': 'label', 'label_date_type': 'not_recorded', 'source_type': 'other',
                       'supplier': 'Fictional FreshCast hackathon scenario',
                       'batch_code': f'FRESHCAST-DEMO-{today}-{material["id"]}',
-                      'storage_location': 'Fictional demo stock — not a physical stock count',
+                      'storage_type': storage_type,
+                      'storage_location': sample_storage_location(material['name'], storage_type),
                       'handling_history': 'documented', 'handling_note': 'Fictional test record. Storage and dates are assumptions for the hackathon, not physical food safety evidence.',
                       'guidance_note': 'Assumed demo expiry date, not a supplier label or validated shelf life.',
                       'quarantined': False, 'unit_cost': material['estimated_unit_cost']})

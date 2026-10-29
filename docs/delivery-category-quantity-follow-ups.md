@@ -291,3 +291,32 @@ reviewed. No migration is required; live Vercel/email operation was not verified
 The broader notification auto-dismiss and FreshCast quantity presentation
 reviews remain pending; this batch completes the reported reminder-panel wording
 and delivery-label review.
+
+## Batch: one delivery category and realistic sample inventory
+
+New checkout offers Delivery or Self-collection. GrabExpress is a courier the
+kitchen may arrange, not a separate fulfilment method in checkout. The express
+request checkbox has been removed. Standard and legacy express records display
+as Delivery and share one hourly delivery-run group. Legacy express requests
+remain an order note, with original stored method and snapshot retained. Existing
+checkout sessions with an unavailable legacy express option fall back to the
+supported delivery method and require availability to be checked again. Fees,
+accepted preparation plans and courier tracking data are unchanged.
+
+Both stock seed paths now use plausible storage positions instead of putting
+sample disclaimers in storage_location. The inventory sample notice recognises
+both known generated batch prefixes. Provenance, identifiers and guidance records
+remain intact. Existing database rows can be corrected with
+[the one-statement SQL](../deploy/sql/refresh_sample_storage_locations.sql),
+documented in [the storage guide](sample-inventory-storage-refresh.md). This is
+separate from deployment; no migration or production connection was used here.
+
+Twenty-nine focused backend tests passed on SQLite, with the two PostgreSQL-only
+SQL checks skipped there. All three sample-storage checks passed on an isolated
+TLS-enabled PostgreSQL 16 instance. Those include 31 matched rows across storage
+cases, preserved non-location values, exact targets, custom/unknown rows left
+alone, before/after zero-quantity audits, no changes on a second run and atomic
+rollback if audit writing fails. Frontend lint, UX, checkout and planner suites
+and build passed. Local Chromium checks one delivery choice, legacy history
+notes and sample storage presentation on desktop/tablet/phone; production rows
+remain unchanged until the SQL is run. Notification timing is the next batch.
