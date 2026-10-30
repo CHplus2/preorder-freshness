@@ -1,0 +1,481 @@
+{
+  "name": "Customer_Use_Case_Corrected",
+  "title": "Customer and visitor use cases — single actor symbols",
+  "canvas": [
+    1520,
+    1600
+  ],
+  "style": "Conventional UML; explicit grid positions; straight / orthogonal connectors",
+  "font": "Times New Roman",
+  "nodes": {
+    "u1": {
+      "box": [
+        370,
+        140,
+        440,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-01\nBrowse menu and details"
+    },
+    "u2": {
+      "box": [
+        370,
+        260,
+        440,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-02\nReceive menu suggestions"
+    },
+    "u23": {
+      "box": [
+        370,
+        380,
+        440,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-23\nUse kitchen help / assistant"
+    },
+    "u3": {
+      "box": [
+        370,
+        570,
+        440,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-03\nManage basket"
+    },
+    "u4": {
+      "box": [
+        370,
+        690,
+        440,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-04\nPlace preorder"
+    },
+    "u7": {
+      "box": [
+        370,
+        810,
+        440,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-07\nMake payment"
+    },
+    "u8": {
+      "box": [
+        370,
+        1010,
+        440,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-08\nView own orders"
+    },
+    "u20": {
+      "box": [
+        370,
+        1130,
+        440,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-20\nManage account / email"
+    },
+    "u21": {
+      "box": [
+        370,
+        1250,
+        440,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-21\nAmend delivery / handover"
+    },
+    "u22": {
+      "box": [
+        370,
+        1370,
+        440,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-22\nReview a delivered menu"
+    },
+    "u5": {
+      "box": [
+        930,
+        690,
+        350,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-05\nCheck dates / times"
+    },
+    "u6": {
+      "box": [
+        930,
+        810,
+        350,
+        88
+      ],
+      "shape": "ellipse",
+      "label": "UC-06\nFulfilment and address"
+    },
+    "visitor": {
+      "box": [
+        100,
+        230,
+        60,
+        105
+      ],
+      "shape": "actor",
+      "label": "Visitor"
+    },
+    "customer": {
+      "box": [
+        100,
+        990,
+        60,
+        105
+      ],
+      "shape": "actor",
+      "label": "Customer"
+    },
+    "provider": {
+      "box": [
+        1410,
+        860,
+        60,
+        105
+      ],
+      "shape": "actor",
+      "label": "Payment\nprovider"
+    }
+  },
+  "connectors": [
+    {
+      "points": [
+        [
+          160,
+          276
+        ],
+        [
+          370,
+          184.0
+        ]
+      ],
+      "source": "visitor",
+      "target": "u1",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": false
+    },
+    {
+      "points": [
+        [
+          160,
+          276
+        ],
+        [
+          370,
+          304.0
+        ]
+      ],
+      "source": "visitor",
+      "target": "u2",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": false
+    },
+    {
+      "points": [
+        [
+          160,
+          276
+        ],
+        [
+          370,
+          424.0
+        ]
+      ],
+      "source": "visitor",
+      "target": "u23",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": false
+    },
+    {
+      "points": [
+        [
+          160,
+          1036
+        ],
+        [
+          370,
+          614.0
+        ]
+      ],
+      "source": "customer",
+      "target": "u3",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": false
+    },
+    {
+      "points": [
+        [
+          160,
+          1036
+        ],
+        [
+          370,
+          734.0
+        ]
+      ],
+      "source": "customer",
+      "target": "u4",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": false
+    },
+    {
+      "points": [
+        [
+          160,
+          1036
+        ],
+        [
+          370,
+          854.0
+        ]
+      ],
+      "source": "customer",
+      "target": "u7",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": false
+    },
+    {
+      "points": [
+        [
+          160,
+          1036
+        ],
+        [
+          370,
+          1054.0
+        ]
+      ],
+      "source": "customer",
+      "target": "u8",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": false
+    },
+    {
+      "points": [
+        [
+          160,
+          1036
+        ],
+        [
+          370,
+          1174.0
+        ]
+      ],
+      "source": "customer",
+      "target": "u20",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": false
+    },
+    {
+      "points": [
+        [
+          160,
+          1036
+        ],
+        [
+          370,
+          1294.0
+        ]
+      ],
+      "source": "customer",
+      "target": "u21",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": false
+    },
+    {
+      "points": [
+        [
+          160,
+          1036
+        ],
+        [
+          370,
+          1414.0
+        ]
+      ],
+      "source": "customer",
+      "target": "u22",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": false
+    },
+    {
+      "points": [
+        [
+          810,
+          304.0
+        ],
+        [
+          850,
+          304
+        ],
+        [
+          850,
+          184
+        ],
+        [
+          810,
+          184.0
+        ]
+      ],
+      "source": "u2",
+      "target": "u1",
+      "arrow": "open",
+      "dashed": true,
+      "label": "«extend»",
+      "semantic_label": "«extend»",
+      "orthogonal": true
+    },
+    {
+      "points": [
+        [
+          810,
+          734.0
+        ],
+        [
+          930,
+          734.0
+        ]
+      ],
+      "source": "u4",
+      "target": "u5",
+      "arrow": "open",
+      "dashed": true,
+      "label": "«include»",
+      "semantic_label": "«include»",
+      "orthogonal": true
+    },
+    {
+      "points": [
+        [
+          810,
+          760.4
+        ],
+        [
+          860,
+          760.4
+        ],
+        [
+          860,
+          854
+        ],
+        [
+          930,
+          854.0
+        ]
+      ],
+      "source": "u4",
+      "target": "u6",
+      "arrow": "open",
+      "dashed": true,
+      "label": "«include»",
+      "semantic_label": "«include»",
+      "orthogonal": true
+    },
+    {
+      "points": [
+        [
+          590.0,
+          898
+        ],
+        [
+          590,
+          960
+        ],
+        [
+          1380,
+          960
+        ],
+        [
+          1380,
+          910
+        ],
+        [
+          1410,
+          910
+        ]
+      ],
+      "source": "u7",
+      "target": "provider",
+      "arrow": "none",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "",
+      "orthogonal": true
+    },
+    {
+      "points": [
+        [
+          130,
+          990
+        ],
+        [
+          130,
+          395
+        ]
+      ],
+      "source": "customer",
+      "target": "visitor",
+      "arrow": "generalization",
+      "dashed": false,
+      "label": "",
+      "semantic_label": "generalization: Customer inherits Visitor functions",
+      "orthogonal": true
+    }
+  ],
+  "semantic_source": {
+    "replaces": "Figure 3.1",
+    "clarification": "One Visitor, one Customer, one Payment provider; Customer specialises Visitor; use-case scope unchanged"
+  }
+}
