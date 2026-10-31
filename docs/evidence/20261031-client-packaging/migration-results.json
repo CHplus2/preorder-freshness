@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "database": "isolated PostgreSQL 16, django_app schema",
+  "migration": "0024_packaging_stock",
+  "rerun_idempotent": true,
+  "private_tables_RLS_enabled": 4,
+  "old_order_packaging_cost_preserved": true,
+  "ingredient_stock_preserved": true,
+  "historical_packaging_not_invented": true
+}

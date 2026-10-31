@@ -269,6 +269,10 @@ def place_order(request):
     order.shipping_fee = shipping_fee
     order.save()
 
+    if not needs_review:
+        from ..services.packaging import allocate_packaging
+        allocate_packaging(order, user)
+
     cart_items.delete()
 
     if payment == "wallet":
@@ -330,6 +334,8 @@ def preparation_quote(request):
     timing = {'arrival_window': window(delivery, duration(store)), 'arrival_window_minutes': duration(store)}
     if plan.get('needs_review'):
         return Response(dict(**timing, preparation_at=None, preparation_end_at=None, **plan_snapshot(plan)))
+    from ..services.packaging import check_cart_packaging
+    check_cart_packaging(items)
     from ..services.discovery import shopping_preview
     return Response(dict(**timing, preparation_at=plan['start'], preparation_end_at=plan['end'],
         procurement_required=bool(shopping_preview(items, plan['start'], plan['end'])), **plan_snapshot(plan)))

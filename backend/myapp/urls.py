@@ -1,3 +1,4 @@
+from .views.packaging import packaging_items, packaging_item, packaging_movements, packaging_menus, menu_packaging
 from .views.handover import order_handover
 from .views.basket_guide import basket_guide, add_basket_plan
 from .views.order_progress import confirm_order_progress
@@ -44,6 +45,11 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 urlpatterns = [
+    path('admin/packaging/', packaging_items),
+    path('admin/packaging/<int:pk>/', packaging_item),
+    path('admin/packaging/<int:pk>/movements/', packaging_movements),
+    path('admin/packaging/menus/', packaging_menus),
+    path('admin/packaging/menus/<int:pk>/', menu_packaging),
     path('orders/<int:pk>/payment-choice/', order_payment_choice),
     path('menu/basket-guide/', basket_guide),
     path('menu/basket-guide/add/', add_basket_plan),

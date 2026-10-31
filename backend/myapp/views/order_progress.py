@@ -40,6 +40,12 @@ def confirm_order_progress(request):
             return Response({'detail': f'Order #{order.pk} changed. Refresh Planner and review your selection; no selected orders were updated.'}, status=409)
         validate_progress(order, target)
     if target == 'cooked':
+        # Packaging precedes ingredient locks, matching single-order progress.
+        # Lock the whole group so differently ordered mappings cannot deadlock.
+        from ..models import PackagingItem, OrderPackaging
+        packages = OrderPackaging.objects.filter(order_item__order__in=orders,
+            allocated_at__isnull=True, released_at__isnull=True).values('packaging_item_id')
+        list(PackagingItem.objects.select_for_update().filter(pk__in=packages).order_by('pk'))
         # Acquire the union of stock rows in global material/expiry order before
         # deducting any selected recipe. Per-order acquisition can deadlock when
         # different groups contain recipes with opposite ingredient sequences.

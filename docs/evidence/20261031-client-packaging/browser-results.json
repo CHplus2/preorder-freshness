@@ -1,0 +1,22 @@
+{
+  "result": "passed",
+  "fixture": "isolated local SQLite; no production records or mail",
+  "viewports": [
+    "1440x950",
+    "390x844"
+  ],
+  "checks": [
+    "create supply",
+    "receive stock",
+    "assign menu packaging",
+    "quote",
+    "checkout",
+    "retry returns same order",
+    "stock deducted once",
+    "low-stock state",
+    "movement history",
+    "no horizontal overflow",
+    "mobile dialog"
+  ],
+  "browser_errors": []
+}

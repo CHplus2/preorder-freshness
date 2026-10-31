@@ -27,6 +27,11 @@ def validate_progress(order, target):
 
 def apply_progress(order, target, actor):
     validate_progress(order, target)
+    from .packaging import allocate_packaging, release_packaging
+    if target in ('processing', 'cooked'):
+        allocate_packaging(order, actor)
+    elif target == 'cancelled':
+        release_packaging(order, actor)
     if target == 'cooked' and not order.inventory_deducted:
         from ..views.orders import deduct_order_inventory
         deduct_order_inventory(order, actor)

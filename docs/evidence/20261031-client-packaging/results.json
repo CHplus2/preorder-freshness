@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-31",
+  "baseline_commit": "ab1a97684dbf5d8b992b9f74fd07580b59d4636d",
+  "batch": 1,
+  "scope": "Packaging stock and per-menu packaging allocations",
+  "checks": {
+    "sqlite_regression": {
+      "discovered": 852,
+      "passed": 825,
+      "skipped": 27
+    },
+    "postgresql_selected": {
+      "passed": 40,
+      "skipped": 0
+    },
+    "frontend_commands": [
+      "test",
+      "test:ux",
+      "test:checkout",
+      "test:planner",
+      "lint",
+      "build"
+    ],
+    "browser": "desktop 1440x950; mobile 390x844; full local create/receive/map/checkout/retry/history flow",
+    "manual_migration": "0024 applies idempotently to isolated PostgreSQL django_app schema; old data preserved"
+  },
+  "production_database_modified": false,
+  "provider_payments_or_email_sent": false,
+  "forecast_models_modified_or_trained": false
+}

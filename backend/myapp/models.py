@@ -361,7 +361,7 @@ class Order(models.Model):
 class OrderItem(models.Model):
     recipe_source = models.CharField(max_length=30, default='accepted')
     preparation_snapshot = models.JSONField(default=dict, blank=True)
-    packaging_unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    packaging_unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True)
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,
@@ -406,6 +406,9 @@ class OrderItem(models.Model):
                         material_name=i.raw_material.name, unit=i.raw_material.unit,
                         quantity_per_portion=i.quantity_required) for i in recipe
                 ])
+                if self.product_id:
+                    from .services.packaging import capture_packaging
+                    capture_packaging(self)
 
     def __str__(self):
         return (
@@ -600,3 +603,61 @@ class RecommendationEvent(models.Model):
     order = models.OneToOneField(Order, null=True, on_delete=models.SET_NULL)
     request_id = models.UUIDField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class PackagingItem(models.Model):
+    """Physical packaging stock, counted separately from edible ingredients."""
+    name = models.CharField(max_length=100, unique=True)
+    quantity = models.PositiveIntegerField(default=0)
+    reorder_level = models.PositiveIntegerField(default=10)
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True, blank=True,
+                                    validators=[MinValueValidator(0)])
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name', 'id']
+        constraints = [models.UniqueConstraint(models.functions.Lower('name'), name='packaging_name_ci_unique')]
+
+
+class ProductPackaging(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='packaging_requirements')
+    packaging_item = models.ForeignKey(PackagingItem, on_delete=models.PROTECT, related_name='menu_requirements')
+    quantity_per_item = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['product', 'packaging_item'], name='unique_menu_packaging'),
+                       models.CheckConstraint(condition=models.Q(quantity_per_item__gte=1), name='positive_menu_packaging')]
+
+
+class OrderPackaging(models.Model):
+    """Accepted packaging per order line; menu edits never rewrite it."""
+    order_item = models.ForeignKey(OrderItem, on_delete=models.PROTECT, related_name='accepted_packaging')
+    packaging_item = models.ForeignKey(PackagingItem, on_delete=models.PROTECT, related_name='order_allocations')
+    packaging_name = models.CharField(max_length=100)
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True)
+    allocated_at = models.DateTimeField(null=True)
+    released_at = models.DateTimeField(null=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['order_item', 'packaging_item'], name='unique_order_packaging'),
+                       models.CheckConstraint(condition=models.Q(quantity__gte=1), name='positive_order_packaging')]
+
+
+class PackagingMovement(models.Model):
+    packaging_item = models.ForeignKey(PackagingItem, on_delete=models.PROTECT, related_name='movements')
+    order_packaging = models.ForeignKey(OrderPackaging, on_delete=models.PROTECT, null=True)
+    request_id = models.UUIDField(unique=True, null=True)
+    kind = models.CharField(max_length=10, choices=[('opening', 'Opening stock'), ('receive', 'Stock received'),
+        ('adjust', 'Adjustment'), ('allocate', 'Order allocation'), ('release', 'Cancellation return')])
+    change = models.IntegerField()
+    balance_after = models.PositiveIntegerField()
+    reason = models.CharField(max_length=200)
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        constraints = [models.UniqueConstraint(fields=['order_packaging', 'kind'], name='unique_packaging_order_movement')]

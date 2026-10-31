@@ -31,6 +31,7 @@ const ConfirmEmailPage=lazy(()=>import('./pages/customer/ConfirmEmailPage'));
 import './fyp.css';
 const PaymentPage=lazy(()=>import("./pages/customer/PaymentPage"));
 const AdminProductsPage=lazy(()=>import("./pages/admin/AdminProductsPage"));
+const PackagingPage=lazy(()=>import('./pages/admin/PackagingPage'));
 const AdminInventoryPage=lazy(()=>import("./pages/admin/AdminInventoryPage"));
 const AdminOrdersPage=lazy(()=>import("./pages/admin/AdminOrdersPage"));
 const AdminReportsPage=lazy(()=>import("./pages/admin/AdminReportsPage"));
@@ -79,6 +80,7 @@ function AnimatedRoutes() {
         <Route path="/contact" element={<ContactPage/>}/>
         <Route path="/menu" element={<ProductsPage/>}/>
         <Route path="*" element={<PageState title="This page isn’t on the menu." description="The link may have changed. You can browse the menu or return to your saved orders."><Link to="/menu">Explore the menu</Link><Link to="/orders">My orders</Link></PageState>}/>
+        <Route path="/admin/packaging" element={<RequireAuth message="Admin access required"><PackagingPage/></RequireAuth>}/>
         <Route path="/admin/settings" element={<RequireAuth message="Admin access required"><StoreSettingsPage/></RequireAuth>}/>
         <Route path="/admin/planner" element={<RequireAuth message="Admin access required"><PlannerPage key={location.search}/></RequireAuth>}/>
         <Route
