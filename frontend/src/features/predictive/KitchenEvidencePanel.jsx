@@ -25,7 +25,7 @@ export default function KitchenEvidencePanel({plan, open, onToggle, panelRef, ch
         <ul className="local-coverage-groups">{Object.entries(groups).map(([reason,orders])=><li key={reason}><strong>{orders.length}</strong> {reasonNames[reason] || reason.replaceAll('_',' ')}</li>)}</ul>
         <h4>Individual excluded order references</h4><ul>{plan.excluded_orders.map(order=><li key={order.order_id}>Order #{order.order_id}: {reasonNames[order.reason] || order.reason.replaceAll('_',' ')}</li>)}</ul>
       </>}
-      <div className="fc-workflow-links"><Link to="/admin/orders">Review orders</Link><Link to="/admin/planner">Review preparation plans</Link></div>
+      <div className="fc-workflow-links"><Link to="/admin/orders">Review orders</Link><Link to="/admin/inventory">Review ingredient stock</Link></div>
     </>},
     {id:'methods',title:'Forecast methods',content:<><h3>Forecast coverage &amp; methods</h3>
       <p>Each menu uses a 28-day moving average, 7-day moving average or same-weekday baseline. With at least 42 history days, the lowest validation MAE selects the method; the latest 14 days are held out for testing. Sparse history uses a limited 28-day baseline.</p>

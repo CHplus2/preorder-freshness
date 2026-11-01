@@ -17,7 +17,7 @@ class ShoppingTests(TestCase):
     def setUp(self):
         cache.clear();self.user=User.objects.create_user('shopping-buyer');self.other=User.objects.create_user('other-shopping-buyer')
         self.client=APIClient();self.client.force_authenticate(self.user)
-        self.store=Storefront.objects.create(pk=1,bulk_minimum=10,bulk_discount_percent=10)
+        self.store=Storefront.objects.create(pk=1,bulk_minimum=10,bulk_discount_percent=10, ordering_mode='scheduled')
         self.p=Product.objects.create(name='Nasi Ayam Kunyit',price='10.00',daily_capacity=100)
         self.cake=Product.objects.create(name='Banana Cake - Box of 4',price='18.00',daily_capacity=100)
         self.day=(timezone.localdate()+timedelta(days=1)).isoformat()

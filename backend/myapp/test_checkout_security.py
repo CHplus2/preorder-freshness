@@ -121,7 +121,7 @@ class CheckoutAmountBoundaryTests(TestCase):
         self.buyer=User.objects.create_user('amount-buyer')
         self.other=User.objects.create_user('amount-other')
         self.client=APIClient();self.client.force_authenticate(self.buyer)
-        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1,bulk_minimum=2,bulk_discount_percent=10)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1,bulk_minimum=2,bulk_discount_percent=10, ordering_mode='scheduled')
         self.product=Product.objects.create(name='Server priced meal',price=12,lead_hours=0)
         CartItem.objects.create(user=self.buyer,product=self.product,quantity=2)
         self.address=Address.objects.create(user=self.buyer,line1='Fixture',city='KL',state='KL',postal_code='50000',phone='0100000000')

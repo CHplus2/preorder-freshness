@@ -77,13 +77,13 @@ def basket_guide(request):
     products=list(Product.objects.select_related('category').prefetch_related('ingredients__raw_material').order_by('pk'))
     by_id={product.pk:product for product in products};reason=None;budget=data.get('budget');mode=data['budget_mode']
     if sum(search_existing.values())>data['quantity']:reason='quantity_below_basket'
-    elif any(pk not in by_id or not usable(by_id[pk],data['date'],now) or quantity>by_id[pk].daily_capacity for pk,quantity in search_existing.items()):reason='basket_needs_review'
+    elif any(pk not in by_id or not usable(by_id[pk],data['date'],now) or (store.ordering_mode=='scheduled' and quantity>by_id[pk].daily_capacity) for pk,quantity in search_existing.items()):reason='basket_needs_review'
     eligible=[p for p in products if usable(p,data['date'],now) and (not data.get('category') or p.category_id==data['category'])]
     ranked=rank_menu_choices(eligible,request.user,personalised=variant=='personalised')
     scores={p.pk:score for score,p,_ in ranked};reasons={p.pk:why for _,p,why in ranked}
     candidates=[]
     if reason is None:
-        for addition in mixed_additions(ranked,search_existing,data['quantity'],data['menu_mode']):
+        for addition in mixed_additions(ranked,search_existing,data['quantity'],data['menu_mode'],stock_only=store.ordering_mode=='simple'):
             rows=candidate_rows(search_base,addition,by_id);cost=quote(rows,store)
             candidates.append(dict(addition=addition,rows=rows,totals=cost,
                 rank=(-len(rows),-sum(scores.get(pk,0)*q for pk,q in addition.items()),tuple((r['product_id'],r['quantity']) for r in rows))))
@@ -193,7 +193,10 @@ def add_basket_plan(request):
     try:
         if date_only:
             if not slots(items,day,store):raise serializers.ValidationError('No remaining times for this date.')
-        else:schedule_order(items,requested,store,now=timezone.now())
+        else:
+            from ..services.simple_ordering import simple, validate_delivery
+            if simple(store): validate_delivery(items, requested, store)
+            else: schedule_order(items,requested,store,now=timezone.now())
     except serializers.ValidationError:
         return Response({'detail':'Kitchen availability changed. Search again for a workable time for the whole basket.'},status=409)
     if replace_basket:CartItem.objects.filter(user=request.user).delete()

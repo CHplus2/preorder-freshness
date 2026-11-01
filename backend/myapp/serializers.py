@@ -268,6 +268,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    receipt_status = serializers.SerializerMethodField()
+
+    def get_receipt_status(self, obj):
+        return 'received' if obj.status == 'delivered' else 'not_received'
+
     arrival_window = serializers.SerializerMethodField()
     dispatch_by = serializers.SerializerMethodField()
 

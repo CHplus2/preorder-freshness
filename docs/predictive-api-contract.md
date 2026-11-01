@@ -3,6 +3,42 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Client ordering mode — 1 November 2026
+
+The default storefront now returns read-only `ordering_mode: "simple"`.
+In this mode `/api/orders/quote/`, placement, slot searches and complete-basket
+recommendations check offered dates, fulfilment hours and recorded ingredient /
+packaging stock, without cooking-capacity or preparation reservations. A simple
+quote returns `ordering_mode: "simple"`, `stock_deduction_stage: "placement"`,
+null `preparation_at` / `preparation_end_at`, `tasks: []`, and
+`needs_review: false`. Placement requires a retry UUID and deducts ingredient
+and packaging stock atomically; its order has no preparation timestamps.
+Older scheduling descriptions below apply to internal `scheduled` compatibility
+mode and historical orders. See `docs/client-feedback-batches.md` for release
+and stock semantics; guest identity/payments are a later batch.
+
+Staff-only `POST /api/admin/orders/receipts/` accepts
+`{received: boolean, reason?: string, orders: [{id, version}]}` (1–20 distinct
+orders). It version-checks all rows before recording actual received/not-received
+facts; corrections require a reason, payments and stock are unchanged.
+Staff-only `POST /api/admin/orders/<id>/cancel/` accepts
+`{version, reason, return_unused_stock?: false}`. The opt-in return restores
+recorded simple-mode allocations once, only on the owner's explicit unused-stock
+assertion. No refund is implied. Generated historical sales summaries are not
+mutable customer receipts.
+
+Authenticated `GET/PATCH /api/orders/<id>/delivery-time/` is scoped to the owning
+customer or staff. PATCH accepts `{version, delivery_at, reason}`, preserves
+accepted menu terms, checks allocated lot deadlines and records an amendment;
+it makes no cooking reservation. Existing opted-in account reminders support
+simple allocations without preparation timestamps.
+
+FreshCast forecasting algorithms and artifacts are unchanged. Booked portions
+remain subtracted from additional forecast demand, and already-deducted orders
+remain excluded from a second stock allocation. Returned ingredient allocations
+are excluded from recorded contribution consumption; simple orders become
+realised contributions only after actual receipt, rather than cancellation.
+
 ## Recommendation result presentation — 28 October 2026
 
 The original card-layout change was presentation-only. The independent

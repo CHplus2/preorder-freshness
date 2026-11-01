@@ -23,7 +23,7 @@ class StoreExtensionsTests(TestCase):
         self.owner = User.objects.create_user('extensions-owner', is_staff=True)
         self.buyer = User.objects.create_user('extensions-buyer')
         self.client = APIClient(); self.client.force_authenticate(self.owner)
-        self.store = Storefront.objects.create(pk=1)
+        self.store = Storefront.objects.create(pk=1, ordering_mode='scheduled')
         self.material = RawMaterial.objects.create(name='Fixture rice', unit='g')
         self.product = Product.objects.create(name='Fixture small box', price=10, lead_hours=1, batch_size=4,
             preparation_tasks=[dict(name='Cook', minutes=30, additional_batch_minutes=10, resource='stove'),

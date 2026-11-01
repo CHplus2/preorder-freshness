@@ -25,7 +25,7 @@ class DailyOperationsTests(TestCase):
         self.buyer = User.objects.create_user('operations-buyer')
         self.owner = User.objects.create_user('operations-owner', is_staff=True)
         self.client = APIClient(); self.client.force_authenticate(self.buyer)
-        self.store = Storefront.objects.create(pk=1, pickup_enabled=True, pickup_location='Fictional counter')
+        self.store = Storefront.objects.create(pk=1, pickup_enabled=True, pickup_location='Fictional counter', ordering_mode='scheduled')
         self.category = Category.objects.create(name='Seasonal boxes')
         self.menu = Product.objects.create(name='Festive gift box', category=self.category, price=18,
             selling_details=SHIPPING.copy(), lead_hours=1, preparation_minutes=20,

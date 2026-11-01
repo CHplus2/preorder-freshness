@@ -60,7 +60,7 @@ def usable_stock():
         received_date__lte=today, quarantined=False)
 
 
-def deduct_order_inventory(order, user):
+def deduct_order_inventory(order, user, deadline=None, stage='preparation'):
     """Caller holds an atomic order lock; lock stock globally before any writes.
 
     Orders may list menus/ingredients in different orders. Acquiring each item's
@@ -70,14 +70,17 @@ def deduct_order_inventory(order, user):
     items = list(order.items.prefetch_related('accepted_ingredients'))
     by_material = defaultdict(list)
     material_ids = {ingredient.raw_material_id for item in items for ingredient in item.accepted_ingredients.all()}
-    for batch in usable_stock().select_for_update().filter(raw_material_id__in=material_ids).order_by(
+    stock = usable_stock()
+    if deadline is not None:
+        stock = stock.filter(expiry_date__gte=deadline)
+    for batch in stock.select_for_update().filter(raw_material_id__in=material_ids).order_by(
             'raw_material_id', 'expiry_date', 'received_date', 'id'):
         by_material[batch.raw_material_id].append(batch)
     for item in items:
-        deduct_inventory(item, user, order, by_material)
+        deduct_inventory(item, user, order, by_material, stage=stage)
 
 
-def deduct_inventory(item, user, order, by_material=None):
+def deduct_inventory(item, user, order, by_material=None, stage='preparation'):
     """
     Deduct raw materials required to produce the ordered quantity
     of a product using FEFO (First Expired, First Out).
@@ -88,6 +91,8 @@ def deduct_inventory(item, user, order, by_material=None):
         raise ValidationError("This order has no recorded recipe. Review its accepted recipe before cooking.")
     for ingredient in ingredients:
 
+        if ingredient.quantity_per_portion <= 0:
+            raise ValidationError('Review the accepted recipe quantities before allocating stock.')
         required_quantity = (
             ingredient.quantity_per_portion * item.quantity
         )
@@ -125,7 +130,7 @@ def deduct_inventory(item, user, order, by_material=None):
             IngredientConsumption.objects.create(order_item=item, inventory_item=inventory_item,
                 material_name=ingredient.material_name, unit=ingredient.unit,
                 batch_code=inventory_item.batch_code, quantity=deduction,
-                unit_cost=inventory_item.unit_cost, recorded_expiry=inventory_item.expiry_date)
+                unit_cost=inventory_item.unit_cost, recorded_expiry=inventory_item.expiry_date, allocation_stage=stage)
 
             remaining -= deduction
 
@@ -162,6 +167,8 @@ def place_order(request):
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
     store, method, area = request_store(store, request.data, require_area=True)
+    if store.ordering_mode == 'simple' and request_id is None:
+        raise ValidationError('Refresh checkout to create a safe order reference before placing the order.')
     if payment == 'cod' and method != 'pickup':
         raise ValidationError('Cash is available for self-collection only. Choose another payment method for delivery.')
     address = None
@@ -177,7 +184,8 @@ def place_order(request):
     list(Product.objects.select_for_update().filter(id__in=cart_items.values('product_id')).order_by('id'))
     delivery_at = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
     from ..services.scheduling import schedule_order, plan_snapshot
-    plan = schedule_order(cart_items, delivery_at, store, allow_manual_review=True, allow_request_exceptions=True)
+    from ..services.simple_ordering import simple, validate_delivery
+    plan = validate_delivery(cart_items, delivery_at, store) if simple(store) else schedule_order(cart_items, delivery_at, store, allow_manual_review=True, allow_request_exceptions=True)
     needs_review = plan.get('needs_review', False)
     if needs_review:
         # Review requests never debit credits or invite an advance transfer.
@@ -230,6 +238,7 @@ def place_order(request):
 
     # --- Create order ---
     order = Order.objects.create(
+        ordering_mode=store.ordering_mode,
         checkout_request_id=request_id,
         user=user,
         delivery_at=delivery_at,
@@ -272,6 +281,9 @@ def place_order(request):
     if not needs_review:
         from ..services.packaging import allocate_packaging
         allocate_packaging(order, user)
+        if simple(store):
+            from ..services.simple_ordering import deduct_at_placement
+            deduct_at_placement(order, user)
 
     cart_items.delete()
 
@@ -329,13 +341,17 @@ def preparation_quote(request):
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     store, method, area = request_store(store, request.data, require_area=True)
     items = list(CartItem.objects.filter(user=request.user).select_related('product'))
-    plan = schedule_order(items, delivery, store, allow_manual_review=True, allow_request_exceptions=True)
+    from ..services.simple_ordering import simple, validate_delivery, check_cart_ingredients
+    plan = validate_delivery(items, delivery, store) if simple(store) else schedule_order(items, delivery, store, allow_manual_review=True, allow_request_exceptions=True)
     from ..services.arrival_windows import window, duration
     timing = {'arrival_window': window(delivery, duration(store)), 'arrival_window_minutes': duration(store)}
     if plan.get('needs_review'):
         return Response(dict(**timing, preparation_at=None, preparation_end_at=None, **plan_snapshot(plan)))
     from ..services.packaging import check_cart_packaging
     check_cart_packaging(items)
+    if simple(store):
+        check_cart_ingredients(items, delivery)
+        return Response(dict(**timing, preparation_at=None, preparation_end_at=None, **plan_snapshot(plan)))
     from ..services.discovery import shopping_preview
     return Response(dict(**timing, preparation_at=plan['start'], preparation_end_at=plan['end'],
         procurement_required=bool(shopping_preview(items, plan['start'], plan['end'])), **plan_snapshot(plan)))

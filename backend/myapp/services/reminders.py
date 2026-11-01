@@ -11,6 +11,11 @@ from .recovery_email import reset_origin
 from django.utils import timezone
 from ..models import Order, OrderReminder
 
+def confirmed_order():
+    return (Q(ordering_mode='simple', inventory_deducted=True) |
+        (Q(ordering_mode='scheduled', preparation_at__isnull=False, preparation_end_at__isnull=False) &
+         (Q(preparation_plan__needs_review=False) | Q(preparation_plan__needs_review__isnull=True))))
+
 def email_ready():
     return bool(settings.OWNER_NOTIFICATION_EMAIL and settings.EMAIL_HOST and
                 settings.EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend')
@@ -42,7 +47,7 @@ def _send_owner_reminders(limit=3):
                 if OrderReminder.objects.filter(order=order,event=event).exists():
                     continue
                 attempted += 1
-                message = f'Order #{order.pk}: {event.replace("_at", "")} due {timezone.localtime(when):%d %b %Y %H:%M} Malaysia time. Review your kitchen planner.'
+                message = f'Order #{order.pk}: {event.replace("_at", "")} due {timezone.localtime(when):%d %b %Y %H:%M} Malaysia time. Review your kitchen orders.'
                 try:
                     count = send_mail('Kitchen order reminder', message, settings.DEFAULT_FROM_EMAIL,
                                       [settings.OWNER_NOTIFICATION_EMAIL])
@@ -92,9 +97,8 @@ def customer_due(now=None):
     receipts = OrderReminder.objects.filter(order_id=OuterRef('pk'), event=OuterRef('customer_event'))
     return (Order.objects.filter(status__in=['pending', 'processing', 'cooked', 'shipped'],
             delivery_at__gt=now, user__is_active=True,
-            preparation_at__isnull=False, preparation_end_at__isnull=False,
             fulfilment_snapshot__customer_reminder__enabled=True)
-        .filter(Q(preparation_plan__needs_review=False) | Q(preparation_plan__needs_review__isnull=True))
+        .filter(confirmed_order())
         .exclude(user__email='')
         .annotate(reminder_at=reminder_at, customer_event=key, current_email=Lower('user__email'),
                   reminder_email=KeyTextTransform('email', 'fulfilment_snapshot__customer_reminder'),
@@ -250,7 +254,8 @@ def queue_time_notice(order):
     from uuid import uuid4
     preference = order.fulfilment_snapshot.get('customer_reminder', {})
     if (preference.get('enabled') is not True or preference.get('time_updates') is not True
-            or order.preparation_plan.get('needs_review') or not order.preparation_end_at):
+            or not (order.ordering_mode == 'simple' and order.inventory_deducted or
+                    order.ordering_mode == 'scheduled' and not order.preparation_plan.get('needs_review') and order.preparation_end_at)):
         return
     order.fulfilment_snapshot = dict(order.fulfilment_snapshot, time_notice={
         'key': 'tc'+uuid4().hex[:18], 'created_at': timezone.now().isoformat(), 'email': preference.get('email', '')})
@@ -260,9 +265,9 @@ def time_due(now=None):
     now = now or timezone.now()
     receipts = OrderReminder.objects.filter(order_id=OuterRef('pk'), event=OuterRef('time_event'))
     return (Order.objects.filter(status__in=['pending','processing','cooked'], user__is_active=True,
-            delivery_at__gt=now, preparation_at__isnull=False, preparation_end_at__isnull=False,
+            delivery_at__gt=now,
             fulfilment_snapshot__customer_reminder__enabled=True, fulfilment_snapshot__customer_reminder__time_updates=True)
-        .filter(Q(preparation_plan__needs_review=False) | Q(preparation_plan__needs_review__isnull=True))
+        .filter(confirmed_order())
         .annotate(current_email=Lower('user__email'),
                   reminder_email=KeyTextTransform('email', 'fulfilment_snapshot__customer_reminder'),
                   notice_email=KeyTextTransform('email', 'fulfilment_snapshot__time_notice'),

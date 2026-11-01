@@ -16,7 +16,7 @@ class StoreSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Add bank transfer instructions or a DuitNow QR image before enabling manual payments.')
         opening = attrs.get('kitchen_open_hour', getattr(self.instance, 'kitchen_open_hour', 8))
         closing = attrs.get('kitchen_close_hour', getattr(self.instance, 'kitchen_close_hour', 20))
-        if not 0 <= opening < closing <= 23:
+        if getattr(self.instance, 'ordering_mode', 'simple') == 'scheduled' and not 0 <= opening < closing <= 23:
             raise serializers.ValidationError('Kitchen hours must open before closing, between 00:00 and 23:00.')
         for kind in ('delivery', 'pickup'):
             first = attrs.get(f'{kind}_open_hour', getattr(self.instance, f'{kind}_open_hour', 9 if kind == 'delivery' else 8))
@@ -50,6 +50,7 @@ class StoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Storefront
         fields = '__all__'
+        read_only_fields = ['ordering_mode']
         extra_kwargs = {'bulk_discount_percent': {'min_value': 0, 'max_value': 50}, 'delivery_buffer_minutes': {'min_value': 1, 'max_value': 1440}, 'bulk_minimum': {'min_value': 1, 'max_value': 10000}}
 
 @api_view(['GET', 'PATCH'])

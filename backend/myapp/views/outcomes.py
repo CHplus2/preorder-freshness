@@ -22,7 +22,7 @@ def contribution(order):
     missing = []
     trace = []
     for item in order.items.all():
-        consumed = list(item.consumption.all())
+        consumed = [row for row in item.consumption.all() if row.returned_at is None]
         recipe = list(item.accepted_ingredients.all())
         if not order.inventory_deducted or not consumed or not recipe:
             missing.append(f'{item.product_name}: actual ingredient consumption unavailable')
@@ -45,7 +45,7 @@ def contribution(order):
     if not order.items.all():
         missing.append('Order items unavailable')
     # Only realised outcomes: fulfilled orders or written-off cooked cancellations.
-    realised = order.status in ('delivered', 'cancelled') and order.inventory_deducted
+    realised = (order.status == 'delivered' if order.ordering_mode == 'simple' else order.status in ('delivered','cancelled')) and order.inventory_deducted
     food_revenue = order.total_amount if order.status == 'delivered' and order.payment_status == 'paid' else ZERO
     if order.status == 'delivered' and order.payment_status == 'unpaid':
         missing.append('Payment not recorded')
@@ -54,6 +54,7 @@ def contribution(order):
         'delivery_at': order.delivery_at, 'placed_at': order.created_at,
         'net_food_revenue': money(food_revenue), 'known_ingredient_cost': money(ingredient_cost),
         'accepted_packaging_cost': money(packaging), 'food_contribution': money(value),
+        'cost_basis': 'allocated stock at placement' if order.ordering_mode=='simple' else 'recorded preparation consumption',
         'realised': realised, 'missing': sorted(set(missing)), 'trace': trace}
 
 

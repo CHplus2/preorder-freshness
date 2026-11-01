@@ -16,7 +16,7 @@ class BasketGuideTests(TestCase):
     def setUp(self):
         self.user=User.objects.create_user('mixed-buyer');self.other=User.objects.create_user('other-mixed-buyer')
         self.client=APIClient();self.client.force_authenticate(self.user)
-        self.store=Storefront.objects.create(pk=1,delivery_fee_myr=5,free_delivery_minimum_myr=None,bulk_minimum=10,bulk_discount_percent=10)
+        self.store=Storefront.objects.create(pk=1,delivery_fee_myr=5,free_delivery_minimum_myr=None,bulk_minimum=10,bulk_discount_percent=10, ordering_mode='scheduled')
         self.category=Category.objects.create(name='Fixture meals');raw=RawMaterial.objects.create(name='Fixture rice',unit='g')
         self.menus=[]
         for index,price in enumerate(['12.00','8.50','10.00']):
@@ -334,7 +334,7 @@ class BasketGuideTests(TestCase):
 class BasketGuideConcurrencyTests(TransactionTestCase):
     @skipUnlessDBFeature('has_select_for_update')
     def test_two_replacement_sessions_cannot_overwrite_each_other(self):
-        user=User.objects.create_user('parallel-replacement-buyer');Storefront.objects.create(pk=1)
+        user=User.objects.create_user('parallel-replacement-buyer');Storefront.objects.create(pk=1, ordering_mode='scheduled')
         raw=RawMaterial.objects.create(name='Replacement fixture rice',unit='g');menus=[]
         for n in range(3):
             menu=Product.objects.create(name=f'Replacement meal {n}',price=10);menus.append(menu)
@@ -370,7 +370,7 @@ class BasketGuideConcurrencyTests(TransactionTestCase):
 
     @skipUnlessDBFeature('has_select_for_update')
     def test_overlapping_confirmations_add_the_complete_basket_once(self):
-        user=User.objects.create_user('parallel-basket-buyer');Storefront.objects.create(pk=1)
+        user=User.objects.create_user('parallel-basket-buyer');Storefront.objects.create(pk=1, ordering_mode='scheduled')
         raw=RawMaterial.objects.create(name='Parallel fixture rice',unit='g')
         for n in range(3):
             menu=Product.objects.create(name=f'Parallel meal {n}',price=10)

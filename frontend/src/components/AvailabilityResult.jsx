@@ -9,6 +9,9 @@ export default function AvailabilityResult({checking, error, quote, selectionKey
   else if (quote?.plan.needs_review) {
     content = requestMode?<><strong>Kitchen confirmation needed</strong><p>You can send this time to the kitchen for review. No payment will be taken and no preparation time is reserved until confirmed.</p>{quote.plan.review_reason && <details><summary>Why kitchen confirmation is needed</summary><p>{quote.plan.review_reason}</p></details>}</>:<><strong>Choose another available time</strong><p>This time cannot be scheduled with the current kitchen bookings. Choose one of the suggested alternatives above, or ask the kitchen to review this time.</p></>;
   }
+  else if (quote?.plan.ordering_mode==='simple') {
+    tone='success';content=<><strong>Your order details are ready</strong><p>Recorded ingredient and packaging stock covers this basket for the selected date. Stock is checked again and deducted when you place the order.</p></>;
+  }
   else if (quote) {
     tone = 'success';
     content = <><strong>Your requested time is available</strong><p>You can continue to place your preorder. Availability will be checked again when you order.</p>{quote.plan.procurement_required && <p><strong>Ingredients need purchasing.</strong> Kitchen time fits; the owner must source suitable stock before cooking.</p>}<details><summary>View preparation details</summary><PreparationDays plan={quote.plan}/><p>Preparation starts {new Date(quote.plan.preparation_at).toLocaleString('en-MY', {timeZone:'Asia/Kuala_Lumpur'})}. {quote.plan.hands_on_minutes} minutes of hands-on work.</p><p>{quote.plan.procurement_required ? 'The owner needs to purchase ingredients for this plan.' : 'Recorded ingredients cover this estimate; stock is not reserved until cooking.'}</p></details></>;

@@ -51,6 +51,8 @@ def setup_checklist(request):
         menu_check('costs', 'Complete menu cost estimates', missing_costs,
                    'Record ingredient unit-cost estimates and packaging costs, including an explicit zero where appropriate. These are estimates; actual order contribution uses batch costs.'),
     ]
+    if not store or store.ordering_mode == 'simple':
+        steps = [step for step in steps if step['id'] != 'preparation']
     today = timezone.localdate()
     active = InventoryItem.objects.filter(quantity__gt=0, received_date__lte=today)
     usable = active.filter(expiry_date__gte=today, quarantined=False)

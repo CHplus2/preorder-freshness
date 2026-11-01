@@ -17,7 +17,7 @@ class ReschedulingTests(TestCase):
         self.owner = User.objects.create_user('owner', is_staff=True)
         self.client = APIClient()
         self.client.force_authenticate(self.buyer)
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(pk=1, ordering_mode='scheduled')
         self.product = Product.objects.create(name='Lunch', price=12, lead_hours=1, daily_capacity=1)
         self.delivery = (timezone.localtime()+timedelta(days=4)).replace(hour=16, minute=0, second=0, microsecond=0)
         self.target = self.delivery+timedelta(days=1)

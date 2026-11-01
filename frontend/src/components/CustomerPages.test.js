@@ -7,9 +7,11 @@ const server=await createServer({server:{middlewareMode:true,hmr:false},appType:
 try{
  const {default:OrdersPage}=await server.ssrLoadModule('/src/pages/customer/OrdersPage.jsx');
  const {OrderContext}=await server.ssrLoadModule('/src/contexts/OrderContext.js');
+ const {StoreContext}=await server.ssrLoadModule('/src/contexts/StorefrontContext.js');
  const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
  const base={id:1,status:'pending',items:[],delivery_method:'standard',shipping_fee:'5',total_amount:'12',discount_amount:'0',payment_status:'unpaid',preparation_plan:{needs_review:true,tasks:[]}};
- const render=changes=>renderToStaticMarkup(h(MemoryRouter,null,h(UIContext.Provider,{value:{formatOrderNumber:id=>'ORD-'+id,setAlert:()=>{}}},h(OrderContext.Provider,{value:{orders:[base,{...base,id:2,status:'delivered'}],fetchOrders:()=>{},ordersLoading:false,ordersError:'',...changes}},h(OrdersPage)))));
+ const renderMarkup=node=>renderToStaticMarkup(h(StoreContext.Provider,{value:{store:{ordering_mode:'scheduled'}}},node));
+ const render=changes=>renderMarkup(h(MemoryRouter,null,h(UIContext.Provider,{value:{formatOrderNumber:id=>'ORD-'+id,setAlert:()=>{}}},h(OrderContext.Provider,{value:{orders:[base,{...base,id:2,status:'delivered'}],fetchOrders:()=>{},ordersLoading:false,ordersError:'',...changes}},h(OrdersPage)))));
  const current=render({});
  assert.match(current,/Delivery request #ORD-1/);assert.doesNotMatch(current,/Order #ORD-2/);
  assert.match(current,/Awaiting kitchen confirmation/);assert.match(current,/No payment was taken/);

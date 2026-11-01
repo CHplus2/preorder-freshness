@@ -25,7 +25,7 @@ from .management.commands.seed_freshcast_demo_history import BUYER
 class DemoHistoryTests(TestCase):
     def setUp(self):
         fixtures.LocalPlanningTests.setUp(self)
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(pk=1, ordering_mode='scheduled')
         self.second = Product.objects.create(name='Second meal', price=12, daily_capacity=2, delivery_weekdays=[0,2,4])
         ProductIngredient.objects.create(product=self.second, raw_material=self.material, quantity_required=50)
 

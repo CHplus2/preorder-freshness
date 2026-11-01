@@ -83,7 +83,7 @@ export default function GuidedMenu(){
   </form>
   <p id={helpId} className="guide-input-help">1–100 total items. Allow a mix keeps your basket items; One menu only offers alternatives and asks before replacing your basket. A meal, box or pack counts as one item. Totals include the current discount and delivery fee. Leave the budget blank for no price limit. Choose a date within 90 days.</p>
   {cartError && <p role="alert">Your basket could not be checked. <Link to="/cart">Review your basket</Link> before requesting suggestions.</p>}
-  {working && <p role="status">Checking prices and one shared kitchen time for each complete basket…</p>}
+  {working && <p role="status">Checking prices and one shared delivery time for each complete basket…</p>}
   {visibleError && <p className="guide-error" role="alert" tabIndex={-1} ref={errorRef}>{visibleError}</p>}
   {success && success.account===accountKey && <p className="guide-success" role="status">{success.message} <Link to="/cart">View basket</Link></p>}
   {shown && <>

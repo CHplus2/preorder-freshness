@@ -13,7 +13,7 @@ class InitialDeliveryTests(TestCase):
         self.buyer=User.objects.create_user('date-buyer')
         self.client=APIClient()
         self.client.force_authenticate(self.owner)
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(pk=1, ordering_mode='scheduled')
         self.menu=Product.objects.create(name='Nasi Lemak Telur',price=7,lead_hours=24,daily_capacity=10)
         self.order=Order.objects.create(user=self.buyer,total_amount=14,shipping_fee=5)
         self.item=OrderItem.objects.create(order=self.order,product=self.menu,product_name=self.menu.name,

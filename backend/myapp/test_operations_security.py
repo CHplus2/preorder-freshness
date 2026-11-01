@@ -23,7 +23,7 @@ class OperationsBoundaryTests(TestCase):
         self.client=APIClient();self.client.force_authenticate(self.owner)
         self.today=timezone.localdate()
         self.material=RawMaterial.objects.create(name='Operations ingredient',unit='g')
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(pk=1, ordering_mode='scheduled')
 
     def test_oversized_shelf_and_handling_dates_return_validation_errors(self):
         base={'raw_material':self.material.pk,'quantity':100,'storage_location':'Fridge',

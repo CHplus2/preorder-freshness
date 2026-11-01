@@ -1,0 +1,26 @@
+{
+  "result": "passed",
+  "fixture": "isolated local SQLite; no production data, real payment or email",
+  "viewports": [
+    "1440x950",
+    "390x844"
+  ],
+  "checks": [
+    "stock-based quote despite extreme historical preparation limits",
+    "checkout retry identity",
+    "orders fetched on initial page load",
+    "no Planner navigation",
+    "bulk actual receipt",
+    "correction with reason",
+    "one-form agreed time change",
+    "explicit unused stock return",
+    "legacy Planner URL redirects",
+    "customer receipt view",
+    "cooking hours hidden",
+    "no horizontal overflow or browser script errors"
+  ],
+  "order_ids": [
+    1,
+    2
+  ]
+}

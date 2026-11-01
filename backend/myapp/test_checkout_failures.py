@@ -13,7 +13,7 @@ class CheckoutFailureTests(TestCase):
     def setUp(self):
         self.buyer=User.objects.create_user('failure-buyer')
         self.client=APIClient();self.client.force_authenticate(self.buyer)
-        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, ordering_mode='scheduled')
         product=Product.objects.create(name='Test meal',price=12,lead_hours=1)
         CartItem.objects.create(user=self.buyer,product=product,quantity=1)
         address=Address.objects.create(user=self.buyer,line1='Test',city='KL',state='KL',postal_code='50000',phone='0100000000')

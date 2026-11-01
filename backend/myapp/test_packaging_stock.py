@@ -182,7 +182,7 @@ class PackagingStockTests(PackagingFixture, TestCase):
 class PackagingCheckoutTests(PackagingFixture, TestCase):
     # Reuse stock setup; checkout tests exercise actual API placement and retry.
     def checkout_setup(self, quantity=2):
-        Storefront.objects.create(pk=1,manual_payment_enabled=True,bank_transfer_instructions='Test QR instructions')
+        Storefront.objects.create(pk=1,manual_payment_enabled=True,bank_transfer_instructions='Test QR instructions', ordering_mode='scheduled')
         Address.objects.create(user=self.buyer,line1='Test address',city='KL',state='KL',postal_code='50000',phone='0100000000')
         CartItem.objects.create(user=self.buyer,product=self.product,quantity=quantity)
         material=RawMaterial.objects.create(name='Test rice',unit='g')

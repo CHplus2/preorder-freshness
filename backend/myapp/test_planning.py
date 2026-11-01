@@ -17,7 +17,7 @@ class PlanningTests(TestCase):
     def setUp(self):
         self.owner=User.objects.create_user('owner',is_staff=True)
         self.user=User.objects.create_user('buyer')
-        self.store=Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
+        self.store=Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, ordering_mode='scheduled')
         self.client=APIClient();self.client.force_authenticate(self.user)
         self.now=timezone.localtime().replace(hour=8,minute=0,second=0,microsecond=0)
         self.delivery=(self.now+timedelta(days=7)).replace(hour=16)

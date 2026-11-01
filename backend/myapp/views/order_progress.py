@@ -35,6 +35,8 @@ def confirm_order_progress(request):
     orders = list(Order.objects.select_for_update().filter(pk__in=expected).order_by('pk'))
     if len(orders) != len(expected):
         return Response({'detail': 'A selected order is unavailable. Refresh Planner; no selected orders were updated.'}, status=404)
+    if any(order.ordering_mode == 'simple' for order in orders):
+        raise ValidationError('Use the received/not-received confirmation for these orders.')
     for order in orders:
         if order.updated_at != expected[order.pk]:
             return Response({'detail': f'Order #{order.pk} changed. Refresh Planner and review your selection; no selected orders were updated.'}, status=409)

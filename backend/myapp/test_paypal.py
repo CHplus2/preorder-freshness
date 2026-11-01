@@ -47,7 +47,7 @@ class PayPalTests(TestCase):
         self.buyer=User.objects.create_user('paypal-buyer',password='fixture-password')
         self.other=User.objects.create_user('other-buyer');self.owner=User.objects.create_user('paypal-owner',is_staff=True)
         self.client=APIClient();self.client.force_authenticate(self.buyer)
-        self.store=Storefront.objects.create(pk=1,bulk_minimum=10,bulk_discount_percent=10)
+        self.store=Storefront.objects.create(pk=1,bulk_minimum=10,bulk_discount_percent=10, ordering_mode='scheduled')
         self.delivery=(timezone.localtime()+timedelta(days=4)).replace(hour=18,minute=0,second=0,microsecond=0)
         self.product=Product.objects.create(name='Sandbox meal',price=10,lead_hours=0,preparation_tasks=[dict(name='Cook',minutes=30,worker=True,resource='stove',max_wait_minutes=0,additional_batch_minutes=0,overnight=False)])
         self.address=Address.objects.create(user=self.buyer,line1='Fixture',city='KL',state='KL',postal_code='50000',phone='0123456789')

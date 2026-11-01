@@ -1,3 +1,5 @@
+import {useStorefront} from '../../contexts/StorefrontContext';
+import SimpleDeliveryChange from '../../components/SimpleDeliveryChange';
 import {arrivalLabel} from '../../utils/arrivalWindow';
 import OrderHandoverEditor from '../../components/OrderHandoverEditor';
 import useOrderEmail from '../../hooks/useOrderEmail';
@@ -23,6 +25,7 @@ import "./CustomerExperience.css";
 
 export default function OrdersPage() {
   const location = useLocation();
+  const simple=useStorefront()?.store?.ordering_mode!=='scheduled';
   const orderEmail=useOrderEmail();
   const { formatOrderNumber, setAlert } = useUI();
   const { orders, fetchOrders, ordersLoading, ordersError, orderPage, chooseOrderView, loadMoreOrders, ordersMoreLoading=false, ordersMoreError='' } = useOrder();
@@ -65,7 +68,7 @@ export default function OrdersPage() {
               </div>
 
               <span className={`status-badge status-${order.status}`}>
-                {orderProgress(order.status,order.preparation_plan?.needs_review,isPickup(order)).label}
+                {simple?(order.status==='cancelled'?'Cancelled':order.status==='delivered'?'Received':'Not received'):orderProgress(order.status,order.preparation_plan?.needs_review,isPickup(order)).label}
               </span>
             </div>
 
@@ -92,7 +95,7 @@ export default function OrdersPage() {
               </div>
             </div>
             <OrderProgress order={order}/><ManualPayment order={order}/>
-            {order.payment_method==='deferred' && <DeferredOrderPayment key={order.id+order.updated_at} order={order} onSaved={fetchOrders}/>}
+            {!simple && order.payment_method==='deferred' && <DeferredOrderPayment key={order.id+order.updated_at} order={order} onSaved={fetchOrders}/>}
             {order.payment_method==='escrow' && <section className="paypal-order-note" aria-label="Escrow payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>Escrow payment</strong><span>Sepolia</span></div><p>{order.payment_status==='paid'?'Verified funding recorded. Funds are held or credited under the escrow rules; withdrawal is separate.':order.payment_status==='refunded'?'Buyer refund credit verified. Withdraw funds through the escrow payment page.':'Funding has not been verified yet. Open this saved payment to fund or check it.'}</p><Link to={'/payment/escrow?order='+order.id}>View escrow payment<ChevronRight size={16} aria-hidden="true"/></Link></section>}
             {order.payment_method==='paypal' && <section className="paypal-order-note" aria-label="PayPal payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>PayPal</strong><span>Test payment</span></div><p>{order.payment_status==='paid'?'Payment recorded. No real money was transferred.':order.payment_status==='refunded'?'Refund recorded. This was a Sandbox test payment.':'Test payment — no real money is transferred. Review this saved payment before trying again.'}</p><Link to={'/payment/paypal?order='+order.id}>{order.payment_status==='paid' || order.payment_status==='refunded'?'View payment details':'Continue to payment'}<ChevronRight size={16} aria-hidden="true"/></Link></section>}
             <details className="customer-order-more"><summary>Receipt & order preferences<ChevronRight size={17} aria-hidden="true"/></summary><div className="customer-order-more-body">
@@ -102,7 +105,7 @@ export default function OrdersPage() {
             <OrderHandoverEditor key={order.id+order.updated_at} order={order} onSaved={fetchOrders}/>
             </div></details>
             {!isPickup(order) && /^https:\/\//.test(order.fulfilment_snapshot?.courier?.url || '') && <a className="customer-track-link" href={order.fulfilment_snapshot.courier.url} target="_blank" rel="noopener noreferrer">Track with {order.fulfilment_snapshot.courier.carrier || 'courier'}<ChevronRight size={16} aria-hidden="true"/></a>}
-            <RescheduleOrder order={order} onSaved={fetchOrders}/>
+            {simple?<SimpleDeliveryChange key={order.id+order.updated_at} order={order} onSaved={fetchOrders}/>:<RescheduleOrder order={order} onSaved={fetchOrders}/>}
             <Link className="customer-order-help" to={`/contact?order=${order.id}`}>Ask the kitchen about this order<ChevronRight size={16} aria-hidden="true"/></Link>
 
           </article>

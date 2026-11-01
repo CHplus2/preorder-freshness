@@ -290,6 +290,8 @@ class CartItem(models.Model):
 
 # ============ ORDER ============
 class Order(models.Model):
+    ordering_mode = models.CharField(max_length=12, default='scheduled', db_default='scheduled')
+    stock_returned_at = models.DateTimeField(null=True, blank=True)
     fulfilment_snapshot = models.JSONField(default=dict, blank=True)
     checkout_request_id = models.UUIDField(null=True, blank=True, unique=True)
     payment_method = models.CharField(max_length=20, blank=True)
@@ -456,6 +458,9 @@ class InventoryLog(models.Model):
         )
 
 class Storefront(models.Model):
+    # Scheduled mode preserves integrations/accepted historical workflows. The
+    # client storefront defaults to simple ordering; it is not customer-selectable.
+    ordering_mode = models.CharField(max_length=12, choices=[('simple', 'Simple ordering'), ('scheduled', 'Historical scheduling')], default='simple', db_default='simple')
     delivery_enabled = models.BooleanField(default=True)
     pickup_enabled = models.BooleanField(default=False)
     pickup_location = models.CharField(max_length=250, blank=True)
@@ -548,6 +553,8 @@ class OrderIngredient(models.Model):
 
 
 class IngredientConsumption(models.Model):
+    allocation_stage = models.CharField(max_length=12, default='preparation', db_default='preparation')
+    returned_at = models.DateTimeField(null=True, blank=True)
     order_item = models.ForeignKey(OrderItem, on_delete=models.PROTECT, related_name='consumption')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.PROTECT, related_name='consumption')
     material_name = models.CharField(max_length=100)

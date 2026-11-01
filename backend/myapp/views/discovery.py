@@ -1,4 +1,5 @@
 from ..services.selling import shipping_enquiry
+from ..services.simple_ordering import simple
 import secrets
 import uuid
 from datetime import timedelta
@@ -125,7 +126,7 @@ def guided_menu(request):
             'price': str(p.price), 'selling_details': p.selling_details, 'food_total': str(total),
             'budget_relation': relation, 'budget_difference': str(difference) if difference is not None else None,
             'portions': data['portions'], 'slots': available,
-            'reasons': [f'Kitchen time available for {data["portions"]} selling units'] + reasons})
+            'reasons': [f'Recorded stock covers {data["portions"]} selling units' if store.ordering_mode=='simple' else f'Kitchen time available for {data["portions"]} selling units'] + reasons})
         if len(results) >= 3 and (not compare_both or len({r['budget_relation'] for r in results}) == 2):
             break
     if budget is not None and budget_mode == 'all' and len(results) > 3:
@@ -146,7 +147,7 @@ def guided_menu(request):
         'budget_catalogue': budget_catalogue,
         'budget': {'amount': str(budget), 'mode': budget_mode, 'basis': 'food_total_before_discounts_and_delivery'} if budget is not None else None,
         'empty_reason': None if results else 'shipping_enquiry' if shipping_only else 'category_unavailable' if not category_available else 'no_kitchen_times' if candidates else 'no_menu_match',
-        'checked_limit': 30, 'message': 'Hourly suggestions use kitchen capacity, not current stock. The owner may need to purchase ingredients. Each food total covers the requested quantity of one menu before discounts; delivery and existing basket items are excluded. Checkout rechecks the whole basket. Up to 30 ranked menus are checked, so these are suggestions rather than an exhaustive search.'})
+        'checked_limit': 30, 'message': ('Suggestions check offered dates and currently recorded ingredient and packaging stock. Checkout rechecks the whole basket.' if simple(store) else 'Hourly suggestions use kitchen capacity, not current stock. The owner may need to purchase ingredients. Each food total covers the requested quantity of one menu before discounts; delivery and existing basket items are excluded. Checkout rechecks the whole basket. Up to 30 ranked menus are checked, so these are suggestions rather than an exhaustive search.')})
 
 
 @api_view(['POST'])

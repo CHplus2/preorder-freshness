@@ -128,7 +128,7 @@ class CustomerReminderTests(TestCase):
 
     def test_checkout_snapshots_consent_and_rejects_missing_email_without_creating_an_order(self):
         from .models import Address, Product, CartItem, Storefront
-        Storefront.objects.update_or_create(pk=1, defaults=dict(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details'))
+        Storefront.objects.update_or_create(pk=1, defaults=dict(ordering_mode='scheduled', manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details'))
         address=Address.objects.create(user=self.user,line1='Fixture',city='KL',state='KL',postal_code='50000',phone='0123456789')
         menu=Product.objects.create(name='Fixture meal',price=12)
         CartItem.objects.create(user=self.user,product=menu,quantity=1)

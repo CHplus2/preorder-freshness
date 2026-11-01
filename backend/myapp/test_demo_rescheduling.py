@@ -18,7 +18,7 @@ class DemoReschedulingTests(TestCase):
     def setUp(self):
         self.actor = User.objects.create_user('reschedule-staff', is_staff=True)
         self.buyer = User.objects.create_user('reschedule-buyer')
-        self.store = Storefront.objects.create(pk=1, delivery_buffer_minutes=90)
+        self.store = Storefront.objects.create(pk=1, delivery_buffer_minutes=90, ordering_mode='scheduled')
         self.menu = Product.objects.create(name='Test rice', price=10, max_early_minutes=0,
             max_preparation_days=1, lead_hours=24, preparation_tasks=[dict(name='Cook and pack',
                 minutes=45, resource='packing_area', worker=True, overnight=False,

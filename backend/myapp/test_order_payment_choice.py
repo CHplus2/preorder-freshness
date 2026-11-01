@@ -19,7 +19,7 @@ class OrderPaymentChoiceTests(TestCase):
         self.owner = User.objects.create_user('choice-owner', is_staff=True)
         self.client = APIClient(); self.client.force_authenticate(self.buyer)
         self.store = Storefront.objects.create(pk=1, pickup_enabled=True, pickup_location='Fixture counter',
-            manual_payment_enabled=True, bank_transfer_instructions='Fictional bank details')
+            manual_payment_enabled=True, bank_transfer_instructions='Fictional bank details', ordering_mode='scheduled')
         self.delivery = (timezone.localtime()+timedelta(days=5)).replace(hour=18, minute=0, second=0, microsecond=0)
         self.menu = Product.objects.create(name='Fixture payment meal', price=12, lead_hours=0)
         self.address = Address.objects.create(user=self.buyer, line1='Fixture', city='KL', state='KL', postal_code='50000', phone='0123456789')

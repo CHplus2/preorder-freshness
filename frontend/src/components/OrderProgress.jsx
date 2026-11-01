@@ -1,10 +1,13 @@
+import {useStorefront} from '../contexts/StorefrontContext';
 import {Link} from 'react-router-dom';
 import {orderProgress} from '../utils/orderProgress';
 import {isPickup} from '../utils/fulfilment';
 import './OrderProgress.css';
 export default function OrderProgress({order}) {
+  const simple=useStorefront()?.store?.ordering_mode!=='scheduled';
   const progress=orderProgress(order.status,order.preparation_plan?.needs_review,isPickup(order));
   const menus=[...new Map(order.items.filter(i=>i.product).map(i=>[i.product,i])).values()];
+  if(simple)return <section className="order-progress" aria-label="Receipt status"><h3>{order.status==='cancelled'?'Order cancelled':order.status==='delivered'?'Received':'Not received'}</h3><p>{order.status==='cancelled'?'Contact the kitchen about any payment or refund.':order.status==='delivered'?'The kitchen has recorded that you received your food.':'The kitchen will update this record after you receive or collect your food.'}</p>{order.status==='delivered'&&menus.map(i=><Link key={i.product} to={`/products/${i.product}`}>Review {i.product_name}</Link>)}</section>;
   if(order.status==='pending' && order.preparation_plan?.needs_review)return <section className="order-progress" aria-label="Order progress"><h3 className="order-progress-heading">Awaiting kitchen confirmation</h3><p>This {isPickup(order)?'collection':'delivery'} time is requested, not confirmed. No preparation slot is reserved yet. The kitchen will confirm a workable plan or contact you to arrange another time.</p>{order.payment_status==='unpaid' && <p>No payment was taken when you submitted this request.</p>}</section>;
   return <section className={'order-progress'+(isPickup(order)?' order-progress--pickup':'')} aria-label="Order progress">
     <div className="order-progress-heading"><h3>Order progress</h3><span>{order.status==='pending' && order.preparation_plan?.manually_confirmed_at?'Kitchen confirmed':isPickup(order)?'Preparation and collection':'Preparation and delivery'}</span></div>

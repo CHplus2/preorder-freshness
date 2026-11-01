@@ -9,7 +9,7 @@ class PricingPreviewTests(TestCase):
     def setUp(self):
         self.owner=User.objects.create_user('owner',is_staff=True)
         self.client=APIClient();self.client.force_authenticate(self.owner)
-        self.store=Storefront.objects.create(pk=1,bulk_minimum=10,bulk_discount_percent=10)
+        self.store=Storefront.objects.create(pk=1,bulk_minimum=10,bulk_discount_percent=10, ordering_mode='scheduled')
         self.material=RawMaterial.objects.create(name='Rice',unit='g',estimated_unit_cost='0.02')
         self.product=Product.objects.create(name='Meal',price=10,packaging_cost=1)
         ProductIngredient.objects.create(product=self.product,raw_material=self.material,quantity_required=100)

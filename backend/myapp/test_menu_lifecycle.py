@@ -14,7 +14,7 @@ class MenuLifecycleTests(TestCase):
         self.owner = User.objects.create_user('owner', is_staff=True)
         self.buyer = User.objects.create_user('buyer')
         self.product = Product.objects.create(name='Rice meal', price=12)
-        self.store = Storefront.objects.create(pk=1)
+        self.store = Storefront.objects.create(pk=1, ordering_mode='scheduled')
 
     def test_public_menu_excludes_paused_and_archived(self):
         for state in ['paused', 'archived']:

@@ -35,7 +35,7 @@ class SetupChecklistTests(TestCase):
 
     def test_complete_setup_allows_zero_cost_and_no_stock_for_future_preorders(self):
         Storefront.objects.create(pk=1,name='My kitchen',tagline='Home meals',founder_name='Owner',
-            service_area='Local area',contact_email='owner@example.test')
+            service_area='Local area',contact_email='owner@example.test', ordering_mode='scheduled')
         self.menu()
         result=self.client.get(self.url).data
         self.assertEqual(result['completed'],result['total'])
@@ -73,6 +73,7 @@ class SetupChecklistTests(TestCase):
         self.assertFalse(data['steps'][2]['complete'])
 
     def test_invalid_legacy_tasks_do_not_break_checklist(self):
+        Storefront.objects.create(pk=1, ordering_mode='scheduled')
         product,_=self.menu();product.preparation_tasks=[{'name':'Invalid','resource':'unknown'}];product.save()
         data=self.client.get(self.url).data
         self.assertFalse(data['steps'][3]['complete'])

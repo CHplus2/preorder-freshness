@@ -19,7 +19,7 @@ from .models import (IngredientConsumption, InventoryItem, KitchenBlock, Order,
 class DemoPlanCommandTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user('plan-command-owner', is_staff=True)
-        self.store = Storefront.objects.create(pk=1)
+        self.store = Storefront.objects.create(pk=1, ordering_mode='scheduled')
         self.menu = Product.objects.create(name='Nasi Telur Kicap', price=10, lead_hours=0,
             max_early_minutes=120, preparation_tasks=[dict(name='Cook and pack', minutes=20,
                 worker=True, resource='packing_area', additional_batch_minutes=0,

@@ -143,7 +143,7 @@ export default function KitchenDecisionJourney({
             does not establish zero future waste or safe stock.
           </p>
           <Link to="/admin/inventory">Review inventory</Link> ·{" "}
-          <Link to="/admin/planner">Open planner</Link>
+          <Link to="/admin/orders">Review orders</Link>
         </section>
         <DecisionReviewBoard />
       </>
@@ -844,7 +844,7 @@ function MarketingComparison({ plan, risk, onWorksheet }) {
         targeted campaign for this ingredient. Check the promotion scope before
         saving any offer.
       </p>
-      <Link to="/admin/planner">Check capacity first</Link> ·{" "}
+      <Link to="/admin/inventory">Review recorded stock</Link> ·{" "}
       <Link to="/admin/settings#promotions">Review offer scope & settings</Link>
     </section>
   );

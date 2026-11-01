@@ -1,3 +1,4 @@
+import {useStorefront} from '../../contexts/StorefrontContext';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
@@ -40,6 +41,7 @@ function History({item,onClose}) {
 
 export default function PackagingPage(){
  const {setAlert}=useUI();
+ const simple=useStorefront()?.store?.ordering_mode!=='scheduled';
  const [items,setItems]=useState([]),[menus,setMenus]=useState([]),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState('');
  const [tab,setTab]=useState('stock'),[search,setSearch]=useState(''),[filter,setFilter]=useState('active');
  const [modal,setModal]=useState(null),[draft,setDraft]=useState(initial),[formError,setFormError]=useState(''),[busy,setBusy]=useState(false);
@@ -87,7 +89,7 @@ export default function PackagingPage(){
   <section className="packaging-workspace" aria-label={tab==='stock'?'Packaging stock':'Packaging by menu'}>
    <div className="packaging-toolbar"><label>Search {tab==='stock'?'packaging':'menus'}<input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder={tab==='stock'?'Containers, bags, labels…':'Menu name…'}/></label>{tab==='stock'&&<label>Show<select value={filter} onChange={e=>setFilter(e.target.value)}><option value="active">Active stock</option><option value="low">Low stock · {items.filter(i=>i.low_stock).length}</option><option value="all">All, including archived</option></select></label>}</div>
    {tab==='stock'?<>
-    <p className="packaging-note">Quantities count individual pieces. New confirmed orders deduct the packaging assigned to their menus. Review-only requests do not reserve stock until preparation starts.</p>
+    <p className="packaging-note">Quantities count individual pieces. New confirmed orders deduct the packaging assigned to their menus. {!simple&&'Review-only requests do not reserve stock until preparation starts.'}</p>
     <div className="packaging-stock-grid">{visible.map(item=><article className="packaging-stock-card" key={item.id}>
      <header><h2>{item.name}</h2>{!item.is_active?<span className="packaging-badge">Archived</span>:item.low_stock?<span className="packaging-badge packaging-low">{item.quantity===0?'Out of stock':'Low stock'}</span>:null}</header>
      <p className="packaging-quantity"><strong>{item.quantity.toLocaleString('en-MY')}</strong> <span>pieces available</span></p>

@@ -53,7 +53,7 @@ class EscrowOrderTests(TestCase):
         self.chain.invoice=r.data['invoice'];return r
     def verify(self):return self.client.post(self.url,{'action':'verify','transaction_hash':TX},format='json')
     def test_checkout_can_record_escrow_without_marking_paid(self):
-        Storefront.objects.create(pk=1)
+        Storefront.objects.create(pk=1, ordering_mode='scheduled')
         address=Address.objects.create(user=self.buyer,line1='Fixture',city='KL',state='KL',postal_code='50000',phone='0123456789')
         CartItem.objects.create(user=self.buyer,product=self.product,quantity=1)
         response=self.client.post('/api/orders/place/',{'address_id':address.pk,'payment':'escrow','delivery_at':self.delivery.isoformat()},format='json')

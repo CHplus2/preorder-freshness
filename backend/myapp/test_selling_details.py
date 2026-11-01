@@ -28,7 +28,7 @@ class SellingDetailsTests(TestCase):
             batch_size=10, max_early_minutes=120)
         self.material = RawMaterial.objects.create(name='Flour for a whole box', unit='g')
         ProductIngredient.objects.create(product=self.menu, raw_material=self.material, quantity_required=120)
-        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, ordering_mode='scheduled')
 
     def test_valid_offer_is_visible_on_public_cards_detail_and_discovery(self):
         self.assertEqual(ProductSerializer(self.menu).data['selling_details'], BOX)
