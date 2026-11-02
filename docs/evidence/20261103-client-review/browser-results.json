@@ -1,0 +1,34 @@
+{
+  "result": "passed",
+  "fixture": "isolated local database; no real bank payments or emails",
+  "viewports": [
+    "1440x1000",
+    "390x844"
+  ],
+  "checks": [
+    "anonymous menu starts private guest session",
+    "add food without registration",
+    "delivery cash at 07:30 with server area fee",
+    "name and phone snapshot",
+    "QR-only pickup at 11:00 and revised 10:30",
+    "sanitized receipt upload through browser",
+    "proof remains unpaid until staff verification",
+    "another guest cannot read orders or proof",
+    "owner reviews proof",
+    "QR time change clears stale proof and warns against paying twice",
+    "owner confirms payment through UI",
+    "grouped receipt through UI does not mark cash paid",
+    "cash verified separately",
+    "sales reconcile to RM40.50",
+    "accepted customer print facts",
+    "packaging movement history and 17 pieces remain",
+    "customer sees received/paid facts",
+    "minute settings and multiline area fee editing",
+    "no horizontal overflow or browser errors",
+    "success notifications disappear without manual dismissal"
+  ],
+  "order_ids": [
+    1,
+    2
+  ]
+}

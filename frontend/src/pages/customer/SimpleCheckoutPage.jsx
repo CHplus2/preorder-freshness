@@ -23,6 +23,7 @@ export default function SimpleCheckoutPage(){
  const {isSessionCurrent}=useAuth(),{placeOrder}=useOrder(),{formatPrice}=useUI(),navigate=useNavigate();
  const [name,setName]=useState(''),[phone,setPhone]=useState(''),[address,setAddress]=useState(''),[notes,setNotes]=useState('');
  const [payment,setPayment]=useState(''),[proof,setProof]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [receiptUploaded,setReceiptUploaded]=useState(false);
  const pending=useRef(false),errorRef=useRef(null);
  const pickup=fulfilmentMethod==='pickup',qr=promotion?.manual_payment_enabled===true&&!!promotion.duitnow_qr_url;
  const areaIssue=!pickup&&promotion?.delivery_areas?.length>0&&!promotion.delivery_areas.includes(deliveryArea);
@@ -64,7 +65,8 @@ export default function SimpleCheckoutPage(){
      {qr&&<label className={method==='manual'?'selected':''}><input type="radio" name="client-payment" checked={method==='manual'} onChange={()=>setPayment('manual')}/><span><strong>DuitNow QR</strong><small>Pay and upload the receipt before placing your order.</small></span></label>}
      {!pickup&&<label className={method==='cod'?'selected':''}><input type="radio" name="client-payment" checked={method==='cod'} onChange={()=>{setPayment('cod');setProof(null)}}/><span><strong>Cash on delivery</strong><small>Pay the kitchen’s agreed amount when you receive your food.</small></span></label>}
     </div>{pickup&&<p className="checkout-hint">Self-collection accepts QR payment only.</p>}{!qr&&<p className="checkout-hint">QR payment is currently unavailable.{pickup?' Contact the kitchen before ordering.':' You can choose cash for delivery.'}</p>}
-    {method==='manual'&&qr&&<CheckoutProofUpload key={proofScope} scope={proofScope} amount={finalTotal} disabled={!quote||!!quoteError||checking||busy} selection={{delivery_at:preferredDelivery+':00+08:00',delivery_method:fulfilmentMethod,delivery_area:deliveryArea,arrival_window_minutes:0}} qrUrl={promotion.duitnow_qr_url} instructions={promotion.bank_transfer_instructions} onUploaded={value=>setProof(value?{...value,scope:proofScope}:null)}/>}
+    {receiptUploaded&&!activeProof&&<p role="status" className="checkout-hint">You uploaded a receipt earlier in this checkout. If you already paid, do not pay again. Contact the kitchen if the amount or payment method has changed; otherwise upload your existing receipt for the updated details.</p>}
+    {method==='manual'&&qr&&<CheckoutProofUpload key={proofScope} scope={proofScope} amount={finalTotal} disabled={!quote||!!quoteError||checking||busy} selection={{delivery_at:preferredDelivery+':00+08:00',delivery_method:fulfilmentMethod,delivery_area:deliveryArea,arrival_window_minutes:0}} qrUrl={promotion.duitnow_qr_url} instructions={promotion.bank_transfer_instructions} onUploaded={value=>{setProof(value?{...value,scope:proofScope}:null);if(value)setReceiptUploaded(true)}}/>}
     </section>
     {error&&<div ref={errorRef} tabIndex="-1" role="alert" className="checkout-error">{error}</div>}
     <p className="checkout-hint">Stock is checked again and deducted when you place your order. QR payment is marked paid only after the kitchen verifies it.</p>

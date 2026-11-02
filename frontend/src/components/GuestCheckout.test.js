@@ -38,5 +38,11 @@ try{
  const {HowItWorksPage}=await load('pages/customer/BusinessPages.jsx');
  const help=render(h(HowItWorksPage));assert.match(help,/Do I need an account/);assert.doesNotMatch(help,/cooking capacity|PayPal|custom time request needs/);
  const auth=render(h(AuthForm));assert.match(auth,/Kitchen sign in/);assert.doesNotMatch(auth,/Create an account/);
+ const {default:Fulfilment}=await load('components/OrderFulfilment.jsx');
+ const details=render(h(Fulfilment,{order:{ordering_mode:'simple',delivery_method:'pickup',fulfilment_snapshot:{pickup_location:'Saved collection counter'}}}));
+ assert.match(details,/Payment and receipt status/);assert.doesNotMatch(details,/preparation progress|Preparation is planned|Dispatch target/);
+ const {default:ProofUpload}=await load('components/CheckoutProofUpload.jsx');
+ const proof=render(h(ProofUpload,{amount:24,qrUrl:store.duitnow_qr_url,onUploaded:()=>{}}));
+ assert.match(proof,/Do not pay twice/);assert.match(proof,/contact the kitchen if the order amount changes or checkout cannot complete/);
  console.log('Guest checkout: private identity, required contact/address, QR/cash policy, minute hours, area prices and protected staff sign-in passed.');
 }finally{await server.close();}

@@ -124,6 +124,36 @@ class ClientReportTests(TestCase):
         self.assertEqual(data['net_food_sales'], '0.00')
         self.assertEqual(data['days'], [])
 
+    def test_wallet_and_fictional_maintenance_receipts_are_not_business_sales(self):
+        # Imported wallet orders might predate the payment ledger.
+        self.order(status='delivered', payment_status='paid', payment_method='wallet')
+        self.order(status='delivered', payment_status='paid', payment_method='synthetic_demo')
+        for source in ['demo_wallet', 'fictional_demo', 'synthetic_history']:
+            order = self.order(status='delivered', payment_status='paid')
+            PaymentEvent.objects.create(order=order, request_id=uuid.uuid4(), kind='receipt',
+                outcome='completed', amount='29.50', method='demo', source=source, reference='Fictional fixture')
+        self.order(status='delivered', payment_status='paid')
+        data = self.sales().json()
+        self.assertEqual(data['paid_received_orders'], 1)
+        self.assertEqual(data['excluded_test_orders'], 5)
+        self.assertEqual(data['total_sales'], '29.50')
+        response = self.client.get('/api/admin/reports/period-sales/export/',
+            {'start': '2026-11-03', 'end': '2026-11-03'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Total,25.00,4.50,29.50', response.content.decode())
+
+    def test_unscheduled_demo_credit_orders_do_not_become_missing_business_sales(self):
+        self.order(status='delivered', payment_status='paid', delivery_at=None, payment_method='wallet')
+        order = self.order(status='delivered', payment_status='paid', delivery_at=None)
+        PaymentEvent.objects.create(order=order, request_id=uuid.uuid4(), kind='receipt', outcome='completed',
+            amount='29.50', method='demo', source='fictional_demo', reference='Fictional fixture')
+        self.assertEqual(self.sales().json()['unscheduled_orders'], 0)
+
+    def test_calendar_edges_fail_validation_instead_of_server_error(self):
+        for day in ['9999-12-31', '0001-01-01']:
+            self.assertEqual(self.client.get('/api/admin/reports/daily-orders/', {'date': day}).status_code, 400)
+            self.assertEqual(self.client.get('/api/admin/reports/period-sales/', {'start': day, 'end': day}).status_code, 400)
+
     def test_invalid_dates_range_and_page_are_rejected(self):
         for query in [{'date': 'not-date'}, {'date': '2026-02-30'}, {'date': '2026-11-03', 'page': 0},
                       {'date': '2026-11-03', 'page': '2.5'}, {}]:

@@ -1,12 +1,33 @@
 # User validation protocol — not yet executed
 
+Updated 3 November 2026 for the client workflow on `main`. Developer browser and
+automated test results are separate evidence, not participant observations or
+client acceptance results. Record the tested commit and deployment status.
+
 Purpose: evaluate whether intended users can complete the system's tasks, and whether guided recommendations reduce decision effort. Recruit consenting home-food sellers and customers representative of the intended Malaysian context. Agree sample size and institutional ethics requirements with the supervisor before recruitment. Do not record identifiable data unnecessarily. Use participant codes and test orders; no actual payment is required.
 
 ## Seller tasks
-Set identity/contact and hours; create a recipe with preparation steps; record an inventory batch and identify held/expired stock; identify a conflicting schedule and shortage; progress a synthetic order; verify a synthetic external payment record; interpret contribution with a deliberately missing cost. Record independent completion, errors, assistance, elapsed time and explanation of report meaning.
+Set kitchen identity/contact, collection and morning delivery hours, and fees
+for two areas. Create a menu with an ingredient recipe and packaging mapping.
+Record an unlabelled batch using documented storage guidance; identify held or
+expired stock and a shortage. Review a test QR receipt against supplied fictional
+bank evidence, record payment, and mark actual test receipt for two orders
+together. Explain why received and paid differ. Print the accepted customer
+name/address/phone and interpret a daily item summary, discounts, delivery income
+and paid/received sales. Include a cancelled order with an explicit unused-stock
+return and a case where restocking is inappropriate. Record independent
+completion, errors, assistance, elapsed time and explanation of report meaning.
 
 ## Customer tasks
-Find a suitable menu, inspect delivery restrictions, complete checkout, recover from an unavailable date, find the order's stage and request an eligible amendment. Include a mixed basket with no common weekday and a simulated lost response. Record task success and whether the recovery message is understood.
+Find a suitable menu, inspect selling units and offered dates, and complete a
+guest preorder with name/phone. Compare area-priced cash delivery with QR-only
+collection using clearly fictional receipt evidence; no real transfer is needed.
+Recover from a shortage or invalid handover time, and explain the warning against
+paying twice after changing details. Check My orders, change an eligible future
+time and explain what happens when changing devices. Include menus with no common
+offered weekday and a simulated lost checkout response. Record task success and
+whether the recovery message is understood. Do not ask participants to solve a
+cooking Planner conflict: that is no longer part of the client's ordering flow.
 
 ## Recommendation comparison
 Compare ordinary browsing with guided recommendations using equivalent food-choice tasks. Counterbalance which condition participants use first and rotate menus to reduce practice effects. Keep budget/date constraints equivalent. Measure time to a valid selection, task completion, and reported decision difficulty using the same question/scale in both conditions. Define exclusions before analysis. A simulated completion rate is not real commercial conversion.

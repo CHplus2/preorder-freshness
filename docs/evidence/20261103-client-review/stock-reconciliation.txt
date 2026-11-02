@@ -1,0 +1,3 @@
+44 objects imported automatically (use -v 2 for details).
+
+{"received_paid_orders": 2, "rice_remaining_g": "1700", "packaging_remaining": 17, "allocated_ingredient_g": "300"}

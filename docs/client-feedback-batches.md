@@ -19,7 +19,7 @@ name and phone for the order/printout. Staff access remains authenticated.
 | 2 | Remove Planner from the client workflow and remove preparation-hour/capacity scheduling gates; deduct ingredient stock at placement; simplify delivery receipt status | Implemented and tested; database update confirmed; main source release, live build unverified |
 | 3 | Customer guest ordering with name/phone; QR proof upload, delivery QR/cash and pickup QR; delivery window 07:30–11:00 and area-based fees | Implemented and tested; database update confirmed; main source release, live build unverified |
 | 4 | Delivery-date order/item summary, individual printable order slips (name/address/phone), and sales reporting | Implemented and tested on main; no new database migration; live deployment unverified |
-| 5 | End-to-end review of client workflow, mobile UI, access control, uploads, totals and stock; map accepted changes to the FYP revision | Planned |
+| 5 | End-to-end review of client workflow, mobile UI, access control, uploads, totals and stock; map accepted changes to the FYP revision | Implemented and tested on main; guide and FYP revision map supplied; deployment/client acceptance/report editing remain separate |
 
 ## Batch 1: packaging stock
 
@@ -384,3 +384,70 @@ remain required and were confirmed by the owner. Publishing `main` does not prov
 that Vercel has finished a successful production deployment. Batch 5 remains the
 final client-workflow review and FYP feature mapping; no FYP objectives or report
 documents were edited by this batch.
+
+## Batch 5: final client review and FYP mapping — 3 November 2026
+
+All five client implementation batches are now complete on `main`. This is a
+functional implementation/review result, not client acceptance, a verified live
+deployment, or a revised FYP document.
+
+The final review corrected three issues:
+
+1. Dated business sales and CSV could count historical demo-wallet credits or
+   explicitly fictional maintenance receipts. These are now excluded alongside
+   generated history and documented Sandbox/Sepolia receipts. Imported wallet
+   orders without ledger rows are also excluded, as are those test records from
+   the missing-handover-date business count. Operational orders are not silently
+   cancelled or altered. Unsupported calendar endpoints now return validation
+   errors rather than overflowing date conversion.
+2. New simple-mode handover/payment explanations still referred to preparation
+   planning or unrelated historical payment providers. The current workflow now
+   describes receipt, bank/cash verification and direct handover coordination.
+   Historical orders keep their applicable explanations and saved records.
+3. After a QR receipt upload, changing time, method or priced details could clear
+   the active upload without a persistent warning within that checkout. The form
+   now reminds the customer not to pay again and explains re-uploading an existing
+   receipt versus contacting the kitchen about a changed amount/method. A general
+   already-paid warning also remains visible in the QR uploader. No upload is
+   automatically marked paid, and server scope/duplicate-image checks remain.
+
+The [current client guide](CLIENT-USER-GUIDE.md) describes the complete owner and
+guest flow. The [FYP objective/diagram map](client-fyp-feature-map.md) retains the
+five objectives verbatim and identifies necessary coordinated revisions across
+chapters, use cases, activity/sequence diagrams and the actual data model.
+The participant-evaluation protocol now uses the client workflow and remains
+explicitly **not yet executed**. Earlier manuals are retained and marked as
+historical. No DOCX/PDF content or report-branch files were changed.
+
+### Final verification
+
+Evidence: `docs/evidence/20261103-client-review/`.
+
+- Full isolated SQLite backend regression: **921 discovered, 891 passed,
+  30 skipped** for PostgreSQL/external-runtime prerequisites.
+- Separate **88 PostgreSQL checks passed, no skips**, covering guest checkout,
+  current reports, packaging and ingredient allocation, competing orders,
+  duplicate checkout references and concurrent duplicate receipt-image use.
+  PostgreSQL 16 ran in a disposable loopback-only container with temporary storage;
+  the configured production database was never used.
+- **62 focused SQLite checks passed**, including three new integrated journeys:
+  cash placement → stock → verified payment → actual receipt → sales/print;
+  private QR pickup → bank verification → receipt → external-refund record;
+  explicit unused cancellation → original-batch and packaging return once.
+- Frontend unit/SSR, UX, checkout and recommendation checks, lint and production
+  build passed. The pre-existing main-bundle size advisory remains.
+- Chromium at **1440×1000 and 390×844** completed guest cash delivery and QR-only
+  pickup, a changed QR time with existing-receipt re-upload, cross-session privacy,
+  owner proof verification, grouped actual receipt, separate cash verification,
+  print facts and dated sales. Sales reconciled to **RM40.50** (RM36 food and
+  RM4.50 delivery) for isolated fixtures. Stock reconciled from 2,000 g / 20 pieces
+  to **1,700 g / 17 pieces** for three sold units, without a second deduction on
+  payment or receipt. Success notifications disappeared automatically. No page
+  overflow or browser script errors were observed.
+
+No new migration is required. No real bank transfers, live email, courier booking,
+production database writes, model training or forecast-algorithm changes occurred.
+The `integration/dormathon-demo` and FYP report branches remain untouched.
+Live Vercel Ready status, the owner's actual bank/stock setup, client sign-off and
+actual participant research remain separate acceptance steps. They are not
+represented as completed by these developer tests.

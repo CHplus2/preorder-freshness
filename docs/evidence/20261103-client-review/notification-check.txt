@@ -1,0 +1,1 @@
+Settings success notification automatically disappeared; clean mobile received-order view captured.

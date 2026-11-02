@@ -3,6 +3,25 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Final client review — 3 November 2026
+
+No new endpoints, schema changes or predictive-model changes. The dated business
+sales report/export now also excludes demo-wallet orders (including imported
+ones without ledger rows), `synthetic_demo` payment methods and completed receipt
+sources `demo_wallet`, `fictional_demo` and `synthetic_history`, alongside verified
+Sandbox/Sepolia receipts. `excluded_test_orders` counts these excluded paid,
+received orders within the chosen range. The same rule excludes them from the
+global `unscheduled_orders` informational count. Operational daily order lists
+retain their existing definition; payment provenance does not itself cancel an
+operational order. Unsupported calendar endpoints return validation errors.
+
+`GET /api/admin/orders/<id>/payments/` retains its response shape. Its explanatory
+`policy` text for simple-mode orders describes bank/cash verification and external
+refund recording rather than unrelated historical demonstration providers.
+Customer proof upload, guest identity and authoritative server pricing/stock
+rules are unchanged. The checkout warns against a second bank transfer when
+details change after a receipt upload; it never marks that upload paid.
+
 ## Client operational reports — 2 November 2026
 
 These read-only additions do not change predictive endpoints or model artifacts.

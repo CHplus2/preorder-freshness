@@ -2,7 +2,7 @@
 
 **FreshCast** helps a food business spot ingredient shortages and potential waste, understand their causes, and compare purchasing decisions. A separate evaluated-model mode demonstrates food-demand forecasting using public historical data.
 
-It is integrated into **Dapur Kita**, an existing React and Django preorder application for a Malaysian home kitchen, connecting dated preorders, menus, ingredient recipes, stock batches and preparation planning.
+It is integrated into **Dapur Kita**, a React and Django preorder application for a Malaysian home kitchen, connecting dated preorders, menus, ingredient recipes, stock batches and fulfilment. The current client workflow uses guest orders and actual receipt recording; the earlier cooking Planner is retained as historical functionality.
 
 ## Open the application
 
@@ -13,13 +13,13 @@ It is integrated into **Dapur Kita**, an existing React and Django preorder appl
 
 Owner screens require an existing staff account. Request demonstration access from the project team; credentials are not published in this repository. New work and releases use `main`. Integration is frozen; see [the branch and release note](docs/main-only-workflow.md).
 
-The client-requested packaging, simplified orders, guest QR/cash checkout and area-fee changes are preserved on `main`. The FYP report remains a snapshot of the earlier baseline; see [client implementation batches](docs/client-feedback-batches.md) for current behavior.
+The five client-feedback batches are implemented on `main`: packaging, placement stock deductions, guest QR/cash checkout, area fees, receipt recording, daily order summaries and printable slips. Start with the [current client guide](docs/CLIENT-USER-GUIDE.md). The FYP report remains an earlier snapshot; the [objective and diagram revision map](docs/client-fyp-feature-map.md) identifies the necessary coordinated changes without rewriting its objectives or documents.
 
 ## Underlying preorder application
 
-Customers browse menus, choose a delivery date and submit a preorder through the existing checkout. The kitchen owner manages menus and recipes, records ingredient batches and expiry evidence, reviews order/preparation schedules, and follows ingredient requirements through fulfilment. Pricing, contribution estimates and reports support operational review.
+Customers browse menus and submit a dated delivery or collection preorder with name and phone, without email/password registration. Delivery accepts QR or cash; collection accepts QR only. Owners manage recipes, ingredient/packaging stock, manual payment verification and actual receipt, then print accepted order details or review dated sales. New orders deduct stock at placement and do not require a cooking-plan acceptance step.
 
-The [application user manual](docs/FYP-USER-MANUAL.md) explains the customer and owner screens; the [technical handoff](docs/FYP-TECHNICAL-HANDOFF.md) covers the wider implementation. The FreshCast workflow below is an additional integrated feature.
+The [current client guide](docs/CLIENT-USER-GUIDE.md) explains these screens. The [earlier application manual](docs/FYP-USER-MANUAL.md) and [technical handoff](docs/FYP-TECHNICAL-HANDOFF.md) preserve historical implementation context. The FreshCast workflow below is an additional integrated feature; already deducted stock is not allocated again as an undeducted commitment.
 
 ## FreshCast decision assistant
 
@@ -68,7 +68,7 @@ The runbook includes a dated example. Records and dates may change; refresh the 
 Prerequisites: **Python 3.13**, **Node.js 24**, npm and Git. From the repository root in PowerShell:
 
 ```powershell
-git switch integration/dormathon-demo
+git switch main
 py -3.13 -m venv venv
 .\venv\Scripts\python.exe -m pip install -r requirements.txt -r backend/predictive_ai/requirements-ml.lock
 npm ci --prefix frontend

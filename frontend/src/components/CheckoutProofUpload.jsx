@@ -21,6 +21,7 @@ export default function CheckoutProofUpload({amount,disabled,selection,qrUrl,ins
  };
  return <div className="checkout-proof">
   <p><strong>Pay RM {amount.toFixed(2)}</strong> using the kitchen’s QR code. Confirm the recipient and amount in your banking app.</p>
+  <p className="checkout-hint">Already paid? Do not pay twice. Keep your receipt and contact the kitchen if the order amount changes or checkout cannot complete.</p>
   <img className="checkout-qr-image" src={qrUrl} alt="Kitchen DuitNow QR code" referrerPolicy="no-referrer" onError={e=>{e.currentTarget.style.display='none'}}/><a href={qrUrl} target="_blank" rel="noopener noreferrer">Open DuitNow QR code</a>{instructions&&<p className="checkout-payment-instructions">{instructions}</p>}
   <label>Payment receipt image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={disabled||busy} onChange={e=>{setFile(e.target.files?.[0]||null);setProof(null);onUploaded(null);setError('')}}/></label>
   <p className="checkout-hint">JPG, PNG or WebP, up to 4 MB. Visible only to you and kitchen staff.</p>

@@ -1,6 +1,12 @@
 # Dapur Kita user manual
 
-**Current behaviour:** see [the feature guide updated 9 October 2026](DAPUR-KITA-FEATURE-GUIDE.md)
+**Historical FYP baseline manual.** For the client-requested simplified workflow
+on `main`, use the [current client guide](CLIENT-USER-GUIDE.md), updated
+3 November 2026. The earlier instructions below are preserved for the frozen
+FYP baseline; Planner, registration and older payment choices are not the current
+client checkout. See the [FYP revision map](client-fyp-feature-map.md).
+
+**Earlier behaviour:** see [the feature guide updated 9 October 2026](DAPUR-KITA-FEATURE-GUIDE.md)
 for owner-review fallback, manual windows, step editing and email rules. Latest
 automated results: [verification summary](LATEST-VERIFICATION-20261009.md).
 

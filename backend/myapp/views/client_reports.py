@@ -1,10 +1,10 @@
 """Read-only client reports. Dates refer to handover in Malaysia, not placement."""
 import csv
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone as datetime_timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from django.db.models import F, Sum
+from django.db.models import F, Q, Sum
 from django.db.models.functions import TruncDate
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -35,8 +35,11 @@ def operational_orders():
 
 
 def handover_dates(orders, start, end):
-    lower = datetime.combine(start, time.min, MY)
-    upper = datetime.combine(end + timedelta(days=1), time.min, MY)
+    try:
+        lower = datetime.combine(start, time.min, MY).astimezone(datetime_timezone.utc)
+        upper = datetime.combine(end + timedelta(days=1), time.min, MY).astimezone(datetime_timezone.utc)
+    except (OverflowError, ValueError):
+        raise serializers.ValidationError('Choose dates within the supported calendar range.')
     return orders.filter(delivery_at__gte=lower, delivery_at__lt=upper)
 
 
@@ -108,12 +111,15 @@ def sales_data(request):
     form.is_valid(raise_exception=True)
     start, end = form.validated_data['start'], form.validated_data['end']
     dated = handover_dates(operational_orders(), start, end)
-    # Sandbox captures/test-network receipts are not real business revenue.
-    test_ids = PaymentEvent.objects.filter(source__in=['paypal_sandbox', 'escrow_sepolia'],
+    # Older demo credits/maintenance receipts are not real business revenue,
+    # including imported wallet orders without a preserved payment event.
+    test_ids = PaymentEvent.objects.filter(source__in=[
+        'paypal_sandbox', 'escrow_sepolia', 'demo_wallet', 'fictional_demo', 'synthetic_history'],
         kind='receipt', outcome='completed').values('order_id')
+    test_payments = Q(pk__in=test_ids) | Q(payment_method__in=['wallet', 'synthetic_demo'])
     eligible = dated.filter(status='delivered', payment_status='paid')
-    excluded_test = eligible.filter(pk__in=test_ids).count()
-    paid = eligible.exclude(pk__in=test_ids)
+    excluded_test = eligible.filter(test_payments).count()
+    paid = eligible.exclude(test_payments)
     totals = paid.aggregate(food=Sum('total_amount'), delivery=Sum('shipping_fee'), discount=Sum('discount_amount'))
     days = list(paid.annotate(date=TruncDate('delivery_at', tzinfo=MY)).values('date')
                 .annotate(food=Sum('total_amount'), delivery=Sum('shipping_fee')).order_by('date'))
@@ -124,7 +130,7 @@ def sales_data(request):
         total_sales=money((totals['food'] or ZERO) + (totals['delivery'] or ZERO)),
         excluded_test_orders=excluded_test,
         unpaid_received_orders=dated.filter(status='delivered', payment_status='unpaid').count(),
-        unscheduled_orders=operational_orders().filter(delivery_at__isnull=True, status='delivered', payment_status='paid').count(),
+        unscheduled_orders=operational_orders().exclude(test_payments).filter(delivery_at__isnull=True, status='delivered', payment_status='paid').count(),
         days=[dict(date=row['date'], net_food_sales=money(row['food']), delivery_income=money(row['delivery']),
                    total_sales=money((row['food'] or ZERO) + (row['delivery'] or ZERO))) for row in days],
         menus=menus, menus_truncated=truncated)

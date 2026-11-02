@@ -90,9 +90,14 @@ def payments(request, pk):
         recovery = {'configured':payment['configured'], 'has_provider_order':provider_id(intent.get('paypal_order_id')),
             'state':payment['state'], 'checked_at':intent.get('last_checked_at'),
             'checked_via':intent.get('last_checked_via'), 'check_error':intent.get('last_check_error')}
+    policy = ('Confirm the full payment against your bank records or cash collected. '
+        'An uploaded receipt still needs verification. Refund records confirm money '
+        'already returned outside this website; they do not send a bank transfer.'
+        if order.ordering_mode == 'simple' else
+        'Full-order receipts and refunds only. Bank/COD records confirm an external action; they do not transfer money. Completed demo-wallet refunds return demo credits. PayPal Sandbox receipts require server verification; refund records do not execute provider refunds.')
     return Response({'events': [event_data(r) for r in rows], 'paypal_recovery':recovery,
         'payment_status': order.payment_status,
         'unresolved_refund': next((r.pk for r in rows if r.kind == 'refund' and r.outcome == 'pending'
             and not any(x.resolves_id == r.pk for x in rows)), None),
         'amount': str(order.total_amount + order.shipping_fee),
-        'policy': 'Full-order receipts and refunds only. Bank/COD records confirm an external action; they do not transfer money. Completed demo-wallet refunds return demo credits. PayPal Sandbox receipts require server verification; refund records do not execute provider refunds.'})
+        'policy': policy})
