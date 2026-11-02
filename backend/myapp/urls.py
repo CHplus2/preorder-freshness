@@ -1,4 +1,5 @@
 from .views.simple_delivery import delivery_time
+from .views.client_reports import daily_orders, period_sales, period_sales_csv, order_slip
 from .views.receipt import receipts, cancel_order
 from .views.packaging import packaging_items, packaging_item, packaging_movements, packaging_menus, menu_packaging
 from .views.handover import order_handover
@@ -50,6 +51,10 @@ from .views import guest, checkout_proofs
 from .views.receiving_qr import upload_receiving_qr
 
 urlpatterns = [
+    path('admin/reports/daily-orders/', daily_orders),
+    path('admin/reports/period-sales/', period_sales),
+    path('admin/reports/period-sales/export/', period_sales_csv),
+    path('admin/orders/<int:pk>/slip/', order_slip),
     path('receiving-qr/',upload_receiving_qr),
     path('guest-session/', guest.start),
     path('checkout-proofs/', checkout_proofs.upload),

@@ -1,6 +1,7 @@
 export const publicNavigation=[['/','Home'],['/story','Our story'],['/menu','Menu'],['/how-it-works','How it works'],['/contact','Contact']];
 export const kitchenNavigation=[['/admin/planner','Planner'],['/admin/products','Menus'],['/admin/inventory','Inventory'],['/admin/packaging','Packaging'],['/admin/orders','Orders'],['/admin/reports','Sales'],['/admin/ai/decisions','FreshCast'],['/admin/settings','Settings'],['/admin/customers','Customers'],['/','View storefront']];
 export function isCurrentSection(path,url){
+ if(url==='/admin/orders')return path===url || /^\/admin\/orders\/\d+\/print$/.test(path);
  if(url==='/menu')return path==='/menu' || /^\/products\/[^/]+$/.test(path);
  if(url==='/admin/ai/decisions')return /^\/admin\/ai\/(forecast|inventory|decisions)$/.test(path);
  return path===url;
@@ -34,6 +35,7 @@ const pages={
  '/admin/ai/decisions':['FreshCast · Decisions','Explore expiry risks, action options and decision evidence.'],
 };
 export function pageMetadata(path){
+ if(/^\/admin\/orders\/\d+\/print$/.test(path))return {title:'Print order slip',description:'Print saved customer, handover and order details for kitchen use.'};
  const [title,description]=pages[path] || (/^\/products\/[^/]+$/.test(path)?['Menu details','Review food, preparation notice and delivery options.']:['Page not found','Return to the kitchen menu or your saved orders.']);
  return {title,description};
 }

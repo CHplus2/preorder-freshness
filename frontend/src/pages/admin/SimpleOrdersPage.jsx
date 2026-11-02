@@ -1,4 +1,6 @@
 import {validReceiptUpdate} from '../../utils/simpleOrdering';
+import {slipUrl} from '../../utils/clientReports';
+import {Link} from 'react-router-dom';
 import CourierHandover from '../../components/CourierHandover';
 import {useEffect,useRef,useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
@@ -49,7 +51,7 @@ export default function SimpleOrdersPage(){
   <div className="simple-orders-filters"><label>Search orders<input type="search" value={search} onChange={e=>{setSearch(e.target.value);setSelected([]);setLimit(12)}} placeholder="Order number, name or menu"/></label><label>Delivery / collection date<input type="date" value={date} onChange={e=>{setDate(e.target.value);setSelected([]);setLimit(12)}}/></label>{date&&<button type="button" onClick={()=>{setDate('');setSelected([])}}>Clear date</button>}</div>
   {selected.length>0&&<div className="simple-orders-selection"><p>{selected.length} selected · confirm actual receipt for every selected order</p><button type="button" disabled={busy} onClick={()=>open('batch',null)}>Mark selected received</button><button type="button" disabled={busy} onClick={()=>setSelected([])}>Clear selection</button></div>}
   {adminOrdersLoading&&<p role="status">Refreshing orders…</p>}
-  <p>{list.length} {list.length===1?'order':'orders'} in this view</p>
+  <p>{list.length} {list.length===1?'order':'orders'} in this view · <Link to="/admin/reports#daily-orders">Daily summary &amp; sales</Link></p>
   {!adminOrdersLoading&&!list.length&&<div className="simple-orders-empty"><h2>No orders in this view</h2><p>Try another date, search or receipt status.</p></div>}
   <div className="simple-orders-list">{visible.map(order=><article key={order.id} aria-label={`Order ${formatOrderNumber(order.id)}`}>
    <header><div><h2>Order #{formatOrderNumber(order.id)}</h2><p>{order.address?.recipient_name||order.user?.username}</p></div><span className={'simple-receipt-badge '+(order.status==='delivered'?'received':'')}>{order.status==='cancelled'?'Cancelled':order.status==='delivered'?'Received':'Not received'}</span></header>
@@ -57,6 +59,7 @@ export default function SimpleOrdersPage(){
    <ul className="simple-order-items">{order.items.map(item=><li key={item.id}><span>{item.product_name}</span><strong>{quantityLabel(item.selling_details,item.quantity)}</strong></li>)}</ul>
    <p className="simple-order-total">RM {(Number(order.total_amount)+Number(order.shipping_fee)).toFixed(2)} <span>Payment: {order.payment_status}</span></p>
    <div className="simple-order-actions">{!['delivered','cancelled'].includes(order.status)&&<><label className="simple-order-select"><input type="checkbox" checked={selected.includes(order.id)} disabled={!selected.includes(order.id)&&selected.length>=20} onChange={e=>setSelected(v=>e.target.checked?[...v,order.id]:v.filter(id=>id!==order.id))}/>Select for receipt</label><button type="button" disabled={busy||adminOrdersLoading} onClick={()=>open('receive',order)}>Mark received</button><button type="button" disabled={busy||adminOrdersLoading} onClick={()=>open('cancel',order)}>Cancel order</button></>}{order.status==='delivered'&&<button type="button" disabled={busy||adminOrdersLoading} onClick={()=>open('correct',order)}>Correct receipt status</button>}<button type="button" onClick={()=>setPayment(v=>v===order.id?null:order.id)}>Payment records</button></div>
+   <p><a href={slipUrl(order.id)} target="_blank" rel="noopener noreferrer">Print order slip</a></p>
    <details><summary>Contact & handover</summary><OrderFulfilment order={order} owner/><OrderContactActions order={order}/><CourierHandover order={order} onSaved={fetchAdminOrders}/></details>
    <SimpleDeliveryChange key={order.id+order.updated_at} order={order} owner onSaved={fetchAdminOrders}/>
    {payment===order.id&&<PaymentRecords order={order} onSaved={fetchAdminOrders}/>}

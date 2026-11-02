@@ -35,6 +35,7 @@ const PackagingPage=lazy(()=>import('./pages/admin/PackagingPage'));
 const AdminInventoryPage=lazy(()=>import("./pages/admin/AdminInventoryPage"));
 const AdminOrdersPage=lazy(()=>import("./pages/admin/AdminOrdersPage"));
 const AdminReportsPage=lazy(()=>import("./pages/admin/AdminReportsPage"));
+const OrderPrintPage=lazy(()=>import('./pages/admin/OrderPrintPage'));
 const AdminCustomersPage=lazy(()=>import("./pages/admin/AdminCustomersPage"));
 const StoreSettingsPage=lazy(()=>import("./pages/admin/StoreSettingsPage"));
 const PredictiveDashboard=lazy(()=>import("./features/predictive/PredictiveDashboard"));
@@ -67,6 +68,7 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        <Route path="/admin/orders/:id/print" element={<RequireAuth message="Admin access required"><OrderPrintPage/></RequireAuth>}/>
         {['forecast', 'inventory', 'decisions'].map(view => (
           <Route key={view} path={`/admin/ai/${view}`} element={
             <RequireAuth message="Admin access required"><PredictiveDashboard view={view}/></RequireAuth>

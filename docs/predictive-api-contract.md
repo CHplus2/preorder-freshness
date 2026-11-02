@@ -3,6 +3,35 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Client operational reports — 2 November 2026
+
+These read-only additions do not change predictive endpoints or model artifacts.
+All require staff authentication and return private/no-store responses:
+
+- `GET /api/admin/reports/daily-orders/?date=YYYY-MM-DD&page=1`: Malaysia handover
+  date, 50-order pages, full-day menu/quantity/value aggregates, received and
+  cancelled counts. Excludes cancelled operational rows and generated history.
+  Money strings use two decimal places; order value includes unpaid orders and is
+  not sales. Page counts and totals are not calculated from the current page.
+- `GET /api/admin/reports/period-sales/?start=YYYY-MM-DD&end=YYYY-MM-DD`: inclusive
+  1–366-day Malaysia handover range; paid/received sales only, with net food,
+  discounts, delivery income, daily rows and menu gross totals. Generated history,
+  completed Sandbox/Sepolia receipts, cancellations and refunds are excluded.
+  Missing-date and received/unpaid counts are separate. Date-free orders do not
+  get inferred dates. Menu breakdowns cap at 500 with `menus_truncated`; overall
+  totals are complete for the range.
+- `GET /api/admin/reports/period-sales/export/?start=…&end=…`: CSV with the same
+  definitions and formula-safe accepted menu names; no customer contacts. Refuses
+  a truncated menu breakdown. Empty ranges export an explicit zero total.
+- `GET /api/admin/orders/<id>/slip/`: minimal print facts from accepted order
+  snapshots, with legacy address fallback, phone, handover, items, prices, totals,
+  status, current kitchen heading and print-fetch timestamp. No proof bytes,
+  email or bank credentials. Missing/generated records return 404. The staff SPA
+  route `/admin/orders/<id>/print` prints these facts; it does not mutate records.
+
+Historical analytics retain their original definitions and are displayed on
+demand, separately from these operational client reports. No new migration.
+
 ## Receiving QR upload — 2 November 2026
 
 Staff-only multipart `POST /api/receiving-qr/` accepts `image`, integer `x`, `y`

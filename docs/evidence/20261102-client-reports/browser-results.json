@@ -1,0 +1,21 @@
+{
+  "result": "passed",
+  "fixture": "isolated local SQLite; no real customer records, payments or emails",
+  "viewports": [
+    "1440x1000",
+    "390x844"
+  ],
+  "checks": [
+    "Malaysia daily summary and menu units",
+    "custom period paid/received sales",
+    "CSV download",
+    "print link from summary and order cards",
+    "customer name/address/phone from accepted snapshot",
+    "untrusted names rendered as text",
+    "print button opens browser print",
+    "A4 PDF hides application navigation",
+    "no horizontal page overflow",
+    "historical analytics fetched only when opened",
+    "no browser script errors"
+  ]
+}

@@ -18,7 +18,7 @@ name and phone for the order/printout. Staff access remains authenticated.
 | 1 | Packaging stock page, receipts/adjustments, menu mapping, low stock, order allocations and movement history | Implemented and tested; database update confirmed; main source release, live build unverified |
 | 2 | Remove Planner from the client workflow and remove preparation-hour/capacity scheduling gates; deduct ingredient stock at placement; simplify delivery receipt status | Implemented and tested; database update confirmed; main source release, live build unverified |
 | 3 | Customer guest ordering with name/phone; QR proof upload, delivery QR/cash and pickup QR; delivery window 07:30–11:00 and area-based fees | Implemented and tested; database update confirmed; main source release, live build unverified |
-| 4 | Delivery-date order/item summary, individual printable order slips (name/address/phone), and sales reporting | Planned |
+| 4 | Delivery-date order/item summary, individual printable order slips (name/address/phone), and sales reporting | Implemented and tested on main; no new database migration; live deployment unverified |
 | 5 | End-to-end review of client workflow, mobile UI, access control, uploads, totals and stock; map accepted changes to the FYP revision | Planned |
 
 ## Batch 1: packaging stock
@@ -320,3 +320,67 @@ Chromium at desktop/mobile verified local upload, preview, saved crop pixel
 identity, Settings persistence and overflow. Test images were synthetic colored
 patterns, not financial payment codes. Full-bank QR decoding/recipient validation
 requires the owner's bank app; the implementation does not claim to verify it.
+
+## Batch 4: daily orders, print slips and dated sales — 2 November 2026
+
+Open **Kitchen workspace → Sales** (`/admin/reports`). **Daily order summary**
+uses the selected delivery/collection date in Malaysia time. It totals selling
+units by accepted menu name and lists the day's active orders with print/manage
+links. All non-cancelled operational statuses count, including unpaid cash and
+unverified QR orders; therefore **order value is not collected sales**. Cancelled
+orders are counted separately. Generated FreshCast sales summaries are excluded.
+The 50-order pages do not truncate the day's quantities, menu counts or value.
+
+Each Orders card also has **Print order slip**. The private staff print screen
+shows the accepted customer name, address (or collection location), phone,
+handover notes, items, unit prices, discounts, delivery fee and total. The browser's
+**Print / Save PDF** button uses an A4 layout with application navigation hidden.
+Guest identity and address snapshots take precedence; old orders can fall back
+to their linked address when no snapshot exists. Missing values say not recorded.
+Changing a current menu's name/price or the kitchen's current pickup location does
+not rewrite the accepted order's slip. The kitchen heading uses its current name.
+Cancelled slips remain clearly labelled; slips do not prove payment or receipt.
+
+**Sales by delivery date** accepts a range of 1–366 days. Sales require a paid,
+received order; pending, unpaid, cancelled and refunded orders do not contribute.
+Generated history and orders with completed PayPal Sandbox/Sepolia test receipts
+are excluded. Missing handover dates are counted separately, never replaced with
+an invented date. Net food after discounts and delivery income are reported
+separately; neither is profit or bank reconciliation. Menu sales use accepted
+unit prices before order discounts. CSV export includes all matching daily totals
+and menus, neutralises spreadsheet-formula names and contains no customer contacts.
+
+Menu breakdowns are bounded to 500 entries with an explicit truncation notice;
+overall totals still cover all matching orders. CSV refuses a truncated menu
+breakdown rather than silently exporting partial results. New APIs are staff-only,
+read-only and private/no-store. Print data does not load proof images or payment
+credentials. Daily requests use a fixed number of queries rather than one query
+per order. Date bounds use timestamp range comparisons in Malaysia time.
+
+Older analytics, costs, recommendation metrics and forecasts are retained in
+**Historical analytics, forecasts & costs**, loaded only when opened. Their
+existing data/provenance definitions are unchanged. FreshCast models, training,
+inference and the predictive dashboard were not changed. Integration and the FYP
+document branch remain frozen; all source work for this batch is on `main`.
+
+### Verification and release
+
+Evidence: `docs/evidence/20261102-client-reports/`.
+
+- Full isolated SQLite backend regression: **915 discovered, 885 passed,
+  30 skipped** (PostgreSQL/external-runtime prerequisites, not passes), including
+  14 new report tests for roles, dates, paging, totals, test exclusion, immutable
+  read behaviour, query counts, private responses and formula-safe CSV.
+- Frontend unit/SSR tests, report checks, lint and production build passed.
+  The existing main-chunk size advisory remains.
+- Chromium at 1440×1000 and 390×844 verified daily summaries, date-range sales,
+  CSV, print links, escaped customer text, the print button, A4 PDF navigation
+  removal, historical analytics on demand, and no page overflow or script errors.
+- All data was isolated and fictional. No production database writes, real bank
+  transfers, email sends or courier bookings occurred.
+
+**No new migration or Supabase SQL is needed for Batch 4.** Existing 0024–0026
+remain required and were confirmed by the owner. Publishing `main` does not prove
+that Vercel has finished a successful production deployment. Batch 5 remains the
+final client-workflow review and FYP feature mapping; no FYP objectives or report
+documents were edited by this batch.
