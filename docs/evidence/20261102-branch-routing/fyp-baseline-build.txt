@@ -1,0 +1,100 @@
+
+> frontend@0.0.0 prebuild
+> npm run images
+
+
+> frontend@0.0.0 images
+> node scripts/prepare-menu-photos.mjs
+
+Responsive menu photos: {
+  photos: 17,
+  count: 50,
+  originalBytes: 20958095,
+  variantBytes: 2506096
+}
+
+> frontend@0.0.0 build
+> vite build
+
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 2669 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                     1.64 kB │ gzip:   0.70 kB
+dist/assets/OrderJourney-COTHOeXD.css               0.41 kB │ gzip:   0.25 kB
+dist/assets/PreparationDays-DO8Fuo86.css            0.58 kB │ gzip:   0.29 kB
+dist/assets/MenuOrderWindow-DJHu6O3I.css            1.86 kB │ gzip:   0.68 kB
+dist/assets/EscrowDemoPage-B0zQmW4v.css             2.10 kB │ gzip:   0.71 kB
+dist/assets/AdminReportsPage-BEd5gCxS.css           2.54 kB │ gzip:   0.93 kB
+dist/assets/CustomerOrdering-BDKM9fqC.css           2.68 kB │ gzip:   0.97 kB
+dist/assets/AdminOrdersPage-974A28HO.css            4.42 kB │ gzip:   1.25 kB
+dist/assets/PaymentPage-DROI6d9Z.css                4.60 kB │ gzip:   1.40 kB
+dist/assets/FulfilmentChoices-ZRnKhfEM.css          5.20 kB │ gzip:   1.40 kB
+dist/assets/StoreSettingsPage-CIcELt3I.css          5.84 kB │ gzip:   1.44 kB
+dist/assets/AdminProductsPage-DY-mLwbO.css          6.15 kB │ gzip:   1.62 kB
+dist/assets/ProductDetailPage-DL25J03O.css          9.18 kB │ gzip:   2.40 kB
+dist/assets/AdminInventoryPage-BXjBuX_t.css         9.18 kB │ gzip:   1.96 kB
+dist/assets/OrdersPage-CUxX-vfU.css                10.89 kB │ gzip:   2.62 kB
+dist/assets/PlannerPage-D0tIg79L.css               11.01 kB │ gzip:   2.53 kB
+dist/assets/CartPage-BsNZhWrL.css                  12.93 kB │ gzip:   3.07 kB
+dist/assets/CheckoutPage-qS7Aqdhu.css              15.03 kB │ gzip:   3.59 kB
+dist/assets/PlanReview-BzwHOMUO.css                16.22 kB │ gzip:   3.39 kB
+dist/assets/ProductsPage-D7q7oXJu.css              42.13 kB │ gzip:   8.24 kB
+dist/assets/PredictiveDashboard-KuRNwuNj.css       66.88 kB │ gzip:  12.94 kB
+dist/assets/index-DjSjexaw.css                     97.17 kB │ gzip:  19.80 kB
+dist/assets/chevron-down-DgMq9eol.js                0.12 kB │ gzip:   0.14 kB
+dist/assets/chevron-left-0JdXiGKa.js                0.13 kB │ gzip:   0.14 kB
+dist/assets/chevron-right-DCZQnDEC.js               0.13 kB │ gzip:   0.14 kB
+dist/assets/arrow-left-BNJp2wqN.js                  0.16 kB │ gzip:   0.16 kB
+dist/assets/arrow-right-DPj7DR0e.js                 0.16 kB │ gzip:   0.16 kB
+dist/assets/guidePresentation-oYJ1m3E0.js           0.27 kB │ gzip:   0.22 kB
+dist/assets/usePayPalConfig-CFj2qmw-.js             0.53 kB │ gzip:   0.37 kB
+dist/assets/orderEmail-Bd4l2_E1.js                  0.58 kB │ gzip:   0.30 kB
+dist/assets/cookieUtils-81ABZPrc.js                 0.66 kB │ gzip:   0.40 kB
+dist/assets/FreshCastWorkflowContext-DsTeYWiz.js    0.75 kB │ gzip:   0.49 kB
+dist/assets/emailChange-sn5QyaaG.js                 0.78 kB │ gzip:   0.44 kB
+dist/assets/ArrivalWindowChoice-Eix1u7Mo.js         0.79 kB │ gzip:   0.45 kB
+dist/assets/decisionNavigation-CZ4haEPf.js          0.89 kB │ gzip:   0.53 kB
+dist/assets/customerExperience-r9nizVgs.js          0.91 kB │ gzip:   0.57 kB
+dist/assets/PreparationDays-Ce8vn0OR.js             1.00 kB │ gzip:   0.58 kB
+dist/assets/arrivalWindow-TObGk_Hn.js               1.33 kB │ gzip:   0.67 kB
+dist/assets/createLucideIcon-CQ_D9biE.js            1.38 kB │ gzip:   0.78 kB
+dist/assets/paypalResponse-B89mf_pN.js              1.42 kB │ gzip:   0.60 kB
+dist/assets/MenuPreorderRules-32eD2y-D.js           2.11 kB │ gzip:   1.02 kB
+dist/assets/AdminCustomersPage-CxgweW1F.js          3.37 kB │ gzip:   1.45 kB
+dist/assets/kitchenDecision-Bd675KOL.js             3.50 kB │ gzip:   1.66 kB
+dist/assets/useOrderCatalogue-BoHMpPHh.js           3.54 kB │ gzip:   1.43 kB
+dist/assets/OrderJourney-CJ2a9KX3.js                3.59 kB │ gzip:   1.50 kB
+dist/assets/RecoveryPage-CdnHVvz3.js                4.29 kB │ gzip:   1.83 kB
+dist/assets/planner-DpNIR6m2.js                     4.68 kB │ gzip:   1.81 kB
+dist/assets/ConfirmEmailPage-kQttCJqM.js            4.68 kB │ gzip:   1.86 kB
+dist/assets/orderProgress-BhRNvPfs.js               5.22 kB │ gzip:   2.17 kB
+dist/assets/DeliveryEmailChoice-B-GzgVVP.js         5.53 kB │ gzip:   2.02 kB
+dist/assets/EscrowOrderPayment-BXAb_pig.js          6.23 kB │ gzip:   2.52 kB
+dist/assets/CartPage-Ah4m5YAX.js                    7.71 kB │ gzip:   2.62 kB
+dist/assets/jsx-runtime-BMGkFCJ0.js                 8.75 kB │ gzip:   3.34 kB
+dist/assets/RescheduleOrder-D357TOyz.js             9.30 kB │ gzip:   3.15 kB
+dist/assets/AccountPage-DNNjoD9d.js                10.41 kB │ gzip:   3.57 kB
+dist/assets/ProductDetailPage-D8CDYs_h.js          13.79 kB │ gzip:   4.70 kB
+dist/assets/OrdersPage-Dv81LiZd.js                 18.65 kB │ gzip:   5.96 kB
+dist/assets/PaymentPage-Cf4RFltS.js                24.77 kB │ gzip:   8.86 kB
+dist/assets/PlanReview-BA4b74Bm.js                 28.06 kB │ gzip:   8.72 kB
+dist/assets/AdminOrdersPage-B7ttnZI8.js            28.63 kB │ gzip:   8.76 kB
+dist/assets/CheckoutPage-D5kaOIpa.js               30.69 kB │ gzip:   9.71 kB
+dist/assets/AdminReportsPage-BHYxZcUM.js           32.01 kB │ gzip:   9.56 kB
+dist/assets/StoreSettingsPage-WmP0XSUV.js          38.39 kB │ gzip:  12.03 kB
+dist/assets/ProductsPage-DKo-o26p.js               38.77 kB │ gzip:  11.72 kB
+dist/assets/AdminInventoryPage-wKQ5t_wv.js         40.48 kB │ gzip:  10.82 kB
+dist/assets/AdminProductsPage-D7vGQOcl.js          47.20 kB │ gzip:  13.94 kB
+dist/assets/PlannerPage-CakF-Iou.js                67.53 kB │ gzip:  18.62 kB
+dist/assets/PredictiveDashboard-pLhbrLo0.js       215.78 kB │ gzip:  58.88 kB
+dist/assets/EscrowDemoPage-DdwdQahn.js            278.73 kB │ gzip: 101.69 kB
+dist/assets/index-CQWhfAOF.js                     527.18 kB │ gzip: 171.60 kB
+
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 500ms

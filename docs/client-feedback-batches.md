@@ -1,5 +1,13 @@
 # Client feedback implementation batches — 31 October 2026
 
+**Branch/release update — 2 November 2026:** the owner confirmed database updates
+0024–0026 are applied. Current client changes and all future development are on
+`main`; `integration/dormathon-demo` is restored to the pre-client FYP website
+baseline and is read-only. Earlier publication notes below describe the original
+batch workflow. Vercel deployment success is a separate check. See
+[main-only workflow](main-only-workflow.md).
+
+
 Client clarification: delivery **07:30–11:00 Malaysia time**; customers need no
 email or password; delivery accepts QR/cash, self-collection QR only. QR proof
 is uploaded at checkout; cash does not require proof. Customer contact remains
@@ -7,9 +15,9 @@ name and phone for the order/printout. Staff access remains authenticated.
 
 | Batch | Scope | Status |
 | --- | --- | --- |
-| 1 | Packaging stock page, receipts/adjustments, menu mapping, low stock, order allocations and movement history | Implemented and tested; database migration/release pending |
-| 2 | Remove Planner from the client workflow and remove preparation-hour/capacity scheduling gates; deduct ingredient stock at placement; simplify delivery receipt status | Implemented and tested; database migration/release pending |
-| 3 | Customer guest ordering with name/phone; QR proof upload, delivery QR/cash and pickup QR; delivery window 07:30–11:00 and area-based fees | Implemented and tested; database migration/release pending |
+| 1 | Packaging stock page, receipts/adjustments, menu mapping, low stock, order allocations and movement history | Implemented and tested; database update confirmed; main source release, live build unverified |
+| 2 | Remove Planner from the client workflow and remove preparation-hour/capacity scheduling gates; deduct ingredient stock at placement; simplify delivery receipt status | Implemented and tested; database update confirmed; main source release, live build unverified |
+| 3 | Customer guest ordering with name/phone; QR proof upload, delivery QR/cash and pickup QR; delivery window 07:30–11:00 and area-based fees | Implemented and tested; database update confirmed; main source release, live build unverified |
 | 4 | Delivery-date order/item summary, individual printable order slips (name/address/phone), and sales reporting | Planned |
 | 5 | End-to-end review of client workflow, mobile UI, access control, uploads, totals and stock; map accepted changes to the FYP revision | Planned |
 

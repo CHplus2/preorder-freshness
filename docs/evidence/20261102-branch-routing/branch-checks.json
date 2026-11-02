@@ -1,0 +1,13 @@
+{
+  "result": "passed",
+  "fyp_baseline": "ab1a97684dbf5d8b992b9f74fd07580b59d4636d",
+  "integration_rollback": "693e1edb8bad741c91b78b2687674b1a91e2a870",
+  "integration_difference_from_baseline": [
+    "AGENTS.md"
+  ],
+  "main_application_source": "8e8a2b11db49a9721f7fa3dd20d73de2dcf2e58b",
+  "main_application_difference": [],
+  "report_snapshot_unchanged": true,
+  "database_downgraded": false,
+  "force_push_used": false
+}

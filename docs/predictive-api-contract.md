@@ -1,6 +1,6 @@
 # Predictive API contract — Dormathon 2026
 
-Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
+Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
 ## Receiving QR upload — 2 November 2026

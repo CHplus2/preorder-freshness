@@ -1,5 +1,28 @@
 # Direct FreshCast deployment on Vercel
 
+## Current branch policy — 2 November 2026
+
+Current client-feature source and all future development use `main`. Integration
+is frozen at the `ab1a976` application baseline cited in the FYP report, restored
+by `693e1ed`. Do not push new work to integration. The historical deployment
+records below are dated evidence, not current branch-selection instructions.
+
+The supplied failed build for integration commit `8e8a2b1` stopped at:
+`ImproperlyConfigured: Set a PostgreSQL DATABASE_URL in Vercel.` The value was
+missing or not a supported PostgreSQL URL in that deployment environment; this
+failure happened before the migration-state query. Applying migrations in
+Supabase cannot configure a Vercel environment variable. Preview and Production
+have separate settings. The user has confirmed 0024–0026 migration records;
+do not rerun or downgrade the database to address a missing build variable.
+
+A push to `main` should trigger Production when `main` is configured as the
+project's Production Branch. Verify the resulting deployment's environment,
+source commit and Ready status. Preserve the existing Production database,
+model-bundle credentials, sender and cron settings; do not print secret values.
+The source migration check remains enabled and does not apply migrations during
+builds. No successful new live deployment is asserted by this source update.
+
+
 ## Connected kitchen release
 
 The integration release adds default database-based My kitchen mode, preserves

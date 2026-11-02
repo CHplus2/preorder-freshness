@@ -10,7 +10,7 @@ You can use Supabase's web editor instead of a terminal or local DATABASE_URL.
 2. Open your **Preorder and Freshness** project in Supabase → **SQL Editor** →
    **New query**.
 3. Open `deploy/sql/apply_client_updates_0024_to_0026.sql` from the tested
-   `integration/dormathon-demo` release. Copy the **whole file**, including BEGIN
+   `main` release. Copy the **whole file**, including BEGIN
    and COMMIT. On GitHub use **Copy raw file**, rather than copying page navigation.
 4. Paste it into the new Supabase query and click **Run**.
 5. The final result must list three rows: `0024_packaging_stock`,
@@ -24,8 +24,9 @@ guards, disable RLS or manually insert migration records to force success.
 
 This updates the database only. The matching application code must still be
 deployed before the new features appear. No git pull or terminal command is
-needed for this SQL Editor route. Main/production has not been updated by the
-integration source commits.
+needed for this SQL Editor route. Current client-feature source and future releases use `main`. Integration is
+frozen at the older FYP application baseline. Check the Vercel Production build
+status to verify deployment; a Git push alone does not prove a successful build.
 
 # Upload a receiving QR after deployment
 

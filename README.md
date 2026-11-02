@@ -8,9 +8,12 @@ It is integrated into **Dapur Kita**, an existing React and Django preorder appl
 
 - **Dapur Kita storefront:** [Browse the menu](https://preorder-freshness.vercel.app/menu) — public entry point for menus and the customer preorder flow.
 - **FreshCast / judge demonstration:** [Open the Decision Assistant](https://preorder-freshness.vercel.app/admin/ai/decisions?source=local) — staff entry point for connected kitchen planning.
-- **Integrated source and this README:** [integration/dormathon-demo](https://github.com/CHplus2/preorder-freshness/tree/integration/dormathon-demo).
+- **Current source and future work:** [main](https://github.com/CHplus2/preorder-freshness/tree/main).
+- **Frozen FYP website baseline:** [integration/dormathon-demo](https://github.com/CHplus2/preorder-freshness/tree/integration/dormathon-demo), restored to the `ab1a976` application code cited in the report.
 
-Owner screens require an existing staff account. Request demonstration access from the project team; credentials are not published in this repository. No merge into `main` is required to use the linked deployed demo.
+Owner screens require an existing staff account. Request demonstration access from the project team; credentials are not published in this repository. New work and releases use `main`. Integration is frozen; see [the branch and release note](docs/main-only-workflow.md).
+
+The client-requested packaging, simplified orders, guest QR/cash checkout and area-fee changes are preserved on `main`. The FYP report remains a snapshot of the earlier baseline; see [client implementation batches](docs/client-feedback-batches.md) for current behavior.
 
 ## Underlying preorder application
 
