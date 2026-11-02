@@ -57,16 +57,6 @@ export default function AuthProvider({children}){
   }catch(error){const message=accountRequestError(error,url==='/api/signup/'?'signup':'signin');setAuthError(message);return message}
   finally{accountChangeBusy.current=false;setAuthPending(false)}
  };
- const startGuest=useCallback(async()=>{
-  if(accountChangeBusy.current)return;
-  accountChangeBusy.current=true;setAuthPending(true);setAuthError('');
-  try{
-   await axios.post('/api/guest-session/',{},{withCredentials:true,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
-   invalidate();announceSessionChange();const next=await checkAuth();
-   if(!next?.isAuthenticated)throw new Error('Guest session unavailable');
-  }catch(error){setAuthError(error.response?.data?.detail || 'Your ordering session could not be opened. Please try again.');}
-  finally{accountChangeBusy.current=false;setAuthPending(false)}
- },[checkAuth,invalidate]);
  const logout=async()=>{
   if(accountChangeBusy.current)return;
   accountChangeBusy.current=true;
@@ -80,7 +70,7 @@ export default function AuthProvider({children}){
  // Every account/role boundary remounts private providers and pages. Requests
  // captured by an old tree cannot refill a new account's basket/order/wallet.
  const isSessionCurrent=useMemo(()=>()=>scope.current===version,[version]);
- return <AuthContext.Provider value={{...session,isSessionCurrent,checkAuth,startGuest,authError,clearAuthError,authPending,login:account=>signIn('/api/login/',account),signup:account=>signIn('/api/signup/',account),logout}}>
+ return <AuthContext.Provider value={{...session,isSessionCurrent,checkAuth,authError,clearAuthError,authPending,login:account=>signIn('/api/login/',account),signup:account=>signIn('/api/signup/',account),logout}}>
   <Fragment key={version}>{children}</Fragment>
  </AuthContext.Provider>;
 }

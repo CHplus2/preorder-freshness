@@ -7,12 +7,6 @@ from rest_framework.exceptions import ValidationError
 
 
 def validate_progress(order, target):
-    if order.ordering_mode == 'simple':
-        if target not in ('pending', 'delivered', 'cancelled') or order.status == 'cancelled' and target != 'cancelled':
-            raise ValidationError('Use received or not received for this order. Payment is recorded separately.')
-        if target == 'delivered' and not order.inventory_deducted:
-            raise ValidationError('Review the missing order stock allocation before recording receipt.')
-        return
     transitions = {
         'pending': {'pending', 'processing', 'cooked', 'cancelled'},
         'processing': {'processing', 'cooked', 'cancelled'},
@@ -33,15 +27,6 @@ def validate_progress(order, target):
 
 def apply_progress(order, target, actor):
     validate_progress(order, target)
-    if order.ordering_mode == 'simple':
-        order.status = target
-        order.save()
-        return
-    from .packaging import allocate_packaging, release_packaging
-    if target in ('processing', 'cooked'):
-        allocate_packaging(order, actor)
-    elif target == 'cancelled':
-        release_packaging(order, actor)
     if target == 'cooked' and not order.inventory_deducted:
         from ..views.orders import deduct_order_inventory
         deduct_order_inventory(order, actor)

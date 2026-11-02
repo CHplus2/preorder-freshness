@@ -22,7 +22,7 @@ class AdaptivePlanningTests(TestCase):
         clock.start(); self.addCleanup(clock.stop)
         self.buyer = User.objects.create_user('adaptive-buyer')
         self.client = APIClient(); self.client.force_authenticate(self.buyer)
-        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, ordering_mode='scheduled')
+        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.menu = Product.objects.create(name='Flexible meal', price=10, lead_hours=24,
             daily_capacity=2, max_early_minutes=0, max_preparation_days=7,
             preparation_tasks=[dict(name='Prepare', minutes=20, worker=True, resource='prep_table', max_wait_minutes=0),

@@ -11,7 +11,7 @@ from types import SimpleNamespace
 class DeliveryWeekdayTests(TestCase):
     def setUp(self):
         self.product = Product.objects.create(name='Saturday rice', price=12, lead_hours=1)
-        self.store = Storefront.objects.create(pk=1, ordering_mode='scheduled')
+        self.store = Storefront.objects.create(pk=1)
         self.delivery = (timezone.localtime()+timedelta(days=8)).replace(hour=16,minute=0,second=0,microsecond=0)
         self.item = SimpleNamespace(product=self.product,product_id=self.product.pk,quantity=1)
 

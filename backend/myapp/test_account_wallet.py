@@ -14,7 +14,7 @@ class AccountWalletTests(TestCase):
         self.other = User.objects.create_user('other')
         self.client = APIClient()
         self.client.force_authenticate(self.user)
-        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, ordering_mode='scheduled')
+        Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.address = Address.objects.create(user=self.user, is_default=True, line1='Test', city='KL', state='Kuala Lumpur', postal_code='50000', phone='0123456789')
         self.wallet = Wallet.objects.create(user=self.user, wallet_address='synthetic-wallet', balance=Decimal('8836.48'))
         for name,price,quantity in [('Fresh Milk',5,1),('Granola Bar',10,3),('Cabbage',9,2),('Dark Chocolate',11,2)]:

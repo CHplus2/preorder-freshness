@@ -1,1 +1,0 @@
-{"result": "passed", "database": "isolated PostgreSQL 16 django_app", "checks": ["0024 prerequisite", "manual SQL applied twice", "migration recorded once", "legacy status and stock unchanged", "existing order mode scheduled", "store defaults to simple", "previous-release inserts still succeed", "legacy allocation default retained"]}

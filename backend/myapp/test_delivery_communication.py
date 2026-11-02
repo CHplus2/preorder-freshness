@@ -126,7 +126,7 @@ class DeliveryCommunicationTests(TestCase):
 
     def test_checkout_saves_instructions_and_separate_dispatch_consent(self):
         from .models import Product,CartItem,Address,Storefront
-        Storefront.objects.update_or_create(pk=1, defaults=dict(ordering_mode='scheduled', manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details'))
+        Storefront.objects.update_or_create(pk=1, defaults=dict(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details'))
         product=Product.objects.create(name='Fixture meal',price=12)
         CartItem.objects.create(user=self.buyer,product=product,quantity=1)
         address=Address.objects.create(user=self.buyer,line1='Fixture',city='KL',state='KL',postal_code='50000',phone='0123456789')

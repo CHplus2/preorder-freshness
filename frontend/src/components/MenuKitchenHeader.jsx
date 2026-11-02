@@ -16,7 +16,7 @@ export default function MenuKitchenHeader({store,error=''}) {
     {error?<p role="status">Kitchen details could not be loaded. Contact the kitchen to confirm collection and delivery arrangements.</p>:<>
      {store.service_area && <p><strong>Service area</strong>{store.service_area}</p>}
      {loaded && <>{methods.includes('standard') && <p><strong>Delivery</strong>{hourLabel(store.delivery_open_hour ?? 9)}–{hourLabel(store.delivery_close_hour ?? 21)} · Malaysia time</p>}{methods.includes('pickup') && <p><strong>Self-collection</strong>{store.pickup_location}<br/>{hourLabel(store.pickup_open_hour ?? 8)}–{hourLabel(store.pickup_close_hour ?? 20)} · Malaysia time</p>}</>}
-     <p>Menu dates, ordering cutoffs and availability apply. Your basket checks all items together.</p>
+     <p>Menu notice and preparation availability apply. Your basket checks times for all items together.</p>
     </>}
    </div></details>
   </div>

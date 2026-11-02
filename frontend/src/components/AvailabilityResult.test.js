@@ -6,8 +6,6 @@ import {MemoryRouter} from 'react-router-dom';
 
 const server = await createServer({server:{middlewareMode:true,hmr:false}, appType:'custom'});
 try {
- const {StoreContext}=await server.ssrLoadModule('/src/contexts/StorefrontContext.js');
- const renderScheduled=node=>renderToStaticMarkup(createElement(StoreContext.Provider,{value:{store:{ordering_mode:'scheduled'}}},node));
   const {default: AvailabilityResult} = await server.ssrLoadModule('/src/components/AvailabilityResult.jsx');
   const quote = {selectionKey:'basket-and-date', plan:{preparation_at:'2026-10-01T03:00:00Z', hands_on_minutes:30, procurement_required:false}};
   const render = props => renderToStaticMarkup(createElement(AvailabilityResult, {selectionKey:'basket-and-date', quote, ...props}));
@@ -40,7 +38,7 @@ try {
   assert.doesNotMatch(initialSlots,/No hourly slots found|Suggest times for this basket|Find the next available day|Search later dates/);
   assert.equal((initialSlots.match(/Find delivery times/g) || []).length,1);
   const {default:DeliveryTimePicker}=await server.ssrLoadModule('/src/components/DeliveryTimePicker.jsx');
-  const picker=props=>renderScheduled(createElement(MemoryRouter,null,createElement(DeliveryTimePicker,{cart:[{id:1,quantity:1,product:{id:1,lead_hours:24}}],onSelect:()=>{},allowRequest:true,onRequestMode:()=>{},...props})));
+  const picker=props=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(DeliveryTimePicker,{cart:[{id:1,quantity:1,product:{id:1,lead_hours:24}}],onSelect:()=>{},allowRequest:true,onRequestMode:()=>{},...props})));
   const automatic=picker({});assert.match(automatic,/Finding available times for your whole basket/);
   assert.match(automatic,/Need a different time\? Ask the kitchen/);
   assert.doesNotMatch(automatic,/type="datetime-local"|No hourly suggestions|Check availability/);
@@ -48,10 +46,10 @@ try {
   assert.match(requested,/This is a custom request/);
   assert.match(requested,/Choose an available time instead/);
   const {default: RecipeEditor} = await server.ssrLoadModule('/src/components/RecipeEditor.jsx');
-  const flexible=renderScheduled(createElement(RecipeEditor,{value:{max_early_minutes:0,max_preparation_days:2},onChange:()=>{}}));
+  const flexible=renderToStaticMarkup(createElement(RecipeEditor,{value:{max_early_minutes:0,max_preparation_days:2},onChange:()=>{}}));
   assert.match(flexible,/Flexible on the dispatch day/);assert.match(flexible,/Completed food does not occupy the worker/);
   assert.doesNotMatch(flexible,/finish exactly|Zero early finish|May finish up to/);
-  const limited=renderScheduled(createElement(RecipeEditor,{value:{max_early_minutes:120,max_preparation_days:2},onChange:()=>{}}));
+  const limited=renderToStaticMarkup(createElement(RecipeEditor,{value:{max_early_minutes:120,max_preparation_days:2},onChange:()=>{}}));
   assert.match(limited,/May finish up to/);
   console.log('Availability result: success, procurement, stale selection, pending, failure and initial state passed.');
 } finally {

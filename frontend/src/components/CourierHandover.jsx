@@ -1,4 +1,3 @@
-import {useStorefront} from '../contexts/StorefrontContext';
 import {useId,useState} from 'react';
 import {recipientDetails} from '../utils/courierHandover';
 import {contactNumber} from '../utils/handover';
@@ -6,7 +5,6 @@ import CourierTrackingEditor from './CourierTrackingEditor';
 import './CourierHandover.css';
 
 export default function CourierHandover({order,onSaved}){
- const simple=useStorefront()?.store?.ordering_mode!=='scheduled';
  const [message,setMessage]=useState(''),[fallback,setFallback]=useState(false);
  const copyId=useId();
  if(order.delivery_method==='pickup' || order.status==='cancelled')return null;
@@ -26,7 +24,7 @@ export default function CourierHandover({order,onSaved}){
   {recipient.missing.length>0 && <p className="courier-handover-review">Confirm before booking: {recipient.missing.join(', ')}. Copying these details does not verify them.</p>}
   <button type="button" onClick={copy}>Copy recipient details</button>{message && <p role="status">{message}</p>}
   {fallback && <div className="courier-copy-fallback"><label htmlFor={copyId}>Recipient details to copy</label><textarea id={copyId} readOnly rows={8} value={recipient.text} onFocus={e=>e.currentTarget.select()}/></div>}
-  {!simple&&<p>Use these details only for this order’s delivery. When food leaves with the rider, record <strong>Handed to courier</strong> to queue opted-in dispatch emails. Confirm delivery only after actual receipt.</p>}
+  <p>Use these details only for this order’s delivery. When food leaves with the rider, record <strong>Handed to courier</strong> to queue opted-in dispatch emails. Confirm delivery only after actual receipt.</p>
   {courierPhone && <p><a href={`tel:${courierPhone}`}>Call courier</a> · {courierPhone}</p>}
   <CourierTrackingEditor key={order.id+'-'+order.updated_at} order={order} onSaved={onSaved} embedded/>
  </details>;

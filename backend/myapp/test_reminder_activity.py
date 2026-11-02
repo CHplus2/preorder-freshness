@@ -114,7 +114,7 @@ class DeliveryCommunicationJourneyTests(TestCase):
         now=timezone.make_aware(datetime(2030,1,7,9))
         with patch('django.utils.timezone.now',return_value=now) as clock:
             buyer=User.objects.create_user('journey-buyer',email='buyer@example.test');owner=User.objects.create_user('journey-owner',is_staff=True)
-            Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, ordering_mode='scheduled')
+            Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
             product=Product.objects.create(name='Journey rice box',price=12,lead_hours=1,batch_size=10,max_early_minutes=120,preparation_tasks=[dict(name='Cook and pack',minutes=30,resource='prep_table')])
             material=RawMaterial.objects.create(name='Fixture rice',unit='g')
             ProductIngredient.objects.create(product=product,raw_material=material,quantity_required=100)

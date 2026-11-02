@@ -22,7 +22,7 @@ class CommitmentTests(TestCase):
         self.owner = User.objects.create_user('owner', is_staff=True)
         self.buyer = User.objects.create_user('buyer', email='buyer@example.test', password='Original-good-password!42')
         self.client = APIClient(); self.client.force_authenticate(self.owner)
-        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, ordering_mode='scheduled')
+        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.material = RawMaterial.objects.create(name='Rice', unit='g')
         self.product = Product.objects.create(name='Rice meal', price=12, packaging_cost=Decimal('0.50'), lead_hours=1)
         ProductIngredient.objects.create(product=self.product, raw_material=self.material, quantity_required=100)

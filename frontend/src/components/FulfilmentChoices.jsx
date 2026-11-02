@@ -1,16 +1,16 @@
-import {fulfilmentTimes,timeLabel,methodsFor} from '../utils/fulfilment';
+import {fulfilmentHours,hourLabel,methodsFor} from '../utils/fulfilment';
 import './FulfilmentChoices.css';
 
 export default function FulfilmentChoices({store,value='standard',area='',onChange,disabled=false,onRefresh,refreshing=false,detailsAtCheckout=false}){
  const options=methodsFor(store),pickup=value==='pickup';
- const [first,last]=fulfilmentTimes(store,value);
+ const [first,last]=fulfilmentHours(store,value);
  return <div className="fulfilment-panel"><fieldset className="fulfilment-choices" disabled={disabled}><legend>Receive your preorder</legend>
   {!options.length?<p role="status">This kitchen is not accepting delivery or collection orders right now.</p>:<>
   <div className="fulfilment-methods">{options.map(method=><label key={method} className={pickup===(method==='pickup')?'selected':''}><input type="radio" name="fulfilment" checked={pickup===(method==='pickup')} onChange={()=>onChange(method,'')}/><span><strong>{method==='pickup'?'Self-collection':'Delivery'}</strong><small>{method==='pickup'?'Collect from the kitchen · no delivery fee':'Delivered to your saved address'}</small></span></label>)}</div>
   {!options.includes('pickup') && <p className="fulfilment-hours">Self-collection is not currently offered by this kitchen.</p>}
-  <p className="fulfilment-hours">{pickup?'Collection':'Delivery'} hours: {timeLabel(first)}–{timeLabel(last)} · Malaysia time. {store?.ordering_mode==='simple'?'Stock is checked at checkout.':'Preparation availability is checked separately.'}</p>
+  <p className="fulfilment-hours">{pickup?'Collection':'Delivery'} hours: {hourLabel(first)}–{hourLabel(last)} · Malaysia time. Preparation availability is checked separately.</p>
   {pickup?<div className="fulfilment-location"><strong>Collection location</strong><p>{store?.pickup_location}</p>{store?.pickup_instructions && <p>{store.pickup_instructions}</p>}</div>:!detailsAtCheckout && <>
-   {store?.delivery_areas?.length>0 && <label>Delivery area<select required value={area} onChange={e=>onChange(value,e.target.value)}><option value="">Choose your area</option>{store.delivery_areas.map(name=><option key={name} value={name}>{name}{store?.delivery_area_fees && Object.hasOwn(store.delivery_area_fees,name)?' · RM '+Number(store.delivery_area_fees[name]).toFixed(2):''}</option>)}</select><small>Outside these areas? Contact the kitchen before ordering.</small></label>}
+   {store?.delivery_areas?.length>0 && <label>Delivery area<select required value={area} onChange={e=>onChange(value,e.target.value)}><option value="">Choose your area</option>{store.delivery_areas.map(name=><option key={name} value={name}>{name}</option>)}</select><small>Outside these areas? Contact the kitchen before ordering.</small></label>}
 
   </>}
   </>}

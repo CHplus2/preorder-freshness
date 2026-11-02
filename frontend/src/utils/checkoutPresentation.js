@@ -21,10 +21,8 @@ export const pricingConfigured=store=>Number.isInteger(store?.bulk_discount_perc
   const first=store[kind+'_open_hour'],last=store[kind+'_close_hour'];
   return first===undefined && last===undefined || Number.isInteger(first) && Number.isInteger(last) && first>=0 && first<last && last<=23;
  }) && (store.pickup_enabled!==true || typeof store.pickup_location==='string' && store.pickup_location.trim().length>0)
- && (store.ordering_mode!=='simple' || ['delivery','pickup'].every(kind=>{const first=store[kind+'_start_time']??'07:30',last=store[kind+'_end_time']??'11:00';const clock=/^(?:[01][0-9]|2[0-3]):[0-5][0-9](?::00)?$/;return clock.test(first)&&clock.test(last)&&first.slice(0,5)<last.slice(0,5)}))
- && (store.delivery_area_fees===undefined || store.delivery_area_fees && typeof store.delivery_area_fees==='object' && !Array.isArray(store.delivery_area_fees) && Object.values(store.delivery_area_fees).every(money))
  && (store.delivery_areas===undefined || Array.isArray(store.delivery_areas) && store.delivery_areas.length<=30 && store.delivery_areas.every(s=>typeof s==='string' && s.trim().length>0 && s.length<=80));
-export function basketTotals(cart,store,method='standard',area=''){
+export function basketTotals(cart,store,method='standard'){
  const cents=value=>{if(!money(value))throw invalidResponse();const [whole,fraction='']=String(value).split('.');return BigInt(whole)*100n+BigInt(fraction.padEnd(2,'0'));};
  const subtotal=cart.reduce((sum,row)=>sum+cents(row.product.price)*BigInt(row.quantity),0n);
  const portions=cart.reduce((sum,row)=>sum+row.quantity,0);
@@ -35,7 +33,7 @@ export function basketTotals(cart,store,method='standard',area=''){
   discount=whole+(remainder>50n || remainder===50n && whole%2n===1n?1n:0n);
  }
  const threshold=store?.free_delivery_minimum_myr===undefined?5000n:store.free_delivery_minimum_myr===null?null:cents(store.free_delivery_minimum_myr);
- const shipping=method==='pickup' || threshold!==null && subtotal>=threshold?0n:cents(store?.delivery_area_fees && Object.hasOwn(store.delivery_area_fees,area)?store.delivery_area_fees[area]:store?.delivery_fee_myr ?? '5.00');
+ const shipping=method==='pickup' || threshold!==null && subtotal>=threshold?0n:cents(store?.delivery_fee_myr ?? '5.00');
  if(subtotal>BigInt(Number.MAX_SAFE_INTEGER))throw invalidResponse();
  return {total:Number(subtotal)/100,discount:Number(discount)/100,shipping:Number(shipping)/100,finalTotal:Number(subtotal-discount+shipping)/100};
 }

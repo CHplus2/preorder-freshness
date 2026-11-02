@@ -23,7 +23,7 @@ class PreorderWindowTests(TestCase):
         cache.clear()
         self.now = timezone.make_aware(datetime(2030, 1, 7, 16, 59))
         self.delivery = (self.now+timedelta(days=1)).replace(hour=12, minute=0)
-        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, ordering_mode='scheduled')
+        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.menu = Product.objects.create(name='Daily lunch', price=10, lead_hours=1,
             preparation_minutes=30, packing_minutes_per_portion=0, max_early_minutes=0)
         self.item = SimpleNamespace(product=self.menu, product_id=self.menu.pk, quantity=1)

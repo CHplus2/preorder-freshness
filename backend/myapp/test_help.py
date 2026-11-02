@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from django.core.cache import cache
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
-from .models import Product, Storefront
+from .models import Product
 from .services.kitchen_help import ai_topic
 
 
@@ -45,10 +45,8 @@ class KitchenHelpTests(TestCase):
         Product.objects.create(name='Cake', price='30.00', daily_capacity=20)
         Product.objects.create(name='Limited', price='5.00', daily_capacity=1)
         data = self.ask(topic='menu', budget='50.00', portions=5).json()
-        self.assertEqual({p['name']:p['food_total'] for p in data['menus']},{'Limited':'25.00','Rice':'50.00'})
-        Storefront.objects.create(pk=1,ordering_mode='scheduled')
-        legacy=self.ask(topic='menu',budget='50.00',portions=5).json()
-        self.assertEqual([p['name'] for p in legacy['menus']],['Rice'])
+        self.assertEqual([p['name'] for p in data['menus']], ['Rice'])
+        self.assertEqual(data['menus'][0]['food_total'], '50.00')
         self.assertIn('not confirmed availability', data['answer'])
         self.assertEqual(self.ask(topic='menu', search='missing').json()['menus'], [])
 

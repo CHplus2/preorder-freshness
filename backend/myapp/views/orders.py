@@ -23,7 +23,7 @@ class OrderList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).select_related("user", "address", "checkout_proof").defer("checkout_proof__content").prefetch_related("items").order_by("-id")
+        return Order.objects.filter(user=self.request.user).select_related("user", "address").prefetch_related("items").order_by("-id")
 
     def list(self, request, *args, **kwargs):
         params = request.query_params
@@ -60,7 +60,7 @@ def usable_stock():
         received_date__lte=today, quarantined=False)
 
 
-def deduct_order_inventory(order, user, deadline=None, stage='preparation'):
+def deduct_order_inventory(order, user):
     """Caller holds an atomic order lock; lock stock globally before any writes.
 
     Orders may list menus/ingredients in different orders. Acquiring each item's
@@ -70,17 +70,14 @@ def deduct_order_inventory(order, user, deadline=None, stage='preparation'):
     items = list(order.items.prefetch_related('accepted_ingredients'))
     by_material = defaultdict(list)
     material_ids = {ingredient.raw_material_id for item in items for ingredient in item.accepted_ingredients.all()}
-    stock = usable_stock()
-    if deadline is not None:
-        stock = stock.filter(expiry_date__gte=deadline)
-    for batch in stock.select_for_update().filter(raw_material_id__in=material_ids).order_by(
+    for batch in usable_stock().select_for_update().filter(raw_material_id__in=material_ids).order_by(
             'raw_material_id', 'expiry_date', 'received_date', 'id'):
         by_material[batch.raw_material_id].append(batch)
     for item in items:
-        deduct_inventory(item, user, order, by_material, stage=stage)
+        deduct_inventory(item, user, order, by_material)
 
 
-def deduct_inventory(item, user, order, by_material=None, stage='preparation'):
+def deduct_inventory(item, user, order, by_material=None):
     """
     Deduct raw materials required to produce the ordered quantity
     of a product using FEFO (First Expired, First Out).
@@ -91,8 +88,6 @@ def deduct_inventory(item, user, order, by_material=None, stage='preparation'):
         raise ValidationError("This order has no recorded recipe. Review its accepted recipe before cooking.")
     for ingredient in ingredients:
 
-        if ingredient.quantity_per_portion <= 0:
-            raise ValidationError('Review the accepted recipe quantities before allocating stock.')
         required_quantity = (
             ingredient.quantity_per_portion * item.quantity
         )
@@ -130,7 +125,7 @@ def deduct_inventory(item, user, order, by_material=None, stage='preparation'):
             IngredientConsumption.objects.create(order_item=item, inventory_item=inventory_item,
                 material_name=ingredient.material_name, unit=ingredient.unit,
                 batch_code=inventory_item.batch_code, quantity=deduction,
-                unit_cost=inventory_item.unit_cost, recorded_expiry=inventory_item.expiry_date, allocation_stage=stage)
+                unit_cost=inventory_item.unit_cost, recorded_expiry=inventory_item.expiry_date)
 
             remaining -= deduction
 
@@ -167,27 +162,10 @@ def place_order(request):
     Storefront.objects.get_or_create(pk=1)
     store = Storefront.objects.select_for_update().get(pk=1)
     store, method, area = request_store(store, request.data, require_area=True)
-    if store.ordering_mode == 'simple' and request_id is None:
-        raise ValidationError('Refresh checkout to create a safe order reference before placing the order.')
-    client_mode=store.ordering_mode == 'simple'
-    customer,client_address={},{}
-    if client_mode:
-        from ..services.auth_limits import limit
-        limit(request,'simple-checkout',str(user.pk),maximum=10)
-        from ..services.guest_ordering import customer_details
-        customer,client_address=customer_details(request.data,method)
-        if payment not in ('manual','cod') or method == 'pickup' and payment != 'manual':
-            raise ValidationError('Delivery accepts QR payment or cash. Self-collection accepts QR payment only.')
-        if payment == 'manual' and not (store.manual_payment_enabled and store.duitnow_qr_url):
-            raise ValidationError('QR payment is unavailable. Contact the kitchen or choose delivery cash.')
-        if payment == 'cod' and request.data.get('payment_proof_id'):
-            raise ValidationError('Cash orders do not need payment proof.')
-        if any(request.data.get(k) for k in ('email_reminder','email_dispatch_updates','email_time_updates')):
-            raise ValidationError('This checkout uses phone contact. Email reminders are not collected here.')
-    if not client_mode and payment == 'cod' and method != 'pickup':
+    if payment == 'cod' and method != 'pickup':
         raise ValidationError('Cash is available for self-collection only. Choose another payment method for delivery.')
     address = None
-    if method != 'pickup' and not client_mode:
+    if method != 'pickup':
         address_id = serializers.IntegerField(min_value=1).run_validation(request.data.get('address_id'))
         try:
             address = Address.objects.get(id=address_id, user=user)
@@ -199,8 +177,7 @@ def place_order(request):
     list(Product.objects.select_for_update().filter(id__in=cart_items.values('product_id')).order_by('id'))
     delivery_at = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
     from ..services.scheduling import schedule_order, plan_snapshot
-    from ..services.simple_ordering import simple, validate_delivery
-    plan = validate_delivery(cart_items, delivery_at, store) if simple(store) else schedule_order(cart_items, delivery_at, store, allow_manual_review=True, allow_request_exceptions=True)
+    plan = schedule_order(cart_items, delivery_at, store, allow_manual_review=True, allow_request_exceptions=True)
     needs_review = plan.get('needs_review', False)
     if needs_review:
         # Review requests never debit credits or invite an advance transfer.
@@ -248,26 +225,11 @@ def place_order(request):
         raise ValidationError('Add a valid email in Account settings before enabling reminders.')
 
     from ..services.handover import HandoverInput
-    handover_data=request.data.get('handover', {})
-    if client_mode:
-        if not isinstance(handover_data,dict):raise ValidationError('Review the handover instructions.')
-        handover_data=dict(handover_data,contact_phone=customer['phone'])
-    handover = HandoverInput(data=handover_data, context={'pickup': method == 'pickup'})
+    handover = HandoverInput(data=request.data.get('handover', {}), context={'pickup': method == 'pickup'})
     handover.is_valid(raise_exception=True)
-
-    if client_mode and 'expected_total' in request.data:
-        from ..services.checkout_proofs import price_scope
-        expected=serializers.DecimalField(max_digits=12,decimal_places=2,min_value=0).run_validation(request.data['expected_total'])
-        if expected != price_scope(list(cart_items),store,delivery_at,method,area)[0]:
-            raise ValidationError('The order total changed. Refresh checkout and review the amount before placing your order.')
-    proof=None
-    if client_mode and payment == 'manual':
-        from ..services.checkout_proofs import claim_proof
-        proof=claim_proof(user,request.data.get('payment_proof_id'),list(cart_items),store,delivery_at,method,area)
 
     # --- Create order ---
     order = Order.objects.create(
-        ordering_mode=store.ordering_mode,
         checkout_request_id=request_id,
         user=user,
         delivery_at=delivery_at,
@@ -275,19 +237,15 @@ def place_order(request):
         preparation_end_at=plan['end'],
         preparation_plan=plan_snapshot(plan),
         delivery_method=method,
-        fulfilment_snapshot=dict(snapshot(store, method, area), customer_reminder=preference, handover=dict(handover.validated_data), customer=customer),
+        fulfilment_snapshot=dict(snapshot(store, method, area), customer_reminder=preference, handover=dict(handover.validated_data)),
         address=address,
-        delivery_address=client_address if client_mode else dict(AddressSerializer(address).data) if address else {},
+        delivery_address=dict(AddressSerializer(address).data) if address else {},
         total_amount=0,
         status="pending",
         payment_status=is_paid,
         payment_method=payment,
         payment_instructions={'instructions': store.bank_transfer_instructions, 'qr_url': store.duitnow_qr_url} if payment == 'manual' else {},
     )
-
-    if proof:
-        proof.order=order
-        proof.save(update_fields=['order'])
 
     total = 0
     for item in cart_items:
@@ -310,13 +268,6 @@ def place_order(request):
     order.total_amount = total - discount
     order.shipping_fee = shipping_fee
     order.save()
-
-    if not needs_review:
-        from ..services.packaging import allocate_packaging
-        allocate_packaging(order, user)
-        if simple(store):
-            from ..services.simple_ordering import deduct_at_placement
-            deduct_at_placement(order, user)
 
     cart_items.delete()
 
@@ -374,16 +325,10 @@ def preparation_quote(request):
     store = Storefront.objects.filter(pk=1).first() or Storefront()
     store, method, area = request_store(store, request.data, require_area=True)
     items = list(CartItem.objects.filter(user=request.user).select_related('product'))
-    from ..services.simple_ordering import simple, validate_delivery, check_cart_ingredients
-    plan = validate_delivery(items, delivery, store) if simple(store) else schedule_order(items, delivery, store, allow_manual_review=True, allow_request_exceptions=True)
+    plan = schedule_order(items, delivery, store, allow_manual_review=True, allow_request_exceptions=True)
     from ..services.arrival_windows import window, duration
     timing = {'arrival_window': window(delivery, duration(store)), 'arrival_window_minutes': duration(store)}
     if plan.get('needs_review'):
-        return Response(dict(**timing, preparation_at=None, preparation_end_at=None, **plan_snapshot(plan)))
-    from ..services.packaging import check_cart_packaging
-    check_cart_packaging(items)
-    if simple(store):
-        check_cart_ingredients(items, delivery)
         return Response(dict(**timing, preparation_at=None, preparation_end_at=None, **plan_snapshot(plan)))
     from ..services.discovery import shopping_preview
     return Response(dict(**timing, preparation_at=plan['start'], preparation_end_at=plan['end'],

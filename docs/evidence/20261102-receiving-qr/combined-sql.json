@@ -1,1 +1,0 @@
-{"result": "passed", "database": "isolated PostgreSQL 16 django_app", "checks": ["combined script upgrades 0023 through 0026", "safe rerun verifies completed migrations", "three migration records exactly once", "existing ingredient quantity, order status and fee unchanged"]}

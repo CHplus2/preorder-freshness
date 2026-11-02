@@ -33,7 +33,6 @@ try{
  const {CartContext}=await server.ssrLoadModule('/src/contexts/CartContext.js');
  const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
  const {StoreContext}=await server.ssrLoadModule('/src/contexts/StorefrontContext.js');
- const renderScheduled=node=>renderToStaticMarkup(h(StoreContext.Provider,{value:{store:{ordering_mode:'scheduled'}}},node));
  const row={id:1,quantity:1,product:{id:2,name:'Meal',price:'10.05',selling_status:'active',delivery_weekdays:[]}};
  const base={cart:[row],cartLoading:false,cartUpdating:false,cartError:'',pricingReady:true,pricingError:'',total:10.05,discount:1,SHIPPING_FEE:5,finalTotal:14.05};
  const cart=patch=>renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store:{name:'Kitchen'}}},h(UIContext.Provider,{value:{formatPrice:value=>'RM '+Number(value).toFixed(2)}},h(CartContext.Provider,{value:{...base,...patch}},h(CartPage))))));
@@ -50,7 +49,7 @@ try{
  const options=renderToStaticMarkup(h(MemoryRouter,null,h(PaymentOptions,{value:'cod',onChange:()=>{},disabled:true})));
  assert.match(options,/<fieldset[^>]*disabled/);assert.match(options,/<legend>Payment method/);
  const {default:Picker}=await server.ssrLoadModule('/src/components/DeliveryTimePicker.jsx');
- const picker=props=>renderScheduled(h(MemoryRouter,null,h(Picker,{cart:[row],onSelect:()=>{},...props})));
+ const picker=props=>renderToStaticMarkup(h(MemoryRouter,null,h(Picker,{cart:[row],onSelect:()=>{},...props})));
  const chosen=picker({value:'2030-01-02T15:00'});assert.match(chosen,/Selected delivery|Selected arrival window/);assert.match(chosen,/Change delivery time/);assert.doesNotMatch(chosen,/Preferred day|Finding available times/);
  const unavailable=picker({value:'2030-01-02T15:00',selectionUnavailable:true});assert.match(unavailable,/Time needs another check/);assert.match(unavailable,/Preferred day/);
  assert.match(picker({value:'2030-01-02T15:00',method:'pickup'}),/Selected collection/);

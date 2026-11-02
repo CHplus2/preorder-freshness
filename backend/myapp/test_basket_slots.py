@@ -21,7 +21,7 @@ class BasketSlotTests(TestCase):
         self.customer = User.objects.create_user('slot-customer')
         self.client = APIClient()
         self.client.force_authenticate(self.customer)
-        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, ordering_mode='scheduled')
+        self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.cookies = Product.objects.create(name='Chocolate Chip Cookies - Pack of 6',
             price=10, lead_hours=24, daily_capacity=10, max_early_minutes=0,
             preparation_minutes=60, batch_size=5, additional_batch_minutes=30,

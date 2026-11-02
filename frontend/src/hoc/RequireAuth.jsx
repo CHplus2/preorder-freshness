@@ -1,6 +1,5 @@
-import {useStorefront} from '../contexts/StorefrontContext';
 import PageState from '../components/PageState';
-import {Link,useLocation} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import PageLoading from "../components/PageLoading";
 import { useEffect } from "react";
 import { useUI } from "../contexts/UIContext";
@@ -8,20 +7,15 @@ import { useAuth } from "../contexts/AuthContext";
 
 export default function RequireAuth({ children, message = "Please Log in to view this page" }) {
     const { setShowLogin } = useUI();
-    const { isAuthenticated, isAdmin, isGuest, startGuest, authPending, authError } = useAuth();
-    const context=useStorefront();
-    const {pathname}=useLocation();
-    const guestFlow=context?.store?.ordering_mode==='simple' && /^\/(cart|checkout|orders|account)(?:\/|$)/.test(pathname) && message!=='Admin access required';
+    const { isAuthenticated, isAdmin } = useAuth();
 
     useEffect(() => {
-        if (isAuthenticated === false && !guestFlow) {
+        if (isAuthenticated === false) {
             setShowLogin(true);
         }
-    }, [isAuthenticated, setShowLogin,guestFlow]);
+    }, [isAuthenticated, setShowLogin]);
 
 
-    if(guestFlow && isAuthenticated===false)return authError?<PageState title="Start your order" description={authError}><button disabled={authPending} onClick={startGuest}>Try again</button></PageState>:<PageLoading label="Opening your ordering session…"/>;
-    if(isGuest && message==='Admin access required')return <PageState title="Kitchen access required" description="Sign in with the kitchen’s staff account to use this workspace."><button onClick={()=>setShowLogin(true)}>Kitchen sign in</button><Link to="/menu">Browse the menu</Link></PageState>;
     if (isAuthenticated === null) return <PageLoading label="Checking account access…" />;
 
     if (isAuthenticated === false || (message === "Admin access required" && isAdmin === false )) {

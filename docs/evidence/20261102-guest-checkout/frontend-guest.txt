@@ -1,5 +1,0 @@
-
-> frontend@0.0.0 test:guest
-> node src/components/GuestCheckout.test.js
-
-Guest checkout: private identity, required contact/address, QR/cash policy, minute hours, area prices and protected staff sign-in passed.

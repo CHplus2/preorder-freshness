@@ -1,4 +1,3 @@
-import {useStorefront} from '../contexts/StorefrontContext';
 import {useEffect,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {X} from 'lucide-react';
@@ -9,7 +8,6 @@ import PasswordField from './PasswordField';
 import './AccountForms.css';
 
 export default function AccountForm({create=false}) {
-  const staffOnly=useStorefront()?.store?.ordering_mode==='simple';
   const {login,signup,authError,clearAuthError,authPending}=useAuth();
   const {setShowLogin,setShowSignup}=useUI();
   const [account,setAccount]=useState({identifier:'',first_name:'',password:'',confirmPassword:'',email:''}),[localError,setLocalError]=useState(''),[usernameOnly,setUsernameOnly]=useState(false);
@@ -28,8 +26,8 @@ export default function AccountForm({create=false}) {
   };
   return <ModalDialog label={create?'Create account':'Sign in'} onDismiss={dismiss}><div className="modal-overlay account-overlay"><section className="modal-content account-form-card" aria-labelledby="account-form-title">
     <button className="account-close" type="button" aria-label="Close account dialog" onClick={dismiss}><X size={21} aria-hidden="true"/></button>
-    <span className="dk-eyebrow">YOUR KITCHEN ACCOUNT</span><h2 id="account-form-title">{staffOnly?'Kitchen sign in':create?'Create your account':'Welcome back'}</h2>
-    <p className="account-form-intro">{staffOnly?'Staff access stays protected. Customers can order with their name and phone number at checkout.':create?'Save your delivery details and follow your orders.':'Sign in to order food and follow your deliveries.'}</p>
+    <span className="dk-eyebrow">YOUR KITCHEN ACCOUNT</span><h2 id="account-form-title">{create?'Create your account':'Welcome back'}</h2>
+    <p className="account-form-intro">{create?'Save your delivery details and follow your orders.':'Sign in to order food and follow your deliveries.'}</p>
     {error && <div className="account-form-error" role="alert" tabIndex={-1} ref={errorRef}>{error}</div>}
     <form onSubmit={submit} aria-busy={authPending || false}>
       <fieldset disabled={authPending} className="account-form-fields">{create?<>
@@ -41,6 +39,6 @@ export default function AccountForm({create=false}) {
       </fieldset><button className="account-primary" disabled={authPending} type="submit">{authPending?(create?'Creating account…':'Signing in…'):(create?'Create account':'Sign in')}</button>
     </form>
     {!create && <div className="account-signin-help"><Link className="account-recovery-link" to="/recover" onClick={dismiss}>Forgot your password?</Link><button type="button" className="account-legacy-toggle" aria-pressed={usernameOnly} disabled={authPending} onClick={()=>{setUsernameOnly(value=>!value);setLocalError('');clearAuthError();}}>{usernameOnly?'Use email or username':'Use an exact older username'}</button></div>}
-    {!staffOnly && <div className="account-form-switch"><span>{create?'Already have an account?':'New to the kitchen?'}</span><button type="button" disabled={authPending} onClick={switchMode}>{create?'Sign in':'Create an account'}</button></div>}
+    <div className="account-form-switch"><span>{create?'Already have an account?':'New to the kitchen?'}</span><button type="button" disabled={authPending} onClick={switchMode}>{create?'Sign in':'Create an account'}</button></div>
   </section></div></ModalDialog>;
 }

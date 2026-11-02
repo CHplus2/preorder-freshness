@@ -1,5 +1,3 @@
-from datetime import time
-import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -292,8 +290,6 @@ class CartItem(models.Model):
 
 # ============ ORDER ============
 class Order(models.Model):
-    ordering_mode = models.CharField(max_length=12, default='scheduled', db_default='scheduled')
-    stock_returned_at = models.DateTimeField(null=True, blank=True)
     fulfilment_snapshot = models.JSONField(default=dict, blank=True)
     checkout_request_id = models.UUIDField(null=True, blank=True, unique=True)
     payment_method = models.CharField(max_length=20, blank=True)
@@ -365,7 +361,7 @@ class Order(models.Model):
 class OrderItem(models.Model):
     recipe_source = models.CharField(max_length=30, default='accepted')
     preparation_snapshot = models.JSONField(default=dict, blank=True)
-    packaging_unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True)
+    packaging_unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,
@@ -410,9 +406,6 @@ class OrderItem(models.Model):
                         material_name=i.raw_material.name, unit=i.raw_material.unit,
                         quantity_per_portion=i.quantity_required) for i in recipe
                 ])
-                if self.product_id:
-                    from .services.packaging import capture_packaging
-                    capture_packaging(self)
 
     def __str__(self):
         return (
@@ -460,14 +453,6 @@ class InventoryLog(models.Model):
         )
 
 class Storefront(models.Model):
-    # Scheduled mode preserves integrations/accepted historical workflows. The
-    # client storefront defaults to simple ordering; it is not customer-selectable.
-    ordering_mode = models.CharField(max_length=12, choices=[('simple', 'Simple ordering'), ('scheduled', 'Historical scheduling')], default='simple', db_default='simple')
-    delivery_start_time = models.TimeField(default=time(7,30), db_default=time(7,30))
-    delivery_end_time = models.TimeField(default=time(11), db_default=time(11))
-    pickup_start_time = models.TimeField(default=time(7,30), db_default=time(7,30))
-    pickup_end_time = models.TimeField(default=time(11), db_default=time(11))
-    delivery_area_fees = models.JSONField(default=dict, blank=True, db_default={})
     delivery_enabled = models.BooleanField(default=True)
     pickup_enabled = models.BooleanField(default=False)
     pickup_location = models.CharField(max_length=250, blank=True)
@@ -560,8 +545,6 @@ class OrderIngredient(models.Model):
 
 
 class IngredientConsumption(models.Model):
-    allocation_stage = models.CharField(max_length=12, default='preparation', db_default='preparation')
-    returned_at = models.DateTimeField(null=True, blank=True)
     order_item = models.ForeignKey(OrderItem, on_delete=models.PROTECT, related_name='consumption')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.PROTECT, related_name='consumption')
     material_name = models.CharField(max_length=100)
@@ -617,81 +600,3 @@ class RecommendationEvent(models.Model):
     order = models.OneToOneField(Order, null=True, on_delete=models.SET_NULL)
     request_id = models.UUIDField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-
-class PackagingItem(models.Model):
-    """Physical packaging stock, counted separately from edible ingredients."""
-    name = models.CharField(max_length=100, unique=True)
-    quantity = models.PositiveIntegerField(default=0)
-    reorder_level = models.PositiveIntegerField(default=10)
-    unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True, blank=True,
-                                    validators=[MinValueValidator(0)])
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['name', 'id']
-        constraints = [models.UniqueConstraint(models.functions.Lower('name'), name='packaging_name_ci_unique')]
-
-
-class ProductPackaging(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='packaging_requirements')
-    packaging_item = models.ForeignKey(PackagingItem, on_delete=models.PROTECT, related_name='menu_requirements')
-    quantity_per_item = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-
-    class Meta:
-        constraints = [models.UniqueConstraint(fields=['product', 'packaging_item'], name='unique_menu_packaging'),
-                       models.CheckConstraint(condition=models.Q(quantity_per_item__gte=1), name='positive_menu_packaging')]
-
-
-class OrderPackaging(models.Model):
-    """Accepted packaging per order line; menu edits never rewrite it."""
-    order_item = models.ForeignKey(OrderItem, on_delete=models.PROTECT, related_name='accepted_packaging')
-    packaging_item = models.ForeignKey(PackagingItem, on_delete=models.PROTECT, related_name='order_allocations')
-    packaging_name = models.CharField(max_length=100)
-    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True)
-    allocated_at = models.DateTimeField(null=True)
-    released_at = models.DateTimeField(null=True)
-
-    class Meta:
-        constraints = [models.UniqueConstraint(fields=['order_item', 'packaging_item'], name='unique_order_packaging'),
-                       models.CheckConstraint(condition=models.Q(quantity__gte=1), name='positive_order_packaging')]
-
-
-class PackagingMovement(models.Model):
-    packaging_item = models.ForeignKey(PackagingItem, on_delete=models.PROTECT, related_name='movements')
-    order_packaging = models.ForeignKey(OrderPackaging, on_delete=models.PROTECT, null=True)
-    request_id = models.UUIDField(unique=True, null=True)
-    kind = models.CharField(max_length=10, choices=[('opening', 'Opening stock'), ('receive', 'Stock received'),
-        ('adjust', 'Adjustment'), ('allocate', 'Order allocation'), ('release', 'Cancellation return')])
-    change = models.IntegerField()
-    balance_after = models.PositiveIntegerField()
-    reason = models.CharField(max_length=200)
-    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-id']
-        constraints = [models.UniqueConstraint(fields=['order_packaging', 'kind'], name='unique_packaging_order_movement')]
-
-
-class GuestCustomer(models.Model):
-    """Opaque browser-session identity, never looked up using a name or phone."""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='guest_customer')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-
-class CheckoutProof(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    order = models.OneToOneField(Order, null=True, blank=True, on_delete=models.PROTECT, related_name='checkout_proof')
-    content = models.BinaryField()
-    digest = models.CharField(max_length=64)
-    scope_digest = models.CharField(max_length=64)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        constraints = [models.UniqueConstraint(fields=['digest'], condition=models.Q(order__isnull=False), name='one_order_per_proof_image')]

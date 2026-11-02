@@ -75,8 +75,7 @@ try {
   assert.doesNotMatch(undated,/Review delivery time for order|Manage order before/);
   assert.doesNotMatch(undated,/1970|Invalid Date/);
   const {default:OrderProgress}=await server.ssrLoadModule('/src/components/OrderProgress.jsx');
-  const {StoreContext}=await server.ssrLoadModule('/src/contexts/StorefrontContext.js');
-  const requestProgress=payment_status=>renderToStaticMarkup(createElement(StoreContext.Provider,{value:{store:{ordering_mode:'scheduled'}}},createElement(MemoryRouter,null,createElement(OrderProgress,{order:{status:'pending',items:[],payment_status,preparation_plan:{needs_review:true,tasks:[]}}}))));
+  const requestProgress=payment_status=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(OrderProgress,{order:{status:'pending',items:[],payment_status,preparation_plan:{needs_review:true,tasks:[]}}})));
   assert.match(requestProgress('unpaid'),/requested, not confirmed/);
   assert.match(requestProgress('unpaid'),/No preparation slot is reserved/);
   assert.match(requestProgress('unpaid'),/No payment was taken/);
@@ -133,7 +132,7 @@ try {
   const {default:AdminOrdersPage}=await server.ssrLoadModule('/src/pages/admin/AdminOrdersPage.jsx');
   const {OrderContext}=await server.ssrLoadModule('/src/contexts/OrderContext.js');
   const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
-  const ownerRender=state=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(UIContext.Provider,{value:{formatOrderNumber:id=>'ORD-'+id}},createElement(OrderContext.Provider,{value:{adminOrders:batchOrders.map(order=>({...order,items:[],payment_status:'unpaid',total_amount:'12',shipping_fee:'0'})),fetchAdminOrders:()=>{},...state}},createElement(StoreContext.Provider,{value:{store:{ordering_mode:'scheduled'}}},createElement(AdminOrdersPage))))));
+  const ownerRender=state=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(UIContext.Provider,{value:{formatOrderNumber:id=>'ORD-'+id}},createElement(OrderContext.Provider,{value:{adminOrders:batchOrders.map(order=>({...order,items:[],payment_status:'unpaid',total_amount:'12',shipping_fee:'0'})),fetchAdminOrders:()=>{},...state}},createElement(AdminOrdersPage)))));
   const owner=ownerRender({});
   assert.match(owner,/Update several orders in this list/);assert.match(owner,/Mark food ready/);assert.match(owner,/More status options/);
   assert.match(owner,/<details class="owner-handover-details"><summary>Handover &amp; contact details/);

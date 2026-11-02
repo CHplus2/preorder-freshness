@@ -1,5 +1,3 @@
-import SimpleOrdersPage from './SimpleOrdersPage';
-import {useStorefront} from '../../contexts/StorefrontContext';
 import {arrivalLabel} from '../../utils/arrivalWindow';
 import '../customer/CustomerExperience.css';
 import OrderContactActions from '../../components/OrderContactActions';
@@ -31,8 +29,7 @@ import {closedGeneratedHistory,generatedSalesHistory,orderStatusLabel,orderDate}
 
 export default function AdminOrdersPage() {
   const [params]=useSearchParams();
-  const {store}=useStorefront();
-  return store.ordering_mode==='scheduled'?<OwnerOrders key={params.toString()}/>:<SimpleOrdersPage/>;
+  return <OwnerOrders key={params.toString()}/>;
 }
 
 function OwnerOrders() {

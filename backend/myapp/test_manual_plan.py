@@ -11,7 +11,7 @@ class ManualPlanTests(TestCase):
         self.owner=User.objects.create_user('owner',is_staff=True)
         self.buyer=User.objects.create_user('buyer')
         self.client=APIClient();self.client.force_authenticate(self.owner)
-        Storefront.objects.create(pk=1, ordering_mode='scheduled')
+        Storefront.objects.create(pk=1)
         self.start=(timezone.localtime()+timedelta(days=4)).replace(hour=10,minute=0,second=0,microsecond=0)
         self.end=self.start+timedelta(hours=2)
         self.order=Order.objects.create(user=self.buyer,delivery_at=self.start.replace(hour=17),preparation_plan={'needs_review':True,'tasks':[]})

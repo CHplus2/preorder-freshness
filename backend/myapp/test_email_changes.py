@@ -22,7 +22,7 @@ class EmailChangeTests(TestCase):
         self.other=User.objects.create_user('other-owner',email='other@example.test',password=PASSWORD)
         self.client=APIClient();self.client.force_authenticate(self.user)
         self.send=patch('myapp.services.email_changes.send_mail',return_value=1).start();self.addCleanup(patch.stopall)
-        Storefront.objects.create(pk=1, ordering_mode='scheduled')
+        Storefront.objects.create(pk=1)
 
     def request(self,target='new@example.test',password=PASSWORD):
         return self.client.post('/api/account/email-change/',dict(email=target,current_password=password),format='json')
@@ -132,7 +132,7 @@ class EmailChangeTests(TestCase):
 class EmailConfirmationConcurrencyTests(TransactionTestCase):
     def setUp(self):
         self.user=User.objects.create_user('confirmation-concurrent',email='old@example.test',password=PASSWORD)
-        Storefront.objects.create(pk=1, ordering_mode='scheduled')
+        Storefront.objects.create(pk=1)
 
     def test_same_link_confirms_once_across_workers(self):
         with patch('myapp.services.email_changes.send_mail',return_value=1) as send:

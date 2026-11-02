@@ -10,7 +10,7 @@ from .models import Product,Order,OrderItem,Storefront,OrderAmendment
 class DemoDateCommandTests(TestCase):
     def setUp(self):
         self.owner=User.objects.create_user('date-command-owner',is_staff=True)
-        Storefront.objects.create(pk=1, ordering_mode='scheduled')
+        Storefront.objects.create(pk=1)
         self.menu=Product.objects.create(name='Nasi Telur Kicap',price=10)
         self.order=Order.objects.create(user=self.owner,total_amount=10)
         OrderItem.objects.create(order=self.order,product=self.menu,product_name=self.menu.name,quantity=1,unit_price=10,subtotal=10)

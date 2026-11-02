@@ -4,7 +4,7 @@ import AppNotification from './components/AppNotification';
 import PageLoading from "./components/PageLoading";
 import RouteErrorBoundary from "./components/RouteErrorBoundary";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback, lazy, Suspense } from "react";
 import { User, Menu, X, ShoppingBag } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
@@ -31,7 +31,6 @@ const ConfirmEmailPage=lazy(()=>import('./pages/customer/ConfirmEmailPage'));
 import './fyp.css';
 const PaymentPage=lazy(()=>import("./pages/customer/PaymentPage"));
 const AdminProductsPage=lazy(()=>import("./pages/admin/AdminProductsPage"));
-const PackagingPage=lazy(()=>import('./pages/admin/PackagingPage'));
 const AdminInventoryPage=lazy(()=>import("./pages/admin/AdminInventoryPage"));
 const AdminOrdersPage=lazy(()=>import("./pages/admin/AdminOrdersPage"));
 const AdminReportsPage=lazy(()=>import("./pages/admin/AdminReportsPage"));
@@ -53,8 +52,6 @@ const EscrowOrderPayment=lazy(()=>import('./pages/customer/EscrowOrderPayment'))
 const EscrowDemoPage=lazy(()=>import('./pages/customer/EscrowDemoPage'));
 
 function AnimatedRoutes() {
-  const {isGuest}=useAuth();
-  const {store}=useStorefront();
   const location = useLocation();
 
   const page_motion = location.pathname.startsWith('/admin/') ? {} : {
@@ -72,7 +69,7 @@ function AnimatedRoutes() {
             <RequireAuth message="Admin access required"><PredictiveDashboard view={view}/></RequireAuth>
           }/>
         ))}
-        <Route path="/account" element={<RequireAuth>{isGuest?<Navigate to="/orders" replace/>:<AccountPage/>}</RequireAuth>}/>
+        <Route path="/account" element={<RequireAuth><AccountPage/></RequireAuth>}/>
         <Route path="/recover" element={<RecoveryPage/>}/>
         <Route path="/confirm-email" element={<ConfirmEmailPage/>}/>
         <Route path="/payment/escrow" element={<RequireAuth><Suspense fallback={<PageLoading label="Loading order escrow…"/>}><EscrowOrderPayment/></Suspense></RequireAuth>}/>
@@ -82,9 +79,8 @@ function AnimatedRoutes() {
         <Route path="/contact" element={<ContactPage/>}/>
         <Route path="/menu" element={<ProductsPage/>}/>
         <Route path="*" element={<PageState title="This page isn’t on the menu." description="The link may have changed. You can browse the menu or return to your saved orders."><Link to="/menu">Explore the menu</Link><Link to="/orders">My orders</Link></PageState>}/>
-        <Route path="/admin/packaging" element={<RequireAuth message="Admin access required"><PackagingPage/></RequireAuth>}/>
         <Route path="/admin/settings" element={<RequireAuth message="Admin access required"><StoreSettingsPage/></RequireAuth>}/>
-        <Route path="/admin/planner" element={<RequireAuth message="Admin access required"><>{store.ordering_mode==='scheduled'?<PlannerPage key={location.search}/>:<Navigate to="/admin/orders" replace/>}</></RequireAuth>}/>
+        <Route path="/admin/planner" element={<RequireAuth message="Admin access required"><PlannerPage key={location.search}/></RequireAuth>}/>
         <Route
           path="/"
           element={
@@ -215,7 +211,7 @@ function AppContent() {
   const [mobileOpen,setMobileOpen]=useState(false);
   const mobileToggle=useRef(null),mobileNavigation=useRef(null),accountMenu=useRef(null),accountToggle=useRef(null);
   const ownerPage=location.pathname.startsWith('/admin/');
-  const publicLinks=publicNavigation,ownerLinks=store.ordering_mode==='scheduled'?kitchenNavigation:kitchenNavigation.filter(([path])=>!['/admin/planner','/admin/customers'].includes(path));
+  const publicLinks=publicNavigation,ownerLinks=kitchenNavigation;
   const metadata=pageMetadata(location.pathname);
   const basketCount=cart.reduce((n,item)=>n+item.quantity,0);
   const basketStatus=cartLoading || cartUpdating?'updating':cartError?'unavailable':`${basketCount} ${basketCount===1?'item':'items'}`;
@@ -239,10 +235,7 @@ function AppContent() {
   },[location.pathname]);
   const { showLogin, setShowLogin, showSignup, dropdownOpen, setDropdownOpen, alert, setAlert } = useUI();
   const dismissNotification=useCallback(()=>setAlert({message:'',type:''}),[setAlert]);
-  const { isAuthenticated, isAdmin, isGuest, logout, startGuest, authPending, authError } = useAuth();
-  useEffect(()=>{
-    if(store.ordering_mode==='simple' && isAuthenticated===false && !authPending && !authError && /^\/(?:(?:menu|products|cart|checkout|orders|account|story|how-it-works|contact)(?:\/|$)|$)/.test(location.pathname))startGuest();
-  },[store.ordering_mode,isAuthenticated,authPending,authError,startGuest,location.pathname]);
+  const { isAuthenticated, isAdmin, logout } = useAuth();
   const { productIdToDelete } = useProduct();
 
   useEffect(()=>{
@@ -271,12 +264,12 @@ function AppContent() {
         </nav>}
         <div className="business-header-actions">
           {isAuthenticated && !ownerPage && <Link to="/cart" className="basket-link" aria-label={`Basket, ${basketStatus}`}><ShoppingBag size={19}/><span aria-hidden="true">{cartLoading || cartUpdating?'…':cartError?'!':basketCount}</span></Link>}
-          {isAuthenticated===false && <button className="login-btn" onClick={()=>setShowLogin(true)}>{store.ordering_mode==='simple'?'Kitchen sign in':'Sign in'}</button>}
-          {isAuthenticated && <div className="user-dropdown" ref={accountMenu}><button ref={accountToggle} className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} aria-controls="account-navigation" onClick={()=>{setMobileOpen(false);setDropdownOpen(!dropdownOpen);}}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content" id="account-navigation">{!isGuest && <Link to="/account" onClick={()=>setDropdownOpen(false)}>Account settings</Link>}<Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to={store.ordering_mode==='scheduled'?'/admin/planner':'/admin/orders'} onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}{isGuest && <button type="button" onClick={()=>{setDropdownOpen(false);setShowLogin(true)}}>Kitchen sign in</button>}<button className="logout-btn" onClick={logout}>{isGuest?'End this browser session':'Sign out'}</button></div>}</div>}
+          {isAuthenticated===false && <button className="login-btn" onClick={()=>setShowLogin(true)}>Sign in</button>}
+          {isAuthenticated && <div className="user-dropdown" ref={accountMenu}><button ref={accountToggle} className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} aria-controls="account-navigation" onClick={()=>{setMobileOpen(false);setDropdownOpen(!dropdownOpen);}}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content" id="account-navigation"><Link to="/account" onClick={()=>setDropdownOpen(false)}>Account settings</Link><Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to="/admin/planner" onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}<button className="logout-btn" onClick={logout}>Sign out</button></div>}</div>}
           {!ownerPage && <button ref={mobileToggle} className="mobile-menu-toggle" aria-label={mobileOpen?'Close navigation':'Open navigation'} aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={()=>{setDropdownOpen(false);setMobileOpen(!mobileOpen);}}>{mobileOpen?<X size={23}/>:<Menu size={23}/>}</button>}
         </div>
       </header>
-      {mobileOpen && !ownerPage && <nav ref={mobileNavigation} className="mobile-navigation" id="mobile-navigation" aria-label="Mobile navigation">{navigation.map(([url,label])=><Link key={url} to={url} onClick={closeMenu} aria-current={isCurrentSection(location.pathname,url)?'page':undefined}>{label}</Link>)}{isAuthenticated && <Link to="/orders" onClick={closeMenu}>My orders</Link>}{isAdmin && <Link to={store.ordering_mode==='scheduled'?'/admin/planner':'/admin/orders'} onClick={closeMenu}>Kitchen dashboard</Link>}</nav>}
+      {mobileOpen && !ownerPage && <nav ref={mobileNavigation} className="mobile-navigation" id="mobile-navigation" aria-label="Mobile navigation">{navigation.map(([url,label])=><Link key={url} to={url} onClick={closeMenu} aria-current={isCurrentSection(location.pathname,url)?'page':undefined}>{label}</Link>)}{isAuthenticated && <Link to="/orders" onClick={closeMenu}>My orders</Link>}{isAdmin && <Link to="/admin/planner" onClick={closeMenu}>Kitchen dashboard</Link>}</nav>}
 
       <AnimatePresence>
         {showSignup && (

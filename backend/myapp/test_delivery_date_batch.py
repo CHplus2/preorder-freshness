@@ -15,7 +15,7 @@ class DemoDeliveryDateBatchTests(TestCase):
         self.owner=User.objects.create_user('batch-owner',is_staff=True)
         self.buyer=User.objects.create_user('batch-buyer')
         self.client=APIClient();self.client.force_authenticate(self.owner)
-        self.store=Storefront.objects.create(pk=1,delivery_buffer_minutes=90, ordering_mode='scheduled')
+        self.store=Storefront.objects.create(pk=1,delivery_buffer_minutes=90)
         self.menu=Product.objects.create(name='Nasi Ayam Black Pepper',price=10,lead_hours=24,daily_capacity=4)
         self.url='/api/admin/orders/missing-delivery-dates/'
 

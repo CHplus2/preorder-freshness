@@ -13,7 +13,7 @@ from ..serializers import OrderSerializer, UserSerializer
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def admin_order_list(request):
-    orders = Order.objects.select_related("user", "address", "checkout_proof").defer("checkout_proof__content").prefetch_related("items").order_by("-created_at")
+    orders = Order.objects.select_related("user", "address").prefetch_related("items").order_by("-created_at")
     serializer = OrderSerializer(orders, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -30,8 +30,6 @@ def admin_order_detail(request, pk):
     new_payment_status = request.data.get("payment_status")
     if new_payment_status and new_payment_status != order.payment_status:
         raise ValidationError('Record a verified payment or refund in Payment records; status cannot be changed directly.')
-    if new_status and order.ordering_mode == 'simple' and new_status != order.status:
-        raise ValidationError('Use the order receipt or cancellation action for this order.')
     if new_status:
         apply_progress(order, new_status, request.user)
     else:

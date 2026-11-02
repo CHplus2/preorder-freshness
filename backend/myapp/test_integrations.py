@@ -12,7 +12,7 @@ class IntegrationTests(TestCase):
         self.user = User.objects.create_user('buyer')
         self.owner = User.objects.create_user('owner', is_staff=True)
         self.client = APIClient()
-        self.store = Storefront.objects.create(pk=1, ordering_mode='scheduled')
+        self.store = Storefront.objects.create(pk=1)
         self.product = Product.objects.create(name='Meal',price=12)
         self.address = Address.objects.create(user=self.user,line1='Test',city='KL',state='KL',postal_code='50000',phone='0123456789')
 

@@ -1,4 +1,3 @@
-import {validSimpleQuote} from '../utils/simpleOrdering';
 import {readArrivalWindow} from '../utils/arrivalWindow';
 import {useEffect,useState} from 'react';
 import axios from 'axios';
@@ -20,7 +19,7 @@ export default function useDeliveryQuote({deliveryAt,selectionKey,enabled,issue=
     const {data}=await axios.post('/api/orders/quote/',{delivery_at:deliveryAt+':00+08:00',delivery_method:method,delivery_area:area,arrival_window_minutes:windowMinutes},
      {signal:controller.signal,timeout:30000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
     if(controller.signal.aborted)return;
-    if(!data || typeof data!=='object' || Array.isArray(data) || (data.ordering_mode==='simple'?!validSimpleQuote(data):data.needs_review!==true &&
+    if(!data || typeof data!=='object' || Array.isArray(data) || (data.needs_review!==true &&
       (!Number.isFinite(Date.parse(data.preparation_at)) || !Number.isFinite(Date.parse(data.preparation_end_at)) || Date.parse(data.preparation_end_at)<=Date.parse(data.preparation_at)))) {
      const error=new Error('Invalid availability response');error.code='INVALID_RESPONSE';throw error;
     }

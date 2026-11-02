@@ -24,9 +24,6 @@ def candidate_item(product, portions):
 
 
 def slot_search(items, day, store, limit=3, now=None):
-    from .simple_ordering import simple, simple_slots
-    if simple(store):
-        return simple_slots(items, day, store, limit, now)
     from .scheduling import schedule_order, availability_snapshot
     now = now or timezone.now()
     today = timezone.localtime(now).date()
@@ -65,9 +62,6 @@ def slot_search(items, day, store, limit=3, now=None):
 
 def next_basket_slots(items, day, store):
     """Bounded seven-day search; suggestions never reserve capacity or stock."""
-    from .simple_ordering import simple, simple_slots
-    if simple(store):
-        return simple_slots(items, day, store, limit=24, find_next=True)
     items = list(items)
     now = timezone.now()
     today = timezone.localtime(now).date()

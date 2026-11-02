@@ -21,7 +21,7 @@ class FulfilmentTests(TestCase):
         self.store = Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, pickup_enabled=True,
             pickup_location='Fictional collection point, Kuching', pickup_instructions='Collect at the front counter.',
             pickup_open_hour=7, pickup_close_hour=14, delivery_open_hour=9, delivery_close_hour=12,
-            delivery_areas=['Batu Kawa', 'Moyan'], delivery_fee_myr=7, free_delivery_minimum_myr=60, ordering_mode='scheduled')
+            delivery_areas=['Batu Kawa', 'Moyan'], delivery_fee_myr=7, free_delivery_minimum_myr=60)
         self.buyer = User.objects.create_user('fulfilment-buyer')
         self.other = User.objects.create_user('fulfilment-other')
         self.owner = User.objects.create_user('fulfilment-owner', is_staff=True)

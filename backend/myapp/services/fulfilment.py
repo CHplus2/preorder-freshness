@@ -1,8 +1,6 @@
 """Fulfilment terms used by discovery, checkout and accepted-order planning."""
 from copy import copy
 from decimal import Decimal
-from datetime import time
-from django.utils.dateparse import parse_time
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 
@@ -31,26 +29,13 @@ def hours(store):
     return getattr(store, 'fulfilment_open_hour', getattr(store, 'delivery_open_hour', 9)), getattr(store, 'fulfilment_close_hour', getattr(store, 'delivery_close_hour', 21))
 
 
-
-def time_bounds(store):
-    if hasattr(store, 'fulfilment_start_time'):
-        return store.fulfilment_start_time, store.fulfilment_end_time
-    if getattr(store,'ordering_mode','scheduled') == 'simple':
-        return getattr(store,'delivery_start_time',time(7,30)), getattr(store,'delivery_end_time',time(11))
-    first,last=hours(store)
-    return time(first),time(last)
-
-
 def fee(subtotal, store, method='standard'):
     if method == 'pickup':
         return Decimal('0.00')
     threshold = getattr(store, 'free_delivery_minimum_myr', Decimal('50'))
     if threshold is not None and subtotal >= threshold:
         return Decimal('0.00')
-    area=getattr(store,'selected_delivery_area','')
-    fees=getattr(store,'delivery_area_fees',{})
-    selected=fees.get(area,getattr(store,'delivery_fee_myr',5)) if isinstance(fees,dict) else getattr(store,'delivery_fee_myr',5)
-    return Decimal(str(selected)).quantize(Decimal('.01'))
+    return Decimal(getattr(store, 'delivery_fee_myr', 5)).quantize(Decimal('.01'))
 
 
 def selected_store(store, method=None, area='', require_area=False, arrival_window_minutes=0):
@@ -70,11 +55,6 @@ def selected_store(store, method=None, area='', require_area=False, arrival_wind
         raise ValidationError('Choose a delivery area served by this kitchen. Contact the kitchen about other areas.')
     selected = copy(store)
     selected.arrival_window_minutes = arrival_window_minutes
-    selected.selected_delivery_area = '' if pickup else area
-    if getattr(store,'ordering_mode','scheduled') == 'simple':
-        kind='pickup' if pickup else 'delivery'
-        selected.fulfilment_start_time=getattr(store,kind+'_start_time',time(7,30))
-        selected.fulfilment_end_time=getattr(store,kind+'_end_time',time(11))
     selected.original_delivery_buffer_minutes = store.delivery_buffer_minutes
     selected.delivery_buffer_minutes = 0 if pickup else store.delivery_buffer_minutes
     selected.fulfilment_open_hour = getattr(store, 'pickup_open_hour' if pickup else 'delivery_open_hour', 8 if pickup else 9)
@@ -85,8 +65,7 @@ def selected_store(store, method=None, area='', require_area=False, arrival_wind
 
 def snapshot(store, method, area=''):
     first, last = hours(store)
-    begin,end=time_bounds(store)
-    return dict(open_time=begin.isoformat(),close_time=end.isoformat(),method=method, label='Self-collection' if method == 'pickup' else 'Express request' if method == 'express' else 'Owner delivery',
+    return dict(method=method, label='Self-collection' if method == 'pickup' else 'Express request' if method == 'express' else 'Owner delivery',
         open_hour=first, close_hour=last, buffer_minutes=store.delivery_buffer_minutes,
         arrival_window_minutes=getattr(store, 'arrival_window_minutes', 0),
         pickup_location=store.pickup_location if method == 'pickup' else '',
@@ -104,11 +83,5 @@ def order_store(store, order):
     selected.delivery_buffer_minutes = saved.get('buffer_minutes', order.preparation_plan.get('delivery_buffer_minutes', store.delivery_buffer_minutes))
     selected.fulfilment_open_hour = saved.get('open_hour', 9)
     selected.fulfilment_close_hour = saved.get('close_hour', 21)
-    if saved.get('open_time') and saved.get('close_time'):
-        selected.fulfilment_start_time=parse_time(saved['open_time'])
-        selected.fulfilment_end_time=parse_time(saved['close_time'])
-    else:
-        selected.fulfilment_start_time=time(saved.get('open_hour',9))
-        selected.fulfilment_end_time=time(saved.get('close_hour',21))
     selected.fulfilment_method = order.delivery_method
     return selected

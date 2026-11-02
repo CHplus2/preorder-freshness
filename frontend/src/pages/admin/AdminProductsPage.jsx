@@ -1,4 +1,3 @@
-import {useStorefront} from '../../contexts/StorefrontContext';
 import MenuEditor from '../../components/MenuEditor';
 import CategoryManager from '../../components/CategoryManager';
 import {unitLabel} from '../../utils/sellingDetails';
@@ -11,9 +10,8 @@ import { useProduct } from "../../contexts/ProductContext";
 
 
 export default function AdminProductsPage() {
-  const simple=useStorefront()?.store?.ordering_mode!=='scheduled';
   const [reviewParams]=useSearchParams();
-  const review=simple&&reviewParams.get('review')==='preparation'?'recipes':reviewParams.get('review');
+  const review=reviewParams.get('review');
   const reviewTitles={recipes:'Menu ingredients',preparation:'Preparation steps',costs:'Menu costs'};
   const [statusFilter,setStatusFilter]=useState('current');
   const [missingStepsOnly,setMissingStepsOnly]=useState(true);
@@ -105,7 +103,7 @@ export default function AdminProductsPage() {
             <th>Price</th>
             <th>Available units</th>
             <th>Category</th>
-            {!simple&&<th>Preparation</th>}
+            <th>Preparation</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -129,10 +127,10 @@ export default function AdminProductsPage() {
               <td data-label="Price">RM {p.price} / {unitLabel(p.selling_details)}</td>
               <td data-label="Available units">{p.stock}</td>
               <td data-label="Category">{p.category_name}</td>
-              {!simple&&<td data-label="Preparation"><span className="status-badge">{p.preparation_tasks?.length ? `${p.preparation_tasks.length} steps` : "Needs setup"}</span></td>}
+              <td data-label="Preparation"><span className="status-badge">{p.preparation_tasks?.length ? `${p.preparation_tasks.length} steps` : "Needs setup"}</span></td>
               <td data-label="Actions">
                 <div className="menu-state-actions">
-                  <button disabled={statusBusy} onClick={() => {setAlert({message:'',type:''});setUpdatedProduct({ ...p });}}>{reviewTitles[review]?`Edit ${reviewTitles[review].toLowerCase()}`:simple?'Edit menu':'Edit & steps'}</button>
+                  <button disabled={statusBusy} onClick={() => {setAlert({message:'',type:''});setUpdatedProduct({ ...p });}}>{reviewTitles[review]?`Edit ${reviewTitles[review].toLowerCase()}`:'Edit & steps'}</button>
                   <button className="menu-delete-action" disabled={statusBusy} onClick={()=>{setAlert({message:'',type:''});setProductIdToDelete(p.id);}}>Delete</button>
                   {p.selling_status==='archived'?<button disabled={statusBusy} onClick={()=>changeStatus(p,'paused')}>Restore as paused</button>:<>
                     <button disabled={statusBusy} onClick={()=>changeStatus(p,p.selling_status==='active'?'paused':'active')}>{p.selling_status==='active'?'Pause orders':'Resume orders'}</button>
@@ -144,7 +142,7 @@ export default function AdminProductsPage() {
             ))
           ) : (
             <tr>
-              <td colSpan={simple?6:7}>{review==='preparation' && missingStepsOnly?'No active menus missing preparation steps match these filters. Uncheck the option above to review existing steps.':'No products found.'}</td>
+              <td colSpan="7">{review==='preparation' && missingStepsOnly?'No active menus missing preparation steps match these filters. Uncheck the option above to review existing steps.':'No products found.'}</td>
             </tr>
           )}
 

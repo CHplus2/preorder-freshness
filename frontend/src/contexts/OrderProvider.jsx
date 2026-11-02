@@ -82,7 +82,7 @@ export default function OrderProvider({ children }) {
     const placeOrder = useCallback(async (addressId, payment, options = {}) => {
         try {
             if(!isAuthenticated || !isSessionCurrent())throw accountChanged();
-            const body=options.body?{...options.body,address_id:addressId,payment}:{address_id:addressId,payment,...readCheckout(sessionStorage,'deliveryPlan',{})};
+            const body={address_id:addressId,payment,...readCheckout(sessionStorage,'deliveryPlan',{})};
             const key=JSON.stringify([accountKey,body,cart.map(i=>[i.product.id,i.quantity])]);
             const attempt=checkoutAttempt(sessionStorage,key,()=>crypto.randomUUID());
             const placed = await axios.post("/api/orders/place/", { ...body, request_id:attempt.id, recommendation_session:sessionStorage.getItem('recommendationSession') }, {

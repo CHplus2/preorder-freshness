@@ -17,7 +17,7 @@ class MultiDayPlanningTests(TestCase):
     def setUp(self):
         self.owner=User.objects.create_user('multi-owner',is_staff=True)
         self.buyer=User.objects.create_user('multi-buyer')
-        self.store=Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1, ordering_mode='scheduled')
+        self.store=Storefront.objects.create(manual_payment_enabled=True, bank_transfer_instructions='Fictional test bank details', pk=1)
         self.now=timezone.localtime().replace(hour=8,minute=0,second=0,microsecond=0)
         self.delivery=(self.now+timedelta(days=7)).replace(hour=18)
         self.client=APIClient();self.client.force_authenticate(self.buyer)

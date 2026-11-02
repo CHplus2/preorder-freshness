@@ -17,7 +17,7 @@ from .models import InventoryItem, InventoryLog, Order, OrderItem, PaymentEvent,
 class DemoInventoryTests(TestCase):
     def setUp(self):
         fixtures.LocalPlanningTests.setUp(self)
-        Storefront.objects.create(pk=1, ordering_mode='scheduled')
+        Storefront.objects.create(pk=1)
 
     def command(self, *args):
         output = io.StringIO()

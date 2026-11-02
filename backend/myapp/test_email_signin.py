@@ -132,7 +132,7 @@ class EmailSigninTests(TestCase):
 @skipUnless(connection.vendor=='postgresql','Row-lock concurrency requires PostgreSQL')
 class EmailIdentityConcurrencyTests(TransactionTestCase):
     def setUp(self):
-        Storefront.objects.create(pk=1, ordering_mode='scheduled')
+        Storefront.objects.create(pk=1)
 
     def test_concurrent_signups_cannot_claim_the_same_email(self):
         gate=Barrier(2)

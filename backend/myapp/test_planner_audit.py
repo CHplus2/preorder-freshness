@@ -20,7 +20,7 @@ class PlannerAuditTests(TestCase):
         self.owner = User.objects.create_user('planner-audit-owner', is_staff=True)
         self.buyer = User.objects.create_user('planner-audit-buyer')
         self.client = APIClient(); self.client.force_authenticate(self.owner)
-        self.store = Storefront.objects.create(pk=1, delivery_buffer_minutes=90, ordering_mode='scheduled')
+        self.store = Storefront.objects.create(pk=1, delivery_buffer_minutes=90)
         self.product = Product.objects.create(name='Audit cookies', price=10, lead_hours=24,
             preparation_tasks=[dict(name='Bake', resource='oven', worker=False,
                 minutes=40, max_wait_minutes=0)])
