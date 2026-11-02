@@ -1,8 +1,9 @@
+import SimpleFulfilmentSettings from './SimpleFulfilmentSettings';
 import DeliveryCostCheck from './DeliveryCostCheck';
 import {useState} from 'react';
 import {deliveryAreasError} from '../utils/deliveryAreas';
 import './FulfilmentChoices.css';
-export default function FulfilmentSettings({store,onChange,disabled=false,areaError='',onSavePickup,pickupSaving=false,pickupError=''}){
+function ScheduledFulfilmentSettings({store,onChange,disabled=false,areaError='',onSavePickup,pickupSaving=false,pickupError=''}){
  const [areas,setAreas]=useState(()=>(store.delivery_areas || []).join('\n'));
  const update=change=>onChange({...store,...change});
  const areaIssue=areaError || deliveryAreasError(store.delivery_areas || []);
@@ -20,3 +21,5 @@ export default function FulfilmentSettings({store,onChange,disabled=false,areaEr
  {!store.pickup_enabled && store.delivery_enabled===false && <p role="status">Both options are off. New orders will be unavailable until you enable an option; existing orders remain in your records.</p>}
  </fieldset></section>;
 }
+
+export default function FulfilmentSettings(props){return props.store.ordering_mode==='simple'?<SimpleFulfilmentSettings {...props}/>:<ScheduledFulfilmentSettings {...props}/>;}

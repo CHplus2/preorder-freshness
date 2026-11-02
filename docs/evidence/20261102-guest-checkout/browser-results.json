@@ -1,0 +1,25 @@
+{
+  "result": "passed",
+  "fixture": "isolated local database; no real bank payments or emails",
+  "viewports": [
+    "1440x1000",
+    "390x844"
+  ],
+  "checks": [
+    "anonymous menu starts private guest session",
+    "add food without registration",
+    "delivery cash at 07:30 with server area fee",
+    "name and phone snapshot",
+    "QR-only pickup at 11:00",
+    "sanitized receipt upload through browser",
+    "proof remains unpaid until staff verification",
+    "another guest cannot read orders or proof",
+    "owner reviews proof",
+    "minute settings and multiline area fee editing",
+    "no horizontal overflow or browser errors"
+  ],
+  "order_ids": [
+    1,
+    2
+  ]
+}

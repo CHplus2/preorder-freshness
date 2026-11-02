@@ -8,7 +8,8 @@ export function authSession(data){
  if(!data || typeof data.authenticated!=='boolean')throw invalidResponse();
  if(!data.authenticated)return {isAuthenticated:false,isAdmin:false,accountKey:'anonymous'};
  if(typeof data.username!=='string' || !data.username || typeof data.is_admin!=='boolean' || (data.user_id!=null && (!Number.isSafeInteger(data.user_id) || data.user_id<1)))throw invalidResponse();
- return {isAuthenticated:true,isAdmin:data.is_admin,accountKey:`user:${data.user_id ?? data.username}:${data.is_admin?'staff':'customer'}`};
+ if(data.is_guest!==undefined && typeof data.is_guest!=='boolean')throw invalidResponse();
+ return {...(data.is_guest?{isGuest:true}:{}),isAuthenticated:true,isAdmin:data.is_admin,accountKey:`user:${data.user_id ?? data.username}:${data.is_admin?'staff':'customer'}`};
 }
 export function scopeStorage(storage,accountKey,keys=sessionKeys){
  try{

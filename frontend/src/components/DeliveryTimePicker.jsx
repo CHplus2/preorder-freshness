@@ -1,3 +1,4 @@
+import {fulfilmentTimes} from '../utils/fulfilment';
 import {useStorefront} from '../contexts/StorefrontContext';
 import ArrivalWindowChoice from './ArrivalWindowChoice';
 import {arrivalLabel,makeArrivalWindow} from '../utils/arrivalWindow';
@@ -45,12 +46,12 @@ function SimpleTimePicker({value='',day='',method='standard',onSelect,disabled,s
  const [now]=useState(()=>Date.now());
  const local=stamp=>new Date(stamp+8*3600000).toISOString().slice(0,16);
  const [chosenDay,setDay]=useState(()=>value.slice(0,10)||day||local(now).slice(0,10));
- const pickup=method==='pickup',opening=store[pickup?'pickup_open_hour':'delivery_open_hour']??9,closing=store[pickup?'pickup_close_hour':'delivery_close_hour']??21;
+ const pickup=method==='pickup',[opening,closing]=fulfilmentTimes(store,method);
  return <div className="delivery-time-picker simple-time-picker">
   {!pickup&&onWindowChange&&<ArrivalWindowChoice value={windowMinutes} onChange={onWindowChange} disabled={disabled}/>}
   <p>Choose when to receive your food. Ingredient and packaging stock will be checked for your chosen date.</p>
   <label>Delivery or collection date<input required type="date" min={local(now).slice(0,10)} max={local(now+90*86400000).slice(0,10)} value={chosenDay} disabled={disabled} onChange={e=>{setDay(e.target.value);onSelect(value.slice(11)?e.target.value+'T'+value.slice(11):'')}}/></label>
-  <label>{pickup?'Collection':'Delivery'} time<input required type="time" step="60" min={String(opening).padStart(2,'0')+':00'} max={String(closing).padStart(2,'0')+':00'} value={value.slice(11)} disabled={disabled} onChange={e=>onSelect(e.target.value?chosenDay+'T'+e.target.value:'')}/></label>
-  <p className="delivery-picker-hint">{String(opening).padStart(2,'0')}:00–{String(closing).padStart(2,'0')}:00 · Malaysia time</p>
+  <label>{pickup?'Collection':'Delivery'} time<input required type="time" step="60" min={opening} max={closing} value={value.slice(11)} disabled={disabled} onChange={e=>onSelect(e.target.value?chosenDay+'T'+e.target.value:'')}/></label>
+  <p className="delivery-picker-hint">{opening}–{closing} · Malaysia time</p>
  </div>;
 }

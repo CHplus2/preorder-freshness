@@ -11,7 +11,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from ..models import InventoryItem, ProductIngredient, IngredientConsumption, InventoryLog, PackagingItem, OrderPackaging, OrderAmendment
 from .preorder_windows import ordering_issue
-from .fulfilment import hours
+from .fulfilment import time_bounds
 
 
 def simple(store):
@@ -26,9 +26,9 @@ def validate_delivery(items, delivery_at, store, now=None, accepted=False):
     if not delivery_at or timezone.is_naive(delivery_at) or not now < delivery_at <= now + timedelta(days=90):
         raise ValidationError('Choose a future delivery time within the next 90 days.')
     local = timezone.localtime(delivery_at)
-    first, last = hours(store)
-    if not time(first) <= local.time() <= time(last):
-        raise ValidationError(f'Choose a time between {first:02d}:00 and {last:02d}:00 Malaysia time.')
+    first, last = time_bounds(store)
+    if not first <= local.time() <= last:
+        raise ValidationError(f'Choose a time between {first:%H:%M} and {last:%H:%M} Malaysia time.')
     from .arrival_windows import validate_window
     validate_window(delivery_at, store, now)
     from .selling import require_local_preorder
@@ -140,12 +140,13 @@ def simple_slots(items, day, store, limit=3, now=None, find_next=False):
         searched_through=last.isoformat(), searched_days=(last-first).days+1,
         earliest_preparation_at=None, delivery_request_after=now.isoformat(), ordering_mode='simple',
         unavailable_code='', unavailable_reason='No suitable times were found. Check the offered dates and current stock.')
-    opening, closing = hours(store)
+    begin,end = time_bounds(store)
+    opening,closing = begin.hour*60+begin.minute,end.hour*60+end.minute
     for offset in range((last-first).days+1):
         stock_checked = False
         selected_day = first+timedelta(days=offset)
-        for hour in range(opening, closing+1):
-            delivery = timezone.make_aware(datetime.combine(selected_day, time(hour)))
+        for minute in range(opening, closing+1, 30):
+            delivery = timezone.make_aware(datetime.combine(selected_day, time(minute//60,minute%60)))
             try:
                 validate_delivery(items, delivery, store, now=now)
                 if not stock_checked:

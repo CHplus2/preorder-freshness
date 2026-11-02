@@ -27,9 +27,18 @@ const questions=[
  ['Can I place an order for a group?','Yes, within the menu’s daily capacity. If the owner enables a bulk promotion, the qualifying discount appears automatically in your basket. For larger plans, contact the kitchen first.'],
  ['When can I leave a review?','After your order is delivered, open the menu item and leave your review. One review per customer per menu keeps feedback tied to actual orders.']
 ];
+const clientQuestions=[
+ ['Do I need an account?','No email or password is needed. Enter your name and phone number at checkout. Orders stay private to this browser session; save your order number if you change devices.'],
+ ['When can I receive my order?','Choose a date and time within the kitchen’s offered delivery or collection hours. Checkout checks menu dates and recorded stock again before accepting the order. Contact the kitchen about a strict event deadline.'],
+ ['How do I pay?','Delivery accepts QR payment or cash. Self-collection accepts QR payment only. Upload your QR payment receipt at checkout; the kitchen verifies it before marking the order paid.'],
+ ['How is the delivery fee calculated?','Choose your delivery area to see its fee. The total is shown before you place the order. Self-collection has no delivery fee.'],
+ ...questions.slice(3,5),
+ ['Can I order for a group?','Yes. Choose the quantities you need; the basket checks recorded stock. Any qualifying bulk discount appears automatically. Contact the kitchen about larger arrangements.']
+];
 export function FAQ({limit=questions.length}){
  const [open,setOpen]=useState(null);
- return <div className="business-faq">{questions.slice(0,limit).map(([q,a],i)=><section key={q}><button aria-expanded={open===i} aria-controls={`faq-${i}`} onClick={()=>setOpen(open===i?null:i)}>{q}{open===i?<Minus size={18}/>:<Plus size={18}/>}</button><div id={`faq-${i}`} hidden={open!==i}><p>{a}</p></div></section>)}</div>;
+ const items=useStorefront()?.store?.ordering_mode==='simple'?clientQuestions:questions;
+ return <div className="business-faq">{items.slice(0,limit).map(([q,a],i)=><section key={q}><button aria-expanded={open===i} aria-controls={`faq-${i}`} onClick={()=>setOpen(open===i?null:i)}>{q}{open===i?<Minus size={18}/>:<Plus size={18}/>}</button><div id={`faq-${i}`} hidden={open!==i}><p>{a}</p></div></section>)}</div>;
 }
 export function BusinessFooter(){
  const {store}=useStorefront();

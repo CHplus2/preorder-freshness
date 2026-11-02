@@ -9,7 +9,7 @@ name and phone for the order/printout. Staff access remains authenticated.
 | --- | --- | --- |
 | 1 | Packaging stock page, receipts/adjustments, menu mapping, low stock, order allocations and movement history | Implemented and tested; database migration/release pending |
 | 2 | Remove Planner from the client workflow and remove preparation-hour/capacity scheduling gates; deduct ingredient stock at placement; simplify delivery receipt status | Implemented and tested; database migration/release pending |
-| 3 | Customer guest ordering with name/phone; QR proof upload, delivery QR/cash and pickup QR; delivery window 07:30–11:00 and area-based fees | Planned |
+| 3 | Customer guest ordering with name/phone; QR proof upload, delivery QR/cash and pickup QR; delivery window 07:30–11:00 and area-based fees | Implemented and tested; database migration/release pending |
 | 4 | Delivery-date order/item summary, individual printable order slips (name/address/phone), and sales reporting | Planned |
 | 5 | End-to-end review of client workflow, mobile UI, access control, uploads, totals and stock; map accepted changes to the FYP revision | Planned |
 
@@ -176,3 +176,116 @@ Evidence: `docs/evidence/20261101-simple-ordering/`.
   stock stayed unchanged, the migration recorded once, retained defaults were
   checked and inserts using the previous model schema still succeeded.
 - No production database writes, real payments, live emails or model training.
+
+## Batch 3: guest checkout, payment evidence and area fees — 2 November 2026
+
+Customers now use a private browser ordering session, with no email, password or
+registration form. Checkout requires **name and phone** for both handover methods,
+plus a full address for delivery. Phone numbers are normalised and copied into
+the order's contact/handover snapshot. An opaque Django user with an unusable
+password backs the session internally; a name or phone number never authenticates
+or searches another customer's records. Staff sign-in remains password protected.
+The old customer-account directory is hidden in the simple-mode workspace; the
+records and historical authentication routes remain available for compatibility.
+
+The browser session lasts up to 30 days. My orders and proof downloads are scoped
+to that session's user. The UI asks customers to keep their order number and
+contact the kitchen after changing devices or clearing browser data. It does not
+promise cross-device recovery using an unverified phone number. Ending a session
+does not erase the owner's order records. New guest orders do not collect email
+or enqueue customer email reminders. Existing historical opt-ins and owner email
+reminders are retained; no scheduler configuration was changed by this batch.
+
+### Payment rules
+
+- **Delivery: DuitNow QR or cash.** Cash orders have no upload and remain unpaid
+  until the owner records actual receipt. Cash collection must be arranged by the
+  kitchen; this does not make a courier collect cash automatically.
+- **Self-collection: QR only.** There is no delivery fee. QR must be configured in
+  Settings; the customer pays the displayed total and uploads a receipt before
+  placing the order.
+- Uploading proof is **evidence awaiting owner verification**, never automatic
+  payment confirmation. Staff review it through Orders → Payment records, verify
+  their bank records and then record the payment. The application does not execute
+  a bank transfer or automatic refund. Existing PayPal, wallet and escrow history
+  remains intact, but those methods cannot settle a new simple-mode order.
+
+Receipts accept still JPEG, PNG or WebP images up to 4 MB. The server decodes and
+re-encodes them, strips the original filename/metadata, bounds image dimensions
+and saved bytes, and stores the sanitized image privately in the database. PDF
+uploads are not supported in this batch; a receipt screenshot is supported.
+Only the uploader and staff can retrieve the image; responses are private and
+not cached. Guest and proof tables have RLS for direct database API access.
+
+Proof is bound to the **server-priced basket, delivery time, method, area and
+arrival choice**, expires for checkout after 24 hours, and attaches to one order
+inside its stock transaction. Changing checkout details requires matching proof;
+the UI explicitly warns against paying twice. Reusing a submitted receipt image
+for another order is blocked, including concurrent attempts. Invalid uploads are
+rate limited even when validation fails. Abandoned uploads are capped per session
+and day; retention/cleanup of unsubmitted database evidence remains an operational
+maintenance task, rather than silently deleting financial material here.
+
+### Hours and delivery fees
+
+New simple-mode delivery and collection defaults are **07:30–11:00 Malaysia time**.
+The owner can edit minute-based opening/closing times in Settings. Menu offered
+dates and cutoffs, recorded stock and held/expired batch rules remain applicable;
+cooking-capacity constraints do not return. Accepted orders keep saved handover
+hours and the fee already recorded on the order.
+
+**Settings → Collection & delivery → Delivery fees by area** supports short area
+names and a fee for each. No real courier rates were invented. Existing areas
+without a separate fee use the existing default delivery fee; the optional
+free-delivery threshold still applies. Leave that threshold blank to always
+charge the area's fee. Pickup is free of a delivery fee. The server computes
+all amounts; changing a price or area invalidates stale proof, and the current
+checkout sends its expected total to prevent unnoticed price changes on submit.
+The basket, date/budget finder and shopping helper use the same area pricing.
+The finder asks for an area where one is required. Updated FAQ and multilingual
+help text describe the client workflow instead of preparation capacity or PayPal.
+
+### Release checklist
+
+1. Back up the private target database. Apply pending **0024**, **0025**, then
+   **0026_guest_qr_fulfilment** using Django `migrate`, followed by `migrate --check`.
+   Alternatively run the complete corresponding scripts in `deploy/sql/`, in
+   order, against Supabase's existing `django_app` schema. The 0026 result must
+   show `0026_guest_qr_fulfilment`.
+2. Deploy this tested integration code only after the build's migration check
+   succeeds. The added storefront fields retain DB defaults for inserts made by
+   the previous release during the upgrade interval.
+3. In Settings, add the owner's actual business QR image URL, enable QR payment,
+   review pickup location/hours and set the actual area fees. A stock of received,
+   unheld ingredients and packaging is required for new orders. No live QR,
+   area-specific prices or stock were fabricated for the owner.
+
+This batch is published to `integration/dormathon-demo`, not main. No production
+DB writes, real payments, live email, courier booking or model training occurred.
+The source recovery/model backups and FYP document are not changed by this batch.
+Batch 4 remains: delivery-date order/item summary, printable individual slips
+(name, address, phone), and sales reporting. Batch 5 remains final workflow and
+FYP evidence review.
+
+### Verification
+
+Evidence: `docs/evidence/20261102-guest-checkout/`.
+
+- Full backend regression: 897 discovered, 867 passed, 30 skipped. Skips require
+  PostgreSQL or missing external runtime artifacts and are not counted as passes.
+- Separate PostgreSQL run: 55 passed, no skips, including shared-stock contention,
+  retry identity and concurrent attempts to use the same receipt image twice.
+- Frontend unit/SSR, UX, checkout, recommendation, historical Planner and shopping
+  helper checks passed, together with lint and the production build. The existing
+  main-bundle size advisory remains.
+- Chromium at 1440×1000 and 390×844: anonymous add-to-basket without registration,
+  cash delivery at 07:30, correct area fee, QR-only pickup at 11:00, actual image
+  upload, proof awaiting verification, unrelated guest denied access, owner proof
+  review, minute settings and multiline area editing. No horizontal overflow or
+  browser script errors observed. Inventory reconciled to 1,700 g / 17 containers
+  from initial 2,000 g / 20 containers for three ordered units; both orders stayed
+  unpaid and only the QR order had attached evidence.
+- Manual SQL applied twice on isolated PostgreSQL 16. Old fees and accepted order
+  snapshots stayed unchanged, migration 0026 recorded once, new morning defaults
+  were verified and previous-release inserts succeeded. A directly granted
+  untrusted DB reader could see no guest/proof rows under RLS.

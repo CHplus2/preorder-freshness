@@ -1,0 +1,9 @@
+{
+  "result": "passed",
+  "checks": [
+    "home page opens a private guest session",
+    "home preview omits legacy lead-hour gate",
+    "current how-it-works and FAQ",
+    "mobile overflow and script errors"
+  ]
+}

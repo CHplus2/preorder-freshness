@@ -12,6 +12,8 @@ class StoreSerializer(serializers.ModelSerializer):
         enabled = attrs.get('manual_payment_enabled', getattr(self.instance, 'manual_payment_enabled', False))
         instructions = attrs.get('bank_transfer_instructions', getattr(self.instance, 'bank_transfer_instructions', ''))
         qr = attrs.get('duitnow_qr_url', getattr(self.instance, 'duitnow_qr_url', ''))
+        if enabled and getattr(self.instance,'ordering_mode','simple')=='simple' and not qr:
+            raise serializers.ValidationError({'duitnow_qr_url':'Add your business DuitNow QR image before enabling QR payment.'})
         if enabled and not (instructions.strip() or qr):
             raise serializers.ValidationError('Add bank transfer instructions or a DuitNow QR image before enabling manual payments.')
         opening = attrs.get('kitchen_open_hour', getattr(self.instance, 'kitchen_open_hour', 8))
@@ -21,11 +23,33 @@ class StoreSerializer(serializers.ModelSerializer):
         for kind in ('delivery', 'pickup'):
             first = attrs.get(f'{kind}_open_hour', getattr(self.instance, f'{kind}_open_hour', 9 if kind == 'delivery' else 8))
             last = attrs.get(f'{kind}_close_hour', getattr(self.instance, f'{kind}_close_hour', 21 if kind == 'delivery' else 20))
-            if not 0 <= first < last <= 23:
+            if getattr(self.instance,'ordering_mode','simple') == 'scheduled' and not 0 <= first < last <= 23:
                 raise serializers.ValidationError(f'{kind.title()} hours must open before closing, between 00:00 and 23:00.')
         if attrs.get('pickup_enabled', getattr(self.instance, 'pickup_enabled', False)) and not attrs.get('pickup_location', getattr(self.instance, 'pickup_location', '')).strip():
             raise serializers.ValidationError({'pickup_location': 'Add a collection location before enabling self-collection. It will be visible to customers.'})
+        if getattr(self.instance,'ordering_mode','simple') == 'simple':
+            from datetime import time
+            for kind in ('delivery','pickup'):
+                start=attrs.get(kind+'_start_time',getattr(self.instance,kind+'_start_time',time(7,30)))
+                end=attrs.get(kind+'_end_time',getattr(self.instance,kind+'_end_time',time(11)))
+                if not start < end or start.second or end.second or start.microsecond or end.microsecond:
+                    raise serializers.ValidationError({kind+'_start_time':'Choose opening and closing times in minutes, with closing later on the same day.'})
+        areas=attrs.get('delivery_areas',getattr(self.instance,'delivery_areas',[]))
+        fees=attrs.get('delivery_area_fees',getattr(self.instance,'delivery_area_fees',{}))
+        if set(fees)-set(areas):
+            raise serializers.ValidationError({'delivery_area_fees':'Remove fees for areas that are no longer offered.'})
         return attrs
+
+    def validate_delivery_area_fees(self, value):
+        if not isinstance(value,dict) or len(value)>30:
+            raise serializers.ValidationError('Use one fee for each of up to 30 delivery areas.')
+        money=serializers.DecimalField(max_digits=8,decimal_places=2,min_value=0)
+        cleaned={}
+        for name,amount in value.items():
+            if not isinstance(name,str) or not name.strip() or name!=name.strip() or len(name)>80:
+                raise serializers.ValidationError('Use the delivery area name exactly as listed.')
+            cleaned[name]=str(money.run_validation(amount))
+        return cleaned
 
     def validate_delivery_areas(self, value):
         if not isinstance(value, list):

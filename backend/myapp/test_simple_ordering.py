@@ -17,7 +17,7 @@ class SimpleOrderingTests(TestCase):
         self.buyer=User.objects.create_user('simple-buyer')
         self.other=User.objects.create_user('other-buyer')
         self.client=APIClient();self.client.force_authenticate(self.buyer)
-        self.store=Storefront.objects.create(pk=1,manual_payment_enabled=True,bank_transfer_instructions='Local test instructions',kitchen_open_hour=8,kitchen_close_hour=9)
+        self.store=Storefront.objects.create(pk=1,manual_payment_enabled=True,bank_transfer_instructions='Local test instructions',duitnow_qr_url='https://example.com/local-qr.png',kitchen_open_hour=8,kitchen_close_hour=9)
         self.product=Product.objects.create(name='Rice meal',price=12,lead_hours=1000,daily_capacity=1,
             preparation_tasks=[dict(name='Long cooking',minutes=3000,resource='oven',worker=True)])
         self.rice=RawMaterial.objects.create(name='Rice',unit='g')
@@ -32,7 +32,7 @@ class SimpleOrderingTests(TestCase):
         self.address=Address.objects.create(user=self.buyer,recipient_name='Test customer',line1='Test street',city='KL',state='KL',postal_code='50000',phone='0100000000')
         CartItem.objects.create(user=self.buyer,product=self.product,quantity=3)
         self.delivery=(timezone.localtime()+timedelta(days=3)).replace(hour=10,minute=15,second=0,microsecond=0)
-        self.body=dict(payment='manual',request_id=str(uuid.uuid4()),address_id=self.address.pk,delivery_at=self.delivery.isoformat())
+        self.body=dict(customer={'name':'Test customer','phone':'0123456789'},delivery_address={'line1':'Local test address'},payment='cod',request_id=str(uuid.uuid4()),address_id=self.address.pk,delivery_at=self.delivery.isoformat())
 
     def place(self):
         response=self.client.post('/api/orders/place/',self.body,format='json')
@@ -58,7 +58,7 @@ class SimpleOrderingTests(TestCase):
         first.refresh_from_db();self.assertEqual(first.status,'pending')
         self.assertFalse(OrderAmendment.objects.exists())
 
-    def test_paid_wallet_debit_is_rolled_back_when_ingredient_stock_is_short(self):
+    def test_unsupported_wallet_payment_does_not_debit_or_deduct_stock(self):
         from .models import Wallet,WalletTransaction,PaymentEvent
         wallet=Wallet.objects.create(user=self.buyer,balance=100,wallet_address='local-simple-stock-test')
         self.body['payment']='wallet';self.early.quantity=0;self.early.save();self.later.quantity=0;self.later.save()
@@ -177,7 +177,7 @@ class SimpleOrderingTests(TestCase):
 
     def test_delivery_time_can_change_without_any_preparation_plan_or_second_deduction(self):
         order=self.place()
-        body=dict(version=order.updated_at.isoformat(),reason='Customer agreed later time',delivery_at=self.delivery.replace(hour=11).isoformat())
+        body=dict(version=order.updated_at.isoformat(),reason='Customer agreed later time',delivery_at=self.delivery.replace(hour=11,minute=0).isoformat())
         r=self.client.patch(f'/api/orders/{order.pk}/delivery-time/',body,format='json')
         self.assertEqual(r.status_code,200,r.data)
         order.refresh_from_db();self.assertIsNone(order.preparation_at);self.assertEqual(order.delivery_at.hour,3)

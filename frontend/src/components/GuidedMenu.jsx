@@ -18,7 +18,7 @@ export default function GuidedMenu(){
  const [data,setData]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[addingPlan,setAddingPlan]=useState(''),[expanded,setExpanded]=useState(false),[selected,setSelected]=useState(''),[success,setSuccess]=useState(null);
  const adding=!!addingPlan;
  const [requestScope,setRequestScope]=useState('');
- const {cart=[],cartLoading,cartError,cartUpdating,fulfilmentMethod,deliveryArea,chooseDeliveryDay,addSuggestedBasket}=useCart();
+ const {cart=[],cartLoading,cartError,cartUpdating,promotion,chooseFulfilment,fulfilmentMethod,deliveryArea,chooseDeliveryDay,addSuggestedBasket}=useCart();
  const {isAuthenticated,accountKey}=useAuth(),{categories}=useProduct(),{formatPrice}=useUI();
  const generation=useRef(0),request=useRef(null),pending=useRef(false),errorRef=useRef(null),dateRef=useRef(null),helpId=useId();
  const scope=JSON.stringify([accountKey,isAuthenticated,cart.map(row=>[row.product.id,row.quantity,row.product.price]),fulfilmentMethod,deliveryArea]);
@@ -74,6 +74,7 @@ export default function GuidedMenu(){
   <p>Find a mix of menus or several items of one menu. Choose the total item count and, optionally, a budget for the whole basket.</p>
   <form className="fyp-form inline" onSubmit={search} aria-describedby={helpId}>
    <fieldset className="guide-menu-choice" disabled={!!adding}><legend>Menu choice</legend><div>{[['mixed','Allow a mix'],['same','One menu only']].map(([value,label])=><label key={value} data-selected={form.menu_mode===value}><input type="radio" name={helpId+'-menu-choice'} value={value} checked={form.menu_mode===value} onChange={()=>updateForm({...form,menu_mode:value})}/><span>{label}</span></label>)}</div></fieldset>
+   {promotion?.ordering_mode==='simple'&&fulfilmentMethod!=='pickup'&&promotion.delivery_areas?.length>0&&<label>Delivery area<select required value={deliveryArea} onChange={e=>chooseFulfilment(fulfilmentMethod,e.target.value)}><option value="">Choose your area</option>{promotion.delivery_areas.map(area=><option key={area} value={area}>{area}</option>)}</select><small>Used to include the correct delivery fee in your budget.</small></label>}
    <label>Delivery date<input ref={dateRef} type="date" required min={bounds.first} max={bounds.last} disabled={!!adding} value={form.date} onChange={event=>updateForm({...form,date:event.target.value})}/></label>
    <label>Total items in this order<input type="number" required min="1" max="100" step="1" disabled={!!adding} value={form.quantity} onChange={event=>updateForm({...form,quantity:event.target.value})}/></label>
    <label>Whole-order budget (RM, optional)<input type="number" min="0.01" max="99999999.99" step="0.01" disabled={!!adding} value={form.budget} onChange={event=>updateForm({...form,budget:event.target.value})}/></label>

@@ -24,11 +24,11 @@ export default function CartProvider({ children }) {
   const [cartError, setCartError] = useState('');
 
   const [cart,setCart]=useState([]);
-  const { isAuthenticated, accountKey, isSessionCurrent } = useAuth();
+  const { isAuthenticated, isGuest, accountKey, isSessionCurrent } = useAuth();
   const [fulfilment,setFulfilment]=useState(()=>{try{const saved=JSON.parse(sessionStorage.getItem('fulfilmentChoice') || '{}');return {account:accountKey,...saved,window_minutes:saved.window_minutes ?? 60}}catch{return {account:accountKey,window_minutes:60}}});
   const options=methodsFor(promotion);
   const fulfilmentMethod=fulfilment.account===accountKey && options.includes(fulfilment.method)?fulfilment.method:options[0] || 'standard';
-  const arrivalWindowMinutes=fulfilmentMethod==='pickup'?0:[0,30,60].includes(fulfilment.window_minutes)?fulfilment.window_minutes:0;
+  const arrivalWindowMinutes=fulfilmentMethod==='pickup'||promotion.ordering_mode==='simple'?0:[0,30,60].includes(fulfilment.window_minutes)?fulfilment.window_minutes:0;
   const deliveryArea=fulfilment.account===accountKey && promotion?.delivery_areas?.includes(fulfilment.area)?fulfilment.area:'';
   const [deliveryChoice,setDeliveryChoice]=useState(()=>{try{return readDeliveryChoice(sessionStorage)}catch{return null}});
   const choiceScope=deliveryChoiceScope(accountKey,cart,promotion,fulfilmentMethod,deliveryArea,arrivalWindowMinutes);
@@ -56,7 +56,7 @@ export default function CartProvider({ children }) {
   const [cartUpdating,setCartUpdating]=useState(false);
   const { setAlert, setShowLogin } = useUI();
 
-  const {total,discount,shipping:SHIPPING_FEE,finalTotal}=basketTotals(cart,promotion,fulfilmentMethod);
+  const {total,discount,shipping:SHIPPING_FEE,finalTotal}=basketTotals(cart,promotion,fulfilmentMethod,deliveryArea);
 
   const refreshCart = useCallback(async () => {
     if(!isSessionCurrent())return;
@@ -85,11 +85,11 @@ export default function CartProvider({ children }) {
   },[isAuthenticated,refreshCart]);
 
   useEffect(() => {
-    if(!isAuthenticated)return;
+    if(!isAuthenticated||isGuest)return;
     const controller=new AbortController();
     axios.get('/api/wallet/',{withCredentials:true,signal:controller.signal,timeout:30000}).then(({data})=>{setWallet(walletData(data));setWalletError('');}).catch(err=>{if(!axios.isCancel(err)){if(err.response?.status===404){setWallet(null);setWalletError('');}else setWalletError(readApiError(err,'Could not load your wallet.'));}}).finally(()=>{if(!controller.signal.aborted)setWalletLoading(false);});
     return()=>controller.abort();
-  }, [isAuthenticated]);
+  }, [isAuthenticated,isGuest]);
 
   const refreshWallet = useCallback(async () => {
     if(!isSessionCurrent())return;

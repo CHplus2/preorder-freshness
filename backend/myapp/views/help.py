@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 from rest_framework.views import APIView
 from ..models import Product, Storefront
-from ..services.kitchen_help import TEXT, TOPICS, local_topic, ai_topic
+from ..services.kitchen_help import TEXT, CLIENT_TEXT, TOPICS, local_topic, ai_topic
 
 
 class HelpThrottle(SimpleRateThrottle):
@@ -51,11 +51,14 @@ class KitchenHelp(APIView):
             mode = 'ai' if topic else 'fallback'
         topic = topic or 'contact'
         store = Storefront.objects.filter(pk=1).first() or Storefront(pk=1)
-        text = TEXT[data['language']]
-        answer = text[topic].format(buffer=store.delivery_buffer_minutes)
+        text = dict(TEXT[data['language']])
+        if store.ordering_mode=='simple':
+            text.update(CLIENT_TEXT[data['language']])
+        answer = text[topic].format(buffer=store.delivery_buffer_minutes,start=store.delivery_start_time.strftime('%H:%M'),end=store.delivery_end_time.strftime('%H:%M'))
         menus = []
         if topic == 'menu':
-            rows = Product.objects.filter(selling_status='active', daily_capacity__gte=data['portions']).order_by('price', 'id')
+            rows = Product.objects.filter(selling_status='active').order_by('price','id')
+            if store.ordering_mode=='scheduled':rows=rows.filter(daily_capacity__gte=data['portions'])
             if data.get('search'):
                 rows = rows.filter(name__icontains=data['search'])
             if data.get('budget'):

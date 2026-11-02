@@ -1,3 +1,4 @@
+import {useStorefront} from '../contexts/StorefrontContext';
 import SellingDetails from './SellingDetails';
 import {quantityLabel} from '../utils/sellingDetails';
 import {useEffect,useRef,useState} from 'react';
@@ -21,7 +22,7 @@ const dateLabel=(value,language)=>new Date(value+'T12:00:00+08:00').toLocaleDate
 const cleanDraft=draft=>Object.fromEntries(Object.entries(draft).filter(([,v])=>v!==''));
 const draftFields=data=>({portions:data.portions===undefined?'':String(data.portions),date:data.date || '',budget:data.budget || '',search:data.search || ''});
 export default function ShoppingAssistant({language='en',aiAvailable=false,onClose}){
- const t=copy[language];const {isAuthenticated}=useAuth() || {};const {setShowLogin}=useUI();const {cart,cartLoading,cartError,refreshCart,fulfilmentMethod,chooseDeliveryTime}=useCart();const navigate=useNavigate();
+ const simple=useStorefront()?.store?.ordering_mode==='simple';const t={...copy[language],...(simple?{payment:{en:'At checkout, add your name, phone and delivery details. Delivery accepts QR or cash; self-collection accepts QR only.',ms:'Semasa pembayaran, isi nama, telefon dan butiran penghantaran. Penghantaran menerima QR atau tunai; ambil sendiri QR sahaja.',zh:'结账时填写姓名、电话和配送资料。配送支持QR或现金；自取仅支持QR。'}[language]}:{})};const {isAuthenticated}=useAuth() || {};const {setShowLogin}=useUI();const {cart,cartLoading,cartError,refreshCart,fulfilmentMethod,deliveryArea,chooseDeliveryTime}=useCart();const navigate=useNavigate();
  const [message,setMessage]=useState(''),[lastMessage,setLastMessage]=useState(''),[useAI,setUseAI]=useState(false);
  const [draft,setDraft]=useState(draftFields({})),[result,setResult]=useState(null),[preview,setPreview]=useState(null),[added,setAdded]=useState(null),[selection,setSelection]=useState(null);
  const [busy,setBusy]=useState(''),[error,setError]=useState('');const pending=useRef(false),read=useRef(null),mounted=useRef(true),resultRef=useRef(null),previewRef=useRef(null),addedRef=useRef(null);
@@ -34,7 +35,7 @@ export default function ShoppingAssistant({language='en',aiAvailable=false,onClo
   pending.current=true;setBusy('options');setError('');setPreview(null);setAdded(null);setResult(null);
   const controller=new AbortController();read.current=controller;
   try{
-   const {data}=await axios.post('/api/help/shop/',{...(fulfilmentMethod?{delivery_method:fulfilmentMethod}:{}),message:text.trim(),draft:cleanDraft(draft),use_ai:useAI},{signal:controller.signal,timeout:12000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   const {data}=await axios.post('/api/help/shop/',{...(fulfilmentMethod?{delivery_method:fulfilmentMethod,delivery_area:deliveryArea||''}:{}),message:text.trim(),draft:cleanDraft(draft),use_ai:useAI},{signal:controller.signal,timeout:12000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    const next=shoppingSuggestions(data);if(controller.signal.aborted)return;
    setResult(next);setDraft(draftFields(next.draft));setLastMessage(text.trim());setMessage('');
   }catch(e){if(!axios.isCancel(e) && mounted.current)setError(apiError(e))}
@@ -46,7 +47,7 @@ export default function ShoppingAssistant({language='en',aiAvailable=false,onClo
   pending.current=true;setBusy('preview');setError('');setAdded(null);setPreview(null);
   const controller=new AbortController();read.current=controller;
   try{
-   const {data}=await axios.post('/api/help/cart/',{product_id:row.id,quantity:row.quantity,...(fulfilmentMethod?{delivery_method:fulfilmentMethod}:{}),...(draft.budget?{budget:draft.budget}:{})},{signal:controller.signal,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   const {data}=await axios.post('/api/help/cart/',{product_id:row.id,quantity:row.quantity,...(fulfilmentMethod?{delivery_method:fulfilmentMethod,delivery_area:deliveryArea||''}:{}),...(draft.budget?{budget:draft.budget}:{})},{signal:controller.signal,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    if(!controller.signal.aborted)setPreview(shoppingPreview(data));
   }catch(e){if(!axios.isCancel(e) && mounted.current)setError(apiError(e))}
   finally{pending.current=false;if(mounted.current)setBusy('')}

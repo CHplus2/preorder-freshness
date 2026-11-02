@@ -69,7 +69,8 @@ def basket_guide(request):
     limit(request,'mixed-basket-guide')
     incoming=Input(data=request.data);incoming.is_valid(raise_exception=True);data=incoming.validated_data
     now=timezone.now();key=owner_key(request);variant=recommendation_variant(request)
-    store,method,area=request_store(Storefront.objects.filter(pk=1).first() or Storefront(),data)
+    original=Storefront.objects.filter(pk=1).first() or Storefront()
+    store,method,area=request_store(original,data,require_area=original.ordering_mode=='simple')
     base=state(basket(request.user));existing={row['product_id']:row['quantity'] for row in base}
     replace_basket=data['menu_mode']=='same' and bool(base)
     search_base=[] if replace_basket else base

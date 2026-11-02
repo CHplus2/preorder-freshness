@@ -86,3 +86,29 @@ def ai_topic(message):
         return topic if topic in TOPICS else None
     except (OSError, ValueError, KeyError, IndexError, TypeError):
         return None
+
+
+# Copy for the requested client workflow, separate from scheduled-mode help.
+CLIENT_TEXT = {
+ 'en': {
+  'menu':'These are menu ideas, not confirmed availability. Food totals exclude delivery and discounts. Use the date finder for whole-order budget suggestions including your selected area fee; checkout checks recorded stock.',
+  'preorder':'Choose an offered date within 90 days. Delivery hours are {start}–{end} Malaysia time. Enter your name and phone at checkout; no email or password is needed. Menu dates, cutoffs and recorded stock still apply, without cooking-hour scheduling.',
+  'delivery':'Choose your delivery area to see its fee, or self-collection if offered. Agree any strict deadline or change with the kitchen. A delivery time is not live courier tracking. Contact the kitchen if your order is early or late.',
+  'payment':'Delivery accepts QR payment or cash; self-collection accepts QR only. For QR, pay the shown total and upload your receipt at checkout. The kitchen verifies the bank transfer before marking it paid. Uploading proof does not verify a payment. Do not pay twice.',
+  'orders':'My orders shows the orders belonging to this browser session, including receipt and payment status. Keep your order number and contact the kitchen if you change devices or clear browser data. A name or phone number alone does not grant access to another order.'
+ },
+ 'ms': {
+  'menu':'Ini ialah cadangan menu, bukan pengesahan ketersediaan. Jumlah makanan tidak termasuk penghantaran dan diskaun. Gunakan pencari tarikh untuk bajet seluruh pesanan termasuk caj kawasan pilihan; stok disemak semasa pembayaran.',
+  'preorder':'Pilih tarikh yang ditawarkan dalam 90 hari. Waktu penghantaran ialah {start}–{end} waktu Malaysia. Masukkan nama dan telefon semasa pembayaran; tiada e-mel atau kata laluan diperlukan. Tarikh menu, tarikh tutup pesanan dan stok masih terpakai tanpa jadual memasak.',
+  'delivery':'Pilih kawasan untuk melihat caj penghantaran, atau ambil sendiri jika ditawarkan. Hubungi dapur untuk masa penting atau perubahan. Masa penghantaran bukan penjejakan kurier secara langsung. Hubungi dapur jika pesanan awal atau lewat.',
+  'payment':'Penghantaran menerima QR atau tunai; pengambilan sendiri menerima QR sahaja. Untuk QR, bayar jumlah yang dipaparkan dan muat naik resit semasa pembayaran. Dapur menyemak pindahan bank sebelum menandakan bayaran diterima. Muat naik resit bukan pengesahan bayaran. Jangan bayar dua kali.',
+  'orders':'Pesanan saya memaparkan pesanan dalam sesi pelayar ini, termasuk penerimaan dan bayaran. Simpan nombor pesanan dan hubungi dapur jika bertukar peranti atau memadam data pelayar. Nama atau telefon sahaja tidak memberikan akses kepada pesanan orang lain.'
+ },
+ 'zh': {
+  'menu':'这些是菜单建议，并非已确认的供应。食品小计不含配送费和折扣。请使用日期推荐功能查看包含所选地区配送费的整单预算；结账时会再次检查库存。',
+  'preorder':'请选择未来90天内开放的日期。配送时段为马来西亚时间 {start}–{end}。结账只需姓名和电话，无需邮箱或密码。菜单日期、截单时间和库存限制仍适用，不需要安排烹饪时段。',
+  'delivery':'选择配送地区查看费用，或选择厨房提供的自取方式。严格的收货期限或时间变更请与厨房确认。配送时间不是实时骑手追踪；如有提前或延迟，请联系厨房。',
+  'payment':'配送支持QR付款或现金；自取仅支持QR。使用QR时，请支付页面金额并在结账上传收据。厨房核对银行记录后才标记已付款；上传收据本身不等于付款已核实。请勿重复付款。',
+  'orders':'我的订单显示此浏览器会话内的订单、收货状态和付款记录。请保存订单号；更换设备或清除浏览器数据后请联系厨房。仅凭姓名或电话无法查看其他人的订单。'
+ }
+}

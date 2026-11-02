@@ -32,9 +32,9 @@ def validate_window(delivery_at, store, now):
     if getattr(store, 'fulfilment_method', '') == 'pickup':
         raise serializers.ValidationError('Self-collection uses one agreed time, not an arrival window.')
     first, last = timezone.localtime(delivery_at-timedelta(minutes=minutes)), timezone.localtime(delivery_at)
-    from .fulfilment import hours
-    opening, closing = hours(store)
-    if first.date() != last.date() or first.hour < opening or last.hour*60+last.minute > closing*60:
+    from .fulfilment import time_bounds
+    opening, closing = time_bounds(store)
+    if first.date() != last.date() or first.time() < opening or last.time() > closing:
         raise serializers.ValidationError('The whole arrival window must fit within delivery hours on the same date.')
     if first <= now:
         raise serializers.ValidationError('Choose an arrival window that starts in the future.')

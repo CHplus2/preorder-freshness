@@ -1,3 +1,5 @@
+from datetime import time
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -461,6 +463,11 @@ class Storefront(models.Model):
     # Scheduled mode preserves integrations/accepted historical workflows. The
     # client storefront defaults to simple ordering; it is not customer-selectable.
     ordering_mode = models.CharField(max_length=12, choices=[('simple', 'Simple ordering'), ('scheduled', 'Historical scheduling')], default='simple', db_default='simple')
+    delivery_start_time = models.TimeField(default=time(7,30), db_default=time(7,30))
+    delivery_end_time = models.TimeField(default=time(11), db_default=time(11))
+    pickup_start_time = models.TimeField(default=time(7,30), db_default=time(7,30))
+    pickup_end_time = models.TimeField(default=time(11), db_default=time(11))
+    delivery_area_fees = models.JSONField(default=dict, blank=True, db_default={})
     delivery_enabled = models.BooleanField(default=True)
     pickup_enabled = models.BooleanField(default=False)
     pickup_location = models.CharField(max_length=250, blank=True)
@@ -668,3 +675,23 @@ class PackagingMovement(models.Model):
     class Meta:
         ordering = ['-id']
         constraints = [models.UniqueConstraint(fields=['order_packaging', 'kind'], name='unique_packaging_order_movement')]
+
+
+class GuestCustomer(models.Model):
+    """Opaque browser-session identity, never looked up using a name or phone."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='guest_customer')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class CheckoutProof(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    order = models.OneToOneField(Order, null=True, blank=True, on_delete=models.PROTECT, related_name='checkout_proof')
+    content = models.BinaryField()
+    digest = models.CharField(max_length=64)
+    scope_digest = models.CharField(max_length=64)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['digest'], condition=models.Q(order__isnull=False), name='one_order_per_proof_image')]

@@ -1,3 +1,5 @@
+import {useStorefront} from '../../contexts/StorefrontContext';
+import SimpleCheckoutPage from './SimpleCheckoutPage';
 import CheckoutSummary from '../../components/CheckoutSummary';
 import {checkoutNextStep} from '../../utils/checkoutNextStep';
 import HandoverFields from '../../components/HandoverFields';
@@ -33,6 +35,9 @@ import './CheckoutPage.css';
 import './CustomerExperience.css';
 const errorText=apiError;
 export default function CheckoutPage(){
+ return useStorefront()?.store?.ordering_mode==='simple'?<SimpleCheckoutPage/>:<ScheduledCheckoutPage/>;
+}
+function ScheduledCheckoutPage(){
  const {isSessionCurrent}=useAuth();
  const orderEmail=useOrderEmail();
  const [emailReminder,setEmailReminder]=useState(false),[dispatchUpdates,setDispatchUpdates]=useState(false),[timeUpdates,setTimeUpdates]=useState(false);

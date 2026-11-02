@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict';
+import {createElement as h} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {MemoryRouter} from 'react-router-dom';
+import {createServer} from 'vite';
+import {basketTotals,pricingConfigured} from '../utils/checkoutPresentation.js';
+import {fulfilmentTimes,timeLabel} from '../utils/fulfilment.js';
+import {authSession} from '../utils/sessionScope.js';
+const store={ordering_mode:'simple',bulk_minimum:10,bulk_discount_percent:0,delivery_fee_myr:'5.00',free_delivery_minimum_myr:null,
+ delivery_enabled:true,pickup_enabled:true,pickup_location:'Local kitchen',delivery_start_time:'07:30:00',delivery_end_time:'11:00:00',
+ pickup_start_time:'07:30:00',pickup_end_time:'11:00:00',delivery_areas:['North','South'],delivery_area_fees:{North:'4.50',South:'8.00'},manual_payment_enabled:true,duitnow_qr_url:'https://example.com/qr.png'};
+const row={id:1,quantity:2,product:{id:1,name:'Rice meal',price:'12.00',selling_status:'active'}};
+assert.equal(basketTotals([row],store,'standard','South').finalTotal,32);
+assert.equal(basketTotals([row],store,'pickup','South').finalTotal,24);
+assert.equal(basketTotals([row],store,'standard','North').finalTotal,28.5);
+assert.equal(basketTotals([row],{...store,delivery_area_fees:{}},'standard','constructor').shipping,5);
+assert.equal(pricingConfigured({...store,delivery_start_time:'11:00',delivery_end_time:'07:30'}),false);
+assert.equal(pricingConfigured({...store,delivery_area_fees:{North:'-1'}}),false);
+assert.deepEqual(fulfilmentTimes(store,'standard'),['07:30','11:00']);assert.equal(timeLabel('07:30'),'7:30am');
+assert.equal(authSession({authenticated:true,user_id:2,username:'opaque-guest',is_admin:false,is_guest:true}).isGuest,true);
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+try{
+ const load=path=>server.ssrLoadModule('/src/'+path);
+ const {StoreContext}=await load('contexts/StorefrontContext.js'),{AuthContext}=await load('contexts/AuthContext.js');
+ const {CartContext}=await load('contexts/CartContext.js'),{OrderContext}=await load('contexts/OrderContext.js'),{UIContext}=await load('contexts/UIContext.js');
+ const {default:Checkout}=await load('pages/customer/CheckoutPage.jsx');
+ const {default:Settings}=await load('components/FulfilmentSettings.jsx');
+ const {default:AuthForm}=await load('components/AccountForm.jsx');
+ const render=(node,method='standard')=>renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store}},h(AuthContext.Provider,{value:{isGuest:true,isAuthenticated:true,isSessionCurrent:()=>true}},h(UIContext.Provider,{value:{formatPrice:n=>'RM '+Number(n).toFixed(2)}},h(OrderContext.Provider,{value:{placeOrder:()=>{}}},h(CartContext.Provider,{value:{cart:[row],cartLoading:false,pricingReady:true,promotion:store,fulfilmentMethod:method,deliveryArea:'North',...{total:24,discount:0,SHIPPING_FEE:method==='pickup'?0:4.5,finalTotal:method==='pickup'?24:28.5}}},node)))))));
+ const checkout=render(h(Checkout));
+ assert.match(checkout,/Your name/);assert.match(checkout,/Phone number/);assert.match(checkout,/Full delivery address/);
+ assert.match(checkout,/Cash on delivery/);assert.match(checkout,/No email or password needed/);
+ assert.doesNotMatch(checkout,/type="password"|type="email"|PayPal|Demo credit wallet|Save delivery address/);
+ const pickup=render(h(Checkout),'pickup');assert.doesNotMatch(pickup,/Cash on delivery|Full delivery address/);assert.match(pickup,/Self-collection accepts QR payment only/);
+ const settings=render(h(Settings,{store,onChange:()=>{},onSavePickup:()=>{}}));
+ assert.match(settings,/type="time"/);assert.match(settings,/North delivery fee/);assert.match(settings,/value="07:30"/);
+ assert.doesNotMatch(settings,/advance notice|cooking hours|hour, 0/);
+ const {HowItWorksPage}=await load('pages/customer/BusinessPages.jsx');
+ const help=render(h(HowItWorksPage));assert.match(help,/Do I need an account/);assert.doesNotMatch(help,/cooking capacity|PayPal|custom time request needs/);
+ const auth=render(h(AuthForm));assert.match(auth,/Kitchen sign in/);assert.doesNotMatch(auth,/Create an account/);
+ console.log('Guest checkout: private identity, required contact/address, QR/cash policy, minute hours, area prices and protected staff sign-in passed.');
+}finally{await server.close();}

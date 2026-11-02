@@ -36,7 +36,7 @@ class SimplePlacementLocks(TransactionTestCase):
             buyer,address,key=row;close_old_connections()
             try:
                 c=APIClient();c.force_authenticate(buyer);barrier.wait(timeout=10)
-                r=c.post('/api/orders/place/',dict(payment='manual',address_id=address.pk,request_id=key,
+                r=c.post('/api/orders/place/',dict(customer={'name':'Test buyer','phone':'0123456789'},delivery_address={'line1':'Local test address'},payment='manual' if buyer.pk in getattr(self,'proofs',{}) else 'cod',payment_proof_id=getattr(self,'proofs',{}).get(buyer.pk),address_id=address.pk,request_id=key,
                     delivery_at=self.delivery.isoformat()),format='json')
                 return r.status_code,dict(r.data) if isinstance(r.data,dict) else list(r.data)
             finally:connections.close_all()
@@ -54,3 +54,25 @@ class SimplePlacementLocks(TransactionTestCase):
         self.assertEqual(results[0][1]['order_id'],results[1][1]['order_id'])
         self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,200)
         self.assertEqual(Order.objects.count(),1);self.assertEqual(IngredientConsumption.objects.count(),1)
+
+
+    def test_same_receipt_image_cannot_fund_two_concurrent_orders(self):
+        from hashlib import sha256
+        from .models import CheckoutProof
+        from .test_guest_checkout import receipt_image
+        from .views.menu_photos import sanitized_photo
+        from .services.checkout_proofs import price_scope
+        store=Storefront.objects.get(pk=1);store.duitnow_qr_url='https://example.com/local-qr.png';store.save()
+        self.stock.quantity=1000;self.stock.save()
+        content,_,_=sanitized_photo(receipt_image())
+        self.proofs={}
+        for buyer in self.buyers:
+            items=list(CartItem.objects.filter(user=buyer).select_related('product'))
+            amount,scope=price_scope(items,store,self.delivery,'standard','')
+            proof=CheckoutProof.objects.create(user=buyer,content=content,digest=sha256(content).hexdigest(),scope_digest=scope,amount=amount)
+            self.proofs[buyer.pk]=str(proof.pk)
+        results=self.requests([(self.buyers[i],self.addresses[i],str(uuid.uuid4())) for i in range(2)])
+        self.assertCountEqual([r[0] for r in results],[201,400],results)
+        self.assertEqual(Order.objects.count(),1)
+        self.assertEqual(CheckoutProof.objects.filter(order__isnull=False).count(),1)
+        self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,700)

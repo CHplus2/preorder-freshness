@@ -13,7 +13,7 @@ from ..serializers import OrderSerializer, UserSerializer
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def admin_order_list(request):
-    orders = Order.objects.select_related("user", "address").prefetch_related("items").order_by("-created_at")
+    orders = Order.objects.select_related("user", "address", "checkout_proof").defer("checkout_proof__content").prefetch_related("items").order_by("-created_at")
     serializer = OrderSerializer(orders, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 

@@ -1,0 +1,6 @@
+
+> frontend@0.0.0 test:shopping
+> node src/utils/shoppingResponse.test.js && node src/components/ShoppingAssistant.test.js
+
+Shopping responses: grounded totals, incomplete/owner requests, signed preview shape and exact confirmation identity passed.
+Shopping UI: multilingual request controls, whole-basket budget, explicit scope and opt-in AI disclosure passed.

@@ -1,3 +1,4 @@
+import {useStorefront} from '../contexts/StorefrontContext';
 import {useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
@@ -7,6 +8,7 @@ import {menuPage} from '../utils/menuPresentation';
 import {readApiError} from '../utils/apiError';
 
 export default function HomeMenuPreview(){
+  const simple=useStorefront()?.store?.ordering_mode==='simple';
   const [rows,setRows]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[revision,setRevision]=useState(0);
   useEffect(()=>{
     const controller=new AbortController();
@@ -18,6 +20,6 @@ export default function HomeMenuPreview(){
   },[revision]);
   return <section className="business-section home-menu" aria-labelledby="home-menu-title">
     <div className="section-heading"><div><span className="dk-eyebrow">FROM THE CURRENT MENU</span><h2 id="home-menu-title">What sounds good?</h2></div><Link className="text-link" to="/menu">See the full menu <ArrowUpRight size={16} aria-hidden="true"/></Link></div>
-    {loading?<p role="status">Loading the kitchen’s menu…</p>:error?<div className="customer-notice" role="alert"><p>{error}</p><button type="button" onClick={()=>{setError('');setLoading(true);setRevision(n=>n+1);}}>Try loading the menu again</button></div>:rows.length?<div className="featured-foods">{rows.map(p=><Link key={p.id} to={`/products/${p.id}`} className="featured-food"><div className="home-food-photo"><ChefHat size={42} aria-hidden="true"/>{p.image_url && <MenuPhoto sizes="(max-width: 600px) 105px, 33vw" src={p.image_url} alt="" loading="lazy" onError={e=>{e.currentTarget.hidden=true;}}/>}</div><div><span>{p.category_name}</span><h3>{p.name}</h3><p>RM {Number(p.price).toFixed(2)} <ArrowUpRight size={19} aria-hidden="true"/></p><small>{p.lead_hours?`${p.lead_hours}h advance notice`:'Check delivery availability'}</small></div></Link>)}</div>:<p>No menus are available right now. <Link to="/contact">Ask the kitchen about the next menu.</Link></p>}
+    {loading?<p role="status">Loading the kitchen’s menu…</p>:error?<div className="customer-notice" role="alert"><p>{error}</p><button type="button" onClick={()=>{setError('');setLoading(true);setRevision(n=>n+1);}}>Try loading the menu again</button></div>:rows.length?<div className="featured-foods">{rows.map(p=><Link key={p.id} to={`/products/${p.id}`} className="featured-food"><div className="home-food-photo"><ChefHat size={42} aria-hidden="true"/>{p.image_url && <MenuPhoto sizes="(max-width: 600px) 105px, 33vw" src={p.image_url} alt="" loading="lazy" onError={e=>{e.currentTarget.hidden=true;}}/>}</div><div><span>{p.category_name}</span><h3>{p.name}</h3><p>RM {Number(p.price).toFixed(2)} <ArrowUpRight size={19} aria-hidden="true"/></p><small>{simple?'Check offered dates and stock':p.lead_hours?`${p.lead_hours}h advance notice`:'Check delivery availability'}</small></div></Link>)}</div>:<p>No menus are available right now. <Link to="/contact">Ask the kitchen about the next menu.</Link></p>}
   </section>;
 }

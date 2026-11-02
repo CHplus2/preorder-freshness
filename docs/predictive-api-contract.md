@@ -3,6 +3,48 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Client guest checkout and fulfilment — 2 November 2026
+
+`POST /api/guest-session/` starts an opaque, private customer session with an
+unusable password, or preserves the current authenticated session. It requires
+CSRF even for anonymous callers and accepts no identity credentials. Name/phone
+are checkout contact snapshots, never order-history authentication. Staff access
+is unchanged. Auth status includes `is_guest`; guest orders collect no email.
+
+New simple-mode placement requires `customer: {name, phone}` and, for delivery,
+`delivery_address: {line1}` (the full address). It accepts `manual` (QR) or `cod`
+(delivery cash); pickup requires `manual`. QR must be configured and requires
+`payment_proof_id`; cash has no proof. `expected_total`, sent by the new UI, is
+checked against server pricing when present. Every order remains unpaid until
+actual payment is verified. Legacy scheduled-mode payment routes and historical
+records are preserved, rather than accepted as payment for new simple orders.
+
+Authenticated multipart `POST /api/checkout-proofs/` accepts `image` and the
+checkout delivery fields. It validates and sanitizes a still JPG/PNG/WebP image
+up to 4 MB, bounds dimensions/output size and returns `{id, amount, url, message}`.
+The private, expiring proof is bound to server-priced items, quantity, delivery
+time/method/area and arrival duration. Placement claims it atomically with stock;
+a failure restores its unclaimed state. An image already attached to an order
+cannot be used again, backed by a partial unique DB index. Uploading it creates
+no payment event and does not mark an order paid. GET of its returned URL is
+restricted to its uploader or staff, with `private, no-store` caching. Order
+responses add `payment_proof` metadata only; binary data is deferred in lists.
+
+Storefront adds `delivery_start_time`, `delivery_end_time`, `pickup_start_time`,
+`pickup_end_time` (minute-based times, default 07:30–11:00) and `delivery_area_fees`
+(JSON mapping offered area names to nonnegative MYR amounts). Missing area fees
+use the configured default; existing free-delivery threshold rules still apply.
+Simple validation/slot search uses minute bounds. Accepted snapshots retain
+`open_time`/`close_time`, existing fees and customer contact. The whole-basket
+finder requires an area when configured and includes its fee in budget matching;
+shopping fingerprints invalidate after area prices change. Existing hourly
+fields remain for scheduled-mode compatibility, not client cooking rules.
+
+Migration `0026_guest_qr_fulfilment` adds private guest/proof tables with RLS;
+existing orders, stock quantities, fees and accepted plans are not backfilled.
+See `docs/client-feedback-batches.md` for upgrade/setup and verification evidence.
+Forecast models and evaluation artifacts are unchanged by this workflow update.
+
 ## Client ordering mode — 1 November 2026
 
 The default storefront now returns read-only `ordering_mode: "simple"`.

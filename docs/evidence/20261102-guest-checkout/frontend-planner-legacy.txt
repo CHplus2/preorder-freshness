@@ -1,0 +1,22 @@
+
+> frontend@0.0.0 test:planner
+> node src/utils/orderBatchProgress.test.js && node src/utils/handoverBoard.test.js && node src/utils/preparationShift.test.js && node src/components/PlannerSnapshot.test.js
+
+Grouped order progress: eligible actual stages, pickup, valid preparation, versioned selections and strict results passed.
+✔ groups Malaysia handovers by hour and method, keeping individual times (14.034877ms)
+✔ unconfirmed, missing plans and stale preparation are excluded from run totals (1.057271ms)
+✔ ready and dispatched work stays visible; completed and cancelled work is excluded (0.399119ms)
+✔ overdue follow-up spans dates without including missing dates or completed work (0.289017ms)
+✔ quantities keep accepted selling units instead of multiplying servings or pieces (0.251561ms)
+✔ legacy express requests share the delivery run category without rewriting orders (0.425639ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22.002895
+Preparation shift: Malaysia time, overnight gaps, overlapping tasks, original indexes and invalid saved times passed.
+Planner progress: scheduled pending orders, guarded unreviewed plans, optional intermediate stages and actual completion actions passed.
+Planner snapshot: initial loading, refresh with cached data, failed refresh, missing response and ready state passed.

@@ -46,7 +46,12 @@ router = DefaultRouter()
 router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
+from .views import guest, checkout_proofs
+
 urlpatterns = [
+    path('guest-session/', guest.start),
+    path('checkout-proofs/', checkout_proofs.upload),
+    path('checkout-proofs/<uuid:pk>/', checkout_proofs.view),
     path('orders/<int:pk>/delivery-time/', delivery_time),
     path('admin/orders/receipts/', receipts),
     path('admin/orders/<int:pk>/cancel/', cancel_order),

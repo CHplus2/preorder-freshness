@@ -133,6 +133,7 @@ def check_auth(request):
             "authenticated": True,
             "user_id": request.user.pk,
             "username": request.user.username,
+            "is_guest": hasattr(request.user, 'guest_customer'),
             "is_admin": request.user.is_staff  
         }, status=status.HTTP_200_OK)
     return Response({"authenticated": False}, status=status.HTTP_200_OK)

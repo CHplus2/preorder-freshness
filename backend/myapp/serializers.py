@@ -268,6 +268,15 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    payment_proof = serializers.SerializerMethodField()
+
+    def get_payment_proof(self,obj):
+        if obj.ordering_mode != 'simple':
+            return None  # Historical orders cannot have checkout-uploaded proof.
+        from .models import CheckoutProof
+        proof=obj._state.fields_cache.get('checkout_proof') if 'checkout_proof' in obj._state.fields_cache else CheckoutProof.objects.only('id','amount','created_at').filter(order_id=obj.pk).first()
+        return dict(id=str(proof.pk),url=f'/api/checkout-proofs/{proof.pk}/',amount=str(proof.amount),created_at=proof.created_at) if proof else None
+
     receipt_status = serializers.SerializerMethodField()
 
     def get_receipt_status(self, obj):
@@ -320,7 +329,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_user(self, obj):
-        return {"id": obj.user.id, "username": obj.user.username}
+        return {"id": obj.user.id, "username": obj.fulfilment_snapshot.get('customer',{}).get('name') or obj.user.username}
 
 class StorageGuidanceSerializer(serializers.Serializer):
     storage_type = serializers.ChoiceField(choices=['chilled', 'frozen', 'ambient'])

@@ -36,6 +36,7 @@ class Draft(serializers.Serializer):
 
 class ShopInput(serializers.Serializer):
     delivery_method=serializers.ChoiceField(choices=['standard','express','pickup'],required=False)
+    delivery_area=serializers.CharField(max_length=80,allow_blank=True,default='')
     message=serializers.CharField(max_length=500,allow_blank=True,default='')
     draft=Draft(default=dict)
     use_ai=serializers.BooleanField(default=False)
@@ -43,6 +44,7 @@ class ShopInput(serializers.Serializer):
 
 class CartInput(serializers.Serializer):
     delivery_method=serializers.ChoiceField(choices=['standard','express','pickup'],required=False)
+    delivery_area=serializers.CharField(max_length=80,allow_blank=True,default='')
     product_id=serializers.IntegerField(min_value=1)
     quantity=serializers.IntegerField(min_value=1,max_value=1000)
     budget=serializers.DecimalField(max_digits=8,decimal_places=2,min_value=Decimal('0.01'),required=False)
@@ -66,7 +68,7 @@ def state(items):
 
 def fingerprint(rows,store):
     return hashlib.sha256(json.dumps([rows,store.bulk_minimum,store.bulk_discount_percent,
-        store.delivery_fee_myr,store.free_delivery_minimum_myr,getattr(store,'fulfilment_method',default_method(store))],default=str,sort_keys=True).encode()).hexdigest()
+        store.delivery_fee_myr,store.free_delivery_minimum_myr,getattr(store,'fulfilment_method',default_method(store)),getattr(store,'selected_delivery_area',''),getattr(store,'delivery_area_fees',{})],default=str,sort_keys=True).encode()).hexdigest()
 
 
 def proposed(rows,product,quantity):
@@ -99,6 +101,7 @@ def shop_suggestions(request):
     serial=Draft(draft).data
     rows=state(basket(request.user));store=Storefront.objects.filter(pk=1).first() or Storefront()
     store.fulfilment_method=data.get('delivery_method',default_method(store))
+    store.selected_delivery_area=data.get('delivery_area','')
     missing=[key for key in ['portions','date'] if key not in draft]
     results=[]
     if not missing:
@@ -151,6 +154,7 @@ def shop_cart(request):
         session=get_object_or_404(RecommendationSession.objects.select_for_update(),pk=signed.get('session'),variant='chat',owner_key=owner(request))
         context=session.context
         store.fulfilment_method=context.get('delivery_method',default_method(store))
+        store.selected_delivery_area=context.get('delivery_area','')
         if context.get('applied'):
             current=fingerprint(state(basket(request.user)),store)
             return Response({'added':True,'already_applied':True,'basket_changed':current!=context['after_fingerprint'],'result':context['result']})
@@ -159,6 +163,7 @@ def shop_cart(request):
         serializer=CartInput(data=request.data);serializer.is_valid(raise_exception=True)
         product_id=serializer.validated_data['product_id'];quantity=serializer.validated_data['quantity']
         store.fulfilment_method=serializer.validated_data.get('delivery_method',default_method(store))
+        store.selected_delivery_area=serializer.validated_data.get('delivery_area','')
         context={}
     current=basket(request.user)
     ids={i.product_id for i in current}|{product_id}
@@ -177,7 +182,7 @@ def shop_cart(request):
         budget=serializer.validated_data.get('budget')
         if budget is not None and Decimal(result['basket_after']['total'])>budget:
             raise serializers.ValidationError('The current basket total exceeds your budget. Review quantities or budget before adding.')
-        context=dict(version='chat-cart-v1',actor=request.user.pk,product_id=product.pk,quantity=quantity,delivery_method=store.fulfilment_method,
+        context=dict(version='chat-cart-v1',actor=request.user.pk,product_id=product.pk,quantity=quantity,delivery_method=store.fulfilment_method,delivery_area=getattr(store,'selected_delivery_area',''),
             before_fingerprint=before,after_fingerprint=after,result=result,applied=False)
         session=RecommendationSession.objects.create(id=uuid.uuid4(),owner_key=owner(request),variant='chat',context=context,products=[product.pk])
         return Response({'preview':result,'confirm':signing.dumps({'session':str(session.pk),'actor':request.user.pk},salt='shopping-cart',compress=True)})

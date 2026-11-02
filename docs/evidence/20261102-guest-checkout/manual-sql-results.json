@@ -1,0 +1,1 @@
+{"result": "passed", "database": "isolated PostgreSQL 16 django_app", "checks": ["manual SQL applied twice", "0026 recorded once", "existing delivery fee and order snapshot unchanged", "new morning defaults", "previous-release inserts supported", "private tables have RLS", "direct granted reader sees no guest or proof rows"]}

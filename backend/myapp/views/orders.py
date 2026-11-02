@@ -23,7 +23,7 @@ class OrderList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).select_related("user", "address").prefetch_related("items").order_by("-id")
+        return Order.objects.filter(user=self.request.user).select_related("user", "address", "checkout_proof").defer("checkout_proof__content").prefetch_related("items").order_by("-id")
 
     def list(self, request, *args, **kwargs):
         params = request.query_params
@@ -169,10 +169,25 @@ def place_order(request):
     store, method, area = request_store(store, request.data, require_area=True)
     if store.ordering_mode == 'simple' and request_id is None:
         raise ValidationError('Refresh checkout to create a safe order reference before placing the order.')
-    if payment == 'cod' and method != 'pickup':
+    client_mode=store.ordering_mode == 'simple'
+    customer,client_address={},{}
+    if client_mode:
+        from ..services.auth_limits import limit
+        limit(request,'simple-checkout',str(user.pk),maximum=10)
+        from ..services.guest_ordering import customer_details
+        customer,client_address=customer_details(request.data,method)
+        if payment not in ('manual','cod') or method == 'pickup' and payment != 'manual':
+            raise ValidationError('Delivery accepts QR payment or cash. Self-collection accepts QR payment only.')
+        if payment == 'manual' and not (store.manual_payment_enabled and store.duitnow_qr_url):
+            raise ValidationError('QR payment is unavailable. Contact the kitchen or choose delivery cash.')
+        if payment == 'cod' and request.data.get('payment_proof_id'):
+            raise ValidationError('Cash orders do not need payment proof.')
+        if any(request.data.get(k) for k in ('email_reminder','email_dispatch_updates','email_time_updates')):
+            raise ValidationError('This checkout uses phone contact. Email reminders are not collected here.')
+    if not client_mode and payment == 'cod' and method != 'pickup':
         raise ValidationError('Cash is available for self-collection only. Choose another payment method for delivery.')
     address = None
-    if method != 'pickup':
+    if method != 'pickup' and not client_mode:
         address_id = serializers.IntegerField(min_value=1).run_validation(request.data.get('address_id'))
         try:
             address = Address.objects.get(id=address_id, user=user)
@@ -233,8 +248,22 @@ def place_order(request):
         raise ValidationError('Add a valid email in Account settings before enabling reminders.')
 
     from ..services.handover import HandoverInput
-    handover = HandoverInput(data=request.data.get('handover', {}), context={'pickup': method == 'pickup'})
+    handover_data=request.data.get('handover', {})
+    if client_mode:
+        if not isinstance(handover_data,dict):raise ValidationError('Review the handover instructions.')
+        handover_data=dict(handover_data,contact_phone=customer['phone'])
+    handover = HandoverInput(data=handover_data, context={'pickup': method == 'pickup'})
     handover.is_valid(raise_exception=True)
+
+    if client_mode and 'expected_total' in request.data:
+        from ..services.checkout_proofs import price_scope
+        expected=serializers.DecimalField(max_digits=12,decimal_places=2,min_value=0).run_validation(request.data['expected_total'])
+        if expected != price_scope(list(cart_items),store,delivery_at,method,area)[0]:
+            raise ValidationError('The order total changed. Refresh checkout and review the amount before placing your order.')
+    proof=None
+    if client_mode and payment == 'manual':
+        from ..services.checkout_proofs import claim_proof
+        proof=claim_proof(user,request.data.get('payment_proof_id'),list(cart_items),store,delivery_at,method,area)
 
     # --- Create order ---
     order = Order.objects.create(
@@ -246,15 +275,19 @@ def place_order(request):
         preparation_end_at=plan['end'],
         preparation_plan=plan_snapshot(plan),
         delivery_method=method,
-        fulfilment_snapshot=dict(snapshot(store, method, area), customer_reminder=preference, handover=dict(handover.validated_data)),
+        fulfilment_snapshot=dict(snapshot(store, method, area), customer_reminder=preference, handover=dict(handover.validated_data), customer=customer),
         address=address,
-        delivery_address=dict(AddressSerializer(address).data) if address else {},
+        delivery_address=client_address if client_mode else dict(AddressSerializer(address).data) if address else {},
         total_amount=0,
         status="pending",
         payment_status=is_paid,
         payment_method=payment,
         payment_instructions={'instructions': store.bank_transfer_instructions, 'qr_url': store.duitnow_qr_url} if payment == 'manual' else {},
     )
+
+    if proof:
+        proof.order=order
+        proof.save(update_fields=['order'])
 
     total = 0
     for item in cart_items:
