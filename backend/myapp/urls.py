@@ -47,8 +47,10 @@ router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
 from .views import guest, checkout_proofs
+from .views.receiving_qr import upload_receiving_qr
 
 urlpatterns = [
+    path('receiving-qr/',upload_receiving_qr),
     path('guest-session/', guest.start),
     path('checkout-proofs/', checkout_proofs.upload),
     path('checkout-proofs/<uuid:pk>/', checkout_proofs.view),

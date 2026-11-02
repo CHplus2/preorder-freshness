@@ -1,0 +1,12 @@
+{
+  "result": "passed",
+  "fixture": "synthetic checker pattern, not a bank payment code",
+  "checks": [
+    "local QR card upload",
+    "Maybank-shaped crop excludes heading",
+    "lossless pixels match original crop",
+    "save uploaded URL and enable QR payment",
+    "desktop/mobile preview",
+    "no horizontal overflow or script errors"
+  ]
+}

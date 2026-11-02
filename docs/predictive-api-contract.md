@@ -3,6 +3,25 @@
 Version: `1` (implemented). Current integration branch: `integration/dormathon-demo`.
 Dashboard branch: `feature/ai-dashboard`.
 
+## Receiving QR upload — 2 November 2026
+
+Staff-only multipart `POST /api/receiving-qr/` accepts `image`, integer `x`, `y`
+and square `size` (128–2000 pixels). It validates a still JPG/PNG/WebP up to 4 MB,
+checks crop bounds, applies EXIF orientation and saves the exact selected pixels
+as lossless WebP without resizing or bank calls. Only the crop is persisted in
+the existing image table; the source card and its filename/metadata are not
+published. Response `{image_url, width, height}` uses the existing public,
+immutable `/api/menu-photos/<digest>/` route. This is a receiving code, unlike the
+private customer receipt uploads. Settings accepts either an existing uploaded
+image reference or an image URL for `duitnow_qr_url`.
+
+The Maybank-card preset is a preview convenience for the supplied layout, not a
+QR decoder or universal bank format. Owners inspect/adjust the selection and
+scan the saved code to verify receiving details. Printed-heading cropping does
+not conceal receiving details returned by the bank. No additional migration or
+forecast model change is introduced. The combined SQL file in `deploy/sql/`
+applies/verifies 0024–0026; see `docs/apply-client-database-updates.md`.
+
 ## Client guest checkout and fulfilment — 2 November 2026
 
 `POST /api/guest-session/` starts an opaque, private customer session with an

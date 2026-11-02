@@ -1,3 +1,4 @@
+import ReceivingQrUpload from '../../components/ReceivingQrUpload';
 import {deliveryAreasError} from '../../utils/deliveryAreas';
 import CourierConnectionStatus from '../../components/CourierConnectionStatus';
 import FulfilmentSettings from '../../components/FulfilmentSettings';
@@ -57,6 +58,7 @@ export default function StoreSettingsPage(){
   }finally{setBusy(false);setPickupSaving(false);}
  };
  const fields=g=><><p>{store.ordering_mode==='simple'&&g.title==='Manual payments'?'Add your business DuitNow QR image and enable QR payment below. Customers upload a receipt at checkout; verify it against your bank records before recording payment.':g.help}</p><div className="admin-fields">{g.fields.map(([key,label,type='text',min,max])=>{
+  if(key==='duitnow_qr_url')return <ReceivingQrUpload key={key} value={store.duitnow_qr_url} disabled={busy} onChange={value=>setStore({...store,duitnow_qr_url:value})}/>;
   const fieldId=key==='service_area'?'store-contact':'setting-'+key;
   return <div className="settings-field" key={key} style={type==='textarea'?{gridColumn:'1 / -1'}:undefined}>
    <label htmlFor={fieldId}>{label}</label>{type==='textarea'?<textarea id={fieldId} disabled={busy} value={store[key] || ''} onChange={e=>setStore({...store,[key]:e.target.value})}/>:<input id={fieldId} disabled={busy} type={type} min={min} max={max} value={store[key] ?? ''} onChange={e=>setStore({...store,[key]:e.target.value})}/>}

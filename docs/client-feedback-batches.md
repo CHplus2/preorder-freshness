@@ -289,3 +289,26 @@ Evidence: `docs/evidence/20261102-guest-checkout/`.
   snapshots stayed unchanged, migration 0026 recorded once, new morning defaults
   were verified and previous-release inserts succeeded. A directly granted
   untrusted DB reader could see no guest/proof rows under RLS.
+
+
+## Receiving-QR follow-up and simpler migration route — 2 November 2026
+
+Settings now supports a local receiving-QR image upload with a QR-only preview
+and a Maybank-card crop preset. Only the crop is stored, encoded losslessly at
+its selected resolution. The printed heading can be excluded; the bank can still
+display its own recipient confirmation. The actual user-supplied bank card was
+not published or committed. The alternative image-URL field remains supported.
+There is no new schema migration for this follow-up.
+
+For users who have not run client migrations, use the complete combined
+`deploy/sql/apply_client_updates_0024_to_0026.sql` in Supabase SQL Editor.
+Instructions: `docs/apply-client-database-updates.md`. The script was tested from
+0023 through 0026, and rerun, on isolated PostgreSQL 16 with old stock/order/fee
+values preserved. No production database was modified.
+
+Verification: 39 focused backend tests discovered, 38 passed, one
+PostgreSQL-only check skipped; frontend unit/SSR, UX, lint and build passed.
+Chromium at desktop/mobile verified local upload, preview, saved crop pixel
+identity, Settings persistence and overflow. Test images were synthetic colored
+patterns, not financial payment codes. Full-bank QR decoding/recipient validation
+requires the owner's bank app; the implementation does not claim to verify it.
