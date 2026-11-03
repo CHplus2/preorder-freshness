@@ -6,6 +6,7 @@ import './ReceivingQrUpload.css';
 import {qrCrop} from '../utils/qrCrop';
 export default function ReceivingQrUpload({value='',onChange,disabled=false}){
  const [file,setFile]=useState(null),[source,setSource]=useState(''),[shape,setShape]=useState(null),[mode,setMode]=useState('maybank'),[crop,setCrop]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
+ const [failedPreview,setFailedPreview]=useState('');
  const canvas=useRef(null),image=useRef(null),controller=useRef(null);
  const blob=useRef('');
  useEffect(()=>()=>{if(blob.current)URL.revokeObjectURL(blob.current)},[]);
@@ -38,7 +39,7 @@ export default function ReceivingQrUpload({value='',onChange,disabled=false}){
    <button type="button" disabled={disabled||busy||crop.size<128} onClick={upload}>{busy?'Uploading…':'Use this QR crop'}</button></>}
   </>}
   <details><summary>Or use an image URL</summary><label>Receiving QR image URL<input type="text" inputMode="url" maxLength="200" disabled={disabled||busy} value={value} onChange={e=>onChange(e.target.value)} placeholder="https://… or an uploaded QR path"/></label></details>
-  {!source&&value&&<img className="receiving-qr-current" src={value} alt="Current receiving QR"/>}
+  {!source&&value&&(failedPreview===value?<p role="alert" className="settings-field-error">The saved QR image could not load. Upload the receiving image from your computer or correct its URL, then save the QR payment settings.</p>:<img className="receiving-qr-current" src={value} alt="Current receiving QR" onError={()=>setFailedPreview(value)}/>)}
   <p>Cropping removes printed text outside the square. Your bank may still show your receiving name after scanning. An external URL displays the image as supplied.</p>
   {error&&<p role="alert" className="settings-field-error">{error}</p>}{notice&&<p role="status">{notice}</p>}
  </div>;

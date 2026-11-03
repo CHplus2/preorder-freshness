@@ -74,7 +74,12 @@ def check_cart_ingredients(items, delivery_at):
     for key, quantity in needed.items():
         if available.get(key, Decimal('0')) < quantity:
             name, unit = labels[key]
-            raise ValidationError(f'Not enough {name} for this delivery date. Choose fewer items or contact the kitchen. Only received, unheld stock within its recorded dates is counted.')
+            needed_text = format(quantity.normalize(), 'f')
+            available_text = format(available.get(key, Decimal('0')).normalize(), 'f')
+            raise ValidationError({'code': 'ingredient_stock_shortage',
+                'detail': f'Not enough {name} for this delivery date: this basket needs {needed_text} {unit}; '
+                f'{available_text} {unit} is available. Choose fewer items or contact the kitchen. '
+                'Only received stock that is not on hold and covers the delivery date is counted.'})
 
 
 def deduct_at_placement(order, actor):
@@ -154,7 +159,11 @@ def simple_slots(items, day, store, limit=3, now=None, find_next=False):
                     check_cart_ingredients(items, delivery)
                     stock_checked = True
             except ValidationError as error:
-                result['unavailable_reason'] = ' '.join(str(s) for s in error.detail)
+                if isinstance(error.detail, dict):
+                    result['unavailable_reason'] = str(error.detail.get('detail', 'Review the recorded stock for this basket.'))
+                    result['unavailable_code'] = str(error.detail.get('code', ''))
+                else:
+                    result['unavailable_reason'] = ' '.join(str(s) for s in error.detail)
                 if delivery > now and ('Not enough' in result['unavailable_reason'] or 'recipe' in result['unavailable_reason']):
                     break
                 continue
@@ -164,6 +173,6 @@ def simple_slots(items, day, store, limit=3, now=None, find_next=False):
                 break
         if result['slots']:
             result.update(suggested_date=selected_day.isoformat(), searched_through=selected_day.isoformat(),
-                searched_days=offset+1, unavailable_reason='')
+                searched_days=offset+1, unavailable_reason='', unavailable_code='')
             return result
     return result

@@ -15,6 +15,11 @@ Owner screens require an existing staff account. Request demonstration access fr
 
 The five client-feedback batches are implemented on `main`: packaging, placement stock deductions, guest QR/cash checkout, area fees, receipt recording, daily order summaries and printable slips. Start with the [current client guide](docs/CLIENT-USER-GUIDE.md). The FYP report remains an earlier snapshot; the [objective and diagram revision map](docs/client-fyp-feature-map.md) identifies the necessary coordinated changes without rewriting its objectives or documents.
 
+Additional client follow-ups, including the newly selected passkey account login,
+are tracked in [the follow-up batches](docs/client-followup-batches-20261103.md).
+Passkey accounts are planned; the current browser-session flow is not presented
+as cross-device account login.
+
 ## Underlying preorder application
 
 Customers browse menus and submit a dated delivery or collection preorder with name and phone, without email/password registration. Delivery accepts QR or cash; collection accepts QR only. Owners manage recipes, ingredient/packaging stock, manual payment verification and actual receipt, then print accepted order details or review dated sales. New orders deduct stock at placement and do not require a cooking-plan acceptance step.

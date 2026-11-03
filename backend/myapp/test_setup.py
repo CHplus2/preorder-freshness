@@ -26,6 +26,15 @@ class SetupChecklistTests(TestCase):
         self.assertFalse(Storefront.objects.exists())
         self.assertEqual(self.client.post(self.url,{},format='json').status_code,405)
 
+    def test_saved_qr_readiness_distinguishes_missing_image_disabled_and_enabled(self):
+        self.assertEqual(self.client.get(self.url).data['checkout']['qr_status'],'missing_image')
+        store=Storefront.objects.create(pk=1,manual_payment_enabled=False,duitnow_qr_url='https://example.com/local-qr.png',delivery_areas=['North','South'])
+        data=self.client.get(self.url).data['checkout']
+        self.assertEqual(data['qr_status'],'disabled')
+        self.assertEqual(data['delivery_area_count'],2)
+        store.manual_payment_enabled=True;store.save()
+        self.assertEqual(self.client.get(self.url).data['checkout']['qr_status'],'ready')
+
     def menu(self):
         product=Product.objects.create(name='Lunch',price=12,packaging_cost=0,
             preparation_tasks=[{'name':'Cook','minutes':30,'resource':'stove'}])

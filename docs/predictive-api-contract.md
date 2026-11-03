@@ -3,6 +3,23 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Stock and receiving-QR follow-up — 3 November 2026
+
+Simple-mode ingredient-stock failures in quote, receipt upload and placement
+precheck use HTTP 400 `{code: "ingredient_stock_shortage", detail: "…"}`.
+The detail identifies required/eligible quantity for the recipe's actual raw
+material; the machine code is not appended to customer-facing error prose.
+Simple slot results retain the normal response shape and expose that code and
+human-readable explanation when there is no stock-fitting result. Final stock
+deduction remains locked/transactional after this advisory precheck.
+
+`GET /api/admin/setup-checklist/` adds staff-only `checkout` metadata:
+`ordering_mode`, `qr_status` (`missing_image`, `disabled`, `ready`) and
+`delivery_area_count`. This reflects saved configuration, not a bank verification
+or image-reachability guarantee. Frontend QR-only saving uses the existing staff
+`PATCH /api/storefront/` with the image, instructions and enabled switch only.
+No new schema, predictive endpoints, model artifact or training changes.
+
 ## Final client review — 3 November 2026
 
 No new endpoints, schema changes or predictive-model changes. The dated business

@@ -1,0 +1,96 @@
+
+> frontend@0.0.0 test:ux
+> node src/components/EmailDeliveryCheck.test.js && node src/components/StorageGuidanceEditor.test.js && node src/components/ExpiryFields.test.js && node src/components/ReminderMonitor.test.js && node src/components/EmailChange.test.js && node src/utils/menuForm.test.js && node src/utils/sellingDetails.test.js && node src/utils/menuPresentation.test.js && node src/utils/customerExperience.test.js && node src/utils/accountForms.test.js && node src/components/ProductUx.test.js && node src/components/CustomerPages.test.js && node src/components/AccountForms.test.js && node --test src/utils/escrowState.test.js && node src/utils/siteNavigation.test.js && node src/components/PageState.test.js
+
+Email diagnostic UI: staff routing, explicit single test, result/reference verification, unavailable sender and separate worker meaning passed.
+Saved storage guidance: optional evidence, matching storage, explicit copy, earlier caps, preserved holds and material changes passed.
+Expiry evidence: relevant mode fields, source reference, date anchors, printed/opened caps, leap years and conservative mode changes passed.
+Reminder monitor: private bounded history, unknown vs zero, failed/incomplete/stale calls and non-sending refresh presentation passed.
+Email changes: strict rollout flags, bounded unique fragments, private sign-in gate and explicit-confirmation boundary passed.
+✔ required menu fields give direct field messages and trim whitespace (1.320519ms)
+✔ API field errors stay field-specific without raw serializer jargon (0.310628ms)
+✔ unknown save outcomes prevent blind duplicate creation; unrelated API errors retain useful explanations (0.354373ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7.59412
+✔ selling quantities use explicit units without converting to pieces or people (1.103088ms)
+✔ optional legacy data is accepted while malformed offer documents are rejected (0.360152ms)
+✔ packing never combines different accepted selling units, sizes or fixed contents (13.828972ms)
+✔ shipping enquiry requires a bounded dispatch window without changing legacy units (0.389195ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21.614684
+✔ menu records preserve actual prices, preorder rules and genuine empty results (0.830066ms)
+✔ bad payloads remain read failures instead of empty menus or invented prices (0.519197ms)
+✔ only configured nonzero group discounts become promotional copy (1.513985ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7.844209
+✔ missing address is legitimate only on initial read; malformed responses cannot become blank forms or save confirmations (1.635665ms)
+✔ only completed and cancelled orders move to history, without mutating provider records (0.267675ms)
+✔ delivery display uses Malaysia time without seconds and does not render invalid or epoch dates (11.947415ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22.317882
+✔ account actions describe their own uncertain outcomes without order-submission guidance (1.073654ms)
+✔ malformed success bodies cannot report a completed password update (0.580947ms)
+✔ reset-fragment parsing is repeatable and distinguishes absent from incomplete links (0.5822ms)
+✔ credential failures guide sign-in rather than asking an anonymous customer to sign in again (3.687994ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11.132121
+Product UX: loading/error counts, enabled payment options and collapsed demo disclosure passed.
+Financial UX: unavailable vs genuine zero, negative contribution, unrealised and incomplete outcomes passed.
+Customer pages: current/history, request/payment distinction, bounded rendering and stale-action guards passed.
+Account forms: new/existing password rules, visibility controls, one error surface and pending guards passed.
+Notifications: severity semantics and accessible dismissal passed.
+✔ roles and exact chain-time boundaries govern visible actions (0.896353ms)
+✔ funding checks distinct participants and test-coin bounds before a wallet request (4.331845ms)
+✔ mined confirmation and successful speed-up use the final transaction hash (0.908751ms)
+✔ wallet cancellation and unavailable test funds have actionable messages (0.204321ms)
+✔ missing or failed ordinary receipts cannot appear as confirmed (0.245402ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 162.7243
+✔ section selection keeps meal details in Menu and all FreshCast pages in FreshCast (0.86001ms)
+✔ every navigation destination has its own title; unknown routes do not inherit the previous page (0.217401ms)
+✔ customer account reads distinguish valid empty lists from invalid or duplicate identities (0.932016ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7.593889
+Page states: recoverable sign-in, staff-only access, verified content and consistent failure presentation passed.

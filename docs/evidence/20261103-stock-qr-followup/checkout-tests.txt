@@ -1,0 +1,37 @@
+
+> frontend@0.0.0 test:checkout
+> node src/utils/deliveryChoice.test.js && node src/components/ArrivalWindow.test.js && node src/components/Handover.test.js && node src/components/DeliveryEmail.test.js && node src/utils/deliverySlots.test.js && node src/utils/checkoutPresentation.test.js && node src/components/AvailabilityResult.test.js && node src/components/CheckoutUx.test.js
+
+Delivery choices: Malaysia time, invalid/expired data, exact basket/account/fulfilment scope, stable ordering and blocked-storage recovery passed.
+Arrival windows: exact ranges, stale/missing API rejection, grouped handovers, calendar spans and bounded time-away requests passed.
+Handover: explicit drop-off permission, validated contact links, non-sending drafts and escaped instructions passed.
+Courier handover: accepted recipient snapshot, honest missing data, customer contact preference, manual booking and strict tracking responses passed.
+Delivery email: optional availability, account contact, explicit consent, confirmation and closed-order boundaries passed.
+✔ suggested time retains Malaysia wall time and checked date range (1.248733ms)
+✔ malformed, mixed-day or duplicate suggestions are errors, not unavailable days (1.189525ms)
+✔ structural basket issue has no invented search range or suggestions (0.15608ms)
+✔ following-week action begins after the last checked day including month boundaries (0.153797ms)
+✔ basket availability invalidates on quantities and preparation settings (0.323217ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8.65358
+✔ invalid baskets are read failures; genuine empty baskets and unavailable menu status are preserved (2.787184ms)
+✔ basket preview matches server half-even cents and the pre-discount free-delivery threshold (0.351069ms)
+✔ an address needs valid saved identity and fields; an empty read is distinct from an invalid save (0.323548ms)
+✔ collection has zero delivery cost; configurable delivery pricing matches subtotal thresholds (0.309988ms)
+✔ demo payment navigation works without local storage and rejects invalid fallback IDs (0.206365ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9.007153
+Availability result: success, procurement, stale selection, pending, failure and initial state passed.
+Checkout UX: stale basket actions hidden, update/pricing guards, address read recovery and disabled payment groups passed.

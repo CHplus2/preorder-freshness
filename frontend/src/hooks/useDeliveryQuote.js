@@ -12,6 +12,18 @@ export default function useDeliveryQuote({deliveryAt,selectionKey,enabled,issue=
  const canCheck=enabled && complete && !issue;
  useEffect(()=>{
   if(!canCheck)return;
+  let timer;
+  const recheck=()=>{
+   if(document.visibilityState==='hidden')return;
+   clearTimeout(timer);timer=setTimeout(()=>setAttempt(value=>value+1),100);
+  };
+  window.addEventListener('focus',recheck);
+  document.addEventListener('visibilitychange',recheck);
+  window.addEventListener('inventory-updated',recheck);
+  return()=>{clearTimeout(timer);window.removeEventListener('focus',recheck);document.removeEventListener('visibilitychange',recheck);window.removeEventListener('inventory-updated',recheck);};
+ },[canCheck]);
+ useEffect(()=>{
+  if(!canCheck)return;
   const controller=new AbortController();
   // Wait for date/time editing to settle; replaced requests cannot update this selection.
   const timer=setTimeout(async()=>{
@@ -30,7 +42,7 @@ export default function useDeliveryQuote({deliveryAt,selectionKey,enabled,issue=
    } catch(error) {
     if(!controller.signal.aborted)setResult({key:selectionKey,attempt,phase:'error',
      error:error.code==='INVALID_RESPONSE'?'The kitchen returned an unexpected availability response. Please retry.':error.code==='ECONNABORTED'?'The availability check timed out. Please retry; no order was placed.':!error.response?'Could not check delivery availability. Check your connection and retry.':error.response.status>=500?'Delivery availability is temporarily unavailable. Please retry.':readApiError(error,'Review your requested delivery time.'),
-     retryable:!error.response || error.response.status>=500});
+     retryable:!error.response || error.response.status>=500 || error.response.data?.code==='ingredient_stock_shortage'});
    }
   },350);
   return()=>{clearTimeout(timer);controller.abort();};

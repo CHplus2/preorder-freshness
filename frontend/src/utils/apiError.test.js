@@ -5,6 +5,11 @@ test('WhatsApp validation uses the customer-facing field name',()=>{
   assert.equal(apiError({response:{status:400,data:{whatsapp_number:['Use country code and digits only.']}}}), 'WhatsApp number: Use country code and digits only.');
 });
 test('nested validation stays readable',()=>{assert.equal(apiError({response:{status:400,data:{ingredients:[{quantity_required:['Must be positive.']}]}}}),'Quantity required: Must be positive.');});
+test('stock error shows its explanation without the machine-readable code',()=>{
+ const error={response:{status:400,data:{code:'ingredient_stock_shortage',detail:'Not enough chicken: 100 g needed; 0 g available.'}}};
+ assert.equal(apiError(error),'Not enough chicken: 100 g needed; 0 g available.');
+ assert.equal(readApiError(error),'Not enough chicken: 100 g needed; 0 g available.');
+});
 test('server failures do not expose internals',()=>{assert.ok(!apiError({response:{status:500,data:'<html>password secret</html>'}}).includes('secret'));});
 test('session, timeout and network recovery',()=>{assert.match(apiError({response:{status:403,data:{detail:'CSRF Failed'}}}),/sign in again/);assert.match(apiError({code:'ECONNABORTED'}),/My orders/);assert.match(apiError({}),/connection/);});
 test('non-JSON errors use fallback',()=>{assert.equal(apiError({response:{status:404,data:'<html>404</html>'}},'Not found.'),'Not found.');});

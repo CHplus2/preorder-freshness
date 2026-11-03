@@ -46,6 +46,19 @@ class ExpiryEvidenceTests(TestCase):
         self.assertEqual(result.data['expiry_date'],str(self.today+timedelta(days=3)))
         self.assertEqual(result.data['original_expiry_date'],str(self.today+timedelta(days=3)))
 
+    def test_explicit_correction_of_wrong_printed_date_uses_thirty_days_but_keeps_opened_limit(self):
+        result=self.create(expiry_basis='storage',shelf_life_days=30,
+            original_expiry_date=str(self.today+timedelta(days=3)),guidance_note='Fixture supplier storage guidance')
+        self.assertEqual(result.data['expiry_date'],str(self.today+timedelta(days=3)))
+        url=self.url+str(result.data['id'])+'/'
+        corrected=self.client.patch(url,dict(updated_at=result.data['updated_at'],original_expiry_date=None),format='json')
+        self.assertEqual(corrected.status_code,200,corrected.data)
+        self.assertEqual(corrected.data['expiry_date'],str(self.today+timedelta(days=30)))
+        self.assertIsNone(corrected.data['original_expiry_date'])
+        opened=self.client.patch(url,dict(updated_at=corrected.data['updated_at'],opened_date=str(self.today),after_open_days=2),format='json')
+        self.assertEqual(opened.status_code,200,opened.data)
+        self.assertEqual(opened.data['expiry_date'],str(self.today+timedelta(days=2)))
+
     def test_supplied_effective_date_cannot_override_calculated_rules(self):
         result=self.create(expiry_basis='storage',shelf_life_days=2,guidance_note='Fixture limits',expiry_date=str(self.today+timedelta(days=300)))
         self.assertEqual(result.status_code,201,result.data)

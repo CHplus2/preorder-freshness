@@ -7,6 +7,7 @@ import ModalDialog from '../../components/ModalDialog';
 import PageLoading from "../../components/PageLoading";
 import {apiError,readApiError} from '../../utils/apiError';
 import ExpiryFields from "../../components/ExpiryFields";
+import {expiryBreakdown} from '../../utils/expiryEvidence';
 import StorageGuidanceEditor from "../../components/StorageGuidanceEditor";
 import {changeBatchMaterial,validStorageGuidance} from "../../utils/storageGuidance";
 import axios from "axios";
@@ -309,6 +310,8 @@ export default function AdminInventoryPage() {
 
       await fetchInventoryItems();
 
+      window.dispatchEvent(new Event('inventory-updated'));
+
       setNewInventoryItem(null);
     } catch (err) {
       setError(
@@ -331,6 +334,8 @@ export default function AdminInventoryPage() {
       );
 
       await fetchInventoryItems();
+
+      window.dispatchEvent(new Event('inventory-updated'));
 
       setEditingInventoryItem(null);
     } catch (err) {
@@ -512,6 +517,7 @@ export default function AdminInventoryPage() {
 
               const freshness =
                 inventoryCategory(item,today);
+              const expiry=expiryBreakdown(item,today);
 
               return (
                 <tr key={item.id} aria-label={`Batch ${item.batch_code || item.id}`}>
@@ -540,6 +546,7 @@ export default function AdminInventoryPage() {
 
                   <td data-label="Expiry">
                     {item.expiry_date}
+                    {expiry&&(expiry.shortened||expiry.effective!==item.expiry_date)&&<span className="inventory-expiry-explanation">{expiry.effective!==item.expiry_date?'Saved deadline differs from the calculation.':`${expiry.controlling.map(limit=>limit.label).join(' and ')} limits the ${item.shelf_life_days}-day calculation.`}<br/><button type="button" onClick={()=>openInventory(item)}>Review date limits</button></span>}
                   </td>
 
                   <td data-label="Recorded status">

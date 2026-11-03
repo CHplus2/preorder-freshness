@@ -35,7 +35,7 @@ try{
  assert.match(editor,/Reusable storage guidance \(optional\)/);assert.match(editor,/Existing batches keep their saved evidence/);
  assert.match(editor,/Source \/ document reference/);assert.match(editor,/Ingredient state and storage conditions/);
  const html=renderToStaticMarkup(createElement(Fields,{value:copied,material,onChange:()=>{}}));
- assert.match(html,/Use this guidance for this batch/);assert.match(html,/Fixture raw unopened chilled conditions/);assert.match(html,/Earlier printed, opened or thawed limits still apply/);
+ assert.match(html,/Use this guidance for this batch/);assert.match(html,/Fixture raw unopened chilled conditions/);assert.match(html,/Why the saved date is earlier/);assert.match(html,/Printed package date/);
  const mismatch=renderToStaticMarkup(createElement(Fields,{value:{...copied,storage_type:'frozen'},material,onChange:()=>{}}));
  assert.doesNotMatch(mismatch,/Use this guidance for this batch/);assert.match(mismatch,/No saved guidance for this storage type/);
  console.log('Saved storage guidance: optional evidence, matching storage, explicit copy, earlier caps, preserved holds and material changes passed.');

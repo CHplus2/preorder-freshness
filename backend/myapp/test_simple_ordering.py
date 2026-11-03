@@ -126,6 +126,31 @@ class SimpleOrderingTests(TestCase):
             self.assertEqual(self.client.post(f'/api/orders/{path}/',self.body,format='json').status_code,400)
         self.assertFalse(Order.objects.exists())
 
+    def test_restocking_one_ingredient_does_not_cover_another_and_same_quote_rechecks_stock(self):
+        chicken=RawMaterial.objects.create(name='Chicken boneless trimmed',unit='g')
+        ProductIngredient.objects.create(product=self.product,raw_material=chicken,quantity_required=50)
+        for stage in ['quote','place']:
+            response=self.client.post(f'/api/orders/{stage}/',self.body,format='json')
+            self.assertEqual(response.status_code,400,response.data)
+            self.assertEqual(response.data['code'],'ingredient_stock_shortage')
+            self.assertIn('Chicken boneless trimmed',response.data['detail'])
+            self.assertIn('150 g',response.data['detail'])
+            self.assertIn('0 g',response.data['detail'])
+        self.early.quantity+=500;self.early.save()
+        still_short=self.client.post('/api/orders/quote/',self.body,format='json')
+        self.assertEqual(still_short.status_code,400)
+        self.assertIn('Chicken boneless trimmed',still_short.data['detail'])
+        slots=self.client.post('/api/orders/slots/',{'date':self.delivery.date().isoformat()},format='json')
+        self.assertEqual(slots.status_code,200,slots.data)
+        self.assertIn('Chicken boneless trimmed',slots.data['unavailable_reason'])
+        self.assertEqual(slots.data['unavailable_code'],'ingredient_stock_shortage')
+        InventoryItem.objects.create(raw_material=chicken,quantity=200,received_date=timezone.localdate(),
+            expiry_date=self.delivery.date()+timedelta(days=1),storage_location='Local test fridge')
+        ready=self.client.post('/api/orders/quote/',self.body,format='json')
+        self.assertEqual(ready.status_code,200,ready.data)
+        self.assertFalse(Order.objects.exists())
+        self.assertFalse(IngredientConsumption.objects.exists())
+
     def test_explicit_sale_dates_and_delivery_hours_still_apply(self):
         self.product.delivery_dates=[(self.delivery+timedelta(days=1)).date().isoformat()];self.product.save()
         self.assertEqual(self.client.post('/api/orders/place/',self.body,format='json').status_code,400)

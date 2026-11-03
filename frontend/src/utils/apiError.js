@@ -31,7 +31,8 @@ export function apiError(error, fallback = 'The request could not be completed.'
     if (value && typeof value === 'object') return Object.entries(value).flatMap(([key,v]) => flatten(v, ['detail','non_field_errors'].includes(key) ? label : `${key === 'whatsapp_number' ? 'WhatsApp number' : key.replaceAll('_',' ').replace(/^./, letter => letter.toUpperCase())}: `));
     return [];
   };
-  const message = flatten(data).slice(0,6).join(' ');
+  const payload=typeof data?.code==='string'&&typeof data?.detail==='string'?{detail:data.detail}:data;
+  const message = flatten(payload).slice(0,6).join(' ');
   if (message.includes('CSRF')) return 'Your session could not be verified. Refresh the page and sign in again. Your form has not been cleared.';
   return message || fallback;
 }

@@ -201,6 +201,11 @@ def place_order(request):
     from ..services.scheduling import schedule_order, plan_snapshot
     from ..services.simple_ordering import simple, validate_delivery
     plan = validate_delivery(cart_items, delivery_at, store) if simple(store) else schedule_order(cart_items, delivery_at, store, allow_manual_review=True, allow_request_exceptions=True)
+    if simple(store):
+        # Use the same recipe/date eligibility explanation as the quote. Stock
+        # is still rechecked under row locks when allocations are deducted below.
+        from ..services.simple_ordering import check_cart_ingredients
+        check_cart_ingredients(cart_items, delivery_at)
     needs_review = plan.get('needs_review', False)
     if needs_review:
         # Review requests never debit credits or invite an advance transfer.

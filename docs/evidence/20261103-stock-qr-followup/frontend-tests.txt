@@ -1,0 +1,166 @@
+
+> frontend@0.0.0 test
+> node src/utils/orderHistory.test.js && node src/utils/apiError.test.js && node src/utils/planner.test.js && node src/utils/shopping.test.js && node src/utils/orderQueue.test.js && node src/utils/packing.test.js && node src/utils/inventoryAttention.test.js && node src/utils/orderProgress.test.js && node src/utils/preparationEstimate.test.js && node src/utils/recommendationExport.test.js && node src/utils/deliveryDays.test.js && node src/utils/apiResponse.test.js && node src/utils/checkoutStorage.test.js && node src/utils/sessionScope.test.js && node src/utils/deliveryResponse.test.js && node src/utils/salesResponse.test.js && node src/utils/guideResponse.test.js && node src/utils/costResponse.test.js && node src/utils/modelBackup.test.js && node src/utils/reviewResponse.test.js && node src/utils/simpleOrdering.test.js && node src/components/SimpleOrdering.test.js && node src/components/GuestCheckout.test.js && node src/components/ClientReports.test.js
+
+Order history: private-page metadata, stable descending cursors, bounded rows and malformed/stale filters passed.
+✔ WhatsApp validation uses the customer-facing field name (1.022931ms)
+✔ nested validation stays readable (0.198913ms)
+✔ stock error shows its explanation without the machine-readable code (0.156862ms)
+✔ server failures do not expose internals (0.138474ms)
+✔ session, timeout and network recovery (1.189586ms)
+✔ non-JSON errors use fallback (0.116792ms)
+✔ read-only failures give retry guidance without order submission instructions (0.247395ms)
+✔ read-only errors retain validation, authentication and safe fallback handling (0.182149ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8.77855
+✔ fractional work minutes round without displaying 60 minutes (0.885437ms)
+✔ shared cooking reserves and exports preparation once while retaining both handovers (13.002977ms)
+✔ delivery requests remain visible separately from scheduled deliveries and calendar exports (1.064462ms)
+✔ calendar excludes old preparation for ready orders and survives invalid saved tasks (0.274054ms)
+✔ hands-on time excludes unattended equipment use (0.208859ms)
+✔ multiday resting appears on each occupied day (0.191603ms)
+✔ overlapping closures are not double counted (0.297219ms)
+✔ legacy overlap is flagged and never fabricated into recipe steps (0.229669ms)
+✔ cooked orders do not reserve future hands-on work (0.182129ms)
+✔ changed hours flag previously accepted early work (0.246123ms)
+✔ unattended equipment conflicts are detected without worker conflicts (0.281536ms)
+✔ different equipment, no equipment and touching endpoints remain valid (0.145295ms)
+✔ closures include unattended work outside hours and union overlapping intervals (0.287504ms)
+✔ legacy whole-kitchen reservations conflict with unattended equipment (0.163902ms)
+✔ conflict details identify both orders and worker-only overlap (0.168549ms)
+✔ closure details preserve the reason and clip overlap to selected day (0.154509ms)
+✔ readiness separates missing dates and overdue records from actionable upcoming plans (0.405328ms)
+✔ readiness compares actual delivery instants and keeps incomplete plans under review (0.12184ms)
+✔ saved tasks do not hide an open order with no delivery date (0.141279ms)
+✔ saved tasks cannot hide overdue deliveries, pre-order preparation or missed pending work (0.253474ms)
+✔ collection reminders name the collection and retain the accepted handover time (0.121679ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 26.980033
+✔ combines shortages with exact three-place quantities and preserves orders (0.90039ms)
+✔ cutoff includes overdue needs and excludes future needs (0.14236ms)
+✔ never combines different ingredients or units (6.008371ms)
+✔ orders shopping by earliest requirement (0.878287ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14.25145
+✔ search accepts formatted IDs, customers and menu names (1.74746ms)
+✔ filters combine and delivery dates use Malaysia timezone (11.545165ms)
+✔ overdue excludes cancelled, delivered, unscheduled and future orders (0.178684ms)
+✔ delivery ordering puts unscheduled orders last without mutating input (0.168508ms)
+✔ menu classification distinguishes current, mixed, archived and missing references (0.232173ms)
+✔ only closed, fully archived history is hidden; open, mixed and unknown records remain (0.871497ms)
+✔ missing-date review matches planner warnings, including dated tasks with no delivery (0.287044ms)
+✔ generated history has a separate view; open requests and ordinary customers remain in the queue (0.2781ms)
+✔ owner shortcuts distinguish open, confirmation, dispatch and past-due work from closed history (0.558364ms)
+✔ payment and cancellation queues retain archived history that needs financial follow-up (0.351179ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22.791278
+✔ unconfirmed requests cannot inflate quantities or enter printed packing totals (14.086377ms)
+✔ uses Malaysia date and excludes dispatched, completed and cancelled orders (0.424257ms)
+✔ totals all order lines without combining renamed menus (0.541309ms)
+✔ reports missing dates and sorts deliveries without mutating source (0.45369ms)
+✔ keeps deleted product lines distinct and includes cooked orders (0.340443ms)
+✔ a date without confirmed preparation is excluded and explicitly counted for review (0.225122ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22.516653
+✔ date boundaries use explicit Malaysia day rather than device midnight (12.598961ms)
+✔ held expired stock appears once and empty batches are excluded (0.939607ms)
+✔ stock value preserves zero cost and reports incomplete costs (0.899769ms)
+✔ priority ranges do not overlap and rows sort without mutating input (0.714224ms)
+✔ invalid calendar dates need review rather than rolling forward into usable shelf life (0.171694ms)
+✔ inventory reads keep malformed data out of stock counts and preserve genuine zero quantities (0.644792ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 24.270383
+✔ each recorded status has exactly one current stage (0.84651ms)
+✔ cancelled and unknown statuses do not invent completed stages (0.582891ms)
+✔ self-collection has a collected outcome and no out-for-delivery stage (0.235978ms)
+✔ unconfirmed requests have no fulfilment stage or booked-time promise (0.173937ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7.278055
+✔ combined timing reproduces the ten-bar example (1.485172ms)
+✔ independent mode repeats full duration including a partial batch (0.156411ms)
+✔ basic cook/pack formula matches backend example (0.158925ms)
+✔ incomplete inputs do not produce misleading zero estimates (0.199374ms)
+✔ unattended overnight steps are exempt from work-window warning (0.242338ms)
+✔ warns about oversized steps and capacity, without assuming unknown hours (0.173366ms)
+✔ resumable prep reports workday lower bound without treating it as one uninterrupted task (0.208598ms)
+✔ banana cake preview distinguishes the daily quantity limit from a long recipe (0.886058ms)
+✔ initial quantity respects a valid daily cap without masking a later larger sample (0.212443ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10.264633
+✔ exports displayed counts and rates with provenance and correctly quoted CSV (1.035338ms)
+✔ empty cohort preserves report metadata without inventing percentages (0.151844ms)
+✔ missing measures stay blank while recorded zero remains zero (0.146516ms)
+✔ neutralises spreadsheet formulas in textual values (0.150833ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10.341604
+Basket delivery weekday compatibility checks passed.
+Malformed list and slot response recovery checks passed.
+Checkout storage failures and stable retry identity passed.
+Session isolation: distinct account/role scope, retained same-account retries, cross-account checkout clearing, blocked storage and finite wallet responses passed.
+Delivery policy, preview and confirmation response validation passed.
+Batch date preview and exact saved-cohort validation passed.
+Sales response checks passed: recorded zero, unknown forecast, malformed and missing values.
+Guide response validation and optional storage recovery passed.
+Cost/contribution checks preserve zero, unknown and negative values; reject malformed records.
+Pricing and supporting cost records validated, including unknown costs and losses.
+Cost menu selection uses recorded status, preserves paused items, hides archived items by default and excludes unknown identities.
+Model backup download: staff session, valid bytes, integrity mismatch, invalid response and unavailable archive passed.
+Review pagination: bounded arrays, next cursor matching, empty pages and invalid data passed.
+Simple ordering: receipt facts, stock-only quotes and exact confirmation identities passed.
+Simple ordering UI: receipt-only actions, direct date/time entry, recipe editing and stock-based menu copy passed.
+Guest checkout: private identity, required contact/address, QR/cash policy, minute hours, area prices and protected staff sign-in passed.
+Client reports: date/request validation, safe print rendering, accepted totals, pickup details and honest loading states passed.

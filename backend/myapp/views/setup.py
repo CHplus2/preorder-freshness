@@ -62,7 +62,12 @@ def setup_checklist(request):
         'held_batches': active.filter(quarantined=True).count(),
         'usable_batches_missing_cost': usable.filter(unit_cost__isnull=True).count(),
     }
+    qr_status = 'ready' if store and store.manual_payment_enabled and store.duitnow_qr_url else 'missing_image' if not store or not store.duitnow_qr_url else 'disabled'
     return Response({'checked_at': timezone.now(), 'menu_count': len(products),
+        'checkout': {'ordering_mode': store.ordering_mode if store else 'simple', 'qr_status': qr_status,
+                     'delivery_area_count': len(store.delivery_areas) if store else 0},
         'completed': sum(int(s['complete']) for s in steps), 'total': len(steps),
         'steps': steps, 'inventory': checks,
-        'note': 'These checks describe recorded setup only. They do not certify food safety, test email or payments, or guarantee production readiness. Future preorders can require procurement even with no stock today.'})
+        'note': ('New orders need enough received ingredient and packaging stock for the chosen date. Check the saved QR settings before asking customers to pay. These checks describe recorded setup; they do not verify a bank transfer or food safety.'
+                 if not store or store.ordering_mode == 'simple' else
+                 'These checks describe recorded setup only. They do not certify food safety, test email or payments, or guarantee production readiness. Future preorders can require procurement even with no stock today.')})

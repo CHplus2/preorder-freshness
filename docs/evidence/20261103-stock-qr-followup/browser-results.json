@@ -1,0 +1,22 @@
+{
+  "result": "passed",
+  "fixture": "isolated local data; no bank QR, real transfer or email",
+  "viewports": [
+    "1440x1000",
+    "390x844"
+  ],
+  "checks": [
+    "30-day base and three-day printed cap explained",
+    "explicit mistaken-date correction persists",
+    "mobile modal fits viewport",
+    "adding rice cannot cover chicken shortage",
+    "same selection rechecks on focus/retry",
+    "QR scoped save preserves unsaved area fee",
+    "actual chicken receipt makes basket available",
+    "QR choice reveals receipt upload",
+    "failed QR image has visible explanation",
+    "placement deducts both recipe ingredients correctly",
+    "uploaded proof remains unpaid",
+    "no page overflow or script errors"
+  ]
+}

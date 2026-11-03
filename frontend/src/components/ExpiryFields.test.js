@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createServer} from 'vite';
-import {changeExpiryBasis,expiryPreview} from '../utils/expiryEvidence.js';
+import {changeExpiryBasis,expiryPreview,expiryBreakdown,removeIncorrectPrintedDate} from '../utils/expiryEvidence.js';
 const stored={received_date:'2026-10-27',expiry_basis:'storage',shelf_life_days:10};
 assert.deepEqual(expiryPreview(stored),{base:'2026-11-06',effective:'2026-11-06'});
 assert.equal(expiryPreview({...stored,original_expiry_date:'2026-10-30',opened_date:'2026-10-27',after_open_days:1}).effective,'2026-10-28');
@@ -13,6 +13,13 @@ const labelled={received_date:'2026-10-27',expiry_date:'2026-10-30'};
 assert.equal(changeExpiryBasis(labelled,'storage').original_expiry_date,'2026-10-30');
 assert.equal(changeExpiryBasis({...stored,expiry_date:'2026-11-06'},'label').expiry_date,'');
 assert.equal(expiryPreview({...stored,opened_date:'2026-10-28',after_open_days:1},'2026-10-27'),null);
+const thirty={received_date:'2026-11-03',expiry_basis:'storage',shelf_life_days:30,original_expiry_date:'2026-11-06'};
+assert.equal(expiryBreakdown(thirty).base,'2026-12-03');
+assert.equal(expiryBreakdown(thirty).effective,'2026-11-06');
+assert.equal(expiryBreakdown(thirty).controlling[0].kind,'printed');
+assert.equal(expiryBreakdown(removeIncorrectPrintedDate(thirty)).effective,'2026-12-03');
+const opened={...thirty,opened_date:'2026-11-03',after_open_days:2};
+assert.equal(expiryBreakdown(removeIncorrectPrintedDate(opened)).effective,'2026-11-05');
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try{
  const {default:Fields}=await server.ssrLoadModule('/src/components/ExpiryFields.jsx');
@@ -30,6 +37,9 @@ try{
  assert.match(render({...labelled,label_date_type:'best_before'}),/Best-before describes quality/);
  assert.match(manufacture,/<label[^>]*>Manufacture date</);assert.match(manufacture,/Documented shelf life from manufacture/);
  assert.match(storage,/not measure physical freshness/);
+ const capped=render({...thirty,received_date:'2026-10-03',original_expiry_date:'2026-10-06'});
+ assert.match(capped,/Why the saved date is earlier/);assert.match(capped,/Printed package date: <!-- -->2026-10-06|Printed package date: 2026-10-06/);
+ assert.match(capped,/Remove incorrectly recorded printed date/);
  assert.match(render({...stored,handling_history:'unknown'}),/<input[^>]*type="checkbox"[^>]*disabled=""[^>]*checked=""/);
  console.log('Expiry evidence: relevant mode fields, source reference, date anchors, printed/opened caps, leap years and conservative mode changes passed.');
 }finally{await server.close();}

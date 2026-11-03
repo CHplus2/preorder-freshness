@@ -31,3 +31,21 @@ export function expiryPreview(value,today=null){
  }
  return {base,effective:dates.sort()[0]};
 }
+
+// Explain the same conservative rule; an effective deadline is not itself a
+// new package label. Draft corrections are validated again when saved.
+export function expiryBreakdown(value,today=null){
+ const preview=expiryPreview(value,today);
+ if(!preview)return null;
+ const basis=value.expiry_basis || 'label';
+ const limits=[{kind:basis==='label'?'printed':'calculated',label:basis==='label'?'Printed package date':'Shelf-life calculation',date:preview.base}];
+ if(basis!=='label'&&value.original_expiry_date)limits.push({kind:'printed',label:'Printed package date',date:value.original_expiry_date});
+ for(const [field,days,kind,label] of [['opened_date','after_open_days','opened','Limit after opening'],['thawed_date','after_thaw_days','thawed','Limit after thawing']]){
+  if(value[field])limits.push({kind,label,date:addDays(value[field],value[days]),anchor:value[field],days:Number(value[days])});
+ }
+ return {...preview,limits,controlling:limits.filter(limit=>limit.date===preview.effective),shortened:preview.effective<preview.base};
+}
+
+export function removeIncorrectPrintedDate(value){
+ return {...value,original_expiry_date:null,label_date_type:'not_recorded',...(value.expiry_basis==='label'?{expiry_date:''}:{})};
+}
