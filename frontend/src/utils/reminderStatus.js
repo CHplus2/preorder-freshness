@@ -5,6 +5,9 @@ const count=value=>Number.isSafeInteger(value) && value>=0;
 const outcomes=['running','incomplete','completed','send_failed','not_configured','worker_error'];
 export function reminderStatus(data){
  if(!data || ['email_configured','customer_email_configured','scheduler_secret_configured','scheduler_activity_verified'].some(k=>typeof data[k]!=='boolean') || ['customer_reminders_due','customer_dispatch_due','customer_time_updates_due'].some(k=>!count(data[k])))throw invalidResponse();
+ if(data.ordering_mode!==undefined || data.owner_delivery_due!==undefined || data.owner_preparation_due!==undefined){
+  if(!['simple','scheduled'].includes(data.ordering_mode)||!count(data.owner_delivery_due)||!count(data.owner_preparation_due)||data.ordering_mode==='simple'&&data.owner_preparation_due!==0)throw invalidResponse();
+ }
  const activity=data.worker_activity;
  if(!activity || !stamp(activity.generated_at) || activity.retention_hours!==24 || activity.recent_threshold_minutes!==15 || !count(activity.authenticated_runs_24h) || !Array.isArray(activity.recent_runs) || activity.recent_runs.length>10 || activity.recent_runs.length>activity.authenticated_runs_24h)throw invalidResponse();
  if(activity.recent_runs.some((run,index)=>!stamp(run?.started_at) || !outcomes.includes(run.outcome)

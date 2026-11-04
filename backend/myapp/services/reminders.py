@@ -2,14 +2,14 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import transaction
-from django.db.models import Q, Exists, OuterRef, F, Value, CharField, Case, When, BooleanField, IntegerField, DateTimeField, DurationField, ExpressionWrapper
+from django.db.models import Q, Exists, OuterRef, F, Value, CharField, Case, When, BooleanField, IntegerField, DateTimeField, DurationField, ExpressionWrapper, Subquery, Count
 from django.db.models.fields.json import KeyTextTransform
 from django.db.models.functions import Cast, Concat, Lower, MD5, Substr, Coalesce
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from .recovery_email import reset_origin
 from django.utils import timezone
-from ..models import Order, OrderReminder
+from ..models import Order, OrderReminder, OrderAmendment, Storefront
 
 def confirmed_order():
     return (Q(ordering_mode='simple', inventory_deducted=True) |
@@ -20,42 +20,83 @@ def email_ready():
     return bool(settings.OWNER_NOTIFICATION_EMAIL and settings.EMAIL_HOST and
                 settings.EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend')
 
-def _send_owner_reminders(limit=3):
-    """Bounded worker. Row locks prevent overlapping workers sending the same event."""
-    now = timezone.now()
+def reminder_ordering_mode():
+    # Reading reminder status must not create or modify kitchen settings.
+    return Storefront.objects.filter(pk=1).values_list('ordering_mode', flat=True).first() or 'simple'
+
+
+def owner_due(now=None, *, preparation_enabled=None):
+    """One authoritative queue for preview, status and the locked sender."""
+    now = now or timezone.now()
+    if preparation_enabled is None:
+        preparation_enabled = reminder_ordering_mode() == 'scheduled'
     lower, upper = now-timedelta(hours=24), now+timedelta(hours=24)
     notified = OrderReminder.objects.filter(order_id=OuterRef('pk'))
-    due = Order.objects.exclude(status__in=['cancelled','delivered']).annotate(
-        prep_notified=Exists(notified.filter(event='preparation_at')),
-        delivery_notified=Exists(notified.filter(event='delivery_at'))).filter(
-        Q(preparation_at__range=(lower,upper),status='pending',prep_notified=False)
-        | Q(delivery_at__range=(lower,upper),delivery_notified=False))
+    changes = OrderAmendment.objects.filter(order_id=OuterRef('pk'), after__change_type='delivery_time').order_by('-created_at', '-pk')
+    key = Concat(Value('od'), Substr(MD5(Cast('delivery_at', output_field=CharField())), 1, 18), output_field=CharField())
+    rows = Order.objects.exclude(status__in=['cancelled', 'delivered']).annotate(
+        owner_delivery_event=Case(When(ordering_mode='simple', then=key), default=Value('delivery_at'), output_field=CharField()),
+        owner_time_changed=Coalesce(Subquery(changes.values('created_at')[:1]), F('created_at')))
+    rows = rows.annotate(
+        owner_prep_notified=Exists(notified.filter(event='preparation_at')),
+        owner_delivery_notified=Exists(notified.filter(event=OuterRef('owner_delivery_event'))),
+        # Preserve old successful receipts on upgrade. A later audited time
+        # change can receive a reminder without deleting or rewriting history.
+        owner_legacy_delivery_notified=Exists(notified.filter(event='delivery_at', sent_at__gte=OuterRef('owner_time_changed'))))
+    rows = rows.annotate(
+        owner_delivery_pending=Case(When(delivery_at__range=(lower, upper), owner_delivery_notified=False,
+            owner_legacy_delivery_notified=False, then=Value(True)), default=Value(False), output_field=BooleanField()),
+        owner_preparation_pending=Case(When(ordering_mode='scheduled', preparation_at__range=(lower, upper), status='pending',
+            owner_prep_notified=False, then=Value(preparation_enabled)), default=Value(False), output_field=BooleanField()))
+    return rows.filter(Q(owner_delivery_pending=True) | Q(owner_preparation_pending=True)).order_by('delivery_at', 'pk')
+
+
+def owner_queue_counts(*, preparation_enabled=None):
+    return owner_due(preparation_enabled=preparation_enabled).aggregate(
+        delivery=Count('pk', filter=Q(owner_delivery_pending=True)),
+        preparation=Count('pk', filter=Q(owner_preparation_pending=True)))
+
+
+def owner_events(order):
+    if order.owner_preparation_pending:
+        yield 'preparation_at', 'preparation_at'
+    if order.owner_delivery_pending:
+        yield 'delivery_at', order.owner_delivery_event
+
+
+def _send_owner_reminders(limit=3):
+    """Bounded worker. Row locks prevent overlapping workers sending the same event."""
+    preparation_enabled = reminder_ordering_mode() == 'scheduled'
     sent = failed = attempted = 0
-    for pk in due.order_by('delivery_at','pk').values_list('pk', flat=True)[:limit]:
-        for event in ('preparation_at', 'delivery_at'):
-            if attempted >= limit:
-                return {'sent': sent, 'failed': failed}
-            with transaction.atomic():
-                order = Order.objects.select_for_update(skip_locked=True).filter(pk=pk).first()
-                if not order or order.status in ('cancelled','delivered'):
-                    continue
+    for pk in owner_due(preparation_enabled=preparation_enabled).values_list('pk', flat=True)[:limit]:
+        with transaction.atomic():
+            # Recheck eligibility after obtaining the order lock. Another worker,
+            # an actual receipt or a changed delivery time may have won first.
+            order = (owner_due(preparation_enabled=preparation_enabled)
+                .select_for_update(skip_locked=True, of=('self',)).filter(pk=pk).first())
+            if not order:
+                continue
+            for event, receipt in owner_events(order):
+                if attempted >= limit:
+                    return {'sent': sent, 'failed': failed}
                 when = getattr(order, event)
-                if not when or not lower <= when <= upper:
-                    continue
-                if event == 'preparation_at' and order.status != 'pending':
-                    continue
-                if OrderReminder.objects.filter(order=order,event=event).exists():
-                    continue
+                label = 'preparation' if event == 'preparation_at' else 'collection' if order.delivery_method == 'pickup' else 'delivery'
+                message = (f'Order #{order.pk}: {label} due {timezone.localtime(when):%d %b %Y %I:%M %p} Malaysia time. '
+                    'Review the order and coordinate the handover. This reminder does not mark payment or receipt.'
+                    if event == 'delivery_at' else
+                    f'Order #{order.pk}: preparation due {timezone.localtime(when):%d %b %Y %I:%M %p} Malaysia time. Review your kitchen orders.')
+                origin = reset_origin()
+                if origin:
+                    message += f'\n{origin}/admin/orders?order={order.pk}'
                 attempted += 1
-                message = f'Order #{order.pk}: {event.replace("_at", "")} due {timezone.localtime(when):%d %b %Y %H:%M} Malaysia time. Review your kitchen orders.'
                 try:
-                    count = send_mail('Kitchen order reminder', message, settings.DEFAULT_FROM_EMAIL,
+                    count = send_mail(f'Kitchen {label} reminder — order #{order.pk}', message, settings.DEFAULT_FROM_EMAIL,
                                       [settings.OWNER_NOTIFICATION_EMAIL])
                 except Exception:
                     failed += 1
                     continue
                 if count:
-                    OrderReminder.objects.create(order=order,event=event)
+                    OrderReminder.objects.create(order=order, event=receipt)
                     sent += 1
                 else:
                     failed += 1

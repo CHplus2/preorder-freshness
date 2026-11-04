@@ -21,7 +21,7 @@ frozen. Do not treat an implemented source change as a verified live deployment.
 | --- | --- | --- |
 | 1 | Explain/correct shelf-life date limits; make stock rechecks and ingredient shortages clear; expose receiving-QR setup and area-fee controls | Implemented and tested; source publication and live deployment are separate |
 | 2 | Passkey account registration/login, named customer profile and checkout prefill, account recovery/cross-device limits | Implemented/tested; owner confirmed running migration 0027 on 4 November; source published as `4be9c09`; owner confirmation recorded as `6dea316` |
-| 3 | Delivery-due owner email reminders for the current workflow, without preparation reminders or duplicate schedules | Planned; no live scheduler or email changed by batch 1 |
+| 3 | Delivery-due owner email reminders for the current workflow, without preparation reminders or duplicate schedules | Implemented/tested 4 November; same worker/schedule, no live email or scheduler changes claimed |
 | 4 | Operational daily summary entry under Orders, retained sales reporting/print preview, and reviewed cleanup of explicitly fictional historical records/references | Planned; no historical delivery/payment/stock records changed by batch 1 |
 
 ## Batch 1 findings and changes
@@ -181,3 +181,24 @@ valid future selections, explains elapsed times and configured hours, and starts
 on tomorrow when today's window has ended. The draft resets on basket/service
 scope changes. It does not relax stock, date, account or payment validation.
 See `docs/evidence/20261104-accounts-areas-time/README.md` for checks.
+
+
+## Batch 3 — delivery-only kitchen reminders (4 November 2026)
+
+The current kitchen mode suppresses preparation reminders even on older orders
+that retain preparation fields. Delivery and collection use a shared eligible
+queue for preview, staff status and sending. Simple orders have dated owner
+receipts; old receipts prevent upgrade replay, with a later audited time change
+allowing a new reminder. Existing scheduled-mode compatibility is preserved.
+
+Settings shows owner handovers waiting and explains phone coordination. New
+passkey customer accounts have no email; older explicit email subscriptions
+remain separate under history. No automatic SMS/WhatsApp was added. Reading
+status and command preview do not send. The shared bearer endpoint, three-email
+budget, retries, closed-order exclusions and order locking remain.
+
+No migration, new scheduler or environment changes are needed. Source has only
+one reminder schedule. Live GitHub Actions history could not be read through
+this environment's restricted API access, and no production worker was invoked.
+See `docs/evidence/20261104-delivery-only-reminders/README.md`. Batch 4 remains
+planned: Orders daily-summary entry and reviewed historical record handling.

@@ -1,11 +1,9 @@
-from datetime import timedelta
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
-from myapp.models import Order, OrderReminder
-from myapp.services.reminders import email_ready, customer_email_ready, customer_due, dispatch_due, time_due, send_due_reminders
+from myapp.services.reminders import email_ready, customer_email_ready, customer_due, dispatch_due, time_due, send_due_reminders, owner_due, owner_events
 
 class Command(BaseCommand):
-    help = 'Preview owner and opted-in customer reminders. --send attempts up to 3 emails in total.'
+    help = 'Preview kitchen reminders and saved customer email subscriptions. --send attempts up to 3 emails in total.'
 
     def add_arguments(self, parser):
         parser.add_argument('--send', action='store_true')
@@ -17,16 +15,10 @@ class Command(BaseCommand):
             self.stdout.write(str(send_due_reminders(include_owner=email_ready(), include_customer=customer_email_ready())))
             return
         now = timezone.now()
-        for order in Order.objects.exclude(status__in=['cancelled','delivered']):
-            for event in ('preparation_at', 'delivery_at'):
-                when = getattr(order,event)
-                if not when or not now-timedelta(hours=24) <= when <= now+timedelta(hours=24):
-                    continue
-                if event == 'preparation_at' and order.status != 'pending':
-                    continue
-                if OrderReminder.objects.filter(order=order,event=event).exists():
-                    continue
-                self.stdout.write(f'PREVIEW: Order #{order.pk}: {event} due {timezone.localtime(when):%d %b %Y %H:%M} Malaysia time.')
+        for order in owner_due(now)[:100]:
+            for field, _receipt in owner_events(order):
+                label = 'preparation' if field == 'preparation_at' else 'collection' if order.delivery_method == 'pickup' else 'delivery'
+                self.stdout.write(f'PREVIEW: Order #{order.pk}: {label} due {timezone.localtime(getattr(order,field)):%d %b %Y %I:%M %p} Malaysia time.')
 
         for order in customer_due(now)[:100]:
             self.stdout.write(f'PREVIEW: Customer reminder for order #{order.pk} (recipient not displayed).')

@@ -24,5 +24,12 @@ try{
  const blocked=render(withRun({outcome:'not_configured',sent:null,failed:null}));assert.match(blocked,/No email was attempted/);
  assert.match(render(stale),/last 15 minutes/);
  const backlog=render({...withRun(),customer_dispatch_due:10});assert.match(backlog,/need another check/);
+ const simple={...withRun(),ordering_mode:'simple',owner_delivery_due:4,owner_preparation_due:0};
+ const current=render(simple);assert.match(current,/Kitchen reminders waiting/);assert.match(current,/Delivery or collection due/);
+ assert.match(current,/No preparation reminders are sent/);assert.match(current,/does not enable automatic email, SMS or WhatsApp/);
+ assert.match(current,/Earlier customer email subscriptions/);assert.match(current,/New phone-and-passkey accounts are not subscribed/);
+ assert.doesNotMatch(current,/<dt>Customer updates<|Customer updates are not configured|<span>Preparation due<|choose them at checkout/);
+ const scheduled=render({...simple,ordering_mode:'scheduled',owner_preparation_due:2});assert.match(scheduled,/<span>Preparation due</);
+ for(const bad of [{...simple,owner_delivery_due:-1},{...simple,owner_preparation_due:1},{...simple,ordering_mode:'unknown'},{...status,owner_delivery_due:1}])assert.throws(()=>reminderStatus(bad),{code:'INVALID_RESPONSE'});
  console.log('Reminder monitor: private bounded history, unknown vs zero, failed/incomplete/stale calls and non-sending refresh presentation passed.');
 }finally{await server.close();}

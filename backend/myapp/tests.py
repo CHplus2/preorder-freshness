@@ -205,6 +205,7 @@ class KitchenTests(TestCase):
         from unittest.mock import patch
         from io import StringIO
         from .models import OrderReminder
+        Storefront.objects.create(pk=1, ordering_mode='scheduled')
         order=self.order();order.status="pending";order.preparation_at=timezone.now()+timedelta(hours=2);order.save()
         output=StringIO()
         call_command('send_order_reminders',stdout=output)

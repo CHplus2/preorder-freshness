@@ -1,6 +1,6 @@
 # Client changes mapped to the unchanged FYP objectives
 
-Prepared 3 November 2026; account/area/time follow-up updated 4 November. Earlier review baseline: `main` at `356ea0f`, plus the final
+Prepared 3 November 2026; account/area/time/reminder follow-ups updated 4 November. Earlier review baseline: `main` at `356ea0f`, plus the final
 review fixes accompanying this document. This is a revision map, not an edited
 FYP report or a claim that participant evaluation has been completed.
 
@@ -121,3 +121,14 @@ remain separate from a source-code review:
 - Update the report document and diagrams as a separate reviewed revision using
   this map. This batch does not replace DOCX/PDF content, modify objectives or
   write to the report/integration branches.
+
+
+### Delivery reminder follow-up — 4 November
+
+Current kitchen owner emails use delivery/collection dates, without preparation
+reminders in the simple workflow. This uses the existing scheduler and does not
+mark orders paid/received. Name/phone/passkey customer accounts do not subscribe
+to email or SMS/WhatsApp. Previously opted-in email records retain their consent
+rules. See `test_owner_delivery_reminders.py` and the delivery-only reminder
+evidence. This is not a claim of live scheduler/inbox verification, and no
+report DOCX, objectives or frozen branch was changed.

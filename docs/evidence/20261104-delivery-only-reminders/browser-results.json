@@ -1,0 +1,1 @@
+{"checks": ["staff saved policy and delivery queue readback", "no preparation queue in simple workflow", "phone contact instead of customer email promises", "refresh status is read-only", "older email subscriptions collapsed", "desktop/mobile responsive", "24-hour once-per-time reminder explanation", "no worker or email-check request"], "uncaught_errors": [], "send_requests": 0}

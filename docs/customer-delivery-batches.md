@@ -1,5 +1,44 @@
 # Customer delivery communication batches
 
+## Current client workflow — 4 November 2026
+
+The customer now creates a name/phone/passkey account, without an email or
+password. Current checkout does **not** offer customer email subscriptions.
+A phone number does not authorize or configure email, SMS or WhatsApp sending.
+The older customer-email batches below document retained compatibility for
+previously opted-in orders; they are not instructions for the current checkout.
+
+Kitchen emails now follow **delivery/collection dates only** while the saved
+kitchen ordering mode is simple. Historical preparation fields do not generate
+preparation reminders in this workflow. Preparation reminders remain available
+only for scheduled orders when the kitchen itself uses the historical scheduled
+mode. No new cooking plan is created and no status is advanced by the clock.
+
+- Eligibility: an open handover within the next 24 hours, or overdue by up to
+  24 hours, with no applicable successful-send receipt. Missing dates, closed
+  orders, older overdue events and more distant times are excluded.
+- A simple order has a dated owner receipt. An agreed changed time can receive a
+  new reminder. Existing old `delivery_at` receipts suppress routine replay on
+  upgrade until a later audited delivery-time change. Receipts are not deleted.
+- Collection emails say collection; delivery emails say delivery. They show
+  Malaysia time and an Orders link if a valid public origin is configured.
+- The same bounded worker, bearer authentication and three-message total budget
+  remain. Order locks and success receipts protect overlapping calls; failures
+  retry on later calls. A crash after SMTP acceptance before commit can still
+  produce a duplicate. SMTP acceptance is not proof of inbox receipt.
+- Settings shows owner handovers waiting and explains phone contact. Earlier
+  customer email queues are under Email settings & history. Reading/refreshing
+  status never sends, and queue counts are not inbox receipts.
+
+**No new scheduler, secret rotation, SMTP changes or migration is required.**
+Keep one enabled scheduler using the existing worker endpoint. The repository
+has one five-minute GitHub schedule and no Vercel cron entry. This source review
+cannot certify external cron-job.org jobs or live GitHub runs. New scheduling
+providers and phone-message integrations were not added. See
+[evidence](evidence/20261104-delivery-only-reminders/README.md).
+
+The sections below retain the earlier email-account workflow and its evidence.
+
 ## Email delivery diagnosis — 27 October 2026
 
 Settings → Order email reminders → **Email settings & history** shows current

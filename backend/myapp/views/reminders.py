@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from ..services import reminder_activity
-from ..services.reminders import email_ready, customer_email_ready, customer_due, dispatch_due, time_due, send_due_reminders
+from ..services.reminders import email_ready, customer_email_ready, customer_due, dispatch_due, time_due, send_due_reminders, reminder_ordering_mode, owner_queue_counts
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,10 @@ logger = logging.getLogger(__name__)
 @permission_classes([IsAdminUser])
 def reminder_status(request):
     from ..services.email_diagnostics import configuration
-    return Response({'email_configured': email_ready(),
+    mode = reminder_ordering_mode()
+    queue = owner_queue_counts(preparation_enabled=mode == 'scheduled')
+    return Response({'ordering_mode': mode, 'owner_delivery_due': queue['delivery'], 'owner_preparation_due': queue['preparation'],
+                     'email_configured': email_ready(),
                      'email_delivery': configuration(),
                      'customer_email_configured': customer_email_ready(),
                      'scheduler_activity_verified': False,

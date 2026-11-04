@@ -1695,3 +1695,30 @@ error, while clearing shared checkout selection so it cannot authorize a quote
 or order. Malaysia UTC+08 and configured delivery/collection hours remain
 canonical. Persisted past/foreign-scope choices remain rejected. No predictive
 API, training, model, or evaluation changes.
+
+
+### 4 November 2026 — owner reminders in the simplified workflow
+
+`GET /api/admin/reminder-status/` remains staff-only, read-only and non-sending.
+It additionally returns `ordering_mode` (`simple` or `scheduled`),
+`owner_delivery_due` (nonnegative integer, includes collection), and
+`owner_preparation_due` (nonnegative integer, always zero in simple mode).
+Counts share the sender/command-preview eligibility query; no addresses, orders
+or mail bodies are added to these new fields. The frontend accepts old responses
+without these three fields during rollout, but rejects partial/invalid new
+metadata and does not invent missing queue counts.
+
+Owner preparation events require both a scheduled kitchen and scheduled order.
+Open delivery/collection events remain eligible from 24 hours before to 24 hours
+after their date. Simple order owner receipts use a 20-character dated key in
+the existing OrderReminder table; old `delivery_at` receipts continue suppressing
+upgrade replays until a later audited delivery-time amendment. Keys identify
+notification events, not authentication credentials. No receipts/history are
+deleted, no stock/payment/status changes occur and no migration is needed.
+
+`GET /api/reminders/run/` keeps its existing bearer gate, aggregate `sent`/`failed`
+response and shared three-message budget. Queue rows are rechecked under order
+locks. Command preview is bounded/read-only. Current customer name/phone/passkey
+accounts have no email and no automatic phone notifications; retained older
+email consent is unchanged. No second schedule or courier integration was added.
+No predictive API/model/evaluation changes.
