@@ -1,9 +1,14 @@
 # Passkey account release prerequisite
 
-The application is prepared locally on `main`. Publish the SQL prerequisite
-first, apply it to the private production database, then publish the matching
-application commit. The SQL-only commit does not enable customer passkeys.
-This order keeps Vercel's read-only migration release check intact.
+Release update — 4 November 2026: the owner confirmed running the SQL script.
+The prepared application source is `4be9c09`, following prerequisite `8cdf40c`.
+It can now be published to `main`; a successful Vercel deployment still needs to
+be observed. The production migration result is owner-reported, not a direct
+production database inspection by this environment.
+
+The procedure below records the release sequence: SQL prerequisite first,
+matching application second. This keeps Vercel's read-only migration release
+check intact.
 
 1. Keep a private recovery copy of the target database using your normal backup
    process. Do not post credentials, database dumps or bank images to GitHub.

@@ -20,7 +20,7 @@ frozen. Do not treat an implemented source change as a verified live deployment.
 | Follow-up batch | Scope | Status |
 | --- | --- | --- |
 | 1 | Explain/correct shelf-life date limits; make stock rechecks and ingredient shortages clear; expose receiving-QR setup and area-fee controls | Implemented and tested; source publication and live deployment are separate |
-| 2 | Passkey account registration/login, named customer profile and checkout prefill, account recovery/cross-device limits | Implemented/tested locally; migration 0027 must be applied before application publication |
+| 2 | Passkey account registration/login, named customer profile and checkout prefill, account recovery/cross-device limits | Implemented/tested; owner confirmed running migration 0027 on 4 November; application source ready for main publication |
 | 3 | Delivery-due owner email reminders for the current workflow, without preparation reminders or duplicate schedules | Planned; no live scheduler or email changed by batch 1 |
 | 4 | Operational daily summary entry under Orders, retained sales reporting/print preview, and reviewed cleanup of explicitly fictional historical records/references | Planned; no historical delivery/payment/stock records changed by batch 1 |
 
@@ -147,3 +147,11 @@ concurrent replay. The final browser flow also deliberately delays storefront
 loading to check the staff-dialog race is fixed. SQL prerequisite source was
 published on main as `8cdf40c`; matching application publication is pending the
 target database's `0027_customer_passkeys` result.
+
+### Release prerequisite confirmation — 4 November 2026
+
+The owner reported running the published SQL script. Application source commit
+`4be9c09` is now authorized for publication to `main`. No new implementation,
+model work, email sends or database writes accompany this release step. The
+existing build migration check remains enabled. The coding environment has not
+independently observed the production migration record or a Ready deployment.
