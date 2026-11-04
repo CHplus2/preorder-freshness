@@ -174,8 +174,9 @@ def place_order(request):
     if client_mode:
         from ..services.auth_limits import limit
         limit(request,'simple-checkout',str(user.pk),maximum=10)
-        from ..services.guest_ordering import customer_details
-        customer,client_address=customer_details(request.data,method)
+        from ..services.guest_ordering import customer_details, require_customer_account
+        require_customer_account(user)
+        customer,client_address=customer_details(request.data,method,user)
         if payment not in ('manual','cod') or method == 'pickup' and payment != 'manual':
             raise ValidationError('Delivery accepts QR payment or cash. Self-collection accepts QR payment only.')
         if payment == 'manual' and not (store.manual_payment_enabled and store.duitnow_qr_url):

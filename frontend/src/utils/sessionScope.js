@@ -9,7 +9,8 @@ export function authSession(data){
  if(!data.authenticated)return {isAuthenticated:false,isAdmin:false,accountKey:'anonymous'};
  if(typeof data.username!=='string' || !data.username || typeof data.is_admin!=='boolean' || (data.user_id!=null && (!Number.isSafeInteger(data.user_id) || data.user_id<1)))throw invalidResponse();
  if(data.is_guest!==undefined && typeof data.is_guest!=='boolean')throw invalidResponse();
- return {...(data.is_guest?{isGuest:true}:{}),isAuthenticated:true,isAdmin:data.is_admin,accountKey:`user:${data.user_id ?? data.username}:${data.is_admin?'staff':'customer'}`};
+ if(data.customer_account!==undefined&&(!data.customer_account||typeof data.customer_account.name!=='string'||typeof data.customer_account.phone!=='string'))throw invalidResponse();
+ return {...(data.customer_account?{customerAccount:data.customer_account}:{}),...(data.is_guest?{isGuest:true}:{}),isAuthenticated:true,isAdmin:data.is_admin,accountKey:`user:${data.user_id ?? data.username}:${data.is_admin?'staff':'customer'}`};
 }
 export function scopeStorage(storage,accountKey,keys=sessionKeys){
  try{

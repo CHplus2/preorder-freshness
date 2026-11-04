@@ -117,6 +117,9 @@ def login_view(request):
         user = None
     if user:
         login(request, user)
+        from django.utils import timezone
+        request.session.pop('customer_passkey_id', None)
+        request.session['passkey_verified_at'] = timezone.now().timestamp()
         return Response({"detail": "Logged in"}, status=status.HTTP_200_OK)
     return Response({"detail": "Sign-in details were not accepted. Check your email or username and password. For a shared email, use your existing username."}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -133,7 +136,8 @@ def check_auth(request):
             "authenticated": True,
             "user_id": request.user.pk,
             "username": request.user.username,
-            "is_guest": hasattr(request.user, 'guest_customer'),
+            "is_guest": hasattr(request.user, 'guest_customer') and not hasattr(request.user, 'customer_account'),
+            **({"customer_account": {"name": request.user.customer_account.name, "phone": request.user.customer_account.phone}} if hasattr(request.user, 'customer_account') and not request.user.is_staff else {}),
             "is_admin": request.user.is_staff  
         }, status=status.HTTP_200_OK)
     return Response({"authenticated": False}, status=status.HTTP_200_OK)

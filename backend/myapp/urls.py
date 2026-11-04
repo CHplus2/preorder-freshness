@@ -47,10 +47,18 @@ router = DefaultRouter()
 router.register("cart", CartViewSet, basename="cart")
 router.register("admin/customers", AdminCustomerViewSet, basename="admin-customers")
 
-from .views import guest, checkout_proofs
+from .views import guest, checkout_proofs, passkeys
 from .views.receiving_qr import upload_receiving_qr
 
 urlpatterns = [
+    path('account/customer/', passkeys.profile),
+    path('account/passkeys/register/options/', passkeys.register_options),
+    path('account/passkeys/register/verify/', passkeys.register_verify),
+    path('account/passkeys/signin/options/', passkeys.signin_options),
+    path('account/passkeys/signin/verify/', passkeys.signin_verify),
+    path('account/passkeys/reauth/options/', passkeys.reauth_options),
+    path('account/passkeys/reauth/verify/', passkeys.reauth_verify),
+    path('account/passkeys/<int:pk>/', passkeys.remove_key),
     path('admin/reports/daily-orders/', daily_orders),
     path('admin/reports/period-sales/', period_sales),
     path('admin/reports/period-sales/export/', period_sales_csv),

@@ -103,7 +103,7 @@ export default function OrdersPage() {
             <details className="customer-order-more"><summary>Receipt & order preferences<ChevronRight size={17} aria-hidden="true"/></summary><div className="customer-order-more-body">
               <dl className="customer-order-details"><div><dt>{isPickup(order)?'Collection fee':'Delivery fee'}</dt><dd>{Number(order.shipping_fee)===0?'Free':`RM ${order.shipping_fee}`}</dd></div>{Number(order.discount_amount)>0 && <div><dt>Bulk discount</dt><dd>−RM {order.discount_amount}</dd></div>}</dl>
             <OrderFulfilment order={order}/>{order.address && <details className="dk-panel customer-order-address"><summary>Delivery address</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}
-            {!isGuest && <OrderEmailReminder order={order} contact={orderEmail} onSaved={fetchOrders}/>}
+            {!simple && !isGuest && <OrderEmailReminder order={order} contact={orderEmail} onSaved={fetchOrders}/>}
             <OrderHandoverEditor key={order.id+order.updated_at} order={order} onSaved={fetchOrders}/>
             </div></details>
             {!isPickup(order) && /^https:\/\//.test(order.fulfilment_snapshot?.courier?.url || '') && <a className="customer-track-link" href={order.fulfilment_snapshot.courier.url} target="_blank" rel="noopener noreferrer">Track with {order.fulfilment_snapshot.courier.carrier || 'courier'}<ChevronRight size={16} aria-hidden="true"/></a>}

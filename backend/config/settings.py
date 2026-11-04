@@ -201,7 +201,7 @@ REST_FRAMEWORK = {
     # The frontend signs in through the CSRF-protected, rate-limited login view.
     # DRF's default BasicAuthentication would offer a separate password-checking
     # path on every protected endpoint, outside those login limits.
-    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],
+    "DEFAULT_AUTHENTICATION_CLASSES": ["myapp.services.passkey_sessions.PasskeySessionAuthentication"],
     "EXCEPTION_HANDLER": "myapp.exceptions.api_exception_handler",
 }
 
@@ -252,3 +252,7 @@ ESCROW_SELLER_ADDRESS = os.getenv('ESCROW_SELLER_ADDRESS', '').strip()
 ESCROW_ARBITER_ADDRESS = os.getenv('ESCROW_ARBITER_ADDRESS', '').strip()
 ESCROW_WEI_PER_MYR = os.getenv('ESCROW_WEI_PER_MYR', '')
 ESCROW_MIN_CONFIRMATIONS = os.getenv('ESCROW_MIN_CONFIRMATIONS', '3')
+
+# Stable, trusted WebAuthn origin. Preview deployments need their own explicit
+# origin and independent passkeys; a Host header never chooses the relying party.
+PASSKEY_ORIGIN = os.getenv('PASSKEY_ORIGIN', PUBLIC_APP_URL or ('https://preorder-freshness.vercel.app' if IS_VERCEL else 'http://localhost:8000'))

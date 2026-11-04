@@ -28,7 +28,7 @@ const questions=[
  ['When can I leave a review?','After your order is delivered, open the menu item and leave your review. One review per customer per menu keeps feedback tied to actual orders.']
 ];
 const clientQuestions=[
- ['Do I need an account?','No email or password is needed. Enter your name and phone number at checkout. Orders stay private to this browser session; save your order number if you change devices.'],
+ ['Do I need an account?','Yes. Browse and build a basket first, then create an account with your name, phone number and a passkey before ordering. No email, password or SMS is needed. Use your saved passkey to sign in on another device.'],
  ['When can I receive my order?','Choose a date and time within the kitchen’s offered delivery or collection hours. Checkout checks menu dates and recorded stock again before accepting the order. Contact the kitchen about a strict event deadline.'],
  ['How do I pay?','Delivery accepts QR payment or cash. Self-collection accepts QR payment only. Upload your QR payment receipt at checkout; the kitchen verifies it before marking the order paid.'],
  ['How is the delivery fee calculated?','Choose your delivery area to see its fee. The total is shown before you place the order. Self-collection has no delivery fee.'],

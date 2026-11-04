@@ -5,6 +5,7 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
   "Pillow==12.3.0",
   "Django==6.0.8",
+  "webauthn==2.7.0",
   "djangorestframework==3.17.2",
   "django-cors-headers==4.9.0",
   "dj-database-url==3.1.2",

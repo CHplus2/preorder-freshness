@@ -3,6 +3,50 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Customer passkey accounts — 4 November 2026
+
+Migration `0027_customer_passkeys` adds private/RLS customer profiles, public
+passkey credentials and short-lived session-bound challenge records. No model,
+forecast, dashboard or predictive endpoint changes.
+
+- `POST /api/account/passkeys/{register,signin,reauth}/options/` and the matching
+  `/verify/` endpoints implement WebAuthn registration, discoverable sign-in and
+  account-security confirmation. Registration/reauth require a customer session;
+  signin also accepts an anonymous CSRF-protected session. Options return
+  `{ceremony_id, options}` (WebAuthn JSON with base64url buffers); verify accepts
+  `{ceremony_id, credential}`. Five-minute ceremonies are bound to the browser,
+  user and action, consumed once even after crypto failure, and rate limited.
+  Verified user presence/verification, trusted origin/RP, signature, handle and
+  counter/backup eligibility are checked server-side with `webauthn==2.7.0`.
+- `GET /api/account/customer/` returns `{name, phone, passkeys:[{id,label,
+  created_at,last_used_at}]}` for the signed-in customer. `PATCH` accepts the
+  validated full name/phone contact form after recent authentication. Contact
+  numbers are not verified, unique account identifiers or recovery secrets.
+- `DELETE /api/account/passkeys/<id>/` is owner-only, needs authentication within
+  five minutes and retains at least one passkey. Maximum five keys per account;
+  revoked-key API sessions are invalidated on their next authenticated request.
+- `GET /api/check-auth/` additionally returns `customer_account:{name,phone}` for
+  a registered nonstaff customer. An upgraded guest is `is_guest:false` and keeps
+  the same Django user, basket and existing orders. Name/phone never claim an
+  existing account. Existing password-authenticated accounts/staff remain valid.
+- Simple-mode `POST /api/orders/place/` and `POST /api/checkout-proofs/` now reject
+  an unregistered browsing guest with HTTP 403 before a new order, allocation or
+  receipt is accepted. Browsing/quotes remain available. Checkout contact must
+  match a registered profile; a stale/mismatched profile returns HTTP 400. Saved
+  recipient/payment/fulfilment snapshots are not rewritten by profile updates.
+
+The private key and biometric/device PIN stay with the authenticator/password
+manager. Cross-device access needs a synced passkey, another registered key or
+supported browser cross-device authentication; the website does not provide SMS,
+phone-only recovery, email sign-in or automatic WhatsApp subscriptions. Keep
+backups in the customer's passkey manager. Losing every key and authenticated
+session cannot be repaired by typing the same phone number. `PASSKEY_ORIGIN`
+optionally sets a stable trusted HTTPS origin; no client Host selects the RP.
+Localhost HTTP development is supported with an explicit matching port.
+
+The new application commit must be published only after the SQL prerequisite is
+applied and verified; publishing the prerequisite alone does not enable this UI.
+
 ## Stock and receiving-QR follow-up — 3 November 2026
 
 Simple-mode ingredient-stock failures in quote, receipt upload and placement

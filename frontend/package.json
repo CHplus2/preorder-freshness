@@ -24,7 +24,8 @@
     "test:escrow": "node --test src/utils/escrowState.test.js src/utils/escrowRecovery.test.js src/utils/escrowOrder.test.js && node src/components/EscrowPayment.test.js",
     "test:ordering": "node src/utils/simpleOrdering.test.js && node src/components/SimpleOrdering.test.js",
     "test:guest": "node src/components/GuestCheckout.test.js",
-    "test:reports": "node src/components/ClientReports.test.js"
+    "test:reports": "node src/components/ClientReports.test.js",
+    "test:accounts": "node src/components/CustomerPasskeys.test.js"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^9.1.1",

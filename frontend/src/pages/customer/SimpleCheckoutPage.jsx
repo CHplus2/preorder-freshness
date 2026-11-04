@@ -1,4 +1,4 @@
-import {useRef,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {Link,useNavigate} from 'react-router-dom';
 import {useAuth} from '../../contexts/AuthContext';
 import {useCart} from '../../contexts/CartContext';
@@ -20,9 +20,10 @@ export default function SimpleCheckoutPage(){
  const {cart,cartLoading,cartError,cartUpdating,pricingReady,pricingError,refreshCart,refreshPricing,promotion,
   fulfilmentMethod='standard',deliveryArea='',chooseFulfilment,preferredDelivery='',preferredDeliveryDay='',chooseDeliveryTime,
   total,discount,SHIPPING_FEE,finalTotal}=useCart();
- const {isSessionCurrent}=useAuth(),{placeOrder}=useOrder(),{formatPrice}=useUI(),navigate=useNavigate();
- const [name,setName]=useState(''),[phone,setPhone]=useState(''),[address,setAddress]=useState(''),[notes,setNotes]=useState('');
+ const {isSessionCurrent,customerAccount,isGuest}=useAuth(),{placeOrder}=useOrder(),{formatPrice}=useUI(),navigate=useNavigate();
+ const [name,setName]=useState(customerAccount?.name||''),[phone,setPhone]=useState(customerAccount?.phone||''),[address,setAddress]=useState(''),[notes,setNotes]=useState('');
  const [payment,setPayment]=useState(''),[proof,setProof]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ useEffect(()=>{if(customerAccount){setName(customerAccount.name);setPhone(customerAccount.phone)}},[customerAccount]);
  const [receiptUploaded,setReceiptUploaded]=useState(false);
  const pending=useRef(false),errorRef=useRef(null);
  const pickup=fulfilmentMethod==='pickup',qr=promotion?.manual_payment_enabled===true&&!!promotion.duitnow_qr_url;
@@ -51,12 +52,13 @@ export default function SimpleCheckoutPage(){
  if(cartLoading&&!cart.length)return <main className="checkout-container"><h1>Checkout</h1><p role="status">Loading your basket…</p></main>;
  if(cartError||!pricingReady)return <main className="checkout-container"><h1>Checkout</h1><p role="alert">{cartError||pricingError||'Loading kitchen details…'}</p><button onClick={()=>{refreshCart();refreshPricing?.()}}>Refresh checkout</button></main>;
  if(!cart.length)return <main className="checkout-container"><h1>Your basket is empty</h1><Link to="/menu">Browse the menu</Link></main>;
- return <main className="checkout-container client-checkout"><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Checkout</h1><p className="checkout-intro">Your food, contact details and preferred time. No email or password needed.</p>
+ if(isGuest)return <main className="checkout-container client-checkout"><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Sign in to place your preorder</h1><section className="checkout-section"><h2>Your basket is ready</h2><p>Create an account with your name, phone number and a passkey, or sign in to an existing account. No email, password or SMS needed.</p><p>Your basket stays with you when you create an account. Signing in loads that account’s basket and orders.</p><Link className="checkout-submit account-checkout-link" to="/account?next=checkout">Create account or sign in</Link><p className="checkout-hint">You’ll choose your time and payment after signing in.</p></section></main>;
+ return <main className="checkout-container client-checkout"><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Checkout</h1><p className="checkout-intro">Your food, contact details and preferred time. Your account keeps your orders together.</p>
   <form onSubmit={submit} className="client-checkout-grid">
    <fieldset disabled={busy||cartUpdating} className="client-checkout-main">
     <legend className="sr-only">Preorder details</legend>
     <section className="checkout-section"><FulfilmentChoices store={promotion} value={fulfilmentMethod} area={deliveryArea} onChange={(next,area)=>{chooseFulfilment(next,area);setPayment('');setProof(null)}}/></section>
-    <section className="checkout-section"><h2>Your details</h2><div className="client-contact-fields"><label>Your name<input required autoComplete="name" maxLength="150" value={name} onChange={e=>setName(e.target.value)}/></label><label>Phone number<input required type="tel" autoComplete="tel" maxLength="30" placeholder="e.g. 012 345 6789" value={phone} onChange={e=>setPhone(e.target.value)}/></label></div><p className="checkout-hint">The kitchen uses this number to coordinate your order.</p>
+    <section className="checkout-section"><h2>Your details</h2>{isGuest&&<p className="checkout-hint"><Link to="/account?next=checkout">Create an account or sign in</Link> to keep your orders available on another device.</p>}{customerAccount&&<p className="checkout-hint">Using your account details. <Link to="/account?next=checkout">Edit name or phone</Link></p>}<div className="client-contact-fields"><label>Your name<input required readOnly={!!customerAccount} autoComplete="name" maxLength="150" value={name} onChange={e=>setName(e.target.value)}/></label><label>Phone number<input required readOnly={!!customerAccount} type="tel" autoComplete="tel" maxLength="30" placeholder="e.g. 012 345 6789" value={phone} onChange={e=>setPhone(e.target.value)}/></label></div><p className="checkout-hint">The kitchen uses this number to coordinate your order.</p>
      {!pickup&&<label>Full delivery address<textarea required autoComplete="street-address" rows="3" maxLength="500" placeholder="House / unit, street, town and postcode" value={address} onChange={e=>setAddress(e.target.value)}/></label>}
      <details className="client-extra-notes"><summary>Handover instructions (optional)</summary><label>Instructions for the kitchen<textarea maxLength="500" rows="2" value={notes} onChange={e=>setNotes(e.target.value)}/></label><p className="checkout-hint">Food is handed to a person. Contact the kitchen to agree any unattended delivery.</p></details>
     </section>
@@ -70,7 +72,7 @@ export default function SimpleCheckoutPage(){
     </section>
     {error&&<div ref={errorRef} tabIndex="-1" role="alert" className="checkout-error">{error}</div>}
     <p className="checkout-hint">Stock is checked again and deducted when you place your order. QR payment is marked paid only after the kitchen verifies it.</p>
-    <p className="checkout-hint">Your orders stay private to this browser session. Save your order number; contact the kitchen if you change devices or clear browser data.</p>
+    <p className="checkout-hint">{customerAccount?'Your orders are saved to your account. Sign in with your passkey to view them on another device.':<>Guest orders stay private to this browser session. <Link to="/account?next=checkout">Save them with a passkey account</Link> before changing devices or clearing browser data.</>}</p>
     <button className="checkout-submit" disabled={busy||cartLoading||cartUpdating||checking||!quote||!!quoteError||!!areaIssue||!paymentReady}>{busy?'Placing order…':`Place preorder · ${formatPrice(finalTotal)}`}</button>
    </fieldset>
    <CheckoutSummary cart={cart} total={total} discount={discount} shipping={SHIPPING_FEE} finalTotal={finalTotal} pickup={pickup} updating={cartUpdating} freeDeliveryMinimum={promotion.free_delivery_minimum_myr} formatPrice={formatPrice}/>

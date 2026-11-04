@@ -5,6 +5,7 @@ import {getCookie} from '../utils/cookieUtils';
 import {authSession,syncBrowserScope,announceSessionChange,SESSION_SIGNAL} from '../utils/sessionScope';
 import {useUI} from './UIContext';
 import axios from 'axios';
+import {runPasskeyCeremony,passkeyError} from '../utils/passkeys';
 
 export default function AuthProvider({children}){
  const [session,setSession]=useState({isAuthenticated:null,isAdmin:null,accountKey:null});
@@ -57,6 +58,20 @@ export default function AuthProvider({children}){
   }catch(error){const message=accountRequestError(error,url==='/api/signup/'?'signup':'signin');setAuthError(message);return message}
   finally{accountChangeBusy.current=false;setAuthPending(false)}
  };
+ const passkeyAction=async(action,values={})=>{
+  if(accountChangeBusy.current)throw new Error('An account change is already running.');
+  accountChangeBusy.current=true;setAuthPending(true);setAuthError('');cancelAuthChecks();
+  try{
+   await runPasskeyCeremony(action,values);
+   // Keep the current page mounted for security confirmations. Account changes
+   // remount all private providers so old requests cannot repopulate new data.
+   if(action!=='reauth'){invalidate();announceSessionChange();}
+   const next=await checkAuth();
+   if(!next?.isAuthenticated||(!next.customerAccount&&action!=='reauth'))throw new Error('Your account session could not be verified. Refresh before continuing.');
+   return next;
+  }catch(error){throw new Error(passkeyError(error));}
+  finally{accountChangeBusy.current=false;setAuthPending(false)}
+ };
  const startGuest=useCallback(async()=>{
   if(accountChangeBusy.current)return;
   accountChangeBusy.current=true;setAuthPending(true);setAuthError('');
@@ -80,7 +95,7 @@ export default function AuthProvider({children}){
  // Every account/role boundary remounts private providers and pages. Requests
  // captured by an old tree cannot refill a new account's basket/order/wallet.
  const isSessionCurrent=useMemo(()=>()=>scope.current===version,[version]);
- return <AuthContext.Provider value={{...session,isSessionCurrent,checkAuth,startGuest,authError,clearAuthError,authPending,login:account=>signIn('/api/login/',account),signup:account=>signIn('/api/signup/',account),logout}}>
+ return <AuthContext.Provider value={{...session,isSessionCurrent,checkAuth,startGuest,authError,clearAuthError,authPending,passkeyAction,login:account=>signIn('/api/login/',account),signup:account=>signIn('/api/signup/',account),logout}}>
   <Fragment key={version}>{children}</Fragment>
  </AuthContext.Provider>;
 }

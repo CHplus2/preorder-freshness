@@ -10,7 +10,7 @@ from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
 from .models import (Storefront,Product,RawMaterial,ProductIngredient,InventoryItem,CartItem,
-    GuestCustomer,CheckoutProof,Order,PackagingItem,ProductPackaging,IngredientConsumption,PaymentEvent)
+    CustomerAccount,GuestCustomer,CheckoutProof,Order,PackagingItem,ProductPackaging,IngredientConsumption,PaymentEvent)
 
 
 def receipt_image(colour='red'):
@@ -38,12 +38,14 @@ class GuestCheckoutTests(TestCase):
             delivery_address={'line1':'House 1, Test street, Kuching 93000'},payment='cod',expected_total='28.50',request_id=str(uuid.uuid4()))
         self.client.post('/api/cart/',dict(product_id=self.product.pk,quantity=2),format='json')
 
-    def guest(self):
+    def guest(self,account=True):
         client=APIClient(enforce_csrf_checks=True)
         client.get('/api/check-auth/')
         r=client.post('/api/guest-session/',{},format='json',HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value)
         self.assertEqual(r.status_code,201,r.data)
         client.credentials(HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value)
+        if account:
+            CustomerAccount.objects.create(user_id=client.get('/api/check-auth/').data['user_id'],name='Local customer',phone='+60123456789')
         return client
 
     def upload(self,colour='red',**changes):
@@ -55,6 +57,7 @@ class GuestCheckoutTests(TestCase):
         return self.client.post('/api/orders/place/',{**self.body,**changes},format='json')
 
     def test_guest_has_no_email_password_or_staff_privileges_and_start_is_repeat_safe(self):
+        self.client=self.guest(account=False)
         auth=self.client.get('/api/check-auth/').data
         self.assertTrue(auth['is_guest']);self.assertFalse(auth['is_admin'])
         user=User.objects.get(pk=auth['user_id']);self.assertEqual(user.email,'');self.assertFalse(user.has_usable_password())
@@ -62,6 +65,19 @@ class GuestCheckoutTests(TestCase):
         self.assertEqual(self.client.post('/api/guest-session/',{},format='json').status_code,200)
         self.assertEqual(GuestCustomer.objects.count(),count)
         self.assertIn(self.client.get('/api/admin/orders/').status_code,(401,403))
+
+    def test_browsing_guest_cannot_place_or_upload_even_with_contact_details(self):
+        self.client=self.guest(account=False)
+        self.client.post('/api/cart/',dict(product_id=self.product.pk,quantity=2),format='json')
+        self.assertEqual(self.place().status_code,403)
+        r=self.client.post('/api/checkout-proofs/',{**self.select,'image':receipt_image()},format='multipart')
+        self.assertEqual(r.status_code,403)
+        self.assertFalse(Order.objects.exists());self.assertFalse(CheckoutProof.objects.exists())
+        self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,1000)
+
+    def test_account_contact_changes_reject_stale_checkout(self):
+        self.assertEqual(self.place(customer={'name':'Another name','phone':'0123456789'}).status_code,400)
+        self.assertFalse(Order.objects.exists())
 
     def test_anonymous_start_requires_csrf_and_never_looks_up_phone(self):
         c=APIClient(enforce_csrf_checks=True)

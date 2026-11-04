@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {createElement as h} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {MemoryRouter} from 'react-router-dom';
+import {createServer} from 'vite';
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+try{
+ const load=p=>server.ssrLoadModule('/src/'+p);
+ const {AuthContext}=await load('contexts/AuthContext.js'),{UIContext}=await load('contexts/UIContext.js');
+ const {CartContext}=await load('contexts/CartContext.js'),{OrderContext}=await load('contexts/OrderContext.js');
+ const {default:Account}=await load('pages/customer/CustomerAccountPage.jsx'),{default:Checkout}=await load('pages/customer/SimpleCheckoutPage.jsx');
+ const cart={cart:[{id:1,quantity:1,product:{id:2,name:'Meal',price:12}}],cartLoading:false,pricingReady:true,promotion:{},total:12,finalTotal:17};
+ const render=(node,auth)=>renderToStaticMarkup(h(MemoryRouter,null,h(AuthContext.Provider,{value:{isAuthenticated:true,isSessionCurrent:()=>true,...auth}},h(UIContext.Provider,{value:{setAlert:()=>{},formatPrice:n=>'RM '+n}},h(OrderContext.Provider,{value:{}},h(CartContext.Provider,{value:cart},node))))));
+ const guest=render(h(Account),{isGuest:true});
+ assert.match(guest,/Create account with a passkey/);assert.match(guest,/Sign in with a passkey/);
+ assert.match(guest,/Your name/);assert.match(guest,/Phone number/);
+ assert.doesNotMatch(guest,/type="password"|type="email"|Email address/);
+ const gate=render(h(Checkout),{isGuest:true});
+ assert.match(gate,/Sign in to place your preorder/);assert.match(gate,/account\?next=checkout/);
+ assert.doesNotMatch(gate,/Payment receipt|Cash on delivery|Place preorder ·/);
+ const account=render(h(Account),{customerAccount:{name:'Local account',phone:'+60123456789'}});
+ assert.match(account,/Your account/);assert.match(account,/Add another passkey/);assert.match(account,/Save contact details/);
+ assert.doesNotMatch(account,/Sign in with a passkey|Create your account|type="email"/);
+ const {StoreContext}=await load('contexts/StorefrontContext.js'),{default:RequireAuth}=await load('hoc/RequireAuth.jsx');
+ const pending=renderToStaticMarkup(h(MemoryRouter,{initialEntries:['/account']},h(StoreContext.Provider,{value:{store:{name:'Kitchen'}}},h(AuthContext.Provider,{value:{isAuthenticated:false}},h(UIContext.Provider,{value:{setShowLogin:()=>{}}},h(RequireAuth,null,'PRIVATE CUSTOMER'))))));
+ assert.match(pending,/Loading kitchen details/);assert.doesNotMatch(pending,/Sign in to continue|PRIVATE CUSTOMER/);
+ const {encodeBase64url,decodeBase64url,browserOptions}=await load('utils/passkeys.js');
+ const bytes=Uint8Array.from([0,1,127,254,255]);assert.deepEqual(new Uint8Array(decodeBase64url(encodeBase64url(bytes.buffer))),bytes);
+ const opts=browserOptions({challenge:encodeBase64url(bytes),user:{id:encodeBase64url(bytes)},excludeCredentials:[{id:encodeBase64url(bytes)}]},true);
+ assert.ok(opts.challenge instanceof ArrayBuffer);assert.ok(opts.user.id instanceof ArrayBuffer);
+ console.log('Customer passkeys: account-first payment gate, contact-only profile, backup-key controls and native credential encoding passed.');
+}finally{await server.close()}

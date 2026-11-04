@@ -24,6 +24,7 @@ const ProductsPage=lazy(()=>import("./pages/customer/ProductsPage"));
 const ProductsDetailPage=lazy(()=>import("./pages/customer/ProductDetailPage"));
 const CartPage=lazy(()=>import("./pages/customer/CartPage"));
 const OrdersPage=lazy(()=>import("./pages/customer/OrdersPage"));
+const CustomerAccountPage=lazy(()=>import("./pages/customer/CustomerAccountPage"));
 const AccountPage=lazy(()=>import("./pages/customer/AccountPage"));
 const CheckoutPage=lazy(()=>import("./pages/customer/CheckoutPage"));
 const RecoveryPage=lazy(()=>import('./pages/customer/RecoveryPage'));
@@ -54,7 +55,7 @@ const EscrowOrderPayment=lazy(()=>import('./pages/customer/EscrowOrderPayment'))
 const EscrowDemoPage=lazy(()=>import('./pages/customer/EscrowDemoPage'));
 
 function AnimatedRoutes() {
-  const {isGuest}=useAuth();
+  const {isAdmin}=useAuth();
   const {store}=useStorefront();
   const location = useLocation();
 
@@ -74,7 +75,7 @@ function AnimatedRoutes() {
             <RequireAuth message="Admin access required"><PredictiveDashboard view={view}/></RequireAuth>
           }/>
         ))}
-        <Route path="/account" element={<RequireAuth>{isGuest?<Navigate to="/orders" replace/>:<AccountPage/>}</RequireAuth>}/>
+        <Route path="/account" element={store.ordering_mode==='simple'&&!isAdmin?<CustomerAccountPage/>:<RequireAuth><AccountPage/></RequireAuth>}/>
         <Route path="/recover" element={<RecoveryPage/>}/>
         <Route path="/confirm-email" element={<ConfirmEmailPage/>}/>
         <Route path="/payment/escrow" element={<RequireAuth><Suspense fallback={<PageLoading label="Loading order escrow…"/>}><EscrowOrderPayment/></Suspense></RequireAuth>}/>
@@ -274,7 +275,7 @@ function AppContent() {
         <div className="business-header-actions">
           {isAuthenticated && !ownerPage && <Link to="/cart" className="basket-link" aria-label={`Basket, ${basketStatus}`}><ShoppingBag size={19}/><span aria-hidden="true">{cartLoading || cartUpdating?'…':cartError?'!':basketCount}</span></Link>}
           {isAuthenticated===false && <button className="login-btn" onClick={()=>setShowLogin(true)}>{store.ordering_mode==='simple'?'Kitchen sign in':'Sign in'}</button>}
-          {isAuthenticated && <div className="user-dropdown" ref={accountMenu}><button ref={accountToggle} className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} aria-controls="account-navigation" onClick={()=>{setMobileOpen(false);setDropdownOpen(!dropdownOpen);}}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content" id="account-navigation">{!isGuest && <Link to="/account" onClick={()=>setDropdownOpen(false)}>Account settings</Link>}<Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to={store.ordering_mode==='scheduled'?'/admin/planner':'/admin/orders'} onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}{isGuest && <button type="button" onClick={()=>{setDropdownOpen(false);setShowLogin(true)}}>Kitchen sign in</button>}<button className="logout-btn" onClick={logout}>{isGuest?'End this browser session':'Sign out'}</button></div>}</div>}
+          {isAuthenticated && <div className="user-dropdown" ref={accountMenu}><button ref={accountToggle} className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} aria-controls="account-navigation" onClick={()=>{setMobileOpen(false);setDropdownOpen(!dropdownOpen);}}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content" id="account-navigation"><Link to="/account" onClick={()=>setDropdownOpen(false)}>{isGuest?'Create account / Sign in':'Account settings'}</Link><Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to={store.ordering_mode==='scheduled'?'/admin/planner':'/admin/orders'} onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}{isGuest && <button type="button" onClick={()=>{setDropdownOpen(false);setShowLogin(true)}}>Kitchen sign in</button>}<button className="logout-btn" onClick={logout}>{isGuest?'End this browser session':'Sign out'}</button></div>}</div>}
           {!ownerPage && <button ref={mobileToggle} className="mobile-menu-toggle" aria-label={mobileOpen?'Close navigation':'Open navigation'} aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={()=>{setDropdownOpen(false);setMobileOpen(!mobileOpen);}}>{mobileOpen?<X size={23}/>:<Menu size={23}/>}</button>}
         </div>
       </header>
@@ -328,10 +329,8 @@ function AppProvider({ children }) {
 export default function App() {
 
   return (
-    <MotionConfig reducedMotion="user"><StorefrontProvider><AppProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AppProvider></StorefrontProvider></MotionConfig>
+    <MotionConfig reducedMotion="user"><Router><StorefrontProvider><AppProvider>
+      <AppContent />
+    </AppProvider></StorefrontProvider></Router></MotionConfig>
   );
 }

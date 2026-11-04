@@ -20,7 +20,7 @@ frozen. Do not treat an implemented source change as a verified live deployment.
 | Follow-up batch | Scope | Status |
 | --- | --- | --- |
 | 1 | Explain/correct shelf-life date limits; make stock rechecks and ingredient shortages clear; expose receiving-QR setup and area-fee controls | Implemented and tested; source publication and live deployment are separate |
-| 2 | Passkey account registration/login, named customer profile and checkout prefill, account recovery/cross-device limits | Planned; passkeys selected by the owner, not yet implemented |
+| 2 | Passkey account registration/login, named customer profile and checkout prefill, account recovery/cross-device limits | Implemented/tested locally; migration 0027 must be applied before application publication |
 | 3 | Delivery-due owner email reminders for the current workflow, without preparation reminders or duplicate schedules | Planned; no live scheduler or email changed by batch 1 |
 | 4 | Operational daily summary entry under Orders, retained sales reporting/print preview, and reviewed cleanup of explicitly fictional historical records/references | Planned; no historical delivery/payment/stock records changed by batch 1 |
 
@@ -109,3 +109,41 @@ was unavailable. The live release and saved bank settings have not been verified
   through an audited, collision-checked mapping. Preserve quantity/date/hold
   evidence and the original reference in traceability history. Renaming a sample
   must not turn it into purported physical stock.
+
+## Batch 2 — customer accounts (4 November 2026)
+
+The owner confirmed that an account is required before ordering. Customers may
+browse and build a basket, then create a passkey account with name/phone or sign
+in with their saved passkey. Registering upgrades the current user, preserving
+their basket/history. Signing into an existing account loads its own basket;
+unrelated guest histories are never merged by matching a phone number.
+
+The customer profile, checkout prefill, backup-key list, add/remove and verified
+contact edits are implemented. Contact changes leave accepted order snapshots
+unchanged. Staff access remains separate. The stable router survives account
+transitions while private providers remount, preventing stale-account reads.
+Registered simple customers do not request legacy wallet/email settings.
+
+Registration/sign-in use the native browser WebAuthn API, required device user
+verification and the pinned Python verification library. Challenges expire,
+remain session/action bound and are consumed once. Server-side account gates
+protect order placement and receipt upload, independent of the UI. Removal is
+owner-only, needs recent verification and cannot delete the last key. Revocation
+invalidates API sessions that used that credential. No biometrics/private keys
+are stored by the website. Synced/backup keys are needed for other devices and
+recovery; there is no insecure name/phone-only recovery.
+
+Deployment has a prerequisite: run the complete published
+`deploy/sql/0027_customer_passkeys.sql` in the private Supabase SQL Editor. The
+matching app source is held locally until that result is confirmed, so the
+read-only build migration check is not bypassed. See `passkey-release.md`.
+No production database, real bank payment, live email scheduler, frozen FYP
+source/report branch, model or model evaluation is changed by this batch.
+
+Validation evidence for batch 2: `docs/evidence/20261104-passkey-accounts/`.
+The full backend suite passed 938 tests (31 skipped); the subsequent 36-test
+PostgreSQL suite includes the final credential backup-eligibility check and
+concurrent replay. The final browser flow also deliberately delays storefront
+loading to check the staff-dialog race is fixed. SQL prerequisite source was
+published on main as `8cdf40c`; matching application publication is pending the
+target database's `0027_customer_passkeys` result.

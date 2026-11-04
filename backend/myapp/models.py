@@ -695,3 +695,38 @@ class CheckoutProof(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['digest'], condition=models.Q(order__isnull=False), name='one_order_per_proof_image')]
+
+
+class CustomerAccount(models.Model):
+    """Contact profile; a phone number is not an authentication/recovery secret."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_account')
+    user_handle = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    name = models.CharField(max_length=150)
+    phone = models.CharField(max_length=30)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class CustomerPasskey(models.Model):
+    account = models.ForeignKey(CustomerAccount, on_delete=models.CASCADE, related_name='passkeys')
+    credential_id = models.CharField(max_length=1400, unique=True)
+    public_key = models.BinaryField()
+    sign_count = models.PositiveBigIntegerField(default=0)
+    label = models.CharField(max_length=80, default='My passkey')
+    device_type = models.CharField(max_length=32)
+    backed_up = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(null=True)
+
+
+class PasskeyCeremony(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session_digest = models.CharField(max_length=64, db_index=True)
+    user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
+    action = models.CharField(max_length=12)
+    challenge = models.CharField(max_length=64)
+    origin = models.CharField(max_length=255)
+    rp_id = models.CharField(max_length=253)
+    context = models.JSONField(default=dict)
+    expires_at = models.DateTimeField(db_index=True)
+    consumed_at = models.DateTimeField(null=True)

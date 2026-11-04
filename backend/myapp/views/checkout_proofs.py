@@ -23,6 +23,8 @@ from .menu_photos import sanitized_photo
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser])
 def upload(request):
+    from ..services.guest_ordering import require_customer_account
+    require_customer_account(request.user)
     limit(request,'checkout-proof',str(request.user.pk),maximum=10)
     return save_upload(request)
 

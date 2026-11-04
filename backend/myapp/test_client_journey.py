@@ -9,7 +9,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from .models import (Storefront, Product, RawMaterial, ProductIngredient, InventoryItem,
-    PackagingItem, ProductPackaging, Order, IngredientConsumption, PackagingMovement, PaymentEvent)
+    PackagingItem, ProductPackaging, Order, IngredientConsumption, PackagingMovement, PaymentEvent, CustomerAccount)
 from .test_guest_checkout import receipt_image
 
 
@@ -42,6 +42,7 @@ class ClientJourneyTests(TestCase):
             HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value)
         self.assertEqual(response.status_code, 201)
         client.credentials(HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value)
+        CustomerAccount.objects.create(user_id=client.get('/api/check-auth/').data['user_id'],name='Journey buyer',phone='+60123456789')
         return client
 
     def details(self, pickup=False):

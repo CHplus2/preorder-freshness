@@ -11,15 +11,18 @@ export default function RequireAuth({ children, message = "Please Log in to view
     const { isAuthenticated, isAdmin, isGuest, startGuest, authPending, authError } = useAuth();
     const context=useStorefront();
     const {pathname}=useLocation();
-    const guestFlow=context?.store?.ordering_mode==='simple' && /^\/(cart|checkout|orders|account)(?:\/|$)/.test(pathname) && message!=='Admin access required';
+    const customerRoute=/^\/(cart|checkout|orders|account)(?:\/|$)/.test(pathname) && message!=='Admin access required';
+    const storePending=customerRoute && !!context && !['simple','scheduled'].includes(context.store?.ordering_mode);
+    const guestFlow=context?.store?.ordering_mode==='simple' && customerRoute;
 
     useEffect(() => {
-        if (isAuthenticated === false && !guestFlow) {
+        if (isAuthenticated === false && !guestFlow && !storePending) {
             setShowLogin(true);
         }
-    }, [isAuthenticated, setShowLogin,guestFlow]);
+    }, [isAuthenticated, setShowLogin,guestFlow,storePending]);
 
 
+    if(storePending)return context.error?<PageState title="Kitchen details unavailable" description={context.error}><button onClick={()=>window.dispatchEvent(new Event('storefront-updated'))}>Retry kitchen details</button></PageState>:<PageLoading label="Loading kitchen details…"/>;
     if(guestFlow && isAuthenticated===false)return authError?<PageState title="Start your order" description={authError}><button disabled={authPending} onClick={startGuest}>Try again</button></PageState>:<PageLoading label="Opening your ordering session…"/>;
     if(isGuest && message==='Admin access required')return <PageState title="Kitchen access required" description="Sign in with the kitchen’s staff account to use this workspace."><button onClick={()=>setShowLogin(true)}>Kitchen sign in</button><Link to="/menu">Browse the menu</Link></PageState>;
     if (isAuthenticated === null) return <PageLoading label="Checking account access…" />;

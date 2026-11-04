@@ -1,0 +1,1 @@
+{"checks": ["account gate before payment", "native passkey registration", "same user and basket", "account contact checkout", "cash order", "passkey reauthentication and profile edit", "historical contact preserved", "responsive account page", "synced passkey sign-in", "same-account orders on second browser"], "browser_errors": []}
