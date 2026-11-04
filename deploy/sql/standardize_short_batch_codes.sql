@@ -4,6 +4,12 @@
 -- IDs, allocation snapshots, costs, locations and holds do not change.
 -- The suffix is the unchanged inventory row ID, padded to at least 3 digits.
 -- Conflicting destination codes are skipped and returned for review.
+-- Keep this SET and the correction in the SAME SQL Editor Run. PostgreSQL
+-- checks the audit log's foreign keys at statement end rather than leaving
+-- deferred trigger events that block a following table/RLS operation (55006).
+-- No table definition, constraint or RLS policy is changed here.
+SET CONSTRAINTS ALL IMMEDIATE;
+
 WITH candidates AS MATERIALIZED (
     SELECT i.id, i.batch_code AS old_code,
            (CASE WHEN upper(trim(r.name)) LIKE 'CHICKEN%' THEN 'CHK'

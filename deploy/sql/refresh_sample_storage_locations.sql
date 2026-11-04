@@ -4,6 +4,12 @@
 -- Storage type, dates, quantities, costs, holds and provenance remain untouched.
 -- A zero-quantity audit entry retains the old/new location for each changed row.
 -- Busy batches cause a safe failure (NOWAIT); retry once editing/cooking finishes.
+-- Keep this SET and the correction in the SAME SQL Editor Run. PostgreSQL
+-- checks the audit log's foreign keys at statement end rather than leaving
+-- deferred trigger events that block a following table/RLS operation (55006).
+-- No table definition, constraint or RLS policy is changed here.
+SET CONSTRAINTS ALL IMMEDIATE;
+
 WITH candidates AS MATERIALIZED (
     SELECT i.id, i.batch_code, i.updated_at, r.name AS ingredient,
            i.storage_location AS old_location,

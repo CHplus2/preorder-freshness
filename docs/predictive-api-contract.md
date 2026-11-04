@@ -3,6 +3,15 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Inventory SQL transaction compatibility — 4 November 2026
+
+No API, schema or model change. The owner-run batch-reference and sample-storage
+correction files now set constraints to immediate within the same SQL request.
+Deferred audit foreign keys remain validated; a following table/RLS alteration
+no longer encounters those pending events (55006). The correction does not alter
+RLS or table definitions, and retains atomic audit/data changes and repeat safety.
+See the inventory batch guide and PostgreSQL regression evidence.
+
 ## Inventory shortage and batch reference review — 4 November 2026
 
 No new schema, predictive API or model changes. Simple-mode stock failures keep

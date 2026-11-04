@@ -51,6 +51,23 @@ and saved storage guidance. `packaging_report` reports the corresponding
 packaging needs. Sharing these result fields allows an accurate restocking plan;
 no credentials or customer contact information are needed.
 
+### If SQL Editor reports pending trigger events (55006)
+
+Open a **new SQL query**, clear its contents, and paste the complete latest
+batch-code correction file (including `SET CONSTRAINTS ALL IMMEDIATE;`). Run all
+of it together. Do not run that line separately and then run only a selection of
+the WITH statement: the constraint mode is scoped to the current transaction.
+The script is repeat-safe and still returns its normal correction/conflict
+summary. It does not disable RLS, constraints or triggers.
+
+The earlier correction can leave audit-log foreign-key checks deferred until
+transaction end. A subsequent table/RLS alteration in the same transaction then
+fails with 55006. This sequence was reproduced and the updated files tested on
+PostgreSQL. The read-only stock audit itself has no audit INSERT or ALTER TABLE;
+if it produces this error, check that the editor is running only that complete
+read-only query rather than mixed older statements. Production query wrappers or
+custom triggers have not been inspected by this environment.
+
 ## Batch 2 — receive the required ingredients and packaging
 
 Pending the current live audit. Calculate quantities from the active recipes and

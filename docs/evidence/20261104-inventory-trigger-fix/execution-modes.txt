@@ -1,0 +1,2 @@
+Original reproduces 55006; updated complete file and repeat pass; autocommit=False
+Original reproduces 55006; updated complete file and repeat pass; autocommit=True
