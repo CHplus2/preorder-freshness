@@ -1680,3 +1680,18 @@ This completes the planned delivery/email **code** batches. Live SMTP/scheduler
 setup and email-confirmation rollout remain deferred, not silently enabled.
 Optional Google/phone identity, mandatory signup verification and automatic
 WhatsApp/GrabExpress integrations still require separate development/provider access.
+
+
+### 4 November 2026 — area-fee editor and simple checkout time drafts
+
+No endpoint/schema/model changes. Owner area editing uses authenticated, CSRF-
+protected `PATCH /api/storefront/` with only `delivery_areas`,
+`delivery_area_fees`, `delivery_fee_myr`, `free_delivery_minimum_myr`. The API's
+existing constraints and server-calculated quote/placement fees remain
+unchanged; free-delivery thresholds override area fees and accepted orders keep
+their saved shipping fee. Customer-selected zones do not verify street coverage.
+The simple picker retains an invalid date/time locally and displays an inline
+error, while clearing shared checkout selection so it cannot authorize a quote
+or order. Malaysia UTC+08 and configured delivery/collection hours remain
+canonical. Persisted past/foreign-scope choices remain rejected. No predictive
+API, training, model, or evaluation changes.

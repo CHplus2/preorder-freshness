@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {defaultDeliveryDay,simpleTimeIssue} from './simpleDeliveryTime.js';
+const now=Date.parse('2026-11-04T15:00:00+08:00');
+assert.equal(defaultDeliveryDay('11:00',now),'2026-11-05');
+assert.equal(defaultDeliveryDay('11:00',Date.parse('2026-11-04T07:00:00+08:00')),'2026-11-04');
+for(const time of ['07:30','08:00','10:59','11:00'])assert.equal(simpleTimeIssue('2026-11-05',time,'07:30','11:00',now),'');
+for(const time of ['00:00','07:29','11:01','12:00','19:30'])assert.match(simpleTimeIssue('2026-11-05',time,'07:30','11:00',now),/between/);
+assert.match(simpleTimeIssue('2026-11-04','07:30','07:30','11:00',now),/passed/);
+assert.match(simpleTimeIssue('2026-02-30','07:30','07:30','11:00',now),/valid/);
+assert.match(simpleTimeIssue('2027-11-05','07:30','07:30','11:00',now),/90 days/);
+assert.equal(simpleTimeIssue('','07:30','07:30','11:00',now),'');
+console.log('Malaysia morning-time boundaries and past drafts passed.');

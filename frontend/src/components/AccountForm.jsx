@@ -29,7 +29,8 @@ export default function AccountForm({create=false}) {
   return <ModalDialog label={create?'Create account':'Sign in'} onDismiss={dismiss}><div className="modal-overlay account-overlay"><section className="modal-content account-form-card" aria-labelledby="account-form-title">
     <button className="account-close" type="button" aria-label="Close account dialog" onClick={dismiss}><X size={21} aria-hidden="true"/></button>
     <span className="dk-eyebrow">YOUR KITCHEN ACCOUNT</span><h2 id="account-form-title">{staffOnly?'Kitchen sign in':create?'Create your account':'Welcome back'}</h2>
-    <p className="account-form-intro">{staffOnly?'Staff access stays protected. Customers can order with their name and phone number at checkout.':create?'Save your delivery details and follow your orders.':'Sign in to order food and follow your deliveries.'}</p>
+    <p className="account-form-intro">{staffOnly?'For kitchen staff. Customers create an account with their name, phone number and a passkey.':create?'Save your delivery details and follow your orders.':'Sign in to order food and follow your deliveries.'}</p>
+    {staffOnly&&<p className="account-form-hint"><Link to="/account" onClick={dismiss}>Customer account: create or sign in with a passkey</Link></p>}
     {error && <div className="account-form-error" role="alert" tabIndex={-1} ref={errorRef}>{error}</div>}
     <form onSubmit={submit} aria-busy={authPending || false}>
       <fieldset disabled={authPending} className="account-form-fields">{create?<>

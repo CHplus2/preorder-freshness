@@ -3,6 +3,8 @@ import {useStorefront} from '../contexts/StorefrontContext';
 import ArrivalWindowChoice from './ArrivalWindowChoice';
 import {arrivalLabel,makeArrivalWindow} from '../utils/arrivalWindow';
 import {useId,useState} from 'react';
+import {defaultDeliveryDay,malaysiaInput,simpleTimeIssue} from '../utils/simpleDeliveryTime';
+import {timeLabel} from '../utils/fulfilment';
 import {Link} from 'react-router-dom';
 import BasketSlots from './BasketSlots';
 import {basketAvailabilityKey} from '../utils/deliverySlots';
@@ -43,15 +45,22 @@ export default function DeliveryTimePicker(props){
  return store.ordering_mode==='scheduled'?<ScheduledDeliveryTimePicker {...props}/>:<SimpleTimePicker {...props} store={store}/>;
 }
 function SimpleTimePicker({value='',day='',method='standard',onSelect,disabled,store,windowMinutes,onWindowChange}){
- const [now]=useState(()=>Date.now());
- const local=stamp=>new Date(stamp+8*3600000).toISOString().slice(0,16);
- const [chosenDay,setDay]=useState(()=>value.slice(0,10)||day||local(now).slice(0,10));
+ const [openedAt]=useState(()=>Date.now());
  const pickup=method==='pickup',[opening,closing]=fulfilmentTimes(store,method);
+ const [chosenDay,setDay]=useState(()=>value.slice(0,10)||day||defaultDeliveryDay(closing,openedAt));
+ const [clock,setClock]=useState(()=>value.slice(11));
+ const issueId=useId();
+ // An invalid draft stays visible; only valid selections enter shared checkout state.
+ const [syncedValue,setSyncedValue]=useState(value);
+ if(value!==syncedValue){setSyncedValue(value);if(value){setDay(value.slice(0,10));setClock(value.slice(11));}}
+ const issue=simpleTimeIssue(chosenDay,clock,opening,closing);
+ const choose=(date,time)=>{setDay(date);setClock(time);onSelect(date&&time&&!simpleTimeIssue(date,time,opening,closing)?date+'T'+time:'');};
  return <div className="delivery-time-picker simple-time-picker">
   {!pickup&&onWindowChange&&<ArrivalWindowChoice value={windowMinutes} onChange={onWindowChange} disabled={disabled}/>}
   <p>Choose when to receive your food. Ingredient and packaging stock will be checked for your chosen date.</p>
-  <label>Delivery or collection date<input required type="date" min={local(now).slice(0,10)} max={local(now+90*86400000).slice(0,10)} value={chosenDay} disabled={disabled} onChange={e=>{setDay(e.target.value);onSelect(value.slice(11)?e.target.value+'T'+value.slice(11):'')}}/></label>
-  <label>{pickup?'Collection':'Delivery'} time<input required type="time" step="60" min={opening} max={closing} value={value.slice(11)} disabled={disabled} onChange={e=>onSelect(e.target.value?chosenDay+'T'+e.target.value:'')}/></label>
-  <p className="delivery-picker-hint">{opening}–{closing} · Malaysia time</p>
+  <label>Delivery or collection date<input required type="date" min={malaysiaInput(openedAt).slice(0,10)} max={malaysiaInput(openedAt+90*86400000).slice(0,10)} value={chosenDay} disabled={disabled} onChange={e=>choose(e.target.value,clock)}/></label>
+  <label>{pickup?'Collection':'Delivery'} time<input required type="time" step="60" min={opening} max={closing} value={clock} disabled={disabled} aria-invalid={!!issue} aria-describedby={issue?issueId:undefined} onChange={e=>choose(chosenDay,e.target.value)}/></label>
+  <p className="delivery-picker-hint">{timeLabel(opening)}–{timeLabel(closing)} · Malaysia time</p>
+  {issue&&<p id={issueId} role="alert" className="settings-field-error">{issue}</p>}
  </div>;
 }

@@ -20,7 +20,7 @@ frozen. Do not treat an implemented source change as a verified live deployment.
 | Follow-up batch | Scope | Status |
 | --- | --- | --- |
 | 1 | Explain/correct shelf-life date limits; make stock rechecks and ingredient shortages clear; expose receiving-QR setup and area-fee controls | Implemented and tested; source publication and live deployment are separate |
-| 2 | Passkey account registration/login, named customer profile and checkout prefill, account recovery/cross-device limits | Implemented/tested; owner confirmed running migration 0027 on 4 November; application source ready for main publication |
+| 2 | Passkey account registration/login, named customer profile and checkout prefill, account recovery/cross-device limits | Implemented/tested; owner confirmed running migration 0027 on 4 November; source published as `4be9c09`; owner confirmation recorded as `6dea316` |
 | 3 | Delivery-due owner email reminders for the current workflow, without preparation reminders or duplicate schedules | Planned; no live scheduler or email changed by batch 1 |
 | 4 | Operational daily summary entry under Orders, retained sales reporting/print preview, and reviewed cleanup of explicitly fictional historical records/references | Planned; no historical delivery/payment/stock records changed by batch 1 |
 
@@ -135,8 +135,8 @@ recovery; there is no insecure name/phone-only recovery.
 
 Deployment has a prerequisite: run the complete published
 `deploy/sql/0027_customer_passkeys.sql` in the private Supabase SQL Editor. The
-matching app source is held locally until that result is confirmed, so the
-read-only build migration check is not bypassed. See `passkey-release.md`.
+matching app source was published on main after the owner confirmed the result;
+the read-only build migration check was not bypassed. See `passkey-release.md`.
 No production database, real bank payment, live email scheduler, frozen FYP
 source/report branch, model or model evaluation is changed by this batch.
 
@@ -155,3 +155,29 @@ The owner reported running the published SQL script. Application source commit
 model work, email sends or database writes accompany this release step. The
 existing build migration check remains enabled. The coding environment has not
 independently observed the production migration record or a Ready deployment.
+
+
+## Account, area-fee and morning-time review — 4 November 2026
+
+This follow-up does not mark planned batches 3–4 above complete.
+Customer profiles use name/phone; native passkeys verify sign-in, without customer
+email/password/SMS. Django's staff login remains username/email plus password.
+Public customer sign-in now opens `/account`; the staff dialog explains its role
+and links to customer passkey access. It is unsafe to grant access from name and
+phone alone. No new authentication scheme or database migration was added here.
+
+**Settings → Collection & delivery → Delivery areas & fees** now provides local
+add/edit/remove controls, individual fee entry and a dedicated partial-save
+button. It preserves unrelated unsaved settings. The default-fee fallback,
+free-delivery subtotal switch, empty-list unrestricted behaviour and historical
+order fee preservation are explicit. Areas should be non-overlapping zones
+covered by one price; broad city names are appropriate only for whole-city
+coverage. The system does not verify an address against a map or postcode.
+
+**AM/PM defect:** shared persisted delivery state correctly rejects past times,
+but binding the time input directly to it erased an invalid morning draft with
+no explanation. The checkout picker now keeps its local draft, publishes only
+valid future selections, explains elapsed times and configured hours, and starts
+on tomorrow when today's window has ended. The draft resets on basket/service
+scope changes. It does not relax stock, date, account or payment validation.
+See `docs/evidence/20261104-accounts-areas-time/README.md` for checks.

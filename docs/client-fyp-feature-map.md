@@ -1,6 +1,6 @@
 # Client changes mapped to the unchanged FYP objectives
 
-Prepared 3 November 2026. Review baseline: `main` at `356ea0f`, plus the final
+Prepared 3 November 2026; account/area/time follow-up updated 4 November. Earlier review baseline: `main` at `356ea0f`, plus the final
 review fixes accompanying this document. This is a revision map, not an edited
 FYP report or a claim that participant evaluation has been completed.
 
@@ -21,11 +21,11 @@ or test counts as evidence of the current client workflow.
 
 | Objective | Current implementation | Evidence to cite | Interpretation limits |
 | --- | --- | --- | --- |
-| 1 | Guest preorder with name/phone, dated delivery or collection, minute-based hours, menu weekdays/dates/cutoffs, area fees, accepted-term time changes, placement stock deductions, private QR proof or delivery cash, actual receipt recording | `backend/myapp/test_guest_checkout.py`, `test_simple_ordering.py`, `test_simple_ordering_postgres.py`, `test_client_journey.py`; final browser evidence | Scheduling now means dated fulfilment, not automatic cooking-task allocation. The client requested removal of Planner from the operational workflow. Availability depends on recorded eligible stock; future procurement is not counted as stock already received. No courier-event automation. |
+| 1 | Required customer passkey account with name/phone; preorder, dated delivery or collection, minute-based hours, menu weekdays/dates/cutoffs, area fees, accepted-term time changes, placement stock deductions, private QR proof or delivery cash, actual receipt recording | `backend/myapp/test_guest_checkout.py`, `test_simple_ordering.py`, `test_simple_ordering_postgres.py`, `test_client_journey.py`; final browser evidence | Scheduling now means dated fulfilment, not automatic cooking-task allocation. The client requested removal of Planner from the operational workflow. Availability depends on recorded eligible stock; future procurement is not counted as stock already received. No courier-event automation. |
 | 2 | Recorded expiry evidence, actual storage, receipt/manufacture-based documented shelf life, optional raw-material guidance, opened/thawed limits, holds, date-derived indicators and FEFO allocation | `backend/myapp/services/freshness.py`, `test_freshness.py`, `test_expiry_evidence.py`, `test_storage_guidance.py`, `test_simple_ordering.py` | Rule-based monitoring of recorded remaining life and storage duration; not a sensor, spoilage detector or safety certification. General reference guidance needs matching ingredient/conditions. |
-| 3 | Owner-controlled kitchen identity, story/contact, own menu/category/image uploads, delivery/collection terms and a single-vendor storefront | `frontend/src/pages/customer/BusinessPages.jsx`, `pages/admin/StoreSettingsPage.jsx`, `components/SimpleFulfilmentSettings.jsx`; guest checkout and earlier storefront/image tests | Branding controls are implemented; increased brand recognition requires evaluation. Guest contact details are order snapshots, not verified reusable identities. Staff authentication remains. |
+| 3 | Owner-controlled kitchen identity, story/contact, own menu/category/image uploads, delivery/collection terms and a single-vendor storefront | `frontend/src/pages/customer/BusinessPages.jsx`, `pages/admin/StoreSettingsPage.jsx`, `components/SimpleFulfilmentSettings.jsx`; guest checkout and earlier storefront/image tests | Branding controls are implemented; increased brand recognition requires evaluation. Passkeys verify the customer account; name and phone are contact details. Accepted orders retain contact snapshots. Staff authentication remains separate. |
 | 4 | Daily order/menu-unit summary, individual print slips, date-range paid/received sales, net food/discount/delivery breakdown, CSV; historical costs/contribution and FreshCast retained separately | `backend/myapp/views/client_reports.py`, `test_client_reports.py`, `test_client_journey.py`; report and final browser evidence | Operational order value includes unpaid orders; sales require paid/received status. Profit and bank reconciliation are different. Demonstration credits/generated histories are excluded from the new business sales report. Forecast demonstration accuracy does not establish own-store accuracy. |
-| 5 | Date-free recommendation cards plus an optional date/quantity/budget finder, single-menu or mixed alternatives, basket-aware pricing and recorded-stock checks, preference/history ranking where available, retained engagement metrics | `backend/myapp/views/discovery.py`, `views/basket_guide.py`, `services/discovery.py`; frontend `test:recommendations` and recommendation/guide backend tests | Functionality is implemented. Reduced decision fatigue or higher conversion is not proven by developer tests, ranking explanations, synthetic orders or a small observed example. Guest personalisation is limited to available session history/preferences; it does not recover someone by phone across devices. |
+| 5 | Date-free recommendation cards plus an optional date/quantity/budget finder, single-menu or mixed alternatives, basket-aware pricing and recorded-stock checks, preference/history ranking where available, retained engagement metrics | `backend/myapp/views/discovery.py`, `views/basket_guide.py`, `services/discovery.py`; frontend `test:recommendations` and recommendation/guide backend tests | Functionality is implemented. Reduced decision fatigue or higher conversion is not proven by developer tests, ranking explanations, synthetic orders or a small observed example. Personalisation uses available account history/preferences. Synced or backup passkeys allow account access on another device; name/phone do not authenticate or recover an account. |
 
 The source paths above refer to current `main`, not the frozen FYP baseline.
 Full automated results include unrelated retained compatibility tests; they
@@ -37,7 +37,7 @@ should not all be described as tests of new client requirements.
 | --- | --- | --- |
 | Packaging page and stock tracking | Packaging stock, menu mapping, movements, low stock and per-order allocation | Packaging stock/locking suites; final browser history and remaining pieces |
 | Deduct ingredients on order placement | Atomic recipe/packaging snapshots and FEFO ingredient allocation; retry-safe; shortage rolls back | Simple ordering, guest, PostgreSQL locking and integrated journey suites |
-| No customer password or email | Private guest session; name and phone at checkout; delivery address when needed; protected staff sign-in | Guest suite, browser UI and cross-session private-data checks |
+| No customer password or email | Required passkey account with name/phone profile; no customer email/password; delivery address when needed; protected staff sign-in | Guest suite, browser UI and cross-session private-data checks |
 | Daily order/item report and print | Sales daily summary; order print slips include accepted name/address/phone | Report suite and browser print/PDF evidence |
 | Sales reporting | Dated paid/received sales and CSV; net food and delivery income separate | Report/journey tests reconcile payment and receipt facts |
 | Delivery fees by area | Settings → Collection & delivery; server-priced fees snapshotted at placement | Guest tests and browser delivery total; pickup has no delivery fee |
@@ -68,15 +68,15 @@ Use the real counts, skips, local test environment and limitations from the
 evidence. Follow [the user evaluation protocol](FYP-USER-EVALUATION.md) for new
 participant observations; none are supplied by this review.
 
-**Chapter 6:** discuss client-fit tradeoffs and remaining limits: no-email guest
-recovery, manual bank verification, immediate stock allocation, manual courier
+**Chapter 6:** discuss client-fit tradeoffs and remaining limits: passkey backup and
+recovery limits, manual bank verification, immediate stock allocation, manual courier
 coordination, no guarantee of punctual handover, and recommendation outcomes
 requiring a genuine user study. Do not assert that all real-world delivery or
 food-safety risks have been solved.
 
 ### Diagrams that need coordinated changes
 
-- **Use cases:** one customer actor with public browsing and private guest
+- **Use cases:** one customer actor with public browsing and passkey account
   ordering; one authenticated owner/staff actor. Remove cooking-plan review from
   the current acceptance flow; add packaging, QR-evidence review, receipt and
   order reporting/printing. Bank and courier interactions are external/manual,
@@ -89,8 +89,9 @@ food-safety risks have been solved.
   Uploading a receipt or opening print preview must not mark payment or delivery.
   The banking app transfer happens outside this website.
 - **Class diagram/ERD:** retain the actual `User` table: a guest is an opaque user
-  with an unusable password plus `GuestCustomer`, not removal of authentication
-  columns. Add/reconcile `PackagingItem`, `ProductPackaging`, `OrderPackaging`,
+  with an unusable password plus `GuestCustomer` during browsing. Registration adds
+  `CustomerAccount`, `CustomerPasskey` and session/action-bound `PasskeyCeremony`;
+  no biometric/private-key data is stored. Authentication columns remain. Add/reconcile `PackagingItem`, `ProductPackaging`, `OrderPackaging`,
   `PackagingMovement`, `CheckoutProof`, accepted customer/address JSON snapshots,
   `IngredientConsumption` and `PaymentEvent`. Recipe, inventory and date-evidence
   entities remain. The database still has legacy order status values; Received /
@@ -98,7 +99,7 @@ food-safety risks have been solved.
   two-value database enum.
 
 Keep identifiers and associations aligned with
-[`backend/myapp/models.py`](../backend/myapp/models.py) and migrations 0024–0026.
+[`backend/myapp/models.py`](../backend/myapp/models.py) and migrations 0024–0027.
 Historical preparation data and legacy payment records remain in storage for
 compatibility; hiding Planner in the client interface did not delete these tables.
 

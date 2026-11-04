@@ -1,0 +1,1 @@
+{"checks": ["owner add/edit/remove/save area fees", "saved fee readback", "desktop/mobile no overflow", "native passkey registration and account-required checkout", "past AM stays visible", "past time blocks order", "future AM retained and server stock quote accepted", "PM outside hours stays visible with inline message", "correction to AM accepted"], "browser_errors": []}

@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useRef,useState} from 'react';
 import {Link,useNavigate} from 'react-router-dom';
 import {useAuth} from '../../contexts/AuthContext';
 import {useCart} from '../../contexts/CartContext';
@@ -21,9 +21,9 @@ export default function SimpleCheckoutPage(){
   fulfilmentMethod='standard',deliveryArea='',chooseFulfilment,preferredDelivery='',preferredDeliveryDay='',chooseDeliveryTime,
   total,discount,SHIPPING_FEE,finalTotal}=useCart();
  const {isSessionCurrent,customerAccount,isGuest}=useAuth(),{placeOrder}=useOrder(),{formatPrice}=useUI(),navigate=useNavigate();
- const [name,setName]=useState(customerAccount?.name||''),[phone,setPhone]=useState(customerAccount?.phone||''),[address,setAddress]=useState(''),[notes,setNotes]=useState('');
+ const [enteredName,setName]=useState(''),[enteredPhone,setPhone]=useState(''),[address,setAddress]=useState(''),[notes,setNotes]=useState('');
+ const name=customerAccount?.name??enteredName,phone=customerAccount?.phone??enteredPhone;
  const [payment,setPayment]=useState(''),[proof,setProof]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
- useEffect(()=>{if(customerAccount){setName(customerAccount.name);setPhone(customerAccount.phone)}},[customerAccount]);
  const [receiptUploaded,setReceiptUploaded]=useState(false);
  const pending=useRef(false),errorRef=useRef(null);
  const pickup=fulfilmentMethod==='pickup',qr=promotion?.manual_payment_enabled===true&&!!promotion.duitnow_qr_url;
@@ -62,7 +62,7 @@ export default function SimpleCheckoutPage(){
      {!pickup&&<label>Full delivery address<textarea required autoComplete="street-address" rows="3" maxLength="500" placeholder="House / unit, street, town and postcode" value={address} onChange={e=>setAddress(e.target.value)}/></label>}
      <details className="client-extra-notes"><summary>Handover instructions (optional)</summary><label>Instructions for the kitchen<textarea maxLength="500" rows="2" value={notes} onChange={e=>setNotes(e.target.value)}/></label><p className="checkout-hint">Food is handed to a person. Contact the kitchen to agree any unattended delivery.</p></details>
     </section>
-    <section className="checkout-section"><h2>{pickup?'Collection time':'Delivery time'}</h2><DeliveryTimePicker key={fulfilmentMethod} value={preferredDelivery} day={preferredDeliveryDay} method={fulfilmentMethod} onSelect={chooseDeliveryTime} windowMinutes={0}/><AvailabilityResult shortage={shortage} onRetry={retryQuote} retryable={retryable} selectionKey={key} deliveryAt={preferredDelivery} checking={checking} quote={quote} error={quoteError} retryable={retryable} onRetry={retryQuote}/>{quoteError&&retryable&&!shortage&&<button type="button" onClick={retryQuote}>Retry availability check</button>}</section>
+    <section className="checkout-section"><h2>{pickup?'Collection time':'Delivery time'}</h2><DeliveryTimePicker key={basketAvailabilityKey(cart)+fulfilmentKey(promotion,fulfilmentMethod,deliveryArea,0)} value={preferredDelivery} day={preferredDeliveryDay} method={fulfilmentMethod} onSelect={chooseDeliveryTime} windowMinutes={0}/><AvailabilityResult shortage={shortage} onRetry={retryQuote} retryable={retryable} selectionKey={key} deliveryAt={preferredDelivery} checking={checking} quote={quote} error={quoteError}/>{quoteError&&retryable&&!shortage&&<button type="button" onClick={retryQuote}>Retry availability check</button>}</section>
     <section className="checkout-section"><h2>Payment</h2><div className="client-payment-options" role="group" aria-label="Payment method">
      {qr&&<label className={method==='manual'?'selected':''}><input type="radio" name="client-payment" checked={method==='manual'} onChange={()=>setPayment('manual')}/><span><strong>DuitNow QR</strong><small>Pay and upload the receipt before placing your order.</small></span></label>}
      {!pickup&&<label className={method==='cod'?'selected':''}><input type="radio" name="client-payment" checked={method==='cod'} onChange={()=>{setPayment('cod');setProof(null)}}/><span><strong>Cash on delivery</strong><small>Pay the kitchen’s agreed amount when you receive your food.</small></span></label>}

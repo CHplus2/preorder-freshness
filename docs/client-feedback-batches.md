@@ -451,3 +451,14 @@ The `integration/dormathon-demo` and FYP report branches remain untouched.
 Live Vercel Ready status, the owner's actual bank/stock setup, client sign-off and
 actual participant research remain separate acceptance steps. They are not
 represented as completed by these developer tests.
+
+## Current account/area/time follow-up — 4 November 2026
+
+The original guest-account stages above are historical. Customers must now create
+or sign into a passkey account; name/phone provide their contact profile without
+customer email/password. The staff password login is separate. Migration 0027
+was confirmed by the owner before main publication. Settings now offers an
+add/edit/remove area-fee editor and scoped save; the morning checkout picker
+retains invalid drafts with explanations. See
+[evidence](evidence/20261104-accounts-areas-time/README.md) and
+[remaining follow-ups](client-followup-batches-20261103.md).

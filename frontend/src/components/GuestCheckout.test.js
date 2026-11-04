@@ -33,7 +33,7 @@ try{
  assert.doesNotMatch(checkout,/type="password"|type="email"|PayPal|Demo credit wallet|Save delivery address/);
  const pickup=render(h(Checkout),'pickup');assert.doesNotMatch(pickup,/Cash on delivery|Full delivery address/);assert.match(pickup,/Self-collection accepts QR payment only/);
  const settings=render(h(Settings,{store,onChange:()=>{},onSavePickup:()=>{}}));
- assert.match(settings,/type="time"/);assert.match(settings,/North delivery fee/);assert.match(settings,/value="07:30"/);
+ assert.match(settings,/type="time"/);assert.match(settings,/Edit North/);assert.match(settings,/RM 4.50 per order/);assert.match(settings,/Add delivery area/);assert.match(settings,/value="07:30"/);
  assert.doesNotMatch(settings,/advance notice|cooking hours|hour, 0/);
  const {HowItWorksPage}=await load('pages/customer/BusinessPages.jsx');
  const help=render(h(HowItWorksPage));assert.match(help,/Do I need an account/);assert.doesNotMatch(help,/cooking capacity|PayPal|custom time request needs/);

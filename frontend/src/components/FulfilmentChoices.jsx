@@ -10,7 +10,7 @@ export default function FulfilmentChoices({store,value='standard',area='',onChan
   {!options.includes('pickup') && <p className="fulfilment-hours">Self-collection is not currently offered by this kitchen.</p>}
   <p className="fulfilment-hours">{pickup?'Collection':'Delivery'} hours: {timeLabel(first)}–{timeLabel(last)} · Malaysia time. {store?.ordering_mode==='simple'?'Stock is checked at checkout.':'Preparation availability is checked separately.'}</p>
   {pickup?<div className="fulfilment-location"><strong>Collection location</strong><p>{store?.pickup_location}</p>{store?.pickup_instructions && <p>{store.pickup_instructions}</p>}</div>:!detailsAtCheckout && <>
-   {store?.delivery_areas?.length>0 && <label>Delivery area<select required value={area} onChange={e=>onChange(value,e.target.value)}><option value="">Choose your area</option>{store.delivery_areas.map(name=><option key={name} value={name}>{name}{store?.delivery_area_fees && Object.hasOwn(store.delivery_area_fees,name)?' · RM '+Number(store.delivery_area_fees[name]).toFixed(2):''}</option>)}</select><small>Outside these areas? Contact the kitchen before ordering.</small></label>}
+   {store?.delivery_areas?.length>0 && <label>Delivery area<select required value={area} onChange={e=>onChange(value,e.target.value)}><option value="">Choose your area</option>{store.delivery_areas.map(name=><option key={name} value={name}>{name}{store?.delivery_area_fees && Object.hasOwn(store.delivery_area_fees,name)?' · RM '+Number(store.delivery_area_fees[name]).toFixed(2):''}</option>)}</select><small>Choose the area that includes your delivery address. Outside these areas? Contact the kitchen before ordering.</small></label>}
 
   </>}
   </>}

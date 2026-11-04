@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {changeDeliveryArea,removeDeliveryArea,areaFee,deliveryFeeError} from './deliveryAreaEditor.js';
+const store={delivery_areas:['North','South'],delivery_area_fees:{North:'4.50'},delivery_fee_myr:'5.00',free_delivery_minimum_myr:null};
+const added=changeDeliveryArea(store,null,'  West  town ','8');
+assert.deepEqual(added.delivery_areas,['North','South','West town']);assert.equal(added.delivery_area_fees['West town'],'8.00');
+const renamed=changeDeliveryArea(added,'North','East','6.25');
+assert.equal(renamed.delivery_area_fees.East,'6.25');assert.equal(Object.hasOwn(renamed.delivery_area_fees,'North'),false);
+assert.equal(areaFee(renamed,'South'),'5.00');assert.equal(areaFee(renamed,'constructor'),'5.00');
+assert.deepEqual(removeDeliveryArea(renamed,'West town').delivery_area_fees,{East:'6.25'});
+assert.deepEqual(store.delivery_area_fees,{North:'4.50'});
+for(const fee of ['','-1','1e2','2.001','1000000','NaN'])assert.throws(()=>changeDeliveryArea(store,null,'West',fee),/fee/);
+assert.throws(()=>changeDeliveryArea(store,null,'north','5'),/repeated/);
+assert.throws(()=>changeDeliveryArea(store,null,'','5'),/name/);
+assert.throws(()=>changeDeliveryArea(store,null,'X'.repeat(81),'5'),/80/);
+const special=changeDeliveryArea(store,null,'__proto__','0');assert.equal(Object.getPrototypeOf(special.delivery_area_fees),Object.prototype);assert.equal(special.delivery_area_fees.__proto__,'0.00');
+assert.equal(deliveryFeeError(store),'');assert.match(deliveryFeeError({...store,free_delivery_minimum_myr:''}),/threshold/);
+console.log('Delivery area edits, inherited fees, validation and prototype-safe names passed.');

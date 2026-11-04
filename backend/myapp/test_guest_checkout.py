@@ -126,6 +126,28 @@ class GuestCheckoutTests(TestCase):
         self.store.delivery_area_fees={'North':'15.00','South':'19.00'};self.store.save()
         order.refresh_from_db();self.assertEqual(order.shipping_fee,8)
 
+    def test_area_crud_updates_new_quotes_and_preserves_accepted_fees(self):
+        staff=APIClient();staff.force_authenticate(self.owner)
+        def update(areas,fees,threshold=None):
+            r=staff.patch('/api/storefront/',{'delivery_areas':areas,'delivery_area_fees':fees,
+                'free_delivery_minimum_myr':threshold},format='json')
+            self.assertEqual(r.status_code,200,r.data)
+        update(['North','South','West'],{'North':'4.50','South':'8.00','West':'9.00'})
+        self.assertIn(self.client.patch('/api/storefront/',{'delivery_area_fees':{}},format='json').status_code,(401,403))
+        r=self.place(delivery_area='West',expected_total='33.00',shipping_fee='0.00')
+        self.assertEqual(r.status_code,201,r.data);order=Order.objects.get(pk=r.data['order_id'])
+        self.assertEqual(order.shipping_fee,9)
+        update(['North','South','East'],{'North':'4.50','South':'8.00','East':'7.00'})
+        self.client.post('/api/cart/',dict(product_id=self.product.pk,quantity=2),format='json')
+        self.assertEqual(self.client.post('/api/orders/quote/',{**self.select,'delivery_area':'West'},format='json').status_code,400)
+        quote=self.client.post('/api/orders/quote/',{**self.select,'delivery_area':'East'},format='json')
+        self.assertEqual(quote.status_code,200,quote.data)
+        order.refresh_from_db();self.assertEqual(order.shipping_fee,9)
+        update(['North','South','East'],{'North':'4.50','South':'8.00','East':'7.00'},'20.00')
+        free=self.place(delivery_area='East',expected_total='24.00',request_id=str(uuid.uuid4()))
+        self.assertEqual(free.status_code,201,free.data)
+        self.assertEqual(Order.objects.get(pk=free.data['order_id']).shipping_fee,0)
+
     def test_valid_qr_upload_stays_unpaid_and_has_private_access_and_no_original_bytes(self):
         proof=self.upload();r=self.place(payment='manual',payment_proof_id=proof['id'])
         self.assertEqual(r.status_code,201,r.data)
