@@ -3,6 +3,27 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Owner-run recipe stock receipt — 4 November 2026
+
+No API, schema, dashboard or model changes. The owner-authorized inventory
+simulation receipt is `deploy/sql/receive_recipe_stock_20261104.sql`. It reads
+current complete active local-menu recipes, calculates a ten-unit-per-menu stock
+target, credits only received/unheld stock covering the owner-selected 31 January
+2027 planning deadline, and adds the remaining quantities as new batches. It
+records positive InventoryLog receipts and configured active PackagingMovement
+receipts. The first stock date is 4 November 2026. Storage metadata is inherited,
+not verified; deadlines are planning inputs and unknown costs remain null.
+
+The shared kitchen lock serializes competing executions/checkout; stock table
+locks stabilize the receipt snapshot. One receipt reference plus a settings hash
+prevents duplicate/refill runs, even after later order consumption or a completed
+zero-shortfall review. A reused reference with changed settings is rejected.
+An otherwise empty review uses a null-batch, zero-change inventory-log marker.
+Incomplete recipes/inactive packaging are reported rather than silently enabled.
+The normal quantity/expiry/hold gates and transactional checkout deductions remain
+unchanged. The temporary result table leaves no permanent database schema change.
+Publishing this file is separate from the owner executing it in Supabase.
+
 ## Inventory SQL transaction compatibility — 4 November 2026
 
 No API, schema or model change. The owner-run batch-reference and sample-storage

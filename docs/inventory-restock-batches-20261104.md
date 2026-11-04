@@ -3,8 +3,8 @@
 The owner requested fewer stock errors, consistent batch references, and clearer
 checkout messages, in batches. The owner describes manually recorded physical
 inventory in the simulated business workflow and does not want “demo” labels in
-ordinary UI. Keep ordinary ingredient/storage/batch names. Do not manufacture
-stock counts, food-safety evidence or historical supplier/payment facts.
+ordinary UI. Keep ordinary ingredient/storage/batch names. Keep owner-authorized simulated quantities separate from claims of actual
+supplier receipts, verified food-safety evidence or historical payments.
 
 ## Batch 1 — shortage presentation, references and audit
 
@@ -70,14 +70,46 @@ custom triggers have not been inspected by this environment.
 
 ## Batch 2 — receive the required ingredients and packaging
 
-Pending the current live audit. Calculate quantities from the active recipes and
-chosen stock target, receive new batches rather than rewriting expired/used ones,
-and preserve adjustment history. Storage durations/deadlines need the owner's
-actual batch information or explicitly selected documented guidance; adding stock
-must not silently extend earlier printed/opened/thawed limits. Physical stock
-entry and a reference-format correction are different operations.
+The owner provided the ingredient audit and selected a deadline in the following
+year. The ready-to-run
+[recipe stock receipt](https://github.com/CHplus2/preorder-freshness/blob/main/deploy/sql/receive_recipe_stock_20261104.sql)
+uses receipt date **4 November 2026**, planning deadline **31 January 2027**, and
+**ten selling units per complete active local menu**. These are inventory
+simulation inputs, not food-safety guidance or a supplier delivery assertion.
+
+Run the COMPLETE file in a fresh Supabase SQL Editor query, including the first
+`SET CONSTRAINTS ALL IMMEDIATE;`. The final `stock_receipt_result` reports:
+
+- `status: recorded`, new batch codes/quantities and any packaging receipts;
+- `already_recorded` on a retry, with no refill of stock consumed since the first
+  run (including a first review that found no shortfall);
+- menus with missing/invalid recipes and inactive packaging that still need setup.
+
+The SQL recalculates requirements against current recipes and stock at execution;
+it does not hardcode the uploaded snapshot's quantities. Stock must cover the new
+January deadline to count, so an existing batch that covered the earlier audit
+date may no longer reduce this receipt. New records copy ordinary storage
+metadata from the latest received, unheld batch. Missing/placeholder storage
+causes an atomic failure for review. No storage condition is newly verified.
+Unknown purchase costs remain null. New receipt logs preserve the action's
+reference; expired/held batches, accepted recipes and old deductions stay fixed.
+The private detailed quantity CSV prepared from the uploaded audit is retained
+outside Git for owner review.
+
+The receipt and checkout use the same kitchen lock; inventory/packaging writes
+are serialized while the coverage snapshot is taken. Partial receipts roll back
+on failure. The reference `Inventory receipt 20261104-B2` identifies this one
+receipt. A genuinely new future receipt needs a distinct reference; reusing this
+one with different dates/target units is rejected. A temporary result table is
+dropped at transaction completion; no permanent schema/policy change is needed.
+
+The coding environment rehearsed all 35 ingredient records and successful quote /
+placement/deduction privately, but has not applied this receipt to production.
+After running it, refresh checkout to recheck available stock. Replenishment is
+finite and further orders continue deducting it normally; it is not unlimited
+availability.
 
 Stock gates, expiry/hold checks, transaction rollback, FEFO and one-time placement
 deduction stay active. No blanket bypass, artificial order/payment history,
-production receipt, model artifact or predictive dashboard change is part of this
+claim of an actual supplier receipt, model artifact or predictive dashboard change is part of this
 batch. The existing reminder/report follow-ups remain separate outstanding work.
