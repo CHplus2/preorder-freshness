@@ -907,13 +907,13 @@ export default function AdminInventoryPage() {
               }
             />
 
-            <label htmlFor="admininventorypage-field-7">Batch Code</label>
+            <label htmlFor="admininventorypage-field-7">Batch code (optional)</label>
 
             <input id="admininventorypage-field-7"
               value={
                 newInventoryItem.batch_code
               }
-              placeholder="e.g. CHK-20260901-001"
+              placeholder="Leave blank to generate automatically"
               onChange={(e) =>
                 setNewInventoryItem({
                   ...newInventoryItem,
@@ -921,6 +921,8 @@ export default function AdminInventoryPage() {
                 })
               }
             />
+
+            <p className="form-help">Leave blank for an ingredient–received date–batch number reference, such as CHK-20261104-081. You can also keep a supplier’s batch code.</p>
 
             <label htmlFor="admininventorypage-field-8">Storage Location</label>
 
@@ -1050,6 +1052,8 @@ export default function AdminInventoryPage() {
                 })
               }
             />
+
+            <p className="form-help">Clear this field to use the standard code. Previous references stay in the batch history.</p>
 
             <label htmlFor="admininventorypage-field-14">Storage Location</label>
 

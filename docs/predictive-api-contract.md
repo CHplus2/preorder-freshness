@@ -3,6 +3,29 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Inventory shortage and batch reference review — 4 November 2026
+
+No new schema, predictive API or model changes. Simple-mode stock failures keep
+HTTP 400 `{code:"ingredient_stock_shortage",detail:"…"}` and add
+`shortages:[{raw_material_id,name,unit,required,available,shortfall}]` plus
+`shortage_count`. IDs, decimal amounts and count in this validation-error payload
+are strings. Relevant missing ingredients are aggregated across the whole basket;
+at most 100 rows are returned. The first-ingredient prose remains for older
+clients. No quote/shortage check writes stock, and placement still rechecks under
+locks before committing allocations.
+
+Staff inventory POST generates a standard `PREFIX-YYYYMMDD-ID` reference when
+`batch_code` is omitted/blank. PATCH with an explicit blank code replaces the
+reference using the effective received date. Existing supplied references remain
+valid. Changes create a zero-quantity `InventoryLog` with the original/new codes;
+ID, stock quantity and accepted allocation snapshots stay fixed. Existing staff
+permission, expiry validation, stock-edit version and adjustment-reason checks
+remain in force. A destination-code conflict returns validation failure.
+
+Owner-run SQL for short-reference correction and read-only recipe/packaging
+stock coverage is documented in `docs/inventory-restock-batches-20261104.md`.
+No live data change is implied by publishing those files.
+
 ## Customer passkey accounts — 4 November 2026
 
 Migration `0027_customer_passkeys` adds private/RLS customer profiles, public

@@ -1,0 +1,1 @@
+PostgreSQL: two corrections, audit references preserved, repeat-safe, collision skipped, stock metadata unchanged, correct recipe-based replenishment and held-stock exclusion passed.

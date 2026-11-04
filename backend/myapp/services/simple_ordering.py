@@ -71,15 +71,22 @@ def check_cart_ingredients(items, delivery_at):
     day = timezone.localtime(delivery_at).date()
     available = dict(eligible_stock(day).filter(raw_material_id__in=needed).values('raw_material_id')
         .annotate(total=Sum('quantity')).values_list('raw_material_id', 'total'))
+    shortages = []
     for key, quantity in needed.items():
-        if available.get(key, Decimal('0')) < quantity:
+        eligible = available.get(key, Decimal('0'))
+        if eligible < quantity:
             name, unit = labels[key]
-            needed_text = format(quantity.normalize(), 'f')
-            available_text = format(available.get(key, Decimal('0')).normalize(), 'f')
-            raise ValidationError({'code': 'ingredient_stock_shortage',
-                'detail': f'Not enough {name} for this delivery date: this basket needs {needed_text} {unit}; '
-                f'{available_text} {unit} is available. Choose fewer items or contact the kitchen. '
-                'Only received stock that is not on hold and covers the delivery date is counted.'})
+            shortages.append(dict(raw_material_id=str(key),name=name,unit=unit,
+                required=format(quantity.normalize(),'f'),available=format(eligible.normalize(),'f'),
+                shortfall=format((quantity-eligible).normalize(),'f')))
+    if shortages:
+        first=shortages[0]
+        extra=f' {len(shortages)-1} other ingredients also need replenishing.' if len(shortages)>1 else ''
+        raise ValidationError({'code':'ingredient_stock_shortage',
+            'detail': f'Not enough {first["name"]} for this delivery date: this basket needs {first["required"]} {first["unit"]}; '
+                f'{first["available"]} {first["unit"]} is available.{extra} Choose fewer items or contact the kitchen. '
+                'Only received stock that is not on hold and covers the delivery date is counted.',
+            'shortages':shortages[:100], 'shortage_count':str(len(shortages))})
 
 
 def deduct_at_placement(order, actor):

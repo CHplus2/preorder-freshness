@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from decimal import Decimal
+from django.db import transaction
 from django.contrib.auth.models import User
 from .models import (
     Category, InventoryItem, ProductIngredient, Product, CartItem, Order, OrderItem, Address, RawMaterial
@@ -364,6 +365,31 @@ class RawMaterialSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class InventoryItemSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        from django.db import transaction
+        from .services.batch_codes import standard_batch_code
+        with transaction.atomic():
+            instance = super().create(validated_data)
+            if not instance.batch_code.strip():
+                instance.batch_code = standard_batch_code(instance)
+                instance.save(update_fields=['batch_code','updated_at'])
+            return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        from .services.batch_codes import standard_batch_code
+        from .models import InventoryLog
+        old_code = instance.batch_code
+        if 'batch_code' in validated_data and not validated_data['batch_code'].strip():
+            validated_data['batch_code'] = standard_batch_code(instance,validated_data.get('received_date'))
+        instance = super().update(instance, validated_data)
+        if instance.batch_code != old_code:
+            request = self.context.get('request')
+            InventoryLog.objects.create(inventory_item=instance,change=0,
+                reason=f'Batch code changed from {old_code or "(blank)"} to {instance.batch_code}',
+                reference='Batch reference correction',admin=request.user if request and request.user.is_staff else None)
+        return instance
+
     expiry_date = serializers.DateField(required=False)
     days_remaining = serializers.SerializerMethodField()
 

@@ -151,6 +151,22 @@ class SimpleOrderingTests(TestCase):
         self.assertFalse(Order.objects.exists())
         self.assertFalse(IngredientConsumption.objects.exists())
 
+    def test_one_response_lists_all_missing_ingredients_without_stock_writes(self):
+        chicken=RawMaterial.objects.create(name='Chicken boneless trimmed',unit='g')
+        salt=RawMaterial.objects.create(name='Salt',unit='g')
+        ProductIngredient.objects.create(product=self.product,raw_material=chicken,quantity_required=60)
+        ProductIngredient.objects.create(product=self.product,raw_material=salt,quantity_required=5)
+        for action in ('quote','place'):
+            r=self.client.post(f'/api/orders/{action}/',self.body,format='json')
+            self.assertEqual(r.status_code,400,r.data)
+            self.assertEqual(r.data['shortage_count'],'2')
+            rows={row['name']:row for row in r.data['shortages']}
+            self.assertEqual(rows['Chicken boneless trimmed']['required'],'180')
+            self.assertEqual(rows['Chicken boneless trimmed']['available'],'0')
+            self.assertEqual(rows['Salt']['shortfall'],'15')
+        self.assertFalse(Order.objects.exists());self.assertFalse(InventoryLog.objects.exists())
+        self.early.refresh_from_db();self.assertEqual(self.early.quantity,400)
+
     def test_explicit_sale_dates_and_delivery_hours_still_apply(self):
         self.product.delivery_dates=[(self.delivery+timedelta(days=1)).date().isoformat()];self.product.save()
         self.assertEqual(self.client.post('/api/orders/place/',self.body,format='json').status_code,400)

@@ -1,0 +1,1 @@
+{"checks": ["all shortages together", "one stock recheck action", "mobile layout", "owner stock receipt generates references", "same basket refresh succeeds after receiving stock", "successful placement deducts new ingredients", "excluded held/expired stock remains excluded"], "page_errors": []}

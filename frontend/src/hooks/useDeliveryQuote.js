@@ -1,3 +1,4 @@
+import {stockShortage} from '../utils/stockShortage';
 import {validSimpleQuote} from '../utils/simpleOrdering';
 import {readArrivalWindow} from '../utils/arrivalWindow';
 import {useEffect,useState} from 'react';
@@ -42,6 +43,7 @@ export default function useDeliveryQuote({deliveryAt,selectionKey,enabled,issue=
    } catch(error) {
     if(!controller.signal.aborted)setResult({key:selectionKey,attempt,phase:'error',
      error:error.code==='INVALID_RESPONSE'?'The kitchen returned an unexpected availability response. Please retry.':error.code==='ECONNABORTED'?'The availability check timed out. Please retry; no order was placed.':!error.response?'Could not check delivery availability. Check your connection and retry.':error.response.status>=500?'Delivery availability is temporarily unavailable. Please retry.':readApiError(error,'Review your requested delivery time.'),
+     shortage:stockShortage(error.response?.data),
      retryable:!error.response || error.response.status>=500 || error.response.data?.code==='ingredient_stock_shortage'});
    }
   },350);
@@ -52,6 +54,7 @@ export default function useDeliveryQuote({deliveryAt,selectionKey,enabled,issue=
   checking:canCheck && (!current || result.phase==='checking'),
   quote:current && result.phase==='ready'?{selectionKey,plan:result.plan}:null,
   error:current && result.phase==='error'?result.error:'',
+  shortage:current && result.phase==='error'?result.shortage:null,
   retryable:current && result.phase==='error' && result.retryable,
   retry:()=>setAttempt(value=>value+1),
  };
