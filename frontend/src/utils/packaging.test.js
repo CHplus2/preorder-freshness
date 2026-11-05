@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {packagingRecords,packagingMenus,packagingHistory,packagingChange} from './packaging.js';
+const item={id:1,name:'Meal box',quantity:0,reorder_level:10,menu_count:1,is_active:true,low_stock:true,unit_cost:null,updated_at:'2030-01-02T01:00:00Z'};
+assert.deepEqual(packagingRecords([item]),[item]);
+for(const bad of [null,[item,item],[{...item,quantity:-1}],[{...item,unit_cost:'NaN'}],[{...item,low_stock:false}]])assert.throws(()=>packagingRecords(bad),{code:'INVALID_RESPONSE'});
+const menu={id:1,name:'Meal',selling_status:'active',updated_at:item.updated_at,requirements:[{packaging_item:1,quantity_per_item:2}]};
+assert.deepEqual(packagingMenus([menu]),[menu]);
+assert.throws(()=>packagingMenus([{...menu,requirements:[...menu.requirements,...menu.requirements]}]),{code:'INVALID_RESPONSE'});
+const movement={id:4,kind:'allocate',change:-2,balance_after:0,reason:'Order allocation',created_at:item.updated_at,order_id:1};
+assert.deepEqual(packagingHistory({results:[movement],next_before:null}).results,[movement]);
+for(const bad of [{results:[movement],next_before:5},{results:[movement,movement],next_before:null},{results:[{...movement,balance_after:-1}],next_before:null}])assert.throws(()=>packagingHistory(bad),{code:'INVALID_RESPONSE'});
+assert.equal(packagingChange('receive','20'),20);assert.equal(packagingChange('remove','3'),-3);
+for(const count of ['',0,-1,'1.5','Infinity',1000001])assert.throws(()=>packagingChange('receive',count));
+console.log('Packaging: validated stock, mappings, history and positive receipt/removal counts passed.');

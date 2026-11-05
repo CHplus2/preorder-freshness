@@ -46,6 +46,11 @@ try {
   for(const field of ['required','available','shortfall'])assert.equal(stockShortage({...payload,shortages:[{...shortages.rows[0],[field]:'NaN'}]}),null);
   assert.equal(stockShortage({...payload,shortages:[shortages.rows[0],shortages.rows[0]]}),null);
   assert.equal(stockShortage({...payload,shortages:[{...shortages.rows[0],shortfall:'12'}]}),null);
+  const packagingPayload={code:'packaging_stock_shortage',shortages:[{packaging_item_id:'9',name:'Meal container',unit:'pieces',required:'3',available:'1',shortfall:'2'}],shortage_count:'1'};
+  const packagingShortage=stockShortage(packagingPayload);assert.equal(packagingShortage.kind,'packaging');
+  const packaging=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(AvailabilityResult,{error:'Packaging shortage',shortage:packagingShortage,retryable:true,onRetry:()=>{}})));
+  assert.match(packaging,/2 pieces short/);assert.match(packaging,/recorded packaging/);assert.match(packaging,/Check stock again/);assert.doesNotMatch(packaging,/recorded deadline/);
+  assert.equal(stockShortage({...packagingPayload,shortages:[{...packagingPayload.shortages[0],required:'3.5',shortfall:'2.5'}]}),null);
   const {default: BasketSlots} = await server.ssrLoadModule('/src/components/BasketSlots.jsx');
   const initialSlots=renderToStaticMarkup(createElement(BasketSlots,{value:'',onSelect:()=>{}}));
   assert.doesNotMatch(initialSlots,/No hourly slots found|Suggest times for this basket|Find the next available day|Search later dates/);

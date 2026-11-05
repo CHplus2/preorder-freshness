@@ -216,3 +216,19 @@ class PackagingCheckoutTests(PackagingFixture, TestCase):
         response=self.client.post('/api/orders/quote/',body,format='json')
         self.assertEqual(response.status_code,400,response.data)
         self.assertFalse(Order.objects.exists());self.assertFalse(PackagingMovement.objects.exists())
+
+    def test_quote_lists_all_packaging_shortages_and_keeps_stock_unchanged(self):
+        body=self.checkout_setup(3)
+        self.box.quantity=1;self.box.save();self.lid.quantity=2;self.lid.save()
+        response=self.client.post('/api/orders/quote/',body,format='json')
+        self.assertEqual(response.status_code,400,response.data)
+        self.assertEqual(response.data['code'],'packaging_stock_shortage')
+        self.assertEqual(response.data['shortage_count'],'2')
+        rows={int(row['packaging_item_id']):row for row in response.data['shortages']}
+        self.assertEqual(rows[self.box.pk]['required'],'3')
+        self.assertEqual(rows[self.box.pk]['shortfall'],'2')
+        self.assertEqual(rows[self.lid.pk]['shortfall'],'1')
+        self.assertEqual(rows[self.lid.pk]['unit'],'pieces')
+        self.box.refresh_from_db();self.lid.refresh_from_db()
+        self.assertEqual((self.box.quantity,self.lid.quantity),(1,2))
+        self.assertFalse(Order.objects.exists());self.assertFalse(PackagingMovement.objects.exists())

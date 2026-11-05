@@ -44,7 +44,7 @@ export default function useDeliveryQuote({deliveryAt,selectionKey,enabled,issue=
     if(!controller.signal.aborted)setResult({key:selectionKey,attempt,phase:'error',
      error:error.code==='INVALID_RESPONSE'?'The kitchen returned an unexpected availability response. Please retry.':error.code==='ECONNABORTED'?'The availability check timed out. Please retry; no order was placed.':!error.response?'Could not check delivery availability. Check your connection and retry.':error.response.status>=500?'Delivery availability is temporarily unavailable. Please retry.':readApiError(error,'Review your requested delivery time.'),
      shortage:stockShortage(error.response?.data),
-     retryable:!error.response || error.response.status>=500 || error.response.data?.code==='ingredient_stock_shortage'});
+     retryable:!error.response || error.response.status>=500 || ['ingredient_stock_shortage','packaging_stock_shortage'].includes(error.response.data?.code)});
    }
   },350);
   return()=>{clearTimeout(timer);controller.abort();};

@@ -70,12 +70,20 @@ def release_packaging(order, actor):
 
 
 def assert_available(needed, stock):
+    shortages = []
     for pk, quantity in needed.items():
         supply = stock[pk]
         if not supply.is_active:
             raise ValidationError(f'{supply.name} is archived. The kitchen must review this menu’s packaging before accepting the order.')
         if supply.quantity < quantity:
-            raise ValidationError(f'Not enough {supply.name}: {quantity} needed, {supply.quantity} available. Your basket has been kept. Contact the kitchen or reduce the quantity.')
+            shortages.append(dict(packaging_item_id=str(pk), name=supply.name, unit='pieces',
+                required=str(quantity), available=str(supply.quantity), shortfall=str(quantity-supply.quantity)))
+    if shortages:
+        first = shortages[0]
+        raise ValidationError({'code': 'packaging_stock_shortage',
+            'detail': f'Not enough {first["name"]}: {first["required"]} needed, {first["available"]} available. '
+                'Your basket has been kept. Contact the kitchen or reduce the quantity.',
+            'shortages': shortages[:100], 'shortage_count': str(len(shortages))})
 
 
 def check_cart_packaging(items):

@@ -3,6 +3,32 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Packaging and stock workflow review — 5 November 2026
+
+No schema, forecasting or model changes. Packaging shortage checks now return
+HTTP 400 `{code:"packaging_stock_shortage", detail:"…", shortages:[…],
+shortage_count:"N"}`. Each row contains `packaging_item_id`, `name`, `unit`
+(`pieces`), `required`, `available` and `shortfall`. Identifiers, quantities and
+count are strings, matching ingredient-shortage validation responses. The
+payload lists up to 100 shortages; the count includes the rest. Archived supplies
+still require a menu review. The existing packaging locks, accepted mappings,
+transaction rollback, deduction stage and retry identities are unchanged.
+Quotes remain read-only. Actual placement rechecks stock inside its transaction.
+
+The browser validates shortage rows and offers the same stock retry for
+packaging as ingredients. Staff Packaging reads validate catalogue, mapping and
+history responses, retain only the newest request, and stop writes after a
+failed refresh. The page renders at most 24 stock/menu records initially, with
+Show more; HTTP list contracts are unchanged. It refreshes on returning to the
+page. History remains paged at 50 movements. Receive/remove are explicit UI
+choices with positive piece counts; the existing API still accepts signed
+`change` values, expected version, reason and stable retry ID. Forms are disabled
+during writes; unknown outcomes retain the draft/retry ID. Duplicate menu
+assignments and over-removal are caught before submission as well as by the
+server. New successful packaging saves invalidate the current availability
+check. Ingredient Inventory also refreshes on return, with session/request
+guards, while leaving open editing forms alone.
+
 ## Account entry and staff settings follow-up — 5 November 2026
 
 No API/schema/model change. Direct simple-mode `/account` entry now opens the

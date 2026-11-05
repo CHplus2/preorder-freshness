@@ -49,7 +49,7 @@ integration review, not a claim that they are visible on the current deployment.
 
 | Review batch | Client requirement | Source entry and relevant verification |
 | --- | --- | --- |
-| 2: stock and packaging | Packaging stock page/tracker, menu packaging and automatic ingredient/packaging deduction when placing an order | `/admin/packaging`; `test_packaging_stock`, `test_simple_ordering`, `test_client_journey`; quotes read only, placement transactional and retry-safe |
+| 2: stock and packaging — completed in source | Packaging stock page/tracker, menu packaging and automatic ingredient/packaging deduction when placing an order | `/admin/packaging`; `test_packaging_stock`, `test_simple_ordering`, `test_client_journey`; quotes read only, placement transactional and retry-safe; new browser review verifies deductions, ledger links, stale forms and lost-response retry |
 | 3: daily work and reports | Order/item quantities per date, per-order print preview with name/address/phone, sales reporting, received/not received | Orders → Daily summary; `/admin/orders/:id/print`; Sales by date; `test_client_reports`, `test_client_journey`; payment and actual receipt are separate facts |
 | 4: delivery/settings and final journey | Area fee editor, 07:30–11:00 Malaysia hours, collection QR-only, delivery QR/cash, no cooking Planner/rules, owner delivery reminders | Simple ordering/guest tests, Settings, current owner reminder worker; final customer/owner mobile review and production release verification |
 

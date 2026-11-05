@@ -11,13 +11,15 @@ import {expiryBreakdown} from '../../utils/expiryEvidence';
 import StorageGuidanceEditor from "../../components/StorageGuidanceEditor";
 import {changeBatchMaterial,validStorageGuidance} from "../../utils/storageGuidance";
 import axios from "axios";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {useAuth} from '../../contexts/AuthContext';
 import { getCookie } from "../../utils/cookieUtils";
 import {useSearchParams} from 'react-router-dom';
 import FreshCastWorkflowContext from '../../components/FreshCastWorkflowContext';
 
 
 const API_URL = "/api/admin";
+const getAuthConfig=()=>({headers:{'X-CSRFToken':getCookie('csrftoken')},withCredentials:true,timeout:15000});
 
 function inventorySaveError(error) {
   if (!error?.response || error.response.status >= 500) {
@@ -42,6 +44,7 @@ const emptyInventoryItem = {
 };
 
 export default function AdminInventoryPage() {
+  const {isSessionCurrent}=useAuth();
   const [params]=useSearchParams();
   const [today,setToday]=useState(()=>malaysiaDate(new Date()));
   useEffect(()=>{const timer=setInterval(()=>setToday(malaysiaDate(new Date())),60000);return()=>clearInterval(timer)},[]);
@@ -81,30 +84,33 @@ export default function AdminInventoryPage() {
     setter(null);
   };
 
-  const refreshRecords = async () => {
+  const refreshController=useRef(null);
+  const refreshRecords = useCallback(async () => {
+    refreshController.current?.abort();const controller=new AbortController();refreshController.current=controller;
     setRefreshing(true);
     setRefreshError("");
     try {
       const [materials, inventory] = await Promise.all([
-        axios.get(`${API_URL}/raw-materials/`, getAuthConfig()),
-        axios.get(`${API_URL}/inventory-items/`, getAuthConfig()),
+        axios.get(`${API_URL}/raw-materials/`, {...getAuthConfig(),signal:controller.signal}),
+        axios.get(`${API_URL}/inventory-items/`, {...getAuthConfig(),signal:controller.signal}),
       ]);
       const nextMaterials=materialRecords(materials.data),nextInventory=inventoryRecords(inventory.data);
+      if(controller.signal.aborted||!isSessionCurrent())return;
       setRawMaterials(nextMaterials);
       setInventoryItems(nextInventory);
     } catch {
-      setRefreshError("Records could not be refreshed. Displayed quantities may be out of date. Refresh records before making another stock change.");
+      if(!controller.signal.aborted&&isSessionCurrent())setRefreshError("Records could not be refreshed. Displayed quantities may be out of date. Refresh records before making another stock change.");
     } finally {
-      setRefreshing(false);
+      if(!controller.signal.aborted&&isSessionCurrent())setRefreshing(false);
     }
-  };
-
-  const getAuthConfig = () => ({
-    headers: {
-      "X-CSRFToken": getCookie("csrftoken"),
-    },
-    withCredentials: true,
-  });
+  },[isSessionCurrent]);
+  const formOpen=!!(newRawMaterial||newInventoryItem||editingInventoryItem||editingRawMaterial);
+  useEffect(()=>{
+    let timer;
+    const onReturn=()=>{if(document.visibilityState==='hidden'||formOpen||loading||initialLoading||initialError)return;clearTimeout(timer);timer=setTimeout(refreshRecords,150)};
+    window.addEventListener('focus',onReturn);document.addEventListener('visibilitychange',onReturn);
+    return()=>{clearTimeout(timer);refreshController.current?.abort();window.removeEventListener('focus',onReturn);document.removeEventListener('visibilitychange',onReturn)};
+  },[refreshRecords,formOpen,loading,initialLoading,initialError]);
 
   const fetchRawMaterials = async () => {
     try {

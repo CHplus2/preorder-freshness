@@ -5,16 +5,17 @@ import './AvailabilityResult.css';
 import PreparationDays from './PreparationDays';
 
 export default function AvailabilityResult({checking, error, quote, selectionKey, requestMode=true,shortage=null,onRetry,retryable=false}) {
+  const packaging=shortage?.kind==='packaging',stockName=packaging?'packaging':'ingredients';
   let content = null;
   let tone = 'pending';
   if (checking) content = <><strong>Checking kitchen availability…</strong><p>This may take a few seconds.</p></>;
   else if(error && shortage){
-    tone='stock';content=<><div className="stock-shortage-heading"><PackageSearch size={22} aria-hidden="true"/><div><strong>Some items need restocking</strong><p>The kitchen does not have enough recorded ingredients for this basket on your chosen date.</p></div></div>
-      <ul className="stock-shortage-list">{shortage.rows.slice(0,5).map(row=><li key={row.raw_material_id}><span>{row.name}</span><span className="stock-shortage-amount">{stockQuantity(row.shortfall)} {row.unit} short</span><small>Needed {stockQuantity(row.required)} {row.unit} · Available {stockQuantity(row.available)} {row.unit}</small></li>)}</ul>
-      {shortage.count>5&&<details><summary>View {shortage.count-5} more ingredients</summary><ul className="stock-shortage-list">{shortage.rows.slice(5).map(row=><li key={row.raw_material_id}><span>{row.name}</span><span className="stock-shortage-amount">{stockQuantity(row.shortfall)} {row.unit} short</span><small>Needed {stockQuantity(row.required)} {row.unit} · Available {stockQuantity(row.available)} {row.unit}</small></li>)}</ul>{shortage.count>shortage.rows.length&&<p>The kitchen needs to review the remaining recipe ingredients.</p>}</details>}
-      <p className="stock-shortage-help">Edit your basket or ask the kitchen about restocking. Moving the time alone will not add ingredients.</p>
+    tone='stock';content=<><div className="stock-shortage-heading"><PackageSearch size={22} aria-hidden="true"/><div><strong>Some items need restocking</strong><p>The kitchen does not have enough recorded {stockName} for this basket{packaging?'.':' on your chosen date.'}</p></div></div>
+      <ul className="stock-shortage-list">{shortage.rows.slice(0,5).map(row=><li key={row.packaging_item_id||row.raw_material_id}><span>{row.name}</span><span className="stock-shortage-amount">{stockQuantity(row.shortfall)} {row.unit} short</span><small>Needed {stockQuantity(row.required)} {row.unit} · Available {stockQuantity(row.available)} {row.unit}</small></li>)}</ul>
+      {shortage.count>5&&<details><summary>View {shortage.count-5} more {stockName}</summary><ul className="stock-shortage-list">{shortage.rows.slice(5).map(row=><li key={row.packaging_item_id||row.raw_material_id}><span>{row.name}</span><span className="stock-shortage-amount">{stockQuantity(row.shortfall)} {row.unit} short</span><small>Needed {stockQuantity(row.required)} {row.unit} · Available {stockQuantity(row.available)} {row.unit}</small></li>)}</ul>{shortage.count>shortage.rows.length&&<p>The kitchen needs to review the remaining {stockName}.</p>}</details>}
+      <p className="stock-shortage-help">Edit your basket or ask the kitchen about restocking. Moving the time alone will not add {stockName}.</p>
       <div className="stock-shortage-actions"><Link to="/cart">Edit basket</Link><Link to="/contact">Ask the kitchen</Link>{retryable&&onRetry&&<button type="button" onClick={onRetry}>Check stock again</button>}</div>
-      <details className="stock-shortage-rules"><summary>Which stock counts?</summary><p>Stock must be received, not on hold, and within its recorded deadline on the chosen delivery date.</p></details></>;
+      <details className="stock-shortage-rules"><summary>Which stock counts?</summary><p>{packaging?'Only available packaging assigned to the menus counts. The kitchen records new supplies under Packaging.':'Stock must be received, not on hold, and within its recorded deadline on the chosen delivery date.'}</p></details></>;
   }
   else if (error) { tone = 'error'; content = <><strong>Availability could not be confirmed</strong><p>{error}</p></>; }
   else if (quote && quote.selectionKey !== selectionKey) content = <><strong>Please check availability again</strong><p>Your delivery time or basket has changed since the last check.</p></>;
