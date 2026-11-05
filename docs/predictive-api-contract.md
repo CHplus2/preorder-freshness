@@ -2001,3 +2001,33 @@ of the existing staff list response; no API fields or database schema changed.
 The refresh keeps order IDs and rows, with only the latest two non-cancelled
 orders upcoming. Older rows remain under Received, Cancelled or All orders.
 No additional data replacement or ID reset is part of this fix.
+
+### 6 November 2026 — menu stock estimates and order sorting
+
+The existing read-only product `stock` field now considers both usable ingredients
+and assigned active packaging. Its value is the smallest whole-number yield
+across recipe quantities and packaging quantities per menu unit; menus with no
+recipe or an invalid recipe yield zero. Menus without assigned packaging have
+no packaging limit. No editable finished-food counter is introduced. Ingredient
+eligibility still requires positive received, unheld stock within its recorded
+dates. This is today's independent estimate for each menu: shared stock makes
+the values non-additive, and checkout rechecks the entire basket for its actual
+handover date. The legacy `freshness` message includes packaging shortages when
+this combined estimate is zero. Model, serializer and instant recommendations
+use the same estimate. It does not change forecast model artifacts or evaluation.
+
+Stock estimates use two shared queries for physical ingredient totals and
+packaging mappings per serializer response, in addition to the existing product
+and prefetched-recipe queries. The 19-menu regression fixture needs four queries,
+not a stock query for every ingredient or product. No global cache hides later
+stock changes. Menu management labels the value Stock-based units, explains its
+scope and offers Refresh stock. Checkout already deducts ingredient batches and
+packaging atomically on simple order placement and prevents retry deductions;
+those write rules remain unchanged. Receipt updates still do not deduct again.
+
+The simple admin Orders queue offers delivery date ascending/descending and
+placement date ascending/descending. Missing/invalid dates stay last in either
+direction; the UI never substitutes a placement date for a missing delivery.
+Sorting keeps status/search/date filters, resets the visible page and clears
+bulk selections. This is a read-only client sort of the existing staff list;
+no order IDs, stored dates, API fields or database schema changed.

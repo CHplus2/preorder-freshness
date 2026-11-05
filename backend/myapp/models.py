@@ -63,33 +63,9 @@ class Product(models.Model):
         return self.name
 
     def get_available_quantity(self):
-        """
-        Calculate how many units of this product can currently
-        be produced based on available raw materials.
-        """
-
-        ingredients = self.ingredients.select_related("raw_material")
-
-        if not ingredients.exists():
-            return 0
-
-        available_quantities = []
-
-        for ingredient in ingredients:
-            total_stock = InventoryItem.objects.filter(
-                raw_material=ingredient.raw_material,
-                quantity__gt=0,
-                expiry_date__gte=timezone.localdate(),
-                received_date__lte=timezone.localdate(),
-                quarantined=False
-            ).aggregate(
-                total=models.Sum("quantity")
-            )["total"] or 0
-
-            possible_units = total_stock // ingredient.quantity_required if ingredient.quantity_required > 0 else 0
-            available_quantities.append(possible_units)
-
-        return min(available_quantities)
+        """Units supported by current usable ingredients and assigned packaging."""
+        from .services.menu_stock import MenuStockSnapshot
+        return MenuStockSnapshot().available(self)
 
 
 # ============ RAW MATERIAL ============

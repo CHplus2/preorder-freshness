@@ -31,6 +31,8 @@ try{
  assert.match(queue,/Cancelled <span class="simple-orders-count">6<\/span>/);
  assert.match(queue,/All orders <span class="simple-orders-count">158<\/span>/);
  assert.match(queue,/Showing 2 of 2 orders in this view · 158 total/);
+ assert.match(queue,/Sort orders<select/);
+ for(const label of ['Delivery date: earliest first','Delivery date: latest first','Order placed: newest first','Order placed: oldest first'])assert.ok(queue.includes(label));
  orderState.adminOrders=[order];
  const {default:Progress}=await load('components/OrderProgress.jsx');
  assert.match(render(h(Progress,{order})),/Not received/);

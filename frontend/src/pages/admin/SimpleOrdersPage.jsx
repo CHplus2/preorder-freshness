@@ -1,5 +1,5 @@
 import {DailyOrderReport} from '../../components/ClientReports';
-import {dailyOrdersUrl,summaryDay,validReportDay,orderCustomerName,undatedOpenOrder,matchesOrderSearch,receiptView,receiptCounts} from '../../utils/operationalOrders';
+import {dailyOrdersUrl,summaryDay,validReportDay,orderCustomerName,undatedOpenOrder,matchesOrderSearch,receiptView,receiptCounts,orderSortOptions,sortOrders} from '../../utils/operationalOrders';
 import {validReceiptUpdate} from '../../utils/simpleOrdering';
 import {slipUrl} from '../../utils/clientReports';
 import {Link} from 'react-router-dom';
@@ -38,12 +38,13 @@ function SimpleOrderQueue(){
  const [status,setStatus]=useState(params.get('order')?'all':'not_received'),[date,setDate]=useState(()=>params.get('review')!=='missing-delivery'&&validReportDay(params.get('date'))?params.get('date'):''),[search,setSearch]=useState(()=>/^\d+$/.test(params.get('order')||'')?formatOrderNumber(Number(params.get('order'))):''),[limit,setLimit]=useState(12);
  const [selected,setSelected]=useState([]),[modal,setModal]=useState(null),[reason,setReason]=useState(''),[returnStock,setReturnStock]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[payment,setPayment]=useState(null);
  const active=useRef(false);
+ const [sort,setSort]=useState('delivery_asc');
  const missingOnly=params.get('review')==='missing-delivery';
  const actual=adminOrders.filter(o=>!closedGeneratedHistory(o));
  const missing=actual.filter(undatedOpenOrder).length;
  const matching=actual.filter(o=>(!missingOnly||undatedOpenOrder(o))&&(!date||(o.delivery_at&&new Date(Date.parse(o.delivery_at)+8*3600000).toISOString().slice(0,10)===date))&&matchesOrderSearch(o,search,formatOrderNumber(o.id)));
  const counts=receiptCounts(matching);
- const list=matching.filter(o=>status==='all'||receiptView(o)===status).sort((a,b)=>Date.parse(a.delivery_at||a.created_at)-Date.parse(b.delivery_at||b.created_at));
+ const list=sortOrders(matching.filter(o=>status==='all'||receiptView(o)===status),sort);
  const visible=list.slice(0,limit);
  const open=(kind,order)=>{setError('');setReason('');setReturnStock(false);setModal({kind,order})};
  const save=async e=>{
@@ -63,7 +64,7 @@ function SimpleOrderQueue(){
   {!adminOrdersLoading&&!adminOrdersError&&missing>0&&<div className="undated-orders-note"><p>{missing} open {missing===1?'order has':'orders have'} no delivery or collection date. These are excluded from daily summaries until a time is agreed.</p>{missingOnly?<Link to="/admin/orders">Show all open orders</Link>:<Link to="/admin/orders?review=missing-delivery">Review orders without dates</Link>}</div>}
   {adminOrdersError&&<p role="alert" className="simple-orders-error">{adminOrdersError}</p>}
   {!missingOnly&&<div className="simple-orders-tabs" role="group" aria-label="Order view">{[['not_received','Not received'],['received','Received'],['cancelled','Cancelled'],['all','All orders']].map(([key,label])=><button type="button" aria-pressed={status===key} key={key} onClick={()=>{setStatus(key);setSelected([]);setLimit(12)}}>{label} <span className="simple-orders-count">{counts[key]}</span></button>)}</div>}
-  <div className="simple-orders-filters"><label>Search orders<input type="search" value={search} onChange={e=>{setSearch(e.target.value);setSelected([]);setLimit(12)}} placeholder="Order number, name or menu"/></label>{!missingOnly&&<label>Delivery / collection date<input type="date" value={date} onChange={e=>{setDate(e.target.value);setSelected([]);setLimit(12)}}/></label>}{date&&<button type="button" onClick={()=>{setDate('');setSelected([])}}>Clear date</button>}</div>
+  <div className="simple-orders-filters"><label>Search orders<input type="search" value={search} onChange={e=>{setSearch(e.target.value);setSelected([]);setLimit(12)}} placeholder="Order number, name or menu"/></label>{!missingOnly&&<label>Delivery / collection date<input type="date" value={date} onChange={e=>{setDate(e.target.value);setSelected([]);setLimit(12)}}/></label>}<label>Sort orders<select value={sort} onChange={e=>{setSort(e.target.value);setSelected([]);setLimit(12)}}>{orderSortOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>{date&&<button type="button" onClick={()=>{setDate('');setSelected([])}}>Clear date</button>}</div>
   {selected.length>0&&<div className="simple-orders-selection"><p>{selected.length} selected · confirm actual receipt for every selected order</p><button type="button" disabled={busy} onClick={()=>open('batch',null)}>Mark selected received</button><button type="button" disabled={busy} onClick={()=>setSelected([])}>Clear selection</button></div>}
   {adminOrdersLoading&&<p role="status">Refreshing orders…</p>}
   {!adminOrdersLoading&&!adminOrdersError&&<p role="status">Showing {visible.length} of {list.length} {list.length===1?'order':'orders'} in this view · {actual.length} total · <Link to={dailyOrdersUrl(date)}>Daily summary</Link></p>}

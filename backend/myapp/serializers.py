@@ -122,21 +122,16 @@ class ProductSerializer(serializers.ModelSerializer):
     freshness = serializers.SerializerMethodField()
 
     def get_stock(self, obj):
-        from django.db.models import Sum
-        from django.utils import timezone
-        if not hasattr(self, '_stock_totals'):
-            self._stock_totals = dict(InventoryItem.objects.filter(quantity__gt=0, quarantined=False,
-                expiry_date__gte=timezone.localdate(), received_date__lte=timezone.localdate())
-                .values('raw_material_id').annotate(n=Sum('quantity')).values_list('raw_material_id', 'n'))
-        ingredients = list(obj.ingredients.all())
-        return int(min((self._stock_totals.get(i.raw_material_id, 0) // i.quantity_required
-                        for i in ingredients if i.quantity_required > 0), default=0))
+        from .services.menu_stock import MenuStockSnapshot
+        if not hasattr(self, '_menu_stock'):
+            self._menu_stock = MenuStockSnapshot()
+        return self._menu_stock.available(obj)
 
     def get_freshness(self, obj):
         if not obj.ingredients.all():
             return 'Recipe not recorded'
         if self.get_stock(obj) < 1:
-            return 'Ingredients need restocking'
+            return 'Ingredients or packaging need restocking'
         return 'Within recorded shelf life - estimate, not a safety guarantee'
 
     def validate_delivery_weekdays(self, value):

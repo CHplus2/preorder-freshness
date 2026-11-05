@@ -12,6 +12,25 @@ export const receiptView=order=>order.status==='cancelled'?'cancelled':order.sta
 export const receiptCounts=orders=>orders.reduce((counts,order)=>{
  counts.all+=1;counts[receiptView(order)]+=1;return counts;
 },{all:0,not_received:0,received:0,cancelled:0});
+export const orderSortOptions=[
+ {value:'delivery_asc',label:'Delivery date: earliest first'},
+ {value:'delivery_desc',label:'Delivery date: latest first'},
+ {value:'placed_desc',label:'Order placed: newest first'},
+ {value:'placed_asc',label:'Order placed: oldest first'},
+];
+export function sortOrders(orders,sort='delivery_asc'){
+ const choice=orderSortOptions.some(option=>option.value===sort)?sort:'delivery_asc';
+ const field=choice.startsWith('delivery_')?'delivery_at':'created_at',direction=choice.endsWith('_desc')?-1:1;
+ return [...orders].sort((a,b)=>{
+  const first=a[field]?Date.parse(a[field]):NaN,last=b[field]?Date.parse(b[field]):NaN;
+  if(!Number.isFinite(first)||!Number.isFinite(last)){
+   if(Number.isFinite(first))return -1;
+   if(Number.isFinite(last))return 1;
+   return direction*(a.id-b.id);
+  }
+  return direction*(first-last||a.id-b.id);
+ });
+}
 const earlierMethods={paypal:{label:'PayPal Sandbox',note:'This used test funds; no real money was transferred.'},
   escrow:{label:'Escrow · Sepolia',note:'This used test cryptocurrency; it is not a bank payment.'},
   wallet:{label:'Credit wallet',note:'This used test credits; it is not a bank payment.'},

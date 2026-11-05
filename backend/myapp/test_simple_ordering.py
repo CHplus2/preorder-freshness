@@ -86,6 +86,23 @@ class SimpleOrderingTests(TestCase):
         self.early.refresh_from_db();self.assertEqual(self.early.quantity,100)
         self.assertEqual(IngredientConsumption.objects.count(),1)
 
+    def test_stock_estimate_changes_after_placement_without_manual_menu_count(self):
+        from .serializers import ProductSerializer
+        self.assertEqual(ProductSerializer(self.product).data['stock'],9)
+        other=Product.objects.create(name='Shared rice meal',price=10)
+        ProductIngredient.objects.create(product=other,raw_material=self.rice,quantity_required=200)
+        ProductPackaging.objects.create(product=other,packaging_item=self.box,quantity_per_item=1)
+        self.assertEqual(other.get_available_quantity(),4)
+        order=self.place()
+        self.assertEqual(ProductSerializer(self.product).data['stock'],6)
+        self.assertEqual(other.get_available_quantity(),3)
+        self.box.refresh_from_db();self.assertEqual(self.box.quantity,17)
+        retry=self.client.post('/api/orders/place/',self.body,format='json')
+        self.assertEqual(retry.status_code,200,retry.data)
+        self.assertEqual(retry.data['order_id'],order.pk)
+        self.assertEqual(ProductSerializer(self.product).data['stock'],6)
+        self.box.refresh_from_db();self.assertEqual(self.box.quantity,17)
+
     def test_future_delivery_skips_lots_expiring_before_delivery(self):
         self.early.expiry_date=timezone.localdate()+timedelta(days=1);self.early.save()
         self.place();self.early.refresh_from_db();self.later.refresh_from_db()

@@ -18,6 +18,7 @@ export default function AdminProductsPage() {
   const [statusFilter,setStatusFilter]=useState('current');
   const [missingStepsOnly,setMissingStepsOnly]=useState(true);
   const [statusBusy,setStatusBusy]=useState(false);
+  const [stockRefreshing,setStockRefreshing]=useState(false);
   const [statusMessage,setStatusMessage]=useState('');
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -40,10 +41,15 @@ export default function AdminProductsPage() {
   const emptyForm = {
     name: "",
     price: "",
-    stock: "",
     description: "",
     category: "",
     image_url: "",
+  };
+
+  const refreshStock=async()=>{
+    if(stockRefreshing)return;
+    setStockRefreshing(true);
+    try{await fetchProducts();}finally{setStockRefreshing(false);}
   };
 
   const changeStatus=async(product,selling_status)=>{
@@ -64,7 +70,7 @@ export default function AdminProductsPage() {
     <div className="admin-products-container">
       <div className="admin-header">
         <h1>Menu management</h1>
-        <div className="menu-header-actions"><button type="button" onClick={() => setManageCategories(true)}>Manage categories</button>
+        <div className="menu-header-actions"><button type="button" disabled={stockRefreshing} onClick={refreshStock}>{stockRefreshing?'Refreshing…':'Refresh stock'}</button><button type="button" onClick={() => setManageCategories(true)}>Manage categories</button>
         <button className="add-product-btn" onClick={() => {setAlert({message:'',type:''});setNewProduct(emptyForm);}}>
           Create menu
         </button></div>
@@ -73,6 +79,7 @@ export default function AdminProductsPage() {
 {reviewTitles[review] && <p className="menu-state-feedback" role="status"><strong>Review: {reviewTitles[review]}</strong><br/>Choose a menu below. Its editor will open at the relevant section.</p>}
 {review==='preparation' && <label><input type="checkbox" checked={missingStepsOnly} onChange={e=>setMissingStepsOnly(e.target.checked)}/> Show only active menus missing preparation steps</label>}
 <p className="menu-state-intro">Pause a menu to stop new orders. Archive it to remove it from your current menu list. Existing orders keep their recipes and delivery plans.</p>
+<p className="menu-state-intro">Stock-based units are calculated from today’s usable ingredients and assigned packaging. Menus share stock; checkout checks the whole basket for its chosen date.</p>
       {statusMessage && <p className="menu-state-feedback" role="status">{statusMessage}</p>}
       {/* Search & Filter */}
       <div className="admin-browse-controls">
@@ -103,7 +110,7 @@ export default function AdminProductsPage() {
             <th>Image</th>
             <th>Name</th>
             <th>Price</th>
-            <th>Available units</th>
+            <th>Stock-based units</th>
             <th>Category</th>
             {!simple&&<th>Preparation</th>}
             <th>Actions</th>
@@ -127,7 +134,7 @@ export default function AdminProductsPage() {
                 </td>
                 <td data-label="Name"><strong>{p.name}</strong><span className="menu-state-label">{p.selling_status==='archived'?'Archived':p.selling_status==='paused'?'Paused':'Accepting orders'}</span></td>
               <td data-label="Price">RM {p.price} / {unitLabel(p.selling_details)}</td>
-              <td data-label="Available units">{p.stock}</td>
+              <td data-label="Stock-based units">{p.stock}</td>
               <td data-label="Category">{p.category_name}</td>
               {!simple&&<td data-label="Preparation"><span className="status-badge">{p.preparation_tasks?.length ? `${p.preparation_tasks.length} steps` : "Needs setup"}</span></td>}
               <td data-label="Actions">

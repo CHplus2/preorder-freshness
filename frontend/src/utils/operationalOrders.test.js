@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {validReportDay,dailyOrdersUrl,orderCustomerName,undatedOpenOrder,earlierPayment,matchesOrderSearch,receiptView,receiptCounts} from './operationalOrders.js';
+import {validReportDay,dailyOrdersUrl,orderCustomerName,undatedOpenOrder,earlierPayment,matchesOrderSearch,receiptView,receiptCounts,sortOrders} from './operationalOrders.js';
 for(const day of ['2026-11-05','2024-02-29'])assert.equal(validReportDay(day),true);
 for(const day of ['2026-02-30','2025-02-29','2026-13-01','0000-01-01','x&day=1',null])assert.equal(validReportDay(day),false);
 assert.equal(dailyOrdersUrl('2026-11-05'),'/admin/orders?view=daily&date=2026-11-05');
@@ -26,3 +26,18 @@ assert.equal(receiptView({status:'processing'}),'not_received');
 assert.equal(receiptCounts([]).all,0);
 assert.equal(history.filter(order=>receiptView(order)==='not_received').length,2);
 assert.equal(history.length,158);
+
+const dated=[
+ {id:1,delivery_at:'2026-11-06T00:00:00Z',created_at:'2026-11-03T01:00:00Z'},
+ {id:2,delivery_at:null,created_at:'2026-11-04T00:00:00Z'},
+ {id:3,delivery_at:'2026-11-07T00:00:00Z',created_at:'2026-11-02T00:00:00Z'},
+ {id:4,delivery_at:'2026-11-06T08:00:00+08:00',created_at:'2026-11-01T00:00:00Z'},
+];
+const ids=rows=>rows.map(order=>order.id);
+assert.deepEqual(ids(sortOrders(dated,'delivery_asc')),[1,4,3,2]);
+assert.deepEqual(ids(sortOrders(dated,'delivery_desc')),[3,4,1,2]);
+assert.deepEqual(ids(sortOrders(dated,'placed_desc')),[2,1,3,4]);
+assert.deepEqual(ids(sortOrders(dated,'placed_asc')),[4,3,1,2]);
+assert.deepEqual(ids(sortOrders(dated,'unknown')),[1,4,3,2]);
+assert.deepEqual(ids(dated),[1,2,3,4]);
+assert.deepEqual(ids(sortOrders([{id:5,delivery_at:'invalid'},dated[0]],'delivery_desc')),[1,5]);
