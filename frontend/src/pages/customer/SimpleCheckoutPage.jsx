@@ -84,7 +84,7 @@ export default function SimpleCheckoutPage(){
     <p className="checkout-hint">{customerAccount?'Your orders are saved to your account. Sign in with your passkey to view them on another device.':<>Guest orders stay private to this browser session. <Link to="/account?next=checkout">Save them with a passkey account</Link> before changing devices or clearing browser data.</>}</p>
     <button className="checkout-submit" disabled={busy||cartLoading||cartUpdating||checking||!quote||!priceConfirmed||!!quoteError||!!areaIssue||!paymentReady}>{busy?'Placing order…':`Place preorder · ${formatPrice(finalTotal)}`}</button>
    </fieldset>
-   <CheckoutSummary cart={cart} total={total} discount={discount} shipping={SHIPPING_FEE} finalTotal={finalTotal} pickup={pickup} updating={cartUpdating} freeDeliveryMinimum={promotion.free_delivery_minimum_myr} formatPrice={formatPrice} shippingPending={areaIssue}/>
+   <CheckoutSummary cart={cart} total={total} discount={discount} shipping={SHIPPING_FEE} finalTotal={finalTotal} pickup={pickup} updating={cartUpdating} freeDeliveryMinimum={promotion.free_delivery_minimum_myr} formatPrice={formatPrice} shippingPending={areaIssue} deliveryArea={deliveryArea} areaFee={Object.hasOwn(promotion.delivery_area_fees||{},deliveryArea)?promotion.delivery_area_fees[deliveryArea]:promotion.delivery_fee_myr}/>
   </form>
  </main>;
 }

@@ -8,10 +8,13 @@ try{
  const load=p=>server.ssrLoadModule('/src/'+p);
  const {AuthContext}=await load('contexts/AuthContext.js'),{UIContext}=await load('contexts/UIContext.js');
  const {CartContext}=await load('contexts/CartContext.js'),{OrderContext}=await load('contexts/OrderContext.js');
- const {default:Account}=await load('pages/customer/CustomerAccountPage.jsx'),{default:Checkout}=await load('pages/customer/SimpleCheckoutPage.jsx');
+ const {default:Account}=await load('pages/customer/CustomerAccountPage.jsx'),{default:Checkout}=await load('pages/customer/SimpleCheckoutPage.jsx'),{default:AccessForm}=await load('components/CustomerAccessForm.jsx');
  const cart={cart:[{id:1,quantity:1,product:{id:2,name:'Meal',price:12}}],cartLoading:false,pricingReady:true,promotion:{},total:12,finalTotal:17};
  const render=(node,auth)=>renderToStaticMarkup(h(MemoryRouter,null,h(AuthContext.Provider,{value:{isAuthenticated:true,isSessionCurrent:()=>true,...auth}},h(UIContext.Provider,{value:{setAlert:()=>{},formatPrice:n=>'RM '+n}},h(OrderContext.Provider,{value:{}},h(CartContext.Provider,{value:cart},node))))));
- const guest=render(h(Account),{isGuest:true});
+ const landing=render(h(Account),{isGuest:true});
+ assert.match(landing,/Create account or sign in<\/button>/);assert.match(landing,/Kitchen staff sign in/);
+ assert.doesNotMatch(landing,/<form|type="password"|type="email"/);
+ const guest=render(h(AccessForm),{isGuest:true});
  assert.match(guest,/Create account with a passkey/);assert.match(guest,/Already have an account/);assert.match(guest,/>Sign in<\/button>/);
  assert.match(guest,/Your name/);assert.match(guest,/Phone number/);
  assert.doesNotMatch(guest,/type="password"|type="email"|Email address/);
@@ -22,6 +25,12 @@ try{
  assert.match(account,/Your account/);assert.match(account,/Add another passkey/);assert.match(account,/Save contact details/);
  assert.doesNotMatch(account,/Sign in with a passkey|Create your account|type="email"/);
  const {StoreContext}=await load('contexts/StorefrontContext.js'),{default:RequireAuth}=await load('hoc/RequireAuth.jsx');
+ const {default:StaffAccount}=await load('pages/customer/AccountPage.jsx');
+ const staff=renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store:{ordering_mode:'simple'}}},h(AuthContext.Provider,{value:{isAdmin:true}},h(StaffAccount)))));
+ assert.match(staff,/Your staff account/);assert.match(staff,/Staff profile/);assert.match(staff,/Open email reminder settings/);
+ assert.match(staff,/empty account email does not switch off kitchen reminders/);
+ assert.doesNotMatch(staff,/Delivery address|Sign-in email &amp; delivery reminders|My orders/);
+ assert.match(staff,/<details class="kitchen-account-security"><summary>Sign-in email/);
  const pending=renderToStaticMarkup(h(MemoryRouter,{initialEntries:['/account']},h(StoreContext.Provider,{value:{store:{name:'Kitchen'}}},h(AuthContext.Provider,{value:{isAuthenticated:false}},h(UIContext.Provider,{value:{setShowLogin:()=>{}}},h(RequireAuth,null,'PRIVATE CUSTOMER'))))));
  assert.match(pending,/Loading kitchen details/);assert.doesNotMatch(pending,/Sign in to continue|PRIVATE CUSTOMER/);
  const {encodeBase64url,decodeBase64url,browserOptions}=await load('utils/passkeys.js');

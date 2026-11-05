@@ -10,7 +10,7 @@ const query='(min-width: 801px)';
 const subscribe=listener=>{const media=window.matchMedia(query);media.addEventListener('change',listener);return()=>media.removeEventListener('change',listener);};
 const wide=()=>window.matchMedia(query).matches;
 
-export default function CheckoutSummary({cart,total,discount,shipping,finalTotal,pickup=false,updating=false,freeDeliveryMinimum,formatPrice,shippingPending=false}){
+export default function CheckoutSummary({cart,total,discount,shipping,finalTotal,pickup=false,updating=false,freeDeliveryMinimum,formatPrice,shippingPending=false,deliveryArea='',areaFee}){
  const expanded=useSyncExternalStore(subscribe,wide,()=>true);
  const shownTotal=shippingPending?total-discount:finalTotal;
  const count=cart.reduce((sum,item)=>sum+item.quantity,0);
@@ -25,7 +25,8 @@ export default function CheckoutSummary({cart,total,discount,shipping,finalTotal
     </div>)}
     <dl><div><dt>Food subtotal</dt><dd>{formatPrice(total)}</dd></div>{discount>0 && <div className="checkout-discount"><dt>Bulk discount</dt><dd>−{formatPrice(discount)}</dd></div>}<div><dt>{pickup?'Collection':'Delivery fee'}</dt><dd>{shippingPending?'Choose an area':shipping?formatPrice(shipping):'Free'}</dd></div><div className="checkout-total"><dt>{shippingPending?'Food total':'Total'}</dt><dd>{formatPrice(shownTotal)}</dd></div></dl>
     {!pickup && freeDeliveryMinimum!=null && total<Number(freeDeliveryMinimum) && <p className="checkout-hint">Add {formatPrice(Number(freeDeliveryMinimum)-total)} in food for free delivery.</p>}
-    {!pickup&&!shippingPending&&shipping===0&&freeDeliveryMinimum!=null&&total>=Number(freeDeliveryMinimum)&&<p className="checkout-hint">Free delivery applied: your food subtotal meets the kitchen’s {formatPrice(Number(freeDeliveryMinimum))} threshold.</p>}
+    {!pickup&&!shippingPending&&deliveryArea&&<p className="checkout-hint">Delivery area: <strong>{deliveryArea}</strong>{Number(areaFee)>0?` · Usual fee ${formatPrice(Number(areaFee))}`:''}.</p>}
+    {!pickup&&!shippingPending&&shipping===0&&freeDeliveryMinimum!=null&&total>=Number(freeDeliveryMinimum)&&<p className="checkout-hint">Free delivery applied: {Number(areaFee)>0?`the ${formatPrice(Number(areaFee))} area fee is waived because `:''}your food subtotal meets the kitchen’s {formatPrice(Number(freeDeliveryMinimum))} free-delivery threshold.</p>}
     {shippingPending?<p className="checkout-hint">Choose your delivery area to confirm the fee and final total.</p>:<p className="checkout-hint">This is the total for this basket, including the shown discount and {pickup?'collection':'delivery'} fee.</p>}
     {!pickup && <p className="checkout-hint">The kitchen arranges delivery. The shown fee is included in your order total; a courier-price difference does not automatically add another charge.</p>}
    </div>

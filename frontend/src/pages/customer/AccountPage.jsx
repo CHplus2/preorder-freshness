@@ -6,11 +6,14 @@ import {apiError,readApiError} from '../../utils/apiError';
 import {accountDetails} from '../../utils/customerExperience';
 import {getCookie} from '../../utils/cookieUtils';
 import {useCart} from '../../contexts/CartContext';
+import {useAuth} from '../../contexts/AuthContext';
+import {useStorefront} from '../../contexts/StorefrontContext';
 import './CheckoutPage.css';
 import './CustomerExperience.css';
+import './KitchenAccount.css';
 
 const states=['Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Penang','Perak','Perlis','Sabah','Sarawak','Selangor','Terengganu','Kuala Lumpur','Labuan','Putrajaya'];
-function AccountSection({title,url,address=false,children}){
+function AccountSection({title,url,address=false,intro,children}){
   const [value,setValue]=useState(null),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[revision,setRevision]=useState(0);
   useEffect(()=>{
     const controller=new AbortController();
@@ -34,7 +37,7 @@ function AccountSection({title,url,address=false,children}){
   };
   return <section className="checkout-section" aria-labelledby={address?'address-heading':'profile-heading'}>
     <h2 tabIndex={-1} id={address?'address-heading':'profile-heading'}>{title}</h2>
-    <p className="account-section-intro">{address?'Your default for future checkouts. Orders already placed keep their original address.':'Keep your name ready for your next order. Sign in with your account email or your existing username.'}</p>
+    <p className="account-section-intro">{intro||(address?'Your default for future checkouts. Orders already placed keep their original address.':'Keep your name ready for your next order. Sign in with your account email or your existing username.')}</p>
     {error && <p className="customer-notice" role="alert">{error}</p>}
     {!value?<><p role="status">{error?'These details are unavailable.':'Loading your details…'}</p>{error && <button type="button" onClick={()=>{setError('');setRevision(n=>n+1);}}>Try loading again</button>}</>:<form onSubmit={save}>
       <fieldset disabled={busy} className="account-fields">{children(value,edit)}</fieldset>
@@ -43,6 +46,18 @@ function AccountSection({title,url,address=false,children}){
   </section>;
 }
 export default function AccountPage(){
+ const {isAdmin}=useAuth(),{store}=useStorefront()||{};
+ if(isAdmin&&store?.ordering_mode==='simple')return <KitchenAccount/>;
+ return <LegacyAccount/>;
+}
+function KitchenAccount(){
+ return <main className="checkout-container account-settings kitchen-account"><header className="customer-page-heading"><span className="dk-eyebrow">KITCHEN WORKSPACE</span><h1>Your staff account</h1><p>Your staff profile and sign-in details. Business settings are managed separately.</p><nav className="customer-shortcuts" aria-label="Kitchen account shortcuts"><Link to="/admin/orders">Orders</Link><Link to="/admin/settings">Kitchen settings</Link></nav></header><div className="account-sections">
+  <AccountSection title="Staff profile" url="/api/account/" intro="Change your display name here. Your existing staff username and password still work.">{(value,edit)=><div className="address-fields"><p className="field-wide kitchen-username">Staff username: <strong>{value.username}</strong></p>{['first_name','last_name'].map((key,i)=><label key={key}>{i?'Last name':'First name'}<input maxLength={150} autoComplete={i?'family-name':'given-name'} value={value[key]} onChange={e=>edit({...value,[key]:e.target.value})}/></label>)}</div>}</AccountSection>
+  <section className="checkout-section"><h2>Kitchen delivery reminders</h2><p className="account-section-intro">Check the recipient, send a test email and see reminder activity in Kitchen settings.</p><p className="account-help">The kitchen’s reminder recipient and email sender are separate from your sign-in email. An empty account email does not switch off kitchen reminders.</p><Link className="customer-order-help" to="/admin/settings#reminders">Open email reminder settings</Link></section>
+  <details className="kitchen-account-security"><summary>Sign-in email &amp; recovery (optional)</summary><OrderEmailSettings staff/></details>
+ </div></main>;
+}
+function LegacyAccount(){
   const {hash}=useLocation();
   useEffect(()=>{
     if(!['#profile-heading','#address-heading','#delivery-email'].includes(hash))return;

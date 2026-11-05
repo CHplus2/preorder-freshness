@@ -3,6 +3,18 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Account entry and staff settings follow-up — 5 November 2026
+
+No API/schema/model change. Direct simple-mode `/account` entry now opens the
+same customer modal as header/checkout entry after authentication settles;
+dismissal leaves a compact reopen screen. Staff Account uses the existing
+profile/email APIs but omits customer address and subscription forms. Optional
+staff sign-in-email management is collapsed and explicitly separate from SMTP
+and the owner-reminder recipient. Customer passwordless account security is
+unchanged. Checkout additionally identifies the selected area/usual fee and
+explains an enabled free-delivery threshold when it waives that fee. Saved
+pricing/promotions, accepted orders and cron configuration remain unchanged.
+
 ## Checkout pricing and account access — 5 November 2026
 
 No schema, forecasting model or predictive endpoint changes. Simple-mode

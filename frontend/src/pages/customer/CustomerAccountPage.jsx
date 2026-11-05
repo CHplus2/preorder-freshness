@@ -1,5 +1,4 @@
-import CustomerAccessForm from '../../components/CustomerAccessForm';
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {Link,useNavigate,useSearchParams} from 'react-router-dom';
 import axios from 'axios';
 import {useAuth} from '../../contexts/AuthContext';
@@ -9,10 +8,12 @@ import {passkeysSupported,passkeyError} from '../../utils/passkeys';
 import './CustomerAccountPage.css';
 
 export default function CustomerAccountPage(){
- const {customerAccount,isAdmin}=useAuth(),{setShowLogin}=useUI(),navigate=useNavigate(),[params]=useSearchParams();
+ const {customerAccount,isAdmin,isAuthenticated,authPending}=useAuth(),{setShowLogin,openCustomerAccess}=useUI(),[params]=useSearchParams();
  const destination=['checkout','orders','cart'].includes(params.get('next'))?'/'+params.get('next'):null;
+ const opened=useRef(false);
+ useEffect(()=>{if(isAuthenticated!==null&&!authPending&&!customerAccount&&!isAdmin&&!opened.current){opened.current=true;openCustomerAccess({next:destination||'/account'})}},[isAuthenticated,authPending,customerAccount,isAdmin,openCustomerAccess,destination]);
  if(isAdmin)return <main className="customer-account"><h1>Kitchen account</h1><Link to="/admin/orders">Open kitchen orders</Link></main>;
- if(!customerAccount)return <main className="customer-account"><CustomerAccessForm onComplete={()=>{if(destination)navigate(destination)}} onStaffSignIn={()=>setShowLogin(true)}/></main>;
+ if(!customerAccount)return <main className="customer-account"><header><h1>Your account</h1><p>Save your orders with your name, phone number and a passkey. No email or password needed.</p></header><button type="button" onClick={()=>openCustomerAccess({next:destination||'/account'})}>Create account or sign in</button><div className="account-footer-links"><Link to="/menu">Browse the menu</Link><button className="account-secondary" type="button" onClick={()=>setShowLogin(true)}>Kitchen staff sign in</button></div></main>;
  return <CustomerAccountDetails/>;
 }
 function CustomerAccountDetails(){

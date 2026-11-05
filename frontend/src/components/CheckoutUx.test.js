@@ -58,6 +58,9 @@ try{
  assert.match(picker({value:''}),/Preferred day/);assert.match(picker({day:'2030-01-02'}),/value="2030-01-02"/);
  const summary=props=>renderToStaticMarkup(h(MemoryRouter,null,h(Summary,{cart:[row],total:10.05,discount:1,shipping:5,finalTotal:14.05,formatPrice:value=>'RM '+Number(value).toFixed(2),...props})));
  const bill=summary({});assert.match(bill,/Your preorder/);assert.match(bill,/RM 10.05 \/ item × 1/);assert.match(bill,/Bulk discount/);assert.match(bill,/RM 14.05/);assert.match(bill,/Edit basket/);
+ const waived=summary({total:60,shipping:0,finalTotal:59,deliveryArea:'North',areaFee:'10.00',freeDeliveryMinimum:'50.00'});
+ assert.match(waived,/Delivery area: <strong>North/);assert.match(waived,/RM 10.00 area fee is waived/);assert.match(waived,/RM 50.00 free-delivery threshold/);
+ const pendingArea=summary({shippingPending:true,deliveryArea:'',areaFee:'10.00'});assert.match(pendingArea,/Choose an area/);assert.doesNotMatch(pendingArea,/area fee is waived/);
  assert.match(summary({pickup:true,shipping:0,finalTotal:9.05}),/<dt>Collection<\/dt><dd>Free/);
  assert.match(summary({updating:true}),/aria-busy="true"/);assert.match(summary({updating:true}),/Updating…/);
  assert.match(bill,/<dt>Delivery fee<\/dt><dd>RM 5.00/);
