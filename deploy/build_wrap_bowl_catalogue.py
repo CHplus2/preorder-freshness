@@ -22,6 +22,16 @@ def build_refresh():
     return (ROOT / 'wrap_bowl_refresh.template.sql').read_text().replace('/*REFRESH_JSON*/',payload)
 
 
+def build_completion():
+    """One submission repairs a partial catalogue and applies the reviewed refresh."""
+    catalogue = json.loads((ROOT / 'data/wrap_bowl_kuch.json').read_text())
+    payload = json.dumps(catalogue, ensure_ascii=False, separators=(',', ':'))
+    if '$wb_catalogue$' in payload:
+        raise ValueError('Catalogue contains the reserved SQL quote delimiter.')
+    repair = (ROOT / 'wrap_bowl_repair.template.sql').read_text().replace('/*CATALOGUE_JSON*/', payload)
+    return repair + '\n' + build_refresh()
+
+
 if __name__ == '__main__':
     destination = ROOT / 'sql/apply_wrap_bowl_catalogue.sql'
     destination.write_text(build())
@@ -29,4 +39,8 @@ if __name__ == '__main__':
 
     target = ROOT / 'sql/refresh_wrap_bowl_operations.sql'
     target.write_text(build_refresh())
+    print(f'Wrote {target.relative_to(ROOT.parent)}')
+
+    target = ROOT / 'sql/complete_wrap_bowl_setup.sql'
+    target.write_text(build_completion())
     print(f'Wrote {target.relative_to(ROOT.parent)}')

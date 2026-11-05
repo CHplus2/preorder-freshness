@@ -23,6 +23,38 @@ This is a data import for the existing single-vendor application, not a new clie
 
 Repeating with all eight names present returns `already_configured`, without resetting owner-edited prices/recipes/story/counts. A partial setup, ambiguous ingredient/category or incompatible existing ingredient unit fails and rolls back. Use normal forms for later changes. Do not rerun a catalogue reset after intentionally renaming/deleting the entire business.
 
+### Recover a partial client setup
+
+If the operational refresh reports `Expected exactly the eight active client
+menus` and batch 1 reports `Some client setup already exists`, use the
+[combined completion script](../deploy/sql/complete_wrap_bowl_setup.sql). This
+handles branding-only setup, partially imported client menus and old menus still
+active alongside all eight client menus. It is for the same owner-authorised
+replacement of fictional project records; it is not a routine catalogue update.
+
+After the private database backup, copy the **whole** file into SQL Editor and
+run it in one submission. Do not highlight just one section. The final result is
+`status: refreshed`. No additional import or refresh file is needed. Repeating
+after completion returns `already_applied` and leaves later stock/order/menu
+changes alone.
+
+The repair snapshots the original catalogue in a private OrderAmendment, reuses
+unambiguous matching client menu IDs, restores the reviewed prices, recipe
+estimates and packaging, and creates missing client menus. It retains existing
+photos for matched menus and normalises case/outer whitespace in expected names.
+The following refresh removes unrelated catalogue/stock records and reconciles
+historical orders as described below. The private operational backup retains the
+earlier repair snapshot under `earlier_changes` → `before` →
+`catalogue_repair_backup`. Accounts, passkeys and receiving-payment settings are
+preserved. No bank, courier or email request is made.
+
+Ambiguous duplicate client names or incompatible ingredient units still stop the
+submission. A failure rolls back the repair and refresh together when submitted
+as the complete file. The exact generated SQL passed 23 isolated PostgreSQL
+checks, including a 40-active-menu starting catalogue, partial/inactive menus,
+extra active menus, rollback after a later failure and repeat-run preservation.
+This does not establish that it has been applied to the live database.
+
 ## Menus transcribed from the poster
 
 | Menu | Price | Offered days |
