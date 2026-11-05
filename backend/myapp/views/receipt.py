@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from ..models import Order, OrderAmendment
 from ..serializers import OrderSerializer
+from ..services.demo_provenance import generated_sales_summary
 from .packaging import StrictInput, Conflict
 
 
@@ -36,9 +37,8 @@ def receipts(request):
     if len(orders) != len(versions):
         raise ValidationError('A selected order is unavailable. Refresh the order list.')
     target = 'delivered' if v['received'] else 'pending'
-    from ..services.demo_provenance import synthetic_history
     for order in orders:
-        if synthetic_history(order):
+        if generated_sales_summary(order):
             raise ValidationError('Generated sales summaries cannot be changed as customer receipts.')
         if order.updated_at != versions[order.pk]:
             raise Conflict('A selected order changed. Refresh the order list; nothing was updated.')
@@ -74,8 +74,7 @@ def cancel_order(request, pk):
     form.is_valid(raise_exception=True)
     v = form.validated_data
     order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
-    from ..services.demo_provenance import synthetic_history
-    if synthetic_history(order):
+    if generated_sales_summary(order):
         raise ValidationError('Generated sales summaries cannot be cancelled as customer requests.')
     if order.status == 'cancelled':
         return Response(OrderSerializer(order, context={'request': request}).data)

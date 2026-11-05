@@ -282,3 +282,37 @@ class SimpleOrderingTests(TestCase):
         result=self.receipt(order)
         self.assertEqual(result.status_code,400,result.data)
         order.refresh_from_db();self.assertEqual(order.status,'pending')
+
+    def test_catalogue_refresh_order_can_be_received_corrected_and_cancelled(self):
+        from .models import PaymentEvent
+        from .services.demo_provenance import synthetic_history,generated_sales_summary
+        order=self.place()
+        order.payment_instructions={'catalogue_refresh_sample':{'version':'1','operation_id':'wrap_bowl_operations_v1'}}
+        order.save()
+        self.assertTrue(synthetic_history(order));self.assertFalse(generated_sales_summary(order))
+        stock=list(InventoryItem.objects.values());packaging=list(PackagingItem.objects.values())
+        payments=list(PaymentEvent.objects.values())
+        self.assertEqual(self.receipt(order).status_code,200)
+        order.refresh_from_db();self.assertEqual(order.status,'delivered');self.assertEqual(order.payment_status,'unpaid')
+        self.assertEqual(self.receipt(order,False).status_code,400)
+        result=self.receipt(order,False,'Customer has not collected it yet')
+        self.assertEqual(result.status_code,200,result.data)
+        order.refresh_from_db();self.assertEqual(order.status,'pending')
+        self.assertEqual(list(InventoryItem.objects.values()),stock)
+        self.assertEqual(list(PackagingItem.objects.values()),packaging)
+        self.assertEqual(list(PaymentEvent.objects.values()),payments)
+        result=self.client.post(f'/api/admin/orders/{order.pk}/cancel/',dict(
+            version=order.updated_at.isoformat(),reason='Customer cancelled',return_unused_stock=False),format='json')
+        self.assertEqual(result.status_code,200,result.data)
+        order.refresh_from_db();self.assertEqual(order.status,'cancelled')
+        self.assertEqual(list(InventoryItem.objects.values()),stock)
+        self.assertEqual(list(PaymentEvent.objects.values()),payments)
+
+    def test_forecast_summary_still_cannot_be_cancelled(self):
+        order=self.place()
+        order.payment_instructions={'freshcast_synthetic_history':{'version':'1'}};order.save()
+        self.client.force_authenticate(self.owner)
+        result=self.client.post(f'/api/admin/orders/{order.pk}/cancel/',dict(
+            version=order.updated_at.isoformat(),reason='Not an individual order'),format='json')
+        self.assertEqual(result.status_code,400,result.data)
+        order.refresh_from_db();self.assertEqual(order.status,'pending')

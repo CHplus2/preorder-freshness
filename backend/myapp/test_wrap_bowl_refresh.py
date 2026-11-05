@@ -86,6 +86,19 @@ class WrapBowlRefreshTests(TransactionTestCase):
   changed=list(Order.objects.values());self.assertEqual(self.run_sql()['status'],'already_applied')
   batch.refresh_from_db();self.assertEqual(list(Order.objects.values()),changed)
   self.assertEqual(OrderAmendment.objects.count(),5)
+ def test_refreshed_upcoming_orders_accept_bulk_receipt_without_stock_or_payment_changes(self):
+  self.run_sql();client=APIClient();client.force_authenticate(self.owner)
+  upcoming=list(Order.objects.filter(status='pending').order_by('id'))
+  self.assertEqual(len(upcoming),2)
+  batches=list(InventoryItem.objects.values());packs=list(PackagingItem.objects.values());payments=list(PaymentEvent.objects.values())
+  result=client.post('/api/admin/orders/receipts/',dict(received=True,orders=[
+   dict(id=o.pk,version=o.updated_at.isoformat()) for o in upcoming]),format='json')
+  self.assertEqual(result.status_code,200,result.data)
+  self.assertEqual(Order.objects.count(),5)
+  for o in upcoming:
+   o.refresh_from_db();self.assertEqual(o.status,'delivered');self.assertEqual(o.payment_status,'unpaid')
+  self.assertEqual(list(InventoryItem.objects.values()),batches);self.assertEqual(list(PackagingItem.objects.values()),packs)
+  self.assertEqual(list(PaymentEvent.objects.values()),payments)
  def test_incomplete_catalogue_aborts_without_taking_a_backup_or_deleting_history(self):
   Product.objects.get(name='Chicken Grilled Salad').ingredients.all().delete()
   with self.assertRaises(DatabaseError):

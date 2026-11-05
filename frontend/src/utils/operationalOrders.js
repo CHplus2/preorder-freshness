@@ -8,6 +8,10 @@ export const dailyOrdersUrl=day=>'/admin/orders?view=daily'+(validReportDay(day)
 export const summaryDay=value=>validReportDay(value)?value:malaysiaDay();
 export const orderCustomerName=order=>order.fulfilment_snapshot?.customer?.name||order.address?.recipient_name||order.delivery_address?.recipient_name||order.user?.username||'Name not recorded';
 export const undatedOpenOrder=order=>!order.delivery_at&&!['delivered','cancelled'].includes(order.status);
+export const receiptView=order=>order.status==='cancelled'?'cancelled':order.status==='delivered'?'received':'not_received';
+export const receiptCounts=orders=>orders.reduce((counts,order)=>{
+ counts.all+=1;counts[receiptView(order)]+=1;return counts;
+},{all:0,not_received:0,received:0,cancelled:0});
 const earlierMethods={paypal:{label:'PayPal Sandbox',note:'This used test funds; no real money was transferred.'},
   escrow:{label:'Escrow · Sepolia',note:'This used test cryptocurrency; it is not a bank payment.'},
   wallet:{label:'Credit wallet',note:'This used test credits; it is not a bank payment.'},

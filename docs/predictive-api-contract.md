@@ -1981,3 +1981,23 @@ No application schema/API-write changes. Optional inventory-code SQL touches
 only recognised sample reference labels plus zero-change traceability entries;
 it preserves stock/date/cost/hold/allocation facts and does not alter RLS/tables.
 This does not change any predictive API, model, forecast or evaluation.
+
+### 6 November 2026 — receipt actions for refreshed individual orders
+
+`POST /api/admin/orders/receipts/` and
+`POST /api/admin/orders/:id/cancel/` retain their staff-only permission, version
+checks, atomic batch handling and explicit stock-return/payment separation.
+The `catalogue_refresh_sample` provenance marker now permits these operational
+actions for the refreshed individual order records. The forecast-only daily
+aggregate marker `freshcast_synthetic_history` continues to block customer
+receipt/cancellation actions. Provenance for **both** markers remains synthetic
+for forecast evaluation; editing an order does not turn constructed history into
+real customer evidence.
+
+The simple Orders queue keeps its default Not received filter. Status tabs show
+counts matching the current date/search filters, and the list states the number
+shown and the overall operational-order total. These are client-side summaries
+of the existing staff list response; no API fields or database schema changed.
+The refresh keeps order IDs and rows, with only the latest two non-cancelled
+orders upcoming. Older rows remain under Received, Cancelled or All orders.
+No additional data replacement or ID reset is part of this fix.

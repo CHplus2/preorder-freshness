@@ -12,8 +12,9 @@ try{
  const {CartContext}=await load('contexts/CartContext.js');
  const {AuthContext}=await load('contexts/AuthContext.js');
  const order={id:1,ordering_mode:'simple',status:'pending',updated_at:'2026-11-01T09:00:00Z',created_at:'2026-11-01T09:00:00Z',delivery_at:'2026-11-02T02:00:00Z',delivery_method:'standard',inventory_deducted:true,payment_status:'unpaid',total_amount:'24',shipping_fee:'5',fulfilment_snapshot:{},user:{username:'Test buyer'},items:[{id:1,product:1,product_name:'Rice meal',quantity:2,selling_details:{}}]};
+ const orderState={adminOrders:[order],fetchAdminOrders:()=>{},adminOrdersLoading:false,adminOrdersError:''};
  const providers=[[StoreContext,{store:{ordering_mode:'simple',delivery_open_hour:9,delivery_close_hour:21}}],
-  [OrderContext,{adminOrders:[order],fetchAdminOrders:()=>{},adminOrdersLoading:false,adminOrdersError:''}],
+  [OrderContext,orderState],
   [UIContext,{formatOrderNumber:id=>'ORD-'+id,formatPrice:x=>'RM '+Number(x).toFixed(2),setAlert:()=>{}}],
   [CartContext,{cart:[],addToCart:()=>{}}],[AuthContext,{isAuthenticated:false}]];
  const render=node=>renderToStaticMarkup(providers.reduceRight((child,[context,value])=>h(context.Provider,{value},child),h(MemoryRouter,null,node)));
@@ -21,6 +22,16 @@ try{
  const owner=render(h(AdminOrders));
  assert.match(owner,/Mark received/);assert.match(owner,/Not received/);assert.match(owner,/Payment records/);
  assert.doesNotMatch(owner,/Open Planner|Food ready|Preparation starts|Plan delivery &amp; preparation|Out for delivery/);
+ orderState.adminOrders=Array.from({length:158},(_,index)=>({...order,id:index+1,
+  status:index<2?'pending':index<152?'delivered':'cancelled',
+  payment_instructions:{catalogue_refresh_sample:{version:'1'}}}));
+ const queue=render(h(AdminOrders));
+ assert.match(queue,/Not received <span class="simple-orders-count">2<\/span>/);
+ assert.match(queue,/Received <span class="simple-orders-count">150<\/span>/);
+ assert.match(queue,/Cancelled <span class="simple-orders-count">6<\/span>/);
+ assert.match(queue,/All orders <span class="simple-orders-count">158<\/span>/);
+ assert.match(queue,/Showing 2 of 2 orders in this view · 158 total/);
+ orderState.adminOrders=[order];
  const {default:Progress}=await load('components/OrderProgress.jsx');
  assert.match(render(h(Progress,{order})),/Not received/);
  assert.match(render(h(Progress,{order:{...order,status:'delivered'}})),/Received/);

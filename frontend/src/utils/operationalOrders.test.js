@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {validReportDay,dailyOrdersUrl,orderCustomerName,undatedOpenOrder,earlierPayment,matchesOrderSearch} from './operationalOrders.js';
+import {validReportDay,dailyOrdersUrl,orderCustomerName,undatedOpenOrder,earlierPayment,matchesOrderSearch,receiptView,receiptCounts} from './operationalOrders.js';
 for(const day of ['2026-11-05','2024-02-29'])assert.equal(validReportDay(day),true);
 for(const day of ['2026-02-30','2025-02-29','2026-13-01','0000-01-01','x&day=1',null])assert.equal(validReportDay(day),false);
 assert.equal(dailyOrdersUrl('2026-11-05'),'/admin/orders?view=daily&date=2026-11-05');
@@ -19,3 +19,10 @@ assert.equal(matchesOrderSearch(row,'ORD-00003','ORD-00003'),true);
 assert.equal(matchesOrderSearch({...row,id:30},'ORD-00003','ORD-00030'),false);
 assert.equal(matchesOrderSearch({...row,id:1},'ORD-00003','ORD-00001'),false);
 assert.equal(matchesOrderSearch(row,'Accepted','ORD-00003'),true);
+
+const history=Array.from({length:158},(_,index)=>({id:index+1,status:index<2?'pending':index<152?'delivered':'cancelled'}));
+assert.deepEqual(receiptCounts(history),{all:158,not_received:2,received:150,cancelled:6});
+assert.equal(receiptView({status:'processing'}),'not_received');
+assert.equal(receiptCounts([]).all,0);
+assert.equal(history.filter(order=>receiptView(order)==='not_received').length,2);
+assert.equal(history.length,158);
