@@ -19,7 +19,8 @@ export default function GuidedMenu(){
  const adding=!!addingPlan;
  const [requestScope,setRequestScope]=useState('');
  const {cart=[],cartLoading,cartError,cartUpdating,promotion,chooseFulfilment,fulfilmentMethod,deliveryArea,chooseDeliveryDay,addSuggestedBasket}=useCart();
- const {isAuthenticated,accountKey}=useAuth(),{categories}=useProduct(),{formatPrice}=useUI();
+ const {isAuthenticated,accountKey}=useAuth(),{categories:allCategories}=useProduct(),{formatPrice}=useUI();
+ const categories=(Array.isArray(allCategories)?allCategories:[]).filter(category=>category.active_menu_count!==0);
  const generation=useRef(0),request=useRef(null),pending=useRef(false),errorRef=useRef(null),dateRef=useRef(null),helpId=useId();
  const scope=JSON.stringify([accountKey,isAuthenticated,cart.map(row=>[row.product.id,row.quantity,row.product.price]),fulfilmentMethod,deliveryArea]);
  const scopeRef=useRef(scope);

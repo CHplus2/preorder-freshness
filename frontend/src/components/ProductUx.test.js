@@ -12,6 +12,8 @@ try{
  assert.equal(renderToStaticMarkup(createElement(SellingDetails,{details:{}})),'');
  const {default:MenuPhotoField}=await server.ssrLoadModule('/src/components/MenuPhotoField.jsx');
  const upload=renderToStaticMarkup(createElement(MenuPhotoField,{value:'',onChange:()=>{}}));
+ const placeholder=renderToStaticMarkup(createElement(MenuPhotoField,{value:'/static/client-menu/salad-bowl.svg',onChange:()=>{}}));
+ assert.match(placeholder,/Temporary illustration selected/);assert.match(placeholder,/src="\/static\/client-menu\/salad-bowl.svg"/);assert.doesNotMatch(placeholder,/type="url"[^>]*value="\/static/);
  assert.match(upload,/type="file"/);assert.match(upload,/image\/jpeg,image\/png,image\/webp/);assert.match(upload,/Or paste an image URL/);
  const {default:CourierTrackingEditor}=await server.ssrLoadModule('/src/components/CourierTrackingEditor.jsx');
  const tracking=renderToStaticMarkup(createElement(CourierTrackingEditor,{order:{id:1,status:'pending',delivery_method:'standard'}}));

@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from ..models import Category, Product, OrderItem, CartItem
-from django.db.models import Count, Exists, OuterRef
+from django.db.models import Count, Exists, OuterRef, Q
 from django.db import transaction, OperationalError, IntegrityError
 from django.shortcuts import get_object_or_404
 from ..serializers import CategorySerializer, ProductSerializer
@@ -27,7 +27,7 @@ class IsAdminOrReadOnly(BasePermission):
 
 class CategoryManagement:
     def get_queryset(self):
-        rows = Category.objects.order_by('name', 'pk')
+        rows = Category.objects.annotate(active_menu_count=Count('product',filter=Q(product__selling_status='active'))).order_by('name', 'pk')
         # Management counts include archived menus, but are not public catalogue data.
         return rows.annotate(menu_count=Count('product')) if self.request.user.is_staff else rows
 

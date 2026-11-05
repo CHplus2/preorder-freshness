@@ -107,6 +107,24 @@ class GuestCheckoutTests(TestCase):
         repeated=self.place();self.assertEqual(repeated.data['order_id'],order.pk)
         self.assertEqual(IngredientConsumption.objects.count(),1)
 
+    def test_bulk_promotion_matches_quote_proof_and_placed_order(self):
+        self.store.bulk_minimum=10;self.store.bulk_discount_percent=10;self.store.save()
+        CartItem.objects.filter(user_id=self.client.get('/api/check-auth/').data['user_id']).update(quantity=9)
+        below=self.client.post('/api/orders/quote/',self.select,format='json')
+        self.assertEqual(below.status_code,200,below.data);self.assertEqual(below.data['pricing']['discount'],'0.00')
+        CartItem.objects.filter(user_id=self.client.get('/api/check-auth/').data['user_id']).update(quantity=10)
+        quote=self.client.post('/api/orders/quote/',self.select,format='json')
+        self.assertEqual(quote.status_code,200,quote.data)
+        self.assertEqual(quote.data['pricing'],dict(food_subtotal='120.00',discount='12.00',delivery_fee='4.50',total='112.50'))
+        proof=self.upload();self.assertEqual(proof['amount'],'112.50')
+        placed=self.place(payment='manual',payment_proof_id=proof['id'],expected_total='112.50')
+        self.assertEqual(placed.status_code,201,placed.data)
+        order=Order.objects.get(pk=placed.data['order_id'])
+        self.assertEqual(order.discount_amount,12);self.assertEqual(order.total_amount,108)
+        self.assertEqual(order.shipping_fee,Decimal('4.50'));self.assertEqual(order.payment_status,'unpaid')
+        self.stock.refresh_from_db();self.box.refresh_from_db()
+        self.assertEqual(self.stock.quantity,0);self.assertEqual(self.box.quantity,10)
+
     def test_name_phone_and_delivery_address_are_required_but_not_email(self):
         for change in ({'customer':{}},{'customer':{'name':'Buyer','phone':'hello'}},{'delivery_address':{}}):
             self.assertEqual(self.place(**change).status_code,400)

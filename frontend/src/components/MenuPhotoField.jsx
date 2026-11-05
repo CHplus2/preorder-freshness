@@ -25,7 +25,8 @@ export default function MenuPhotoField({ value, onChange, onBusy=noop, fieldErro
     finally{if(!current.signal.aborted){setBusy(false);onBusy(false);}}
   };
   const url = value.trim();
-  const supported = /^https?:\/\//i.test(url) || /^\/api\/menu-photos\/[0-9a-f]{64}\/$/.test(url);
+  const illustrative = /^\/static\/client-menu\/(salad-bowl|sandwich|rice-bowl)\.svg$/.test(url);
+  const supported = illustrative || /^https?:\/\//i.test(url) || /^\/api\/menu-photos\/[0-9a-f]{64}\/$/.test(url);
   const failed = url && (!supported || failedUrl === url);
 
   return (
@@ -36,13 +37,14 @@ export default function MenuPhotoField({ value, onChange, onBusy=noop, fieldErro
       <p id={id+'-upload-help'} className="menu-photo-help">JPEG, PNG or WebP, up to 4 MB. Photos are resized and saved securely. Save the menu to use the uploaded photo.</p>
       {busy && <p role="status">Uploading photo…</p>}{error && <p role="alert">{error}</p>}
       <label htmlFor={id}>Or paste an image URL</label>
-      <input id={id} type="url" inputMode="url" value={value.startsWith('/api/menu-photos/')?'':value}
+      <input id={id} type="url" inputMode="url" value={illustrative||value.startsWith('/api/menu-photos/')?'':value}
         data-menu-field="image_url" aria-invalid={Boolean(fieldError)}
         disabled={busy}
         placeholder="https://example.com/your-food-photo.jpg"
         aria-describedby={id + "-help"+(fieldError?' '+id+'-validation':'')}
         onChange={event => { setFailedUrl(null); onChange(event.target.value); }} />
       {fieldError && <p id={id+'-validation'} className="menu-field-error">{fieldError}</p>}
+      {illustrative && <p className="menu-photo-help">Temporary illustration selected. Upload your food photo or paste a URL to replace it.</p>}
       {value.startsWith('/api/menu-photos/') && <p className="menu-photo-help">Uploaded photo selected. Pasting a URL replaces it.</p>}
       <p id={id + "-help"} className="menu-photo-help">
         Paste a public image link, not a webpage link. Use a photo you own or have permission to use.

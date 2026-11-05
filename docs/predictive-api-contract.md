@@ -3,6 +3,36 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Client catalogue rollout — 5 November 2026
+
+Batch 1 adds an explicit owner-run SQL catalogue import from reviewed JSON: eight
+poster menus with prices/days, public Wrap & Bowl Kuch/Ayu story, owner-authorised
+estimated recipes and standard packaging assignments. It archives prior menus
+without changing their identity, stock or accepted order/payment facts. New
+packaging starts at zero. Existing bank settings, area prices, promotion settings
+and stock/evidence are preserved. No migration, model training or automatic
+production data write occurs. See `docs/wrap-bowl-client-batches.md` for batches
+and application instructions.
+
+`GET /api/categories/` and category detail now expose read-only
+`active_menu_count`, counting only active menus. Existing staff-only `menu_count`
+still includes every state. Menu tabs and date-finder category choices exclude
+zero-active categories even when a staff member previews the storefront; admin
+category management retains all categories and safe historical links.
+
+Menu image validation additionally accepts exactly three bundled static SVG
+illustration paths under `/static/client-menu/`. These authored assets contain no
+script/external references and are captioned illustrative. Arbitrary local SVG
+paths are rejected. The menu photo editor recognises them without putting a
+relative path in its external-URL input; normal sanitised photo upload remains
+available for the client's future photos.
+
+Bulk promotion remains existing behaviour: configured threshold/percentage is
+server-priced in quote, proof scope and order placement. The new regression
+checks that these amounts and placement stock deductions agree; receipt upload
+does not verify a bank payment. Source testing does not confirm the live store's
+current promotion percentage.
+
 ## Receipt submission, saved contact and bank payment wording — 5 November 2026
 
 No endpoint or schema changes. Customer-facing payment choices use **Bank QR /

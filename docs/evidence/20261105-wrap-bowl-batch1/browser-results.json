@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "8 poster menus visible",
+    "Salad bowls filter returns 5 menus",
+    "archived-only categories excluded from customer filters for guests and staff",
+    "all 8 local illustrations load",
+    "Ayu founder story renders",
+    "standard packaging items visible with honest zero opening stock",
+    "mobile menu has no horizontal overflow"
+  ],
+  "browser_errors": []
+}

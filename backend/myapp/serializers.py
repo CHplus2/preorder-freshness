@@ -10,6 +10,7 @@ from .models import (
 class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=100, trim_whitespace=True)
     menu_count = serializers.IntegerField(read_only=True)
+    active_menu_count = serializers.IntegerField(read_only=True)
 
     def validate_name(self, value):
         value = ' '.join(value.split())
@@ -24,7 +25,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'created_at', 'menu_count']
+        fields = ['id', 'name', 'created_at', 'menu_count', 'active_menu_count']
         read_only_fields = ['id', 'created_at']
 
 
@@ -76,6 +77,8 @@ class MenuImageReference(serializers.CharField):
     def to_internal_value(self, data):
         import re
         data = super().to_internal_value(data)
+        if data in {'/static/client-menu/salad-bowl.svg','/static/client-menu/sandwich.svg','/static/client-menu/rice-bowl.svg'}:
+            return data
         if re.fullmatch(r'/api/menu-photos/[0-9a-f]{64}/', data):
             from .models import MenuPhoto
             if not MenuPhoto.objects.filter(pk=data.split('/')[-2]).exists():

@@ -20,7 +20,8 @@ import "./ProductsPage.css";
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const { categories } = useProduct();
+  const { categories: allCategories } = useProduct();
+  const categories=(Array.isArray(allCategories)?allCategories:[]).filter(category=>category.active_menu_count!==0);
   const {store,error:storeError}=useStorefront();
   const searchInput=useRef(null);
 

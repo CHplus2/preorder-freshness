@@ -61,6 +61,17 @@ class CategoryManagementTests(TestCase):
         self.client.force_authenticate(self.owner)
         self.assertEqual(self.client.get(self.url).data['menu_count'], 3)
 
+    def test_public_active_count_excludes_archived_and_paused_menus(self):
+        for state in ['active','paused','archived']:
+            Product.objects.create(name=state,price=10,category=self.category,selling_status=state)
+        response=self.client.get(self.url)
+        self.assertEqual(response.data['active_menu_count'],1)
+        self.assertNotIn('menu_count',response.data)
+        self.client.force_authenticate(self.owner)
+        response=self.client.get(self.url)
+        self.assertEqual(response.data['active_menu_count'],1)
+        self.assertEqual(response.data['menu_count'],3)
+
     def test_delete_protects_even_paused_and_archived_menu_links(self):
         self.client.force_authenticate(self.owner)
         for state in ['active', 'paused', 'archived']:

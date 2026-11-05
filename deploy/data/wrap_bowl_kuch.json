@@ -1,0 +1,435 @@
+{
+  "version": 1,
+  "source": "Client menu poster and founder story supplied 5 November 2026",
+  "recipe_basis": "Owner-authorised editable estimates; confirm actual ingredients, allergens, yields and quantities with Ayu before real production. Rice quantities are dry weight; meat is raw trimmed weight. Dressing, sauces and mayonnaise are tracked as purchased ingredients; homemade versions need their own actual recipe.",
+  "stock_policy": "This catalogue import does not create received ingredient or packaging stock, alter shelf-life evidence, or modify existing stock quantities.",
+  "storefront": {
+    "name": "Wrap & Bowl Kuch",
+    "tagline": "Made with passion, served with love.",
+    "story": "Fresh salad bowls and satisfying Wanpaku sandwiches from a home kitchen in Kuching, Sarawak. Thoughtfully prepared to make good food a convenient part of your busy day.",
+    "founder_name": "Ayu Shafinaz",
+    "founder_intro": "Hi, I’m Ayu Shafinaz, founder of Wrap & Bowl Kuch, a small home-based food business in Kuching, Sarawak. A love for cooking became a way to share good food and earn extra income.",
+    "founding_story": "My journey began with something simple — my love for cooking. What started as a hobby slowly turned into an opportunity to earn extra income while doing something I genuinely enjoy. I never imagined that something I loved doing in my free time could grow into a little business of my own.\nFor me, food is more than just something we eat. It brings comfort, happiness and a little joy to our everyday lives.\nRunning a small business comes with its own challenges, but every step of this journey has taught me something valuable. What started as a side income has grown into something close to my heart — a little dream that I’m slowly building with passion, patience and a lot of love.\nWith love and gratitude,\nAyu Shafinaz",
+    "food_philosophy": "Through Wrap & Bowl Kuch, I hope to share the joy of good food with delicious, convenient meals that make healthier eating easier and more enjoyable. Our meals are thoughtfully prepared for people balancing busy daily routines.",
+    "signature_food": "Fresh Salad Bowls, Wanpaku Sandwiches and Monday Sukiya Beef Rice Bowls",
+    "service_area": "Kuching and Samarahan, Sarawak. Delivery Monday–Friday, subject to area availability.",
+    "whatsapp_number": "601114007567",
+    "founder_image_url": "",
+    "social_url": "",
+    "contact_email": ""
+  },
+  "raw_materials": [
+    {
+      "name": "Beef sukiyaki slices",
+      "unit": "g"
+    },
+    {
+      "name": "Black pepper",
+      "unit": "g"
+    },
+    {
+      "name": "Carrot",
+      "unit": "g"
+    },
+    {
+      "name": "Cherry tomato",
+      "unit": "g"
+    },
+    {
+      "name": "Chicken boneless trimmed",
+      "unit": "g"
+    },
+    {
+      "name": "Cooking oil",
+      "unit": "ml"
+    },
+    {
+      "name": "Cornflour",
+      "unit": "g"
+    },
+    {
+      "name": "Cucumber",
+      "unit": "g"
+    },
+    {
+      "name": "Egg",
+      "unit": "unit"
+    },
+    {
+      "name": "Lemon",
+      "unit": "g"
+    },
+    {
+      "name": "Lettuce",
+      "unit": "g"
+    },
+    {
+      "name": "Mayonnaise",
+      "unit": "ml"
+    },
+    {
+      "name": "Panko breadcrumbs",
+      "unit": "g"
+    },
+    {
+      "name": "Plain flour",
+      "unit": "g"
+    },
+    {
+      "name": "Red cabbage",
+      "unit": "g"
+    },
+    {
+      "name": "Rice",
+      "unit": "g"
+    },
+    {
+      "name": "Salad dressing",
+      "unit": "ml"
+    },
+    {
+      "name": "Salmon fillet",
+      "unit": "g"
+    },
+    {
+      "name": "Salt",
+      "unit": "g"
+    },
+    {
+      "name": "Sandwich bread",
+      "unit": "g"
+    },
+    {
+      "name": "Sesame seeds",
+      "unit": "g"
+    },
+    {
+      "name": "Soy sauce",
+      "unit": "ml"
+    },
+    {
+      "name": "Spring onion",
+      "unit": "g"
+    },
+    {
+      "name": "Sweetcorn kernels",
+      "unit": "g"
+    },
+    {
+      "name": "Teriyaki sauce",
+      "unit": "ml"
+    }
+  ],
+  "packaging_items": [
+    "Disposable fork",
+    "Disposable spoon",
+    "Dressing cup with lid (30 ml)",
+    "Food label",
+    "Greaseproof paper sheet",
+    "Rice bowl with lid (750 ml)",
+    "Salad bowl with lid (1000 ml)",
+    "Sandwich box (2 halves)",
+    "Sauce cup with lid (60 ml)"
+  ],
+  "menus": [
+    {
+      "name": "Chicken Grilled Salad",
+      "price": "13.00",
+      "category": "Salad bowls",
+      "description": "Grilled chicken salad bowl.",
+      "delivery_weekdays": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "image_url": "/static/client-menu/salad-bowl.svg",
+      "selling_details": {
+        "ordering_mode": "local_preorder",
+        "unit": "portion",
+        "contents": "One salad bowl"
+      },
+      "ingredients": {
+        "Lettuce": "60.000",
+        "Red cabbage": "20.000",
+        "Carrot": "15.000",
+        "Cucumber": "30.000",
+        "Cherry tomato": "35.000",
+        "Sweetcorn kernels": "25.000",
+        "Salad dressing": "25.000",
+        "Chicken boneless trimmed": "130.000",
+        "Cooking oil": "5.000",
+        "Salt": "1.000",
+        "Black pepper": "0.500"
+      },
+      "packaging": {
+        "Salad bowl with lid (1000 ml)": 1,
+        "Dressing cup with lid (30 ml)": 1,
+        "Disposable fork": 1,
+        "Food label": 1
+      }
+    },
+    {
+      "name": "Chicken Popcorn Salad",
+      "price": "13.00",
+      "category": "Salad bowls",
+      "description": "Popcorn chicken salad bowl.",
+      "delivery_weekdays": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "image_url": "/static/client-menu/salad-bowl.svg",
+      "selling_details": {
+        "ordering_mode": "local_preorder",
+        "unit": "portion",
+        "contents": "One salad bowl"
+      },
+      "ingredients": {
+        "Lettuce": "60.000",
+        "Red cabbage": "20.000",
+        "Carrot": "15.000",
+        "Cucumber": "30.000",
+        "Cherry tomato": "35.000",
+        "Sweetcorn kernels": "25.000",
+        "Salad dressing": "25.000",
+        "Chicken boneless trimmed": "130.000",
+        "Cooking oil": "15.000",
+        "Salt": "1.000",
+        "Black pepper": "0.500",
+        "Plain flour": "15.000",
+        "Cornflour": "20.000",
+        "Egg": "0.250"
+      },
+      "packaging": {
+        "Salad bowl with lid (1000 ml)": 1,
+        "Dressing cup with lid (30 ml)": 1,
+        "Disposable fork": 1,
+        "Food label": 1
+      }
+    },
+    {
+      "name": "Eggsquisite Salad",
+      "price": "12.00",
+      "category": "Salad bowls",
+      "description": "Egg salad bowl.",
+      "delivery_weekdays": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "image_url": "/static/client-menu/salad-bowl.svg",
+      "selling_details": {
+        "ordering_mode": "local_preorder",
+        "unit": "portion",
+        "contents": "One salad bowl"
+      },
+      "ingredients": {
+        "Lettuce": "60.000",
+        "Red cabbage": "20.000",
+        "Carrot": "15.000",
+        "Cucumber": "30.000",
+        "Cherry tomato": "35.000",
+        "Sweetcorn kernels": "25.000",
+        "Salad dressing": "25.000",
+        "Egg": "2.000",
+        "Salt": "0.500",
+        "Black pepper": "0.300"
+      },
+      "packaging": {
+        "Salad bowl with lid (1000 ml)": 1,
+        "Dressing cup with lid (30 ml)": 1,
+        "Disposable fork": 1,
+        "Food label": 1
+      }
+    },
+    {
+      "name": "Beef Sukiya Salad",
+      "price": "18.00",
+      "category": "Salad bowls",
+      "description": "Sliced beef salad bowl.",
+      "delivery_weekdays": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "image_url": "/static/client-menu/salad-bowl.svg",
+      "selling_details": {
+        "ordering_mode": "local_preorder",
+        "unit": "portion",
+        "contents": "One salad bowl"
+      },
+      "ingredients": {
+        "Lettuce": "60.000",
+        "Red cabbage": "20.000",
+        "Carrot": "15.000",
+        "Cucumber": "30.000",
+        "Cherry tomato": "35.000",
+        "Sweetcorn kernels": "25.000",
+        "Salad dressing": "25.000",
+        "Beef sukiyaki slices": "120.000",
+        "Teriyaki sauce": "20.000",
+        "Soy sauce": "5.000",
+        "Cooking oil": "5.000"
+      },
+      "packaging": {
+        "Salad bowl with lid (1000 ml)": 1,
+        "Dressing cup with lid (30 ml)": 1,
+        "Disposable fork": 1,
+        "Food label": 1
+      }
+    },
+    {
+      "name": "Wanpaku Chicken Katsu",
+      "price": "12.00",
+      "category": "Wanpaku sandwiches",
+      "description": "Chicken katsu Wanpaku sandwich.",
+      "delivery_weekdays": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "image_url": "/static/client-menu/sandwich.svg",
+      "selling_details": {
+        "ordering_mode": "local_preorder",
+        "unit": "box",
+        "contents": "One sandwich, cut into two halves"
+      },
+      "ingredients": {
+        "Sandwich bread": "80.000",
+        "Lettuce": "20.000",
+        "Red cabbage": "20.000",
+        "Carrot": "20.000",
+        "Cucumber": "20.000",
+        "Mayonnaise": "20.000",
+        "Chicken boneless trimmed": "110.000",
+        "Egg": "0.250",
+        "Plain flour": "15.000",
+        "Panko breadcrumbs": "20.000",
+        "Cooking oil": "10.000",
+        "Salt": "1.000",
+        "Black pepper": "0.500"
+      },
+      "packaging": {
+        "Sandwich box (2 halves)": 1,
+        "Greaseproof paper sheet": 1,
+        "Food label": 1
+      }
+    },
+    {
+      "name": "Wanpaku Chicken Grilled",
+      "price": "12.00",
+      "category": "Wanpaku sandwiches",
+      "description": "Grilled chicken Wanpaku sandwich.",
+      "delivery_weekdays": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "image_url": "/static/client-menu/sandwich.svg",
+      "selling_details": {
+        "ordering_mode": "local_preorder",
+        "unit": "box",
+        "contents": "One sandwich, cut into two halves"
+      },
+      "ingredients": {
+        "Sandwich bread": "80.000",
+        "Lettuce": "20.000",
+        "Red cabbage": "20.000",
+        "Carrot": "20.000",
+        "Cucumber": "20.000",
+        "Mayonnaise": "20.000",
+        "Chicken boneless trimmed": "110.000",
+        "Cooking oil": "5.000",
+        "Salt": "1.000",
+        "Black pepper": "0.500"
+      },
+      "packaging": {
+        "Sandwich box (2 halves)": 1,
+        "Greaseproof paper sheet": 1,
+        "Food label": 1
+      }
+    },
+    {
+      "name": "Salmon Grilled Salad Bowl",
+      "price": "28.00",
+      "category": "Salad bowls",
+      "description": "Grilled salmon salad bowl.",
+      "delivery_weekdays": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "image_url": "/static/client-menu/salad-bowl.svg",
+      "selling_details": {
+        "ordering_mode": "local_preorder",
+        "unit": "portion",
+        "contents": "One salad bowl"
+      },
+      "ingredients": {
+        "Lettuce": "60.000",
+        "Red cabbage": "20.000",
+        "Carrot": "15.000",
+        "Cucumber": "30.000",
+        "Cherry tomato": "35.000",
+        "Sweetcorn kernels": "25.000",
+        "Salad dressing": "25.000",
+        "Salmon fillet": "150.000",
+        "Lemon": "15.000",
+        "Cooking oil": "5.000",
+        "Salt": "1.000",
+        "Black pepper": "0.500"
+      },
+      "packaging": {
+        "Salad bowl with lid (1000 ml)": 1,
+        "Dressing cup with lid (30 ml)": 1,
+        "Disposable fork": 1,
+        "Food label": 1
+      }
+    },
+    {
+      "name": "Sukiya Beef Rice Bowl",
+      "price": "20.00",
+      "category": "Rice bowls",
+      "description": "Sliced beef rice bowl. Available on Mondays only.",
+      "delivery_weekdays": [
+        0
+      ],
+      "image_url": "/static/client-menu/rice-bowl.svg",
+      "selling_details": {
+        "ordering_mode": "local_preorder",
+        "unit": "portion",
+        "contents": "One rice bowl"
+      },
+      "ingredients": {
+        "Beef sukiyaki slices": "120.000",
+        "Teriyaki sauce": "20.000",
+        "Soy sauce": "5.000",
+        "Cooking oil": "5.000",
+        "Rice": "80.000",
+        "Cucumber": "20.000",
+        "Spring onion": "5.000",
+        "Sesame seeds": "2.000"
+      },
+      "packaging": {
+        "Rice bowl with lid (750 ml)": 1,
+        "Sauce cup with lid (60 ml)": 1,
+        "Disposable spoon": 1,
+        "Food label": 1
+      }
+    }
+  ]
+}
