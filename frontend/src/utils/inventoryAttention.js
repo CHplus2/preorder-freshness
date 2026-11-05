@@ -13,7 +13,7 @@ export function inventoryRecords(data) {
 }
 export function materialRecords(data) {
  const rows=responseList(data);
- if(rows.some(row=>!Number.isSafeInteger(row.id) || row.id<1 || typeof row.name!=='string' || typeof row.unit!=='string' || (row.storage_guidance!==undefined && !validStorageGuidance(row.storage_guidance))))throw invalidResponse();
+ if(rows.some(row=>!Number.isSafeInteger(row.id) || row.id<1 || typeof row.name!=='string' || typeof row.unit!=='string' || (row.active_menu_count!==undefined&&(!Number.isSafeInteger(row.active_menu_count)||row.active_menu_count<0)) || (row.storage_guidance!==undefined && !validStorageGuidance(row.storage_guidance))))throw invalidResponse();
  return rows;
 }
 export function expiryStatus(expiry, today) {

@@ -1,6 +1,6 @@
 # Wrap & Bowl Kuch client rollout
 
-Batch 1 prepared 5 November 2026 from the owner-supplied client poster and founder story.
+Batch 1 prepared 5 November 2026; stock, area and history refresh reviewed 6 November 2026. Source: the owner-supplied client poster, founder story and explicit confirmation that all affected operational records are fictional FYP data.
 
 This is a data import for the existing single-vendor application, not a new client-specific application fork. The five FYP objectives and frozen report/integration branches are unchanged.
 
@@ -9,9 +9,9 @@ This is a data import for the existing single-vendor application, not a new clie
 | Batch | Scope | State |
 | --- | --- | --- |
 | 1 | Eight menus/prices/days, Ayu’s story and public contact, estimated ingredient recipes, standard packaging assignments, temporary illustrations; verify bulk checkout | Prepared and tested locally; owner-run Supabase import required |
-| 2 | Inventory and packaging opening stock, relevant-material review, actual shelf-life evidence and stock/checkout deductions | Pending; batch 1 does not fabricate received stock |
-| 3 | Kuching–Samarahan delivery area list and provisional owner-editable fees, replacing Kuala Lumpur/Petaling Jaya choices | Pending; fees must be described as kitchen prices, not live courier quotes |
-| 4 | Inspect historical orders, missing dates and obsolete payment presentation; review traceable corrections and keep original financial evidence | Pending; no order, payment or allocation ledger changes in batch 1 |
+| 2 | Current ingredient/packaging views, dated stock checks, opening stock and reconciled allocations | Included in the coordinated owner-run operational refresh |
+| 3 | Kuching–Samarahan delivery areas and editable fees | Included in the same refresh so historical and future orders share valid areas |
+| 4 | Replace fictional historical menu/payment/date/allocation records, with private originals retained | Included in the same refresh; no real financial records were authorised for rewriting |
 
 ## Apply batch 1
 
@@ -61,3 +61,90 @@ An added integration test checks below-threshold behaviour, qualifying quote, pr
 ## Verification and limits
 
 See the [local evidence](evidence/20261105-wrap-bowl-batch1/README.md). No production Supabase connection or mutation was performed: this runtime has no configured TCP access grant for that database. Source publication alone does not install database records or prove a successful Vercel deployment.
+
+## Apply the coordinated stock, area and order-history refresh
+
+After batch 1, run the whole [operational refresh SQL](../deploy/sql/refresh_wrap_bowl_operations.sql)
+in Supabase SQL Editor, targeting the same `django_app` schema. Back up first.
+This is a one-time replacement of the owner-confirmed fictional project dataset,
+not a migration or a normal release/build action. Deploy the matching source
+before using the new stock-check controls. Expect **`status: refreshed`**, eight
+menus, 25 ingredient types, nine packaging types and 12 delivery areas. Reruns
+return `already_applied` and never refill consumed stock or rewrite later orders.
+
+The refresh retains user accounts, passkeys, bank instructions, receiving QR and
+original order IDs. It saves the original operational records in private existing
+OrderAmendment records before replacing them. Use the read-only [recovery export](../deploy/sql/export_wrap_bowl_refresh_backup.sql)
+to download those originals privately; do not post its output publicly. Original
+receipt images remain private, detached from the newly described orders so they
+are not misrepresented as evidence for changed amounts.
+
+It removes unrelated products/categories/materials/batches and rebuilds accepted
+recipes and packaging snapshots using the current client menus. Food quantities
+are one to ten selling units per line, with up to three lines per refreshed
+order. Missing dates are filled; delivery/collection uses offered weekdays and
+07:30–11:00 Malaysia time. The latest two non-cancelled records become upcoming
+unpaid cash deliveries; earlier non-cancelled records become received, paid
+history. Cancellations stay cancelled. QR/bank-transfer and cash replace obsolete
+payment choices. Sample receipt/refund amounts and food totals are recalculated
+consistently; these are constructed project entries, not bank-confirmed real
+transactions. The originals, including provider references, are in the private
+recovery archive.
+
+Historical ingredient batches are fully allocated and have zero balance; current
+opening lots retain enough for ten of **each** of the eight menus after the
+upcoming orders' allocations. Packaging has matching opening/allocation movements
+and the same ten-per-menu remaining target. Cancelled orders retain current
+packaging terms without claiming an allocation. Batch references use the normal
+`ABC-YYYYMMDD-NNN` style. Received dates and per-type planning deadlines are
+constructed project values, not verified physical counts or food-safety evidence.
+Inventory defaults to non-empty current-menu stock; Include empty batches exposes
+the retained allocation trace. The ingredient directory contains the 25 current
+material types. No new customer-facing “demo” heading is introduced.
+
+Customer reminder preferences are cleared on refreshed scenario records; no bank,
+email or courier request is sent by the script. Historical cooking reservations
+are removed. New orders placed normally keep the normal account, payment-proof,
+stock and reminder behaviour. The private provenance marker identifies rewritten
+history as generated when forecasts report accuracy. No model training/artifacts
+were changed; constructed project records cannot establish genuine sales or
+demand accuracy.
+
+### Proposed local delivery prices
+
+These are editable kitchen-set project prices for a Petra Jaya-area planning
+origin, not verified courier quotes or measured route distances. The former
+free-delivery threshold is cleared so the selected area's fee applies.
+
+| Area | Fee |
+| --- | --- |
+| Petra Jaya | RM 8 |
+| Samariang | RM 10 |
+| Matang Jaya | RM 12 |
+| Satok | RM 12 |
+| Kuching city centre | RM 12 |
+| Demak Laut | RM 14 |
+| Tabuan Jaya | RM 15 |
+| Stutong | RM 15 |
+| Batu Kawa | RM 16 |
+| Kota Sentosa | RM 18 |
+| Desa Ilmu, Kota Samarahan | RM 22 |
+| UNIMAS, Kota Samarahan | RM 24 |
+
+The exact client pickup address was not supplied. The collection location therefore
+asks customers to agree the point with the kitchen in Kuching; it does not claim
+an invented private house address. The pickup availability switch and receiving
+payment configuration are preserved. Edit the address and prices in Settings
+when the owner provides them.
+
+### Stock checks after setup
+
+Inventory → **Check ingredients & packaging for your menus** calculates dated
+requirements from current recipes and units of every offered menu. It is read-only,
+excludes held/expired/not-yet-received ingredient lots and does not reserve stock.
+The worksheet leaves actual receipt quantities and date evidence blank. Add batch
+and packaging Update stock open the existing controlled receipt flows. Current
+menu filters hide unrelated or empty records without silently deleting data.
+Checkout still rechecks and deducts the complete basket, once per request.
+
+See [batch 2 verification](evidence/20261106-wrap-bowl-operations/README.md).

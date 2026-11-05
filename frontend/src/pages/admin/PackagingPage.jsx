@@ -1,6 +1,6 @@
 import {useStorefront} from '../../contexts/StorefrontContext';
 import {useCallback,useEffect,useRef,useState} from 'react';
-import {Link} from 'react-router-dom';
+import {Link,useSearchParams} from 'react-router-dom';
 import axios from 'axios';
 import ModalDialog from '../../components/ModalDialog';
 import PageLoading from '../../components/PageLoading';
@@ -43,10 +43,13 @@ function History({item,onClose}) {
 
 export default function PackagingPage(){
  const {setAlert}=useUI();
+ const [params,setParams]=useSearchParams();
+ const requestedId=/^[1-9]\d{0,15}$/.test(params.get('item')||'')&&Number.isSafeInteger(Number(params.get('item')))?Number(params.get('item')):null;
+ const clearRequested=()=>setParams(old=>{const next=new URLSearchParams(old);next.delete('item');return next});
  const {isSessionCurrent}=useAuth();
  const simple=useStorefront()?.store?.ordering_mode!=='scheduled';
  const [items,setItems]=useState([]),[menus,setMenus]=useState([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(true),[loadError,setLoadError]=useState('');
- const [tab,setTab]=useState('stock'),[search,setSearch]=useState(''),[filter,setFilter]=useState('active'),[menuFilter,setMenuFilter]=useState('all'),[limit,setLimit]=useState(24);
+ const [tab,setTab]=useState('stock'),[search,setSearch]=useState(''),[filter,setFilter]=useState('current'),[menuFilter,setMenuFilter]=useState('all'),[limit,setLimit]=useState(24);
  const [modal,setModal]=useState(null),[draft,setDraft]=useState(initial),[formError,setFormError]=useState(''),[busy,setBusy]=useState(false);
  const [rows,setRows]=useState([]),[history,setHistory]=useState(null);
  const requestId=useRef(null),inFlight=useRef(false),readController=useRef(null),errorRef=useRef(null);
@@ -90,11 +93,13 @@ export default function PackagingPage(){
     else await axios.patch(`${BASE}${item.id}/`,{...data,expected_updated_at:version},config());
    }
    if(!isSessionCurrent())return;
+   if(modal.kind==='new')setFilter('active');
    setModal(null);setAlert({message:modal.kind==='adjust'?'Packaging stock updated.':modal.kind==='mapping'?'Menu packaging saved.':'Packaging saved.',type:'success'});window.dispatchEvent(new Event('inventory-updated'));await load();
   }catch(e){if(isSessionCurrent())setFormError(e.response?e.response.status===409?'This record changed while the form was open. Close the form, refresh records and review the latest stock before trying again.':apiError(e):e.isAxiosError?'The save could not be confirmed. Your entries are kept. Retry the same save or check History before starting another stock change.':e.message);}
   finally{inFlight.current=false;setBusy(false)}
  }
- const visible=items.filter(i=>(filter==='all'||filter==='low'&&i.low_stock||filter==='active'&&i.is_active)&&i.name.toLowerCase().includes(search.toLowerCase()));
+ const currentPackageIds=new Set(menus.filter(menu=>menu.selling_status==='active').flatMap(menu=>menu.requirements.map(row=>row.packaging_item)));
+ const visible=items.filter(i=>(!requestedId||i.id===requestedId)&&(!!requestedId||filter==='all'||filter==='current'&&i.is_active&&currentPackageIds.has(i.id)||filter==='low'&&i.low_stock||filter==='active'&&i.is_active)&&i.name.toLowerCase().includes(search.toLowerCase()));
  const visibleMenus=menus.filter(m=>m.selling_status!=='archived'&&(menuFilter!=='unmapped'||m.selling_status==='active'&&!m.requirements.length)&&m.name.toLowerCase().includes(search.toLowerCase()));
  const blocked=busy||refreshing||!!loadError;
  const lowCount=items.filter(i=>i.low_stock).length,unmapped=menus.filter(m=>m.selling_status==='active'&&!m.requirements.length).length;
@@ -103,10 +108,11 @@ export default function PackagingPage(){
  return <main className="packaging-page">
   <header className="packaging-heading"><div><p className="packaging-eyebrow">Kitchen stock</p><h1>Packaging</h1><p>Keep containers, lids, bags and labels ready for your orders.</p></div><div className="packaging-actions"><button type="button" disabled={busy||refreshing} onClick={refresh}>{refreshing?'Refreshing…':'Refresh records'}</button><button type="button" className="packaging-primary" disabled={blocked} onClick={()=>open('new')}>Add packaging</button></div></header>
   {loadError&&<div className="packaging-error" role="alert"><p>{loadError} Refresh records before making a stock change.</p><button type="button" disabled={refreshing} onClick={refresh}>Retry loading records</button></div>}
+  {params.has('item')&&<div className="packaging-notice" role="status"><p>{requestedId&&items.some(item=>item.id===requestedId)?'Showing the packaging selected in your stock check. Use Update stock to record pieces actually received.':'That packaging record is not available in the current list. Refresh records or review all packaging.'}</p><button type="button" onClick={clearRequested}>Show all packaging</button></div>}
   <div className="packaging-tabs" role="group" aria-label="Packaging views"><button type="button" aria-pressed={tab==='stock'} onClick={()=>{setTab('stock');setSearch('');setLimit(24)}}>Stock <span>{items.filter(i=>i.is_active).length}</span></button><button type="button" aria-pressed={tab==='menus'} onClick={()=>{setTab('menus');setMenuFilter('all');setSearch('');setLimit(24)}}>Menu packaging</button></div>
   {!loadError&&<div className="packaging-overview"><p><strong>{items.filter(i=>i.is_active).length}</strong> active packaging items</p><button type="button" onClick={()=>{setTab('stock');setFilter('low');setSearch('');setLimit(24)}}><strong>{lowCount}</strong> low or out of stock</button><button type="button" onClick={()=>{setTab('menus');setMenuFilter('unmapped');setSearch('');setLimit(24)}}><strong>{unmapped}</strong> active menus without packaging</button></div>}
   <section aria-busy={refreshing} className="packaging-workspace" aria-label={tab==='stock'?'Packaging stock':'Packaging by menu'}>
-   <div className="packaging-toolbar"><label>Search {tab==='stock'?'packaging':'menus'}<input type="search" value={search} onChange={e=>{setSearch(e.target.value);setLimit(24)}} placeholder={tab==='stock'?'Containers, bags, labels…':'Menu name…'}/></label>{tab==='stock'&&<label>Show<select value={filter} onChange={e=>{setFilter(e.target.value);setLimit(24)}}><option value="active">Active stock</option><option value="low">Low stock · {items.filter(i=>i.low_stock).length}</option><option value="all">All, including archived</option></select></label>}{tab==='menus'&&<label>Show<select value={menuFilter} onChange={e=>{setMenuFilter(e.target.value);setLimit(24)}}><option value="all">Current menus</option><option value="unmapped">Active menus without packaging</option></select></label>}</div>
+   <div className="packaging-toolbar"><label>Search {tab==='stock'?'packaging':'menus'}<input type="search" value={search} onChange={e=>{setSearch(e.target.value);setLimit(24)}} placeholder={tab==='stock'?'Containers, bags, labels…':'Menu name…'}/></label>{tab==='stock'&&<label>Show<select value={filter} onChange={e=>{setFilter(e.target.value);setLimit(24)}}><option value="current">Used by current menus</option><option value="active">All active stock</option><option value="low">Low stock · {items.filter(i=>i.low_stock).length}</option><option value="all">All, including archived</option></select></label>}{tab==='menus'&&<label>Show<select value={menuFilter} onChange={e=>{setMenuFilter(e.target.value);setLimit(24)}}><option value="all">Current menus</option><option value="unmapped">Active menus without packaging</option></select></label>}</div>
    {tab==='stock'?<>
     <p className="packaging-note">Quantities count individual pieces. {simple?'Packaging is deducted as soon as an order is placed, including unpaid QR and cash orders.':'New confirmed orders deduct the packaging assigned to their menus.'} {!simple&&'Review-only requests do not reserve stock until preparation starts.'}</p>
     <div className="packaging-stock-grid">{visible.slice(0,limit).map(item=><article className="packaging-stock-card" key={item.id}>

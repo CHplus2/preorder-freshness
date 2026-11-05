@@ -3,6 +3,40 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Stock readiness and coordinated client-data refresh — 6 November 2026
+
+Staff-only GET `/api/admin/stock-readiness/` accepts `date` (Malaysia today through
+90 days) and `quantity` (1–100 units per offered active menu). Unknown/duplicate
+parameters are rejected. It combines shared ingredient and packaging needs,
+filters offered weekdays/dates, and applies checkout's received/unheld/date-covered
+ingredient eligibility. Responses distinguish `covered`, `shortages`, `review`
+and `no_menus`; the request does not mutate/reserve stock. Raw-material list data
+adds read-only `active_menu_count`. Inventory and packaging default to current-menu
+supplies; empty ingredient lots remain accessible separately. CSV worksheets leave
+actual quantities received and expiry evidence blank. Packaging links target an
+item without changing its balance.
+
+The owner explicitly confirmed all affected operational data fictional and
+requested replacing it to match the client. The owner-run
+`deploy/sql/refresh_wrap_bowl_operations.sql` backs up originals privately in
+existing OrderAmendment records, then replaces old catalogue/stock/history with
+eight menus, 25 ingredients, nine packaging types and 12 local areas. It reconciles
+opening balances, accepted recipes, stock/packaging allocations, current payment
+choices, sample totals and offered morning handover dates. Original receipt bytes
+remain private and detached; customer reminder consent is not invented. Accounts,
+passkeys and receiving-payment configuration are preserved. A stored operation
+marker prevents reapplying the reset to later orders or consumed stock. No schema
+migration or automatic release-time data write is added.
+
+The new private `catalogue_refresh_sample.version=1` marker is recognised by
+existing forecast provenance checks. Model artifacts/training are unchanged;
+project-generated history is not evidence of real-world demand accuracy. There
+are no new customer-facing “demo” titles. See `docs/wrap-bowl-client-batches.md`
+for the precise sample-history transformation, planning-stock limits, provisional
+area prices, recovery export and owner-run application steps. Source publication
+and local verification do not establish a live Supabase mutation or Vercel Ready
+status.
+
 ## Client catalogue rollout — 5 November 2026
 
 Batch 1 adds an explicit owner-run SQL catalogue import from reviewed JSON: eight

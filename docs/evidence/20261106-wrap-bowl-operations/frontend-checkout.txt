@@ -1,0 +1,6 @@
+
+> frontend@0.0.0 test:guest
+> node src/components/GuestCheckout.test.js && node src/utils/deliveryAreaEditor.test.js
+
+Guest checkout: private identity, required contact/address, QR/cash policy, minute hours, area prices and protected staff sign-in passed.
+Delivery area edits, inherited fees, validation and prototype-safe names passed.

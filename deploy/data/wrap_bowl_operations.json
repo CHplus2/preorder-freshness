@@ -1,0 +1,234 @@
+{
+  "operation_id": "wrap_bowl_operations_v1",
+  "owner_confirmed_all_records_fictional": true,
+  "units_per_menu": 10,
+  "fee_basis": "Provisional kitchen-set prices for a Petra Jaya-area planning origin. These are editable project rates, not verified GrabExpress quotes. Confirm the actual collection point and route before real business use.",
+  "areas": [
+    {
+      "name": "Petra Jaya",
+      "fee": "8.00",
+      "street": "Jalan Pustaka",
+      "postcode": "93050"
+    },
+    {
+      "name": "Samariang",
+      "fee": "10.00",
+      "street": "Jalan Sultan Tengah",
+      "postcode": "93050"
+    },
+    {
+      "name": "Matang Jaya",
+      "fee": "12.00",
+      "street": "Jalan Matang",
+      "postcode": "93050"
+    },
+    {
+      "name": "Satok",
+      "fee": "12.00",
+      "street": "Jalan Satok",
+      "postcode": "93400"
+    },
+    {
+      "name": "Kuching city centre",
+      "fee": "12.00",
+      "street": "Jalan Padungan",
+      "postcode": "93100"
+    },
+    {
+      "name": "Demak Laut",
+      "fee": "14.00",
+      "street": "Jalan Demak",
+      "postcode": "93050"
+    },
+    {
+      "name": "Tabuan Jaya",
+      "fee": "15.00",
+      "street": "Jalan Wan Alwi",
+      "postcode": "93350"
+    },
+    {
+      "name": "Stutong",
+      "fee": "15.00",
+      "street": "Jalan Stutong",
+      "postcode": "93350"
+    },
+    {
+      "name": "Batu Kawa",
+      "fee": "16.00",
+      "street": "Jalan Batu Kawa",
+      "postcode": "93250"
+    },
+    {
+      "name": "Kota Sentosa",
+      "fee": "18.00",
+      "street": "Jalan Penrissen",
+      "postcode": "93250"
+    },
+    {
+      "name": "Desa Ilmu, Kota Samarahan",
+      "fee": "22.00",
+      "street": "Jalan Desa Ilmu",
+      "postcode": "94300"
+    },
+    {
+      "name": "UNIMAS, Kota Samarahan",
+      "fee": "24.00",
+      "street": "Jalan Datuk Mohammad Musa",
+      "postcode": "94300"
+    }
+  ],
+  "stock_profiles": [
+    {
+      "name": "Beef sukiyaki slices",
+      "storage_type": "frozen",
+      "planning_days": 90,
+      "location": "Freezer A - Labelled ingredient containers"
+    },
+    {
+      "name": "Black pepper",
+      "storage_type": "ambient",
+      "planning_days": 90,
+      "location": "Pantry A - Dry goods shelf"
+    },
+    {
+      "name": "Carrot",
+      "storage_type": "chilled",
+      "planning_days": 14,
+      "location": "Fridge A - Covered ingredient containers"
+    },
+    {
+      "name": "Cherry tomato",
+      "storage_type": "chilled",
+      "planning_days": 7,
+      "location": "Fridge A - Covered ingredient containers"
+    },
+    {
+      "name": "Chicken boneless trimmed",
+      "storage_type": "frozen",
+      "planning_days": 90,
+      "location": "Freezer A - Labelled ingredient containers"
+    },
+    {
+      "name": "Cooking oil",
+      "storage_type": "ambient",
+      "planning_days": 180,
+      "location": "Pantry A - Dry goods shelf"
+    },
+    {
+      "name": "Cornflour",
+      "storage_type": "ambient",
+      "planning_days": 90,
+      "location": "Pantry A - Dry goods shelf"
+    },
+    {
+      "name": "Cucumber",
+      "storage_type": "chilled",
+      "planning_days": 7,
+      "location": "Fridge A - Covered ingredient containers"
+    },
+    {
+      "name": "Egg",
+      "storage_type": "chilled",
+      "planning_days": 21,
+      "location": "Fridge A - Covered ingredient containers"
+    },
+    {
+      "name": "Lemon",
+      "storage_type": "chilled",
+      "planning_days": 14,
+      "location": "Fridge A - Covered ingredient containers"
+    },
+    {
+      "name": "Lettuce",
+      "storage_type": "chilled",
+      "planning_days": 7,
+      "location": "Fridge A - Covered ingredient containers"
+    },
+    {
+      "name": "Mayonnaise",
+      "storage_type": "chilled",
+      "planning_days": 14,
+      "location": "Fridge A - Covered ingredient containers"
+    },
+    {
+      "name": "Panko breadcrumbs",
+      "storage_type": "ambient",
+      "planning_days": 90,
+      "location": "Pantry A - Dry goods shelf"
+    },
+    {
+      "name": "Plain flour",
+      "storage_type": "ambient",
+      "planning_days": 90,
+      "location": "Pantry A - Dry goods shelf"
+    },
+    {
+      "name": "Red cabbage",
+      "storage_type": "chilled",
+      "planning_days": 14,
+      "location": "Fridge A - Covered ingredient containers"
+    },
+    {
+      "name": "Rice",
+      "storage_type": "ambient",
+      "planning_days": 180,
+      "location": "Pantry A - Dry goods shelf"
+    },
+    {
+      "name": "Salad dressing",
+      "storage_type": "chilled",
+      "planning_days": 7,
+      "location": "Fridge A - Covered ingredient containers"
+    },
+    {
+      "name": "Salmon fillet",
+      "storage_type": "frozen",
+      "planning_days": 60,
+      "location": "Freezer A - Labelled ingredient containers"
+    },
+    {
+      "name": "Salt",
+      "storage_type": "ambient",
+      "planning_days": 90,
+      "location": "Pantry A - Dry goods shelf"
+    },
+    {
+      "name": "Sandwich bread",
+      "storage_type": "ambient",
+      "planning_days": 5,
+      "location": "Pantry A - Dry goods shelf"
+    },
+    {
+      "name": "Sesame seeds",
+      "storage_type": "ambient",
+      "planning_days": 90,
+      "location": "Pantry A - Dry goods shelf"
+    },
+    {
+      "name": "Soy sauce",
+      "storage_type": "ambient",
+      "planning_days": 90,
+      "location": "Pantry A - Dry goods shelf"
+    },
+    {
+      "name": "Spring onion",
+      "storage_type": "chilled",
+      "planning_days": 7,
+      "location": "Fridge A - Covered ingredient containers"
+    },
+    {
+      "name": "Sweetcorn kernels",
+      "storage_type": "frozen",
+      "planning_days": 90,
+      "location": "Freezer A - Labelled ingredient containers"
+    },
+    {
+      "name": "Teriyaki sauce",
+      "storage_type": "ambient",
+      "planning_days": 90,
+      "location": "Pantry A - Dry goods shelf"
+    }
+  ],
+  "stock_basis": "Owner-authorised project inventory replacement; quantities and planning dates are constructed records, not verified physical counts or shelf-life evidence.",
+  "validated_for_apply": true
+}

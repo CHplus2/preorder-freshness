@@ -348,6 +348,7 @@ class StorageGuidanceSerializer(serializers.Serializer):
 
 
 class RawMaterialSerializer(serializers.ModelSerializer):
+    active_menu_count = serializers.IntegerField(read_only=True)
     storage_guidance = StorageGuidanceSerializer(many=True, required=False, allow_empty=True, max_length=3)
 
     def validate_storage_guidance(self, value):

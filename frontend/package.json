@@ -26,7 +26,8 @@
     "test:guest": "node src/components/GuestCheckout.test.js && node src/utils/deliveryAreaEditor.test.js",
     "test:reports": "node src/components/ClientReports.test.js && node src/utils/operationalOrders.test.js",
     "test:accounts": "node src/components/CustomerPasskeys.test.js",
-    "test:packaging": "node src/utils/packaging.test.js"
+    "test:packaging": "node src/utils/packaging.test.js",
+    "test:stock": "node src/utils/stockReadiness.test.js && node src/utils/inventoryAttention.test.js && node src/components/StockReadiness.test.js"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^9.1.1",

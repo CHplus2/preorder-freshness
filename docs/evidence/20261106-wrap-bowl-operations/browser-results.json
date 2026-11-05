@@ -1,0 +1,49 @@
+{
+  "checks": [
+    "Current catalogue has 25 non-empty ingredient batches; read-only stock check and worksheet do not mutate stock",
+    "Changed target invalidates old result; Add batch selects the ingredient without inventing a received quantity",
+    "Packaging target link opens one supply; real stock-receipt action updates its balance",
+    "Refreshed order history and print slip show current food, local handover details and available payment methods",
+    "New passkey customer sees 12 Kuching/Samarahan areas; RM13 food plus RM8 delivery places at 07:30 with once-only ingredient and four-piece packaging deduction"
+  ],
+  "browser_errors": [],
+  "areas": [
+    "Petra Jaya",
+    "Samariang",
+    "Matang Jaya",
+    "Satok",
+    "Kuching city centre",
+    "Demak Laut",
+    "Tabuan Jaya",
+    "Stutong",
+    "Batu Kawa",
+    "Kota Sentosa",
+    "Desa Ilmu, Kota Samarahan",
+    "UNIMAS, Kota Samarahan"
+  ],
+  "refresh_result": {
+    "menus": 8,
+    "orders": 5,
+    "status": "refreshed",
+    "message": "Current catalogue, stock, allocations and order history were refreshed together. Accounts, passkeys and receiving payment settings were preserved.",
+    "ingredients": 25,
+    "operation_id": "wrap_bowl_operations_v1",
+    "delivery_areas": [
+      "Petra Jaya",
+      "Samariang",
+      "Matang Jaya",
+      "Satok",
+      "Kuching city centre",
+      "Demak Laut",
+      "Tabuan Jaya",
+      "Stutong",
+      "Batu Kawa",
+      "Kota Sentosa",
+      "Desa Ilmu, Kota Samarahan",
+      "UNIMAS, Kota Samarahan"
+    ],
+    "packaging_types": 9,
+    "private_backup_order_id": 1,
+    "units_per_menu_available": 10
+  }
+}

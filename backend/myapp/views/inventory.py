@@ -1,5 +1,6 @@
 from rest_framework import generics
 from django.db import transaction
+from django.db.models import Count,Q
 from django.utils.dateparse import parse_datetime
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
@@ -20,7 +21,7 @@ class IsAdminOrReadOnly(BasePermission):
 # ------------------------------------------
 
 class RawMaterialListCreate(generics.ListCreateAPIView):
-    queryset = RawMaterial.objects.all().order_by("name")
+    queryset = RawMaterial.objects.annotate(active_menu_count=Count("product_ingredients__product",filter=Q(product_ingredients__product__selling_status="active"),distinct=True)).order_by("name")
     serializer_class = RawMaterialSerializer
     permission_classes = [IsAdminUser]
 

@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {stockReadiness,stockWorksheet} from './stockReadiness.js';
+const date='2026-11-09',quantity=2;
+const valid={date,quantity_per_menu:quantity,checked_at:'2026-11-05T12:00:00Z',state:'shortages',menus:[{id:1,name:'Salad',units:2}],excluded_menus:[],issues:[],ingredients:[{id:1,name:'Lettuce',unit:'g',required:'120.000',available:'20.000',shortfall:'100.000',menu_count:1}],packaging:[{id:2,name:'Lidded bowl',required:2,available:1,shortfall:1,is_active:true,menu_count:1}]};
+assert.equal(stockReadiness(valid,date,quantity),valid);
+for(const bad of [{...valid,date:'2026-11-10'},{...valid,quantity_per_menu:1},{...valid,state:'covered'},{...valid,ingredients:undefined},{...valid,ingredients:[{...valid.ingredients[0],available:'NaN'}]},{...valid,ingredients:[{...valid.ingredients[0],shortfall:'0.000'}]},{...valid,packaging:[{...valid.packaging[0],available:-1}]},{...valid,packaging:[valid.packaging[0],valid.packaging[0]]}])assert.throws(()=>stockReadiness(bad,date,quantity),{code:'INVALID_RESPONSE'});
+const covered={...valid,state:'covered',ingredients:[{...valid.ingredients[0],available:'120.000',shortfall:'0.000'}],packaging:[{...valid.packaging[0],available:2,shortfall:0}]};assert.equal(stockReadiness(covered,date,quantity).state,'covered');
+assert.equal(stockReadiness({...covered,state:'review',packaging:[{...covered.packaging[0],is_active:false}]},date,quantity).state,'review');
+assert.equal(stockReadiness({...valid,state:'no_menus',menus:[],ingredients:[],packaging:[]},date,quantity).state,'no_menus');
+const csv=stockWorksheet({...valid,ingredients:[{...valid.ingredients[0],name:'=SUM(1,2)'}]});
+assert.match(csv,/"'=SUM\(1,2\)"/);assert.match(csv,/"100.000","","","","",""/);assert.match(csv,/"Packaging","Lidded bowl","pieces","2","1","1"/);
+console.log('Stock readiness: strict scope, malformed reads, arithmetic consistency, inactive supplies and safe blank receipt worksheet passed.');

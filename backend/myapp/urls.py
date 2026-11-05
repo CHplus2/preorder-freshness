@@ -1,3 +1,4 @@
+from .views.stock_readiness import stock_readiness
 from .views.simple_delivery import delivery_time
 from .views.client_reports import daily_orders, period_sales, period_sales_csv, order_slip
 from .views.receipt import receipts, cancel_order
@@ -70,6 +71,7 @@ urlpatterns = [
     path('orders/<int:pk>/delivery-time/', delivery_time),
     path('admin/orders/receipts/', receipts),
     path('admin/orders/<int:pk>/cancel/', cancel_order),
+    path('admin/stock-readiness/', stock_readiness),
     path('admin/packaging/', packaging_items),
     path('admin/packaging/<int:pk>/', packaging_item),
     path('admin/packaging/<int:pk>/movements/', packaging_movements),

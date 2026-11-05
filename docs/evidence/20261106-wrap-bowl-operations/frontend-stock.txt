@@ -1,0 +1,20 @@
+
+> frontend@0.0.0 test:stock
+> node src/utils/stockReadiness.test.js && node src/utils/inventoryAttention.test.js && node src/components/StockReadiness.test.js
+
+Stock readiness: strict scope, malformed reads, arithmetic consistency, inactive supplies and safe blank receipt worksheet passed.
+✔ date boundaries use explicit Malaysia day rather than device midnight (12.841603ms)
+✔ held expired stock appears once and empty batches are excluded (1.072464ms)
+✔ stock value preserves zero cost and reports incomplete costs (1.014478ms)
+✔ priority ranges do not overlap and rows sort without mutating input (0.79926ms)
+✔ invalid calendar dates need review rather than rolling forward into usable shelf life (0.170612ms)
+✔ inventory reads keep malformed data out of stock counts and preserve genuine zero quantities (0.621338ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21.927429
+Stock check UI: honest read-only entry, bounded date/quantity and no invented availability before loading passed.

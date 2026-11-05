@@ -1,3 +1,4 @@
+import StockReadiness from '../../components/StockReadiness';
 import './InventoryWorkspace.css';
 import InventoryAttention from '../../components/InventoryAttention';
 import InventoryFeedback from '../../components/InventoryFeedback';
@@ -53,6 +54,11 @@ export default function AdminInventoryPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRawMaterial, setSelectedRawMaterial] = useState(()=>/^\d+$/.test(params.get('material')||'')?params.get('material'):"");
+  const [ingredientScope,setIngredientScope]=useState(()=>params.get('material')?'all':'current');
+  const [showEmptyBatches,setShowEmptyBatches]=useState(()=>params.has('material'));
+  const currentMaterialIds=useMemo(()=>new Set(rawMaterials.filter(row=>row.active_menu_count!==0).map(row=>row.id)),[rawMaterials]);
+  const scopedMaterials=rawMaterials.filter(row=>ingredientScope==='all'||currentMaterialIds.has(row.id));
+  const scopedInventoryItems=inventoryItems.filter(row=>Number(row.quantity)>0&&(ingredientScope==='all'||currentMaterialIds.has(row.raw_material)));
   const [freshnessFilter, setFreshnessFilter] = useState("");
   const [visibleCount,setVisibleCount]=useState(12);
   const batchHeading=useRef(null);
@@ -206,6 +212,8 @@ export default function AdminInventoryPage() {
           : true;
 
       return (
+        (showEmptyBatches||Number(item.quantity)>0) &&
+        (ingredientScope==='all'||currentMaterialIds.has(item.raw_material)) &&
         matchesSearch &&
         matchesRawMaterial &&
         matchesFreshness
@@ -213,6 +221,7 @@ export default function AdminInventoryPage() {
     });
   }, [
     inventoryItems,
+    ingredientScope,currentMaterialIds,showEmptyBatches,
     searchQuery,
     selectedRawMaterial,
     freshnessFilter,
@@ -438,14 +447,19 @@ export default function AdminInventoryPage() {
 
       {/* Summary */}
       <div className="inventory-summary" role="group" aria-label="Filter batches by recorded status">
-        {[["expiring","Expiry within 3 days"],["expired","Past recorded deadline"],["held","On hold"]].map(([status,label])=><button type="button" className="summary-card" key={status} disabled={refreshing || !!refreshError} aria-pressed={freshnessFilter===status} onClick={()=>chooseStatus(freshnessFilter===status?'':status)}><span>{label}</span><strong>{inventoryItems.filter(item=>inventoryCategory(item,today)===status).length}</strong><small>View batches</small></button>)}
+        {[["expiring","Expiry within 3 days"],["expired","Past recorded deadline"],["held","On hold"]].map(([status,label])=><button type="button" className="summary-card" key={status} disabled={refreshing || !!refreshError} aria-pressed={freshnessFilter===status} onClick={()=>chooseStatus(freshnessFilter===status?'':status)}><span>{label}</span><strong>{scopedInventoryItems.filter(item=>inventoryCategory(item,today)===status).length}</strong><small>View batches</small></button>)}
       </div>
 
-      <InventoryAttention disabled={refreshing || !!refreshError} items={inventoryItems} today={today} onReview={id=>openInventory(inventoryItems.find(item=>item.id===id))}/>
+      <StockReadiness today={today} disabled={formOpen||loading||refreshing||!!refreshError} onAddIngredient={id=>{if(rawMaterials.some(row=>row.id===id)){setError('');setNewInventoryItem({...emptyInventoryItem,raw_material:String(id),received_date:today});}}}/>
 
-      <h2 ref={batchHeading} tabIndex={-1} className="inventory-batch-heading">All stock batches · {inventoryItems.length}</h2>
+      <InventoryAttention disabled={refreshing || !!refreshError} items={scopedInventoryItems} today={today} onReview={id=>openInventory(inventoryItems.find(item=>item.id===id))}/>
+
+      <h2 ref={batchHeading} tabIndex={-1} className="inventory-batch-heading">{ingredientScope==='current'?'Current-menu stock batches':'All stock batches'} · {filteredInventory.length}</h2>
       {/* Filters */}
       <div className="inventory-controls">
+        <label>Ingredients shown<select value={ingredientScope} onChange={e=>{setIngredientScope(e.target.value);setSelectedRawMaterial('');setVisibleCount(12)}}><option value="current">Used by current menus</option><option value="all">All ingredients, including earlier menus</option></select></label>
+
+        <label className="inventory-show-empty"><span>Include empty batches</span><input type="checkbox" checked={showEmptyBatches} onChange={e=>{setShowEmptyBatches(e.target.checked);setVisibleCount(12)}}/></label>
 
         <label>Search batches<input
           type="search"
@@ -466,7 +480,7 @@ export default function AdminInventoryPage() {
             All Raw Materials
           </option>
 
-          {rawMaterials.map((material) => (
+          {scopedMaterials.map((material) => (
             <option
               key={material.id}
               value={material.id}
@@ -616,9 +630,9 @@ export default function AdminInventoryPage() {
       {visibleCount<filteredInventory.length && <div className="inventory-load-more"><button type="button" onClick={()=>setVisibleCount(count=>count+12)}>Show {Math.min(12,filteredInventory.length-visibleCount)} more batches</button></div>}
 
       {/* Raw Material Management */}
-      <details className="raw-material-section"><summary>Ingredient directory · {rawMaterials.length}</summary>
+      <details className="raw-material-section"><summary>Ingredient directory · {scopedMaterials.length}</summary>
 
-        <p>Manage ingredient units and reusable storage guidance. Stock is recorded separately in batches above.</p>
+        <p>Manage ingredient units and reusable storage guidance. The current-menu view shows ingredients used by active menus. Choose All ingredients above to review earlier or unassigned materials; their stock and history remain recorded.</p>
 
         <div className="admin-table-scroll responsive-records"><table className="admin-table">
 
@@ -633,7 +647,7 @@ export default function AdminInventoryPage() {
 
           <tbody>
 
-            {rawMaterials.map((material) => (
+            {scopedMaterials.map((material) => (
 
               <tr key={material.id}>
 
