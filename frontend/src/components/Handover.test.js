@@ -12,6 +12,13 @@ const whatsapp={...order,fulfilment_snapshot:{handover:{contact_method:'whatsapp
 const contact=orderContact(whatsapp);assert.ok(contact.whatsapp.startsWith('https://wa.me/60123456789?text='));assert.ok(decodeURIComponent(contact.whatsapp).includes('order #7'));assert.match(contact.text,/Malaysia/);
 assert.match(orderContact({...order,preparation_plan:{needs_review:true}}).text,/still needs kitchen confirmation/);
 assert.match(orderContact({...order,status:'shipped'}).text,/marked order #7 out for delivery/);
+const simple={...order,ordering_mode:'simple',address:{},fulfilment_snapshot:{customer:{phone:'0123456789'}},preparation_plan:{needs_review:true}};
+assert.equal(orderContact(simple).phone,'+60123456789');assert.match(orderContact(simple).whatsapp,/wa\.me\/60123456789/);
+assert.doesNotMatch(orderContact(simple).text,/needs kitchen confirmation/);
+assert.equal(orderContact({...simple,fulfilment_snapshot:{customer:{phone:'javascript:123456789'}}}).whatsapp,null);
+const fullAddress={...simple,delivery_address:{line1:'8 Example Lane, Kuching, Sarawak 93000'},fulfilment_snapshot:{customer:{name:'Accepted buyer',phone:'0123456789'}}};
+assert.deepEqual(recipientDetails(fullAddress).missing,[]);assert.equal(recipientDetails(fullAddress).name,'Accepted buyer');assert.equal(recipientDetails(fullAddress).reviewTime,false);
+assert.match(recipientDetails(fullAddress).text,/8 Example Lane, Kuching, Sarawak 93000/);
 const delivery={...order,payment_status:'unpaid',updated_at:'2026-10-27T00:00:00Z',
  delivery_address:{recipient_name:'Accepted recipient',phone:'0123456789',line1:'Accepted street',city:'Kuala Lumpur',state:'Kuala Lumpur',postal_code:'50000',country:'Malaysia'},
  address:{recipient_name:'Changed recipient',phone:'0199999999',line1:'Edited street'},

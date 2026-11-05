@@ -2,7 +2,7 @@ import {useId,useRef,useState} from 'react';
 import {Pencil,Trash2,Plus} from 'lucide-react';
 import {areaFee,changeDeliveryArea,removeDeliveryArea} from '../utils/deliveryAreaEditor';
 import './DeliveryAreasEditor.css';
-export default function DeliveryAreasEditor({store,onChange,disabled=false,error='',onSave,saving=false}){
+export default function DeliveryAreasEditor({store,onChange,disabled=false,error='',onSave,saving=false,saveLabel='Save delivery areas & fees',saveHelp='Save to apply this list and its fees to new orders. Existing orders keep their agreed area and fee.'}){
  const id=useId(),nameRef=useRef(null);
  const [editing,setEditing]=useState(null),[name,setName]=useState(''),[fee,setFee]=useState(''),[issue,setIssue]=useState('');
  const areas=store.delivery_areas||[];
@@ -23,7 +23,7 @@ export default function DeliveryAreasEditor({store,onChange,disabled=false,error
   <label className="delivery-free-toggle"><input type="checkbox" checked={free} disabled={disabled} onChange={e=>onChange({...store,free_delivery_minimum_myr:e.target.checked?'50.00':null})}/>Offer free delivery above a food subtotal</label>
   {free&&<label>Free delivery from food subtotal (RM)<input required type="number" min="0" max="999999.99" step="0.01" value={store.free_delivery_minimum_myr} disabled={disabled} onChange={e=>onChange({...store,free_delivery_minimum_myr:e.target.value})}/></label>}
   <p className="delivery-fee-summary">{free?(Number(store.free_delivery_minimum_myr)===0?'RM0 makes delivery free for every order.':`Area fees apply below RM ${Number(store.free_delivery_minimum_myr||0).toFixed(2)}. Orders reaching that food subtotal have free delivery.`):'Each delivery order pays its selected area’s fee. Self-collection has no delivery fee.'}</p></div>
-  {onSave&&<button className="delivery-area-save" type="button" disabled={disabled} onClick={save}>{saving?'Saving delivery fees…':'Save delivery areas & fees'}</button>}
-  <p className="delivery-area-save-help">Save to apply this list and its fees to new orders. Existing orders keep their agreed area and fee.</p>
+  {onSave&&<button className="delivery-area-save" type="button" disabled={disabled} onClick={save}>{saving?'Saving…':saveLabel}</button>}
+  <p className="delivery-area-save-help">{saveHelp}</p>
  </section>;
 }

@@ -25,6 +25,7 @@ export default function CartProvider({ children }) {
 
   const [cart,setCart]=useState([]);
   const { isAuthenticated, isGuest, customerAccount, accountKey, isSessionCurrent } = useAuth();
+  const walletEnabled=pricingReady&&promotion.ordering_mode==='scheduled'&&isAuthenticated&&!isGuest&&!customerAccount;
   const [fulfilment,setFulfilment]=useState(()=>{try{const saved=JSON.parse(sessionStorage.getItem('fulfilmentChoice') || '{}');return {account:accountKey,...saved,window_minutes:saved.window_minutes ?? 60}}catch{return {account:accountKey,window_minutes:60}}});
   const options=methodsFor(promotion);
   const fulfilmentMethod=fulfilment.account===accountKey && options.includes(fulfilment.method)?fulfilment.method:options[0] || 'standard';
@@ -85,14 +86,14 @@ export default function CartProvider({ children }) {
   },[isAuthenticated,refreshCart]);
 
   useEffect(() => {
-    if(!isAuthenticated||isGuest||customerAccount)return;
+    if(!walletEnabled)return;
     const controller=new AbortController();
     axios.get('/api/wallet/',{withCredentials:true,signal:controller.signal,timeout:30000}).then(({data})=>{setWallet(walletData(data));setWalletError('');}).catch(err=>{if(!axios.isCancel(err)){if(err.response?.status===404){setWallet(null);setWalletError('');}else setWalletError(readApiError(err,'Could not load your wallet.'));}}).finally(()=>{if(!controller.signal.aborted)setWalletLoading(false);});
     return()=>controller.abort();
-  }, [isAuthenticated,isGuest,customerAccount]);
+  }, [walletEnabled]);
 
   const refreshWallet = useCallback(async () => {
-    if(!isSessionCurrent())return;
+    if(!isSessionCurrent()||!walletEnabled)return;
     setWalletLoading(true); setWalletError('');
     try {
       const {data}=await axios.get('/api/wallet/',{withCredentials:true,timeout:30000});
@@ -102,7 +103,7 @@ export default function CartProvider({ children }) {
       if(err.response?.status===404) setWallet(null);
       else setWalletError(readApiError(err,'Could not load your wallet.'));
     } finally {if(isSessionCurrent())setWalletLoading(false);}
-  },[isSessionCurrent]);
+  },[isSessionCurrent,walletEnabled]);
 
   const createWallet = useCallback(async () => {
     if(!isSessionCurrent())return false;
@@ -236,7 +237,7 @@ export default function CartProvider({ children }) {
         addSuggestedBasket,
         removeFromCart,
         updateQuantity,
-        wallet, walletLoading, walletError, refreshWallet,
+        wallet:walletEnabled?wallet:null, walletLoading:walletEnabled?walletLoading:false, walletError:walletEnabled?walletError:'', refreshWallet,
         createWallet, topupWallet
       }}
     >

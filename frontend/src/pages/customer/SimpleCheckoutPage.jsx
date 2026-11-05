@@ -13,7 +13,7 @@ import CheckoutSummary from '../../components/CheckoutSummary';
 import CheckoutProofUpload from '../../components/CheckoutProofUpload';
 import useDeliveryQuote from '../../hooks/useDeliveryQuote';
 import {basketAvailabilityKey} from '../../utils/deliverySlots';
-import {fulfilmentKey,fulfilmentSelectionKey} from '../../utils/fulfilment';
+import {fulfilmentKey,fulfilmentSelectionKey,methodsFor} from '../../utils/fulfilment';
 import './CheckoutPage.css';
 import './SimpleCheckoutPage.css';
 
@@ -28,9 +28,10 @@ export default function SimpleCheckoutPage(){
  const [receiptUploaded,setReceiptUploaded]=useState(false);
  const pending=useRef(false),errorRef=useRef(null);
  const pickup=fulfilmentMethod==='pickup',transfer=manualPaymentAvailable(promotion,fulfilmentMethod),qr=!!promotion.duitnow_qr_url;
+ const accepting=methodsFor(promotion).length>0;
  const areaIssue=!pickup&&promotion?.delivery_areas?.length>0&&!promotion.delivery_areas.includes(deliveryArea);
  const key=JSON.stringify([preferredDelivery,basketAvailabilityKey(cart),fulfilmentKey(promotion,fulfilmentMethod,deliveryArea,0)]);
- const {quote,checking,error:quoteError,retry:retryQuote,retryable,shortage}=useDeliveryQuote({deliveryAt:preferredDelivery,selectionKey:key,method:fulfilmentMethod,area:deliveryArea,windowMinutes:0,enabled:!pricingRefreshing&&!areaIssue&&cart.length>0&&!cartLoading&&!cartUpdating&&!cartError});
+ const {quote,checking,error:quoteError,retry:retryQuote,retryable,shortage}=useDeliveryQuote({deliveryAt:preferredDelivery,selectionKey:key,method:fulfilmentMethod,area:deliveryArea,windowMinutes:0,enabled:accepting&&!pricingRefreshing&&!areaIssue&&cart.length>0&&!cartLoading&&!cartUpdating&&!cartError});
  const priceConfirmed=confirmedCheckoutPrice(quote?.plan?.pricing,{total,discount,shipping:SHIPPING_FEE,finalTotal})&&!pricingRefreshing;
  const refreshRequested=useRef('');
  const mismatch=Boolean(quote?.plan?.pricing&&!priceConfirmed&&!pricingRefreshing);
@@ -59,6 +60,7 @@ export default function SimpleCheckoutPage(){
  if(cartLoading&&!cart.length)return <main className="checkout-container"><h1>Checkout</h1><p role="status">Loading your basket…</p></main>;
  if(cartError||!pricingReady)return <main className="checkout-container"><h1>Checkout</h1><p role="alert">{cartError||pricingError||'Loading kitchen details…'}</p><button onClick={()=>{refreshCart();refreshPricing?.()}}>Refresh checkout</button></main>;
  if(!cart.length)return <main className="checkout-container"><h1>Your basket is empty</h1><Link to="/menu">Browse the menu</Link></main>;
+ if(!accepting)return <main className="checkout-container client-checkout"><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Ordering is temporarily unavailable</h1><section className="checkout-section"><p>The kitchen is not offering delivery or self-collection right now. Your basket is kept.</p><Link to="/contact">Contact the kitchen</Link></section></main>;
  if(isGuest)return <main className="checkout-container client-checkout"><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Sign in to place your preorder</h1><section className="checkout-section"><h2>Your basket is ready</h2><p>Create an account with your name, phone number and a passkey, or sign in to an existing account. No email, password or SMS needed.</p><p>Your basket stays with you when you create an account. Signing in loads that account’s basket and orders.</p><button type="button" className="checkout-submit account-checkout-link" onClick={()=>openCustomerAccess({next:'/checkout'})}>Create account or sign in</button><p className="checkout-hint">You’ll choose your time and payment after signing in.</p></section></main>;
  return <main className="checkout-container client-checkout"><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Checkout</h1><p className="checkout-intro">Your food, contact details and preferred time. Your account keeps your orders together.</p>
   <form onSubmit={submit} className="client-checkout-grid">

@@ -3,6 +3,39 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Delivery settings and final workflow review — 5 November 2026
+
+No schema, model or server endpoint changes. Simple-mode **Save delivery
+settings** now sends one existing storefront PATCH for availability, minute
+hours, declared areas, area fees, default fee and free-delivery threshold. It
+validates same-day start/end and confirms the normalized saved response. Turning
+delivery off sends only `delivery_enabled:false`, preserving hours/prices and
+unrelated name, bank and pickup drafts. The save action and anchor remain
+available while delivery is off. Pickup saves now show success feedback, and an
+enabled pickup without receiving QR configuration has a setup link. Accepted
+orders retain their saved terms/fees. No settings are changed by publication.
+
+If both handover methods are off, simple checkout preserves the basket and
+shows a closed-ordering message before time/payment entry. The existing server
+method/hour/stock/payment checks remain authoritative. Customer account details
+remain name/phone plus WebAuthn; no email/password/SMS was added to this flow.
+
+For open simple orders, manual contact uses the accepted customer phone when no
+separate handover phone is saved. A WhatsApp link prepares a draft for a valid
+number, even when contact defaults to phone; it never verifies a WhatsApp account,
+subscribes it or sends a message. Historical scheduled orders retain their saved
+contact preference. Courier-copy details use the accepted customer name and full
+free-text address without incorrectly requiring separate city/postcode fields.
+Simple orders do not acquire cooking-confirmation wording from old plan JSON.
+
+Simple-mode pages no longer fetch the unavailable legacy wallet. Its scheduled
+workflow remains intact. Settings → Advanced displays the build revision for
+release identification. Delivery-only owner reminders, recorded send receipts,
+worker authentication, budgets and the single existing schedule are unchanged;
+new phone/passkey accounts still have no automatic email/SMS/WhatsApp subscription.
+Mocked SMTP tests establish local reminder behaviour, not a live scheduled run or
+inbox delivery. Source publication remains separate from Vercel Ready status.
+
 ## Daily receipt filters and report review — 5 November 2026
 
 No schema or forecasting/model change. Staff-only `GET

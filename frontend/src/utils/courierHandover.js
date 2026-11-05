@@ -8,11 +8,12 @@ export function recipientDetails(order){
  const address=orderAddress(order);
  const fromSnapshot=!!(order.delivery_address && typeof order.delivery_address==='object' && !Array.isArray(order.delivery_address) && Object.keys(order.delivery_address).length);
  const saved=handoverDetails(order);
- const name=clean(address.recipient_name),phone=contactNumber(saved.contact_phone);
+ const name=clean(order.fulfilment_snapshot?.customer?.name)||clean(address.recipient_name),phone=contactNumber(saved.contact_phone);
  const lines=[clean(address.line1),clean(address.line2),[clean(address.postal_code),clean(address.city)].filter(Boolean).join(' '),clean(address.state),clean(address.country)].filter(Boolean);
- const missing=[!name && 'recipient name',!phone && 'usable recipient phone',!clean(address.line1) && 'street address',!clean(address.city) && 'city',!clean(address.postal_code) && 'postcode'].filter(Boolean);
+ const simple=order.ordering_mode==='simple';
+ const missing=[!name && 'recipient name',!phone && 'usable recipient phone',!clean(address.line1) && 'street address',!simple&&!clean(address.city) && 'city',!simple&&!clean(address.postal_code) && 'postcode'].filter(Boolean);
  const arrangement=saved.mode==='agreed_place'?`Leave only at the customer-authorised place: ${clean(saved.location) || 'confirm the location with the customer'}.`:'Hand to a person. Call the recipient if nobody answers; no unattended drop-off is authorised.';
- const reviewTime=!!order.preparation_plan?.needs_review || !Number.isFinite(Date.parse(order.delivery_at || ''));
+ const reviewTime=!simple&&!!order.preparation_plan?.needs_review || !Number.isFinite(Date.parse(order.delivery_at || ''));
  const text=[`Food delivery · order #${order.id}`,`Recipient: ${name || 'confirm name with customer'}`,`Recipient phone: ${phone || 'confirm number with customer'}`,
   `Delivery address: ${lines.length?lines.join(', '):'confirm address with customer'}`,
   `${reviewTime?'Requested arrival (not confirmed)':'Agreed arrival'}: ${arrivalLabel(order)}`,

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {changeDeliveryArea,removeDeliveryArea,areaFee,deliveryFeeError} from './deliveryAreaEditor.js';
+import {changeDeliveryArea,removeDeliveryArea,areaFee,deliveryFeeError,deliverySettingsPayload} from './deliveryAreaEditor.js';
 const store={delivery_areas:['North','South'],delivery_area_fees:{North:'4.50'},delivery_fee_myr:'5.00',free_delivery_minimum_myr:null};
 const added=changeDeliveryArea(store,null,'  West  town ','8');
 assert.deepEqual(added.delivery_areas,['North','South','West town']);assert.equal(added.delivery_area_fees['West town'],'8.00');
@@ -14,4 +14,10 @@ assert.throws(()=>changeDeliveryArea(store,null,'','5'),/name/);
 assert.throws(()=>changeDeliveryArea(store,null,'X'.repeat(81),'5'),/80/);
 const special=changeDeliveryArea(store,null,'__proto__','0');assert.equal(Object.getPrototypeOf(special.delivery_area_fees),Object.prototype);assert.equal(special.delivery_area_fees.__proto__,'0.00');
 assert.equal(deliveryFeeError(store),'');assert.match(deliveryFeeError({...store,free_delivery_minimum_myr:''}),/threshold/);
+const payload=deliverySettingsPayload({...store,delivery_enabled:true,delivery_start_time:'07:30:00',delivery_end_time:'11:00:00',name:'Unsaved kitchen name',manual_payment_enabled:false});
+assert.equal(payload.delivery_enabled,true);assert.equal(payload.delivery_start_time,'07:30');assert.equal(payload.delivery_end_time,'11:00');
+assert.deepEqual(payload.delivery_area_fees,{North:'4.50'});assert.equal(Object.hasOwn(payload,'name'),false);assert.equal(Object.hasOwn(payload,'manual_payment_enabled'),false);
+assert.deepEqual(deliverySettingsPayload({...store,delivery_enabled:false,delivery_start_time:'bad',delivery_fee_myr:'bad'}),{delivery_enabled:false});
+assert.throws(()=>deliverySettingsPayload({...store,delivery_start_time:'11:00',delivery_end_time:'07:30'}),/end after/);
+assert.throws(()=>deliverySettingsPayload({...store,delivery_start_time:'25:00'}),/valid delivery/);
 console.log('Delivery area edits, inherited fees, validation and prototype-safe names passed.');

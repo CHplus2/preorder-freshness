@@ -9,7 +9,7 @@ export function contactNumber(value=''){
 }
 export function handoverDetails(order){
  const saved=order.fulfilment_snapshot?.handover || {};
- return {contact_phone:saved.contact_phone || orderAddress(order).phone || '',contact_method:saved.contact_method || 'phone',mode:saved.mode || 'in_person',location:saved.location || '',notes:saved.notes || ''};
+ return {contact_phone:saved.contact_phone || order.fulfilment_snapshot?.customer?.phone || orderAddress(order).phone || '',contact_method:saved.contact_method || 'phone',mode:saved.mode || 'in_person',location:saved.location || '',notes:saved.notes || ''};
 }
 export function orderAddress(order){
  const saved=order.delivery_address;
@@ -21,7 +21,7 @@ export function orderContact(order){
  const pickup=order.delivery_method==='pickup';
  let text;
  if(order.status==='shipped')text=`The kitchen has marked order #${order.id} out for delivery. Please arrange for someone to receive it. Check My orders for the courier tracking link, if provided.`;
- else if(order.preparation_plan?.needs_review)text=`About order #${order.id}: your requested ${pickup?'collection':'delivery'} time is ${when}. It still needs kitchen confirmation. Please contact us to agree arrangements.`;
+ else if(order.ordering_mode!=='simple'&&order.preparation_plan?.needs_review)text=`About order #${order.id}: your requested ${pickup?'collection':'delivery'} time is ${when}. It still needs kitchen confirmation. Please contact us to agree arrangements.`;
  else text=`A reminder about order #${order.id}: ${pickup?'collection':'delivery'} is scheduled for ${when}. ${pickup?'Please be ready to collect your order.':'Please arrange for someone to receive your food.'} Let us know if your arrangements have changed.`;
- return {phone,text,whatsapp:saved.contact_method==='whatsapp' && phone?`https://wa.me/${phone.slice(1)}?text=${encodeURIComponent(text)}`:null};
+ return {phone,text,whatsapp:(saved.contact_method==='whatsapp'||order.ordering_mode==='simple') && phone?`https://wa.me/${phone.slice(1)}?text=${encodeURIComponent(text)}`:null};
 }
