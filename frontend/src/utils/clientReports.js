@@ -31,6 +31,7 @@ export function dailyReport(data, expectedDate, expectedPage) {
   || typeof data.has_more !== 'boolean' || typeof data.menus_truncated !== 'boolean'
   || !amounts(data, ['food_total','delivery_fee','order_value']) || !menus(data.menus)
   || !Array.isArray(data.orders) || data.orders.length > 50) throw invalidResponse();
+ if(data.undated_open_count!==undefined&&!count(data.undated_open_count))throw invalidResponse();
  data.orders.forEach(row => readSlip(row, row.id));
  if (data.orders.some(row => !Number.isSafeInteger(row.id) || row.id < 1)
   || new Set(data.orders.map(row => row.id)).size !== data.orders.length) throw invalidResponse();

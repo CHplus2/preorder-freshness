@@ -1,3 +1,5 @@
+import EarlierPaymentNote from '../../components/EarlierPaymentNote';
+import {earlierPayment} from '../../utils/operationalOrders';
 import {useAuth} from '../../contexts/AuthContext';
 import {useStorefront} from '../../contexts/StorefrontContext';
 import SimpleDeliveryChange from '../../components/SimpleDeliveryChange';
@@ -66,7 +68,7 @@ export default function OrdersPage() {
             {/* HEADER */}
             <div className="order-header">
               <div>
-                <h2 className="order-id">{order.status==='pending' && order.preparation_plan?.needs_review?`${handoverLabel(order)} request`:'Order'} #{formatOrderNumber(order.id)}</h2>
+                <h2 className="order-id">{!simple && order.status==='pending' && order.preparation_plan?.needs_review?`${handoverLabel(order)} request`:'Order'} #{formatOrderNumber(order.id)}</h2>
               </div>
 
               <span className={`status-badge status-${order.status}`}>
@@ -74,7 +76,7 @@ export default function OrdersPage() {
               </span>
             </div>
 
-            <dl className="customer-order-arrival"><div><dt>{order.status==='pending' && order.preparation_plan?.needs_review?`Requested ${handoverLabel(order).toLowerCase()}`:handoverLabel(order)}</dt><dd>{arrivalLabel(order)}</dd></div><div><dt>How you receive it</dt><dd>{methodLabel(order.delivery_method)}</dd></div></dl>
+            <dl className="customer-order-arrival"><div><dt>{!simple && order.status==='pending' && order.preparation_plan?.needs_review?`Requested ${handoverLabel(order).toLowerCase()}`:handoverLabel(order)}</dt><dd>{arrivalLabel(order)}</dd></div><div><dt>How you receive it</dt><dd>{methodLabel(order.delivery_method)}</dd></div></dl>
 
             {/* BODY */}
             <div className="order-body">
@@ -98,8 +100,9 @@ export default function OrdersPage() {
             </div>
             <OrderProgress order={order}/><ManualPayment order={order}/>
             {!simple && order.payment_method==='deferred' && <DeferredOrderPayment key={order.id+order.updated_at} order={order} onSaved={fetchOrders}/>}
-            {order.payment_method==='escrow' && <section className="paypal-order-note" aria-label="Escrow payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>Escrow payment</strong><span>Sepolia</span></div><p>{order.payment_status==='paid'?'Verified funding recorded. Funds are held or credited under the escrow rules; withdrawal is separate.':order.payment_status==='refunded'?'Buyer refund credit verified. Withdraw funds through the escrow payment page.':'Funding has not been verified yet. Open this saved payment to fund or check it.'}</p><Link to={'/payment/escrow?order='+order.id}>View escrow payment<ChevronRight size={16} aria-hidden="true"/></Link></section>}
-            {order.payment_method==='paypal' && <section className="paypal-order-note" aria-label="PayPal payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>PayPal</strong><span>Test payment</span></div><p>{order.payment_status==='paid'?'Payment recorded. No real money was transferred.':order.payment_status==='refunded'?'Refund recorded. This was a Sandbox test payment.':'Test payment — no real money is transferred. Review this saved payment before trying again.'}</p><Link to={'/payment/paypal?order='+order.id}>{order.payment_status==='paid' || order.payment_status==='refunded'?'View payment details':'Continue to payment'}<ChevronRight size={16} aria-hidden="true"/></Link></section>}
+            {simple&&earlierPayment(order)&&<EarlierPaymentNote order={order}/>}
+            {!simple && order.payment_method==='escrow' && <section className="paypal-order-note" aria-label="Escrow payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>Escrow payment</strong><span>Sepolia</span></div><p>{order.payment_status==='paid'?'Verified funding recorded. Funds are held or credited under the escrow rules; withdrawal is separate.':order.payment_status==='refunded'?'Buyer refund credit verified. Withdraw funds through the escrow payment page.':'Funding has not been verified yet. Open this saved payment to fund or check it.'}</p><Link to={'/payment/escrow?order='+order.id}>View escrow payment<ChevronRight size={16} aria-hidden="true"/></Link></section>}
+            {!simple && order.payment_method==='paypal' && <section className="paypal-order-note" aria-label="PayPal payment"><div className="paypal-order-heading"><ReceiptText size={18} aria-hidden="true"/><strong>PayPal</strong><span>Test payment</span></div><p>{order.payment_status==='paid'?'Payment recorded. No real money was transferred.':order.payment_status==='refunded'?'Refund recorded. This was a Sandbox test payment.':'Test payment — no real money is transferred. Review this saved payment before trying again.'}</p><Link to={'/payment/paypal?order='+order.id}>{order.payment_status==='paid' || order.payment_status==='refunded'?'View payment details':'Continue to payment'}<ChevronRight size={16} aria-hidden="true"/></Link></section>}
             <details className="customer-order-more"><summary>Receipt & order preferences<ChevronRight size={17} aria-hidden="true"/></summary><div className="customer-order-more-body">
               <dl className="customer-order-details"><div><dt>{isPickup(order)?'Collection fee':'Delivery fee'}</dt><dd>{Number(order.shipping_fee)===0?'Free':`RM ${order.shipping_fee}`}</dd></div>{Number(order.discount_amount)>0 && <div><dt>Bulk discount</dt><dd>−RM {order.discount_amount}</dd></div>}</dl>
             <OrderFulfilment order={order}/>{order.address && <details className="dk-panel customer-order-address"><summary>Delivery address</summary><p>{order.address.recipient_name}<br/>{order.address.line1}{order.address.line2 && <><br/>{order.address.line2}</>}<br/>{order.address.postal_code} {order.address.city}, {order.address.state}<br/>{order.address.phone}</p></details>}

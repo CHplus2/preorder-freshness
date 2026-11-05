@@ -84,6 +84,27 @@ class ClientReportTests(TestCase):
         self.order(delivery_at=None)
         self.assertEqual([o['id'] for o in self.daily().json()['orders']], [first.pk, last.pk])
 
+    def test_daily_counts_undated_open_orders_without_using_placement_date(self):
+        self.order(delivery_at=None)
+        self.order(delivery_at=None,status='delivered')
+        self.order(delivery_at=None,status='cancelled')
+        self.order(delivery_at=None,payment_instructions={'freshcast_synthetic_history':{'version':'1'}})
+        current=self.order()
+        data=self.daily().json()
+        self.assertEqual(data['undated_open_count'],1)
+        self.assertEqual(data['count'],1);self.assertEqual(data['quantity'],3)
+        self.assertEqual([row['id'] for row in data['orders']],[current.pk])
+        self.assertEqual(Order.objects.filter(delivery_at__isnull=True).count(),4)
+
+    def test_retired_test_methods_without_event_rows_are_not_real_sales(self):
+        for method in ('paypal','escrow','wallet','synthetic_demo'):
+            self.order(status='delivered',payment_status='paid',payment_method=method)
+        self.order(status='delivered',payment_status='paid',payment_method='manual')
+        result=self.sales().json();self.assertEqual(result['paid_received_orders'],1)
+        self.assertEqual(result['excluded_test_orders'],4);self.assertEqual(result['total_sales'],'29.50')
+        self.assertEqual(Order.objects.filter(payment_status='paid').count(),5)
+        self.assertFalse(PaymentEvent.objects.exists())
+
     def test_sales_counts_orders_once_with_multiple_lines_and_discount(self):
         order = self.order(status='delivered', payment_status='paid')
         OrderItem.objects.create(order=order, product=None, product_name='Deleted menu', unit_price='2.50', quantity=2, subtotal='5.00')

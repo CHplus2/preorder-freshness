@@ -18,6 +18,7 @@ const sales={start:'2026-11-01',end:'2026-11-30',paid_received_orders:1,unpaid_r
 assert.equal(malaysiaDay(new Date('2026-11-02T16:01:00Z')),'2026-11-03');
 assert.equal(malaysiaDay(new Date('2026-11-02T15:59:00Z')),'2026-11-02');
 assert.equal(slipUrl(12),'/admin/orders/12/print');
+assert.throws(()=>dailyReport({...daily,undated_open_count:-1},daily.date,1),{code:'INVALID_RESPONSE'});
 assert.equal(dailyReport(daily,'2026-11-03',1),daily);
 assert.equal(periodReport(sales,sales.start,sales.end),sales);
 assert.equal(printableSlip(order,12),order);
@@ -46,5 +47,22 @@ try{
  const initial=renderToStaticMarkup(h(MemoryRouter,null,h('div',null,h(DailyOrderReport),h(PeriodSalesReport))));
  assert.match(initial,/Daily order summary/);assert.match(initial,/Delivery \/ collection date/);assert.match(initial,/Sales by delivery date/);
  assert.match(initial,/Loading report/);assert.doesNotMatch(initial,/RM 0\.00|Download sales CSV/);
+ const {StoreContext}=await server.ssrLoadModule('/src/contexts/StorefrontContext.js');
+ const {OrderContext}=await server.ssrLoadModule('/src/contexts/OrderContext.js');
+ const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
+ const {default:SimpleOrders}=await server.ssrLoadModule('/src/pages/admin/SimpleOrdersPage.jsx');
+ const queueOrder={...order,total_amount:'25.00',shipping_fee:'4.50',status:'pending',user:{username:'opaque-user'},fulfilment_snapshot:{customer:{name:'Saved customer name',phone:'+60123456789'}},items:[{id:1,product_name:'Saved meal',quantity:3,selling_details:{}}]};
+ const queue=entry=>renderToStaticMarkup(h(MemoryRouter,{initialEntries:[entry]},h(StoreContext.Provider,{value:{store:{ordering_mode:'simple'}}},h(OrderContext.Provider,{value:{adminOrders:[queueOrder],fetchAdminOrders:()=>{},adminOrdersLoading:false}},h(UIContext.Provider,{value:{formatOrderNumber:id=>'ORD-'+id,setAlert:()=>{}}},h(SimpleOrders))))));
+ const ops=queue('/admin/orders');assert.match(ops,/Orders workspace/);assert.match(ops,/Daily summary/);assert.match(ops,/Saved customer name/);assert.doesNotMatch(ops,/>opaque-user</);assert.match(ops,/Preview &amp; print/);
+ const dailyView=queue('/admin/orders?view=daily&date=2026-11-03');assert.match(dailyView,/Daily order summary/);assert.match(dailyView,/value="2026-11-03"/);assert.doesNotMatch(dailyView,/Select for receipt|Search orders/);
+ const {default:Earlier}=await server.ssrLoadModule('/src/components/EarlierPaymentNote.jsx');
+ const old=renderToStaticMarkup(h(Earlier,{order:{payment_method:'paypal',payment_status:'paid'}}));assert.match(old,/Earlier payment record/);assert.match(old,/test funds/);assert.doesNotMatch(old,/href=|button|Continue to payment/);
+ const {default:CustomerOrders}=await server.ssrLoadModule('/src/pages/customer/OrdersPage.jsx');
+ const oldOrder={...queueOrder,payment_method:'paypal',preparation_plan:{needs_review:true},created_at:'2026-01-01T00:00:00Z'};
+ const customer=renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store:{ordering_mode:'simple'}}},h(OrderContext.Provider,{value:{orders:[oldOrder],fetchOrders:()=>{},ordersLoading:false,ordersError:''}},h(UIContext.Provider,{value:{formatOrderNumber:id=>'ORD-'+id,setAlert:()=>{}}},h(CustomerOrders))))));
+ assert.match(customer,/Earlier payment record/);assert.doesNotMatch(customer,/href="\/payment\/paypal|Continue to payment|Delivery request #/);
+ const {default:Manual}=await server.ssrLoadModule('/src/components/ManualPayment.jsx');
+ const oldTransfer=renderToStaticMarkup(h(StoreContext.Provider,{value:{store:{ordering_mode:'simple'}}},h(Manual,{order:{...oldOrder,ordering_mode:'scheduled',payment_method:'manual',payment_instructions:{qr_url:'https:\/\/example.com\/old.png'}}})));
+ assert.match(oldTransfer,/Earlier bank-transfer arrangement/);assert.doesNotMatch(oldTransfer,/href=|Transfer RM/);
  console.log('Client reports: date/request validation, safe print rendering, accepted totals, pickup details and honest loading states passed.');
 }finally{await server.close();}

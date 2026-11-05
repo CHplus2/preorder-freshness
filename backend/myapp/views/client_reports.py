@@ -88,6 +88,7 @@ def daily_orders(request):
     menus, truncated = menu_totals(active)
     summary = active.aggregate(food=Sum('total_amount'), delivery=Sum('shipping_fee'))
     return Response(dict(date=day, page=page, page_size=PAGE_SIZE, count=count, has_more=offset + PAGE_SIZE < count,
+        undated_open_count=operational_orders().filter(delivery_at__isnull=True).exclude(status__in=['delivered','cancelled']).count(),
         cancelled_count=dated.filter(status='cancelled').count(),
         received_count=active.filter(status='delivered').count(),
         quantity=OrderItem.objects.filter(order__in=active).aggregate(n=Sum('quantity'))['n'] or 0,
@@ -116,7 +117,7 @@ def sales_data(request):
     test_ids = PaymentEvent.objects.filter(source__in=[
         'paypal_sandbox', 'escrow_sepolia', 'demo_wallet', 'fictional_demo', 'synthetic_history'],
         kind='receipt', outcome='completed').values('order_id')
-    test_payments = Q(pk__in=test_ids) | Q(payment_method__in=['wallet', 'synthetic_demo'])
+    test_payments = Q(pk__in=test_ids) | Q(payment_method__in=['wallet', 'synthetic_demo', 'paypal', 'escrow'])
     eligible = dated.filter(status='delivered', payment_status='paid')
     excluded_test = eligible.filter(test_payments).count()
     paid = eligible.exclude(test_payments)

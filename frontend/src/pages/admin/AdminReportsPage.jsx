@@ -1,4 +1,6 @@
 import './SalesWorkspace.css';
+import {useStorefront} from '../../contexts/StorefrontContext';
+import {Link} from 'react-router-dom';
 import {DailyOrderReport,PeriodSalesReport} from '../../components/ClientReports';
 import RecommendationReport from '../../components/RecommendationReport';
 import BatchTrace from '../../components/BatchTrace';
@@ -31,5 +33,6 @@ function HistoricalReports() {
 
 export default function AdminReportsPage() {
  const [historyOpen,setHistoryOpen]=useState(false);
- return <main className="dk-workspace sales-workspace"><div className="admin-page-heading"><div><span className="admin-kicker">KITCHEN OPERATIONS</span><h1>Orders &amp; sales</h1><p>Review the day’s orders, print customer slips and compare recorded sales.</p></div></div><nav className="sales-section-links" aria-label="Report sections"><a href="#daily-orders">Daily order summary</a><a href="#period-sales">Sales by date</a><a href="#historical-reports">Historical analytics &amp; costs</a></nav><DailyOrderReport/><PeriodSalesReport/><details id="historical-reports" className="historical-reports" onToggle={event=>setHistoryOpen(event.currentTarget.open)}><summary>Historical analytics, forecasts &amp; costs</summary>{historyOpen&&<HistoricalReports/>}</details></main>;
+ const simple=useStorefront()?.store?.ordering_mode!=='scheduled';
+ return <main className="dk-workspace sales-workspace"><div className="admin-page-heading"><div><span className="admin-kicker">KITCHEN OPERATIONS</span><h1>{simple?'Sales':'Orders & sales'}</h1><p>{simple?'Review paid, received sales by delivery date. Daily menu quantities and customer slips are available under Orders.':'Review the day’s orders, print customer slips and compare recorded sales.'}</p></div></div><nav className="sales-section-links" aria-label="Report sections">{simple?<Link to="/admin/orders?view=daily">Daily summary in Orders</Link>:<a href="#daily-orders">Daily order summary</a>}<a href="#period-sales">Sales by date</a><a href="#historical-reports">Historical analytics &amp; costs</a></nav>{!simple&&<DailyOrderReport/>}<PeriodSalesReport/><details id="historical-reports" className="historical-reports" onToggle={event=>setHistoryOpen(event.currentTarget.open)}><summary>Historical analytics, forecasts &amp; costs</summary>{historyOpen&&<HistoricalReports/>}</details></main>;
 }

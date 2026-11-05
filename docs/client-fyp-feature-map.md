@@ -1,6 +1,6 @@
 # Client changes mapped to the unchanged FYP objectives
 
-Prepared 3 November 2026; account/area/time/reminder follow-ups updated 4 November. Earlier review baseline: `main` at `356ea0f`, plus the final
+Prepared 3 November 2026; account/area/time/reminder follow-ups updated 4 November; Orders/history updated 5 November. Earlier review baseline: `main` at `356ea0f`, plus the final
 review fixes accompanying this document. This is a revision map, not an edited
 FYP report or a claim that participant evaluation has been completed.
 
@@ -24,7 +24,7 @@ or test counts as evidence of the current client workflow.
 | 1 | Required customer passkey account with name/phone; preorder, dated delivery or collection, minute-based hours, menu weekdays/dates/cutoffs, area fees, accepted-term time changes, placement stock deductions, private QR proof or delivery cash, actual receipt recording | `backend/myapp/test_guest_checkout.py`, `test_simple_ordering.py`, `test_simple_ordering_postgres.py`, `test_client_journey.py`; final browser evidence | Scheduling now means dated fulfilment, not automatic cooking-task allocation. The client requested removal of Planner from the operational workflow. Availability depends on recorded eligible stock; future procurement is not counted as stock already received. No courier-event automation. |
 | 2 | Recorded expiry evidence, actual storage, receipt/manufacture-based documented shelf life, optional raw-material guidance, opened/thawed limits, holds, date-derived indicators and FEFO allocation | `backend/myapp/services/freshness.py`, `test_freshness.py`, `test_expiry_evidence.py`, `test_storage_guidance.py`, `test_simple_ordering.py` | Rule-based monitoring of recorded remaining life and storage duration; not a sensor, spoilage detector or safety certification. General reference guidance needs matching ingredient/conditions. |
 | 3 | Owner-controlled kitchen identity, story/contact, own menu/category/image uploads, delivery/collection terms and a single-vendor storefront | `frontend/src/pages/customer/BusinessPages.jsx`, `pages/admin/StoreSettingsPage.jsx`, `components/SimpleFulfilmentSettings.jsx`; guest checkout and earlier storefront/image tests | Branding controls are implemented; increased brand recognition requires evaluation. Passkeys verify the customer account; name and phone are contact details. Accepted orders retain contact snapshots. Staff authentication remains separate. |
-| 4 | Daily order/menu-unit summary, individual print slips, date-range paid/received sales, net food/discount/delivery breakdown, CSV; historical costs/contribution and FreshCast retained separately | `backend/myapp/views/client_reports.py`, `test_client_reports.py`, `test_client_journey.py`; report and final browser evidence | Operational order value includes unpaid orders; sales require paid/received status. Profit and bank reconciliation are different. Demonstration credits/generated histories are excluded from the new business sales report. Forecast demonstration accuracy does not establish own-store accuracy. |
+| 4 | Daily order/menu-unit summary under Orders, individual print previews/slips, date-range paid/received sales, net food/discount/delivery breakdown, CSV; historical costs/contribution and FreshCast retained separately | `backend/myapp/views/client_reports.py`, `test_client_reports.py`, `test_client_journey.py`; report and final browser evidence | Operational order value includes unpaid orders; sales require paid/received status. Profit and bank reconciliation are different. Demonstration credits/generated histories are excluded from the new business sales report. Forecast demonstration accuracy does not establish own-store accuracy. |
 | 5 | Date-free recommendation cards plus an optional date/quantity/budget finder, single-menu or mixed alternatives, basket-aware pricing and recorded-stock checks, preference/history ranking where available, retained engagement metrics | `backend/myapp/views/discovery.py`, `views/basket_guide.py`, `services/discovery.py`; frontend `test:recommendations` and recommendation/guide backend tests | Functionality is implemented. Reduced decision fatigue or higher conversion is not proven by developer tests, ranking explanations, synthetic orders or a small observed example. Personalisation uses available account history/preferences. Synced or backup passkeys allow account access on another device; name/phone do not authenticate or recover an account. |
 
 The source paths above refer to current `main`, not the frozen FYP baseline.
@@ -38,7 +38,7 @@ should not all be described as tests of new client requirements.
 | Packaging page and stock tracking | Packaging stock, menu mapping, movements, low stock and per-order allocation | Packaging stock/locking suites; final browser history and remaining pieces |
 | Deduct ingredients on order placement | Atomic recipe/packaging snapshots and FEFO ingredient allocation; retry-safe; shortage rolls back | Simple ordering, guest, PostgreSQL locking and integrated journey suites |
 | No customer password or email | Required passkey account with name/phone profile; no customer email/password; delivery address when needed; protected staff sign-in | Guest suite, browser UI and cross-session private-data checks |
-| Daily order/item report and print | Sales daily summary; order print slips include accepted name/address/phone | Report suite and browser print/PDF evidence |
+| Daily order/item report and print | Orders → Daily summary; preview-first slips include accepted name/address/phone | Report suite and browser print/PDF evidence |
 | Sales reporting | Dated paid/received sales and CSV; net food and delivery income separate | Report/journey tests reconcile payment and receipt facts |
 | Delivery fees by area | Settings → Collection & delivery; server-priced fees snapshotted at placement | Guest tests and browser delivery total; pickup has no delivery fee |
 | Delivery 7:30 am–11 am | Default minute-based delivery/collection settings; editable by owner | Guest boundary tests at 07:29, 07:30, 11:00, 11:01 |
@@ -132,3 +132,14 @@ to email or SMS/WhatsApp. Previously opted-in email records retain their consent
 rules. See `test_owner_delivery_reminders.py` and the delivery-only reminder
 evidence. This is not a claim of live scheduler/inbox verification, and no
 report DOCX, objectives or frozen branch was changed.
+
+
+### Orders and historical records — 5 November
+
+Daily operational summaries now have their main entry under Orders; Sales retains
+paid/received financial reports. Undated open orders are counted/reviewable without
+invented fulfilment dates. Earlier payment records retain provenance and current
+pages do not prompt another legacy payment. Known test methods are excluded from
+business sales, including imported rows missing an event. The optional audited
+reference-correction SQL passed isolated PostgreSQL tests; production application
+is owner-run and not claimed here. See the 5 November Orders/history evidence.

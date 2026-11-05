@@ -17,7 +17,7 @@ export default function SimpleDeliveryChange({order,onSaved,owner=false}){
   try{await axios.patch(`/api/orders/${order.id}/delivery-time/`,{delivery_at:value+':00+08:00',version:policy.version,reason},{headers:{'X-CSRFToken':getCookie('csrftoken')}});setOpen(false);await onSaved?.();}
   catch(e){setError(apiError(e));}finally{setBusy(false)}
  };
- return <section className="simple-delivery-change"><button type="button" onClick={()=>setOpen(v=>!v)} aria-expanded={open}>{open?'Close time change':owner?'Change agreed time':'Change delivery time'}</button>{open&&<form onSubmit={save}>
+ return <section className="simple-delivery-change"><button type="button" onClick={()=>setOpen(v=>!v)} aria-expanded={open}>{open?'Close time change':owner?(order.delivery_at?'Change agreed time':'Set agreed time'):(order.delivery_method==='pickup'?'Change collection time':'Change delivery time')}</button>{open&&<form onSubmit={save}>
   <p>Choose a future time within the kitchen’s delivery hours. The allocated ingredients must remain within their recorded dates. All times are Malaysia time.</p>
   {policy&&!policy.eligible?<p>{policy.reason}</p>:<><label>New delivery or collection time<input required type="datetime-local" value={value} onChange={e=>setValue(e.target.value)}/></label><label>Reason<input required maxLength="300" value={reason} onChange={e=>setReason(e.target.value)}/></label><button type="submit" disabled={busy||!policy}>{busy?'Saving…':'Save agreed time'}</button></>}
   {error&&<p role="alert">{error}</p>}

@@ -22,7 +22,7 @@ frozen. Do not treat an implemented source change as a verified live deployment.
 | 1 | Explain/correct shelf-life date limits; make stock rechecks and ingredient shortages clear; expose receiving-QR setup and area-fee controls | Implemented and tested; source publication and live deployment are separate |
 | 2 | Passkey account registration/login, named customer profile and checkout prefill, account recovery/cross-device limits | Implemented/tested; owner confirmed running migration 0027 on 4 November; source published as `4be9c09`; owner confirmation recorded as `6dea316` |
 | 3 | Delivery-due owner email reminders for the current workflow, without preparation reminders or duplicate schedules | Implemented/tested 4 November; same worker/schedule, no live email or scheduler changes claimed |
-| 4 | Operational daily summary entry under Orders, retained sales reporting/print preview, and reviewed cleanup of explicitly fictional historical records/references | Planned; no historical delivery/payment/stock records changed by batch 1 |
+| 4 | Operational daily summary entry under Orders, retained sales reporting/print preview, and reviewed cleanup of explicitly fictional historical records/references | Implemented/tested 5 November; optional audited reference-correction SQL prepared, not applied to production |
 
 ## Batch 1 findings and changes
 
@@ -202,3 +202,44 @@ one reminder schedule. Live GitHub Actions history could not be read through
 this environment's restricted API access, and no production worker was invoked.
 See `docs/evidence/20261104-delivery-only-reminders/README.md`. Batch 4 remains
 planned: Orders daily-summary entry and reviewed historical record handling.
+
+
+## Batch 4 — daily Orders summary and earlier-record review (5 November 2026)
+
+The simple kitchen now opens its operational daily summary at
+`/admin/orders?view=daily&date=YYYY-MM-DD`. Sales keeps financial reporting and
+links back to Orders. Opening the summary does not load the full order queue or
+historical forecast data. Validated Malaysia dates survive browser navigation;
+changing dates hides stale results. Menu totals explicitly include received
+orders so they are not mistaken for additional food to prepare.
+
+Queue search/display uses the accepted customer name, and links with an order
+reference match that order exactly, including when phone numbers contain the
+same digits. Open orders without dates have a clear review view and are excluded
+from daily totals. Their dates are not fabricated from placement timestamps.
+Print actions say Preview & print and open the existing dedicated slip. Printing
+requires an explicit click; accepted name/address/phone and payment facts remain.
+
+Current customer and owner pages show earlier PayPal, escrow, credit-wallet and
+payment-request records as history, without current funding actions. Old manual
+transfer instructions do not prompt another payment in the simple workflow.
+Underlying historical provider/reconciliation APIs remain for compatibility;
+this is current-interface presentation, not erasure of financial evidence.
+Sales excludes known test payment methods even where an imported row lacks its
+payment event. No past payment is relabelled as a QR bank transfer.
+
+Inventory reference correction is a separate, owner-run database action:
+`deploy/sql/preview_sample_batch_references.sql` is read-only;
+`deploy/sql/standardize_sample_batch_references.sql` corrects only the recognised
+older sample-code patterns, with collision checks and a zero-quantity audit log.
+It preserves quantity, storage/expiry dates, holds, costs, allocations and IDs.
+No ALTER TABLE/RLS or migration change occurs. Run the complete published script
+in Supabase SQL Editor to apply the authorised simulated-reference cleanup, then
+refresh inventory. Its result reports corrected rows and any skipped conflicts.
+The script passed PostgreSQL rehearsal, but has **not** been run against the
+private live database by this session.
+
+See `docs/evidence/20261105-orders-summary-history/README.md`. No new migration or
+environment settings are required. These follow-up source batches are complete;
+Vercel Ready, private SQL application, actual kitchen settings and client
+acceptance remain separate verification steps.

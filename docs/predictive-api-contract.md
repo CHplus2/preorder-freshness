@@ -1722,3 +1722,32 @@ locks. Command preview is bounded/read-only. Current customer name/phone/passkey
 accounts have no email and no automatic phone notifications; retained older
 email consent is unchanged. No second schedule or courier integration was added.
 No predictive API/model/evaluation changes.
+
+
+### 5 November 2026 — Orders summary and earlier-record presentation
+
+The staff-only, read-only `GET /api/admin/reports/daily-orders/?date=YYYY-MM-DD`
+adds optional frontend-compatible `undated_open_count`: the count of all open
+operational orders without a handover date, across all dates. Received/cancelled
+and generated-history rows are excluded from that count. It is informational and
+never substitutes placement dates into dated totals. Existing pagination,
+Malaysia-day boundaries, menu aggregation and privacy controls remain unchanged.
+
+Simple-mode UI entry: `/admin/orders?view=daily&date=YYYY-MM-DD`; the queue mounts
+only when selected. Unknown/impossible date query values fall back to today.
+Sales UI retains financial reports and links to the Orders summary. Existing
+`/admin/orders/:id/print` remains a separate, staff-only preview; no automatic
+print or payment/stock/status update occurs. Order search uses accepted contact
+snapshots; explicit ORD references match IDs exactly.
+
+Current-interface earlier PayPal/escrow/wallet/deferred payment panels suppress
+funding actions, and earlier manual-transfer instructions do not encourage a
+second payment. Provider/history APIs are retained; no payment is converted to a
+new method. Sales treats this project's known test-only methods (`paypal`,
+`escrow`, `wallet`, `synthetic_demo`) as excluded test records even without an
+associated event, in addition to existing completed-test-event exclusions.
+
+No application schema/API-write changes. Optional inventory-code SQL touches
+only recognised sample reference labels plus zero-change traceability entries;
+it preserves stock/date/cost/hold/allocation facts and does not alter RLS/tables.
+This does not change any predictive API, model, forecast or evaluation.

@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {validReportDay,dailyOrdersUrl,orderCustomerName,undatedOpenOrder,earlierPayment,matchesOrderSearch} from './operationalOrders.js';
+for(const day of ['2026-11-05','2024-02-29'])assert.equal(validReportDay(day),true);
+for(const day of ['2026-02-30','2025-02-29','2026-13-01','0000-01-01','x&day=1',null])assert.equal(validReportDay(day),false);
+assert.equal(dailyOrdersUrl('2026-11-05'),'/admin/orders?view=daily&date=2026-11-05');
+assert.equal(dailyOrdersUrl('malformed'),'/admin/orders?view=daily');
+assert.equal(orderCustomerName({fulfilment_snapshot:{customer:{name:'Accepted name'}},user:{username:'opaque'}}),'Accepted name');
+assert.equal(orderCustomerName({address:{recipient_name:'Earlier recipient'}}),'Earlier recipient');
+assert.equal(undatedOpenOrder({delivery_at:null,status:'pending'}),true);
+assert.equal(undatedOpenOrder({delivery_at:null,status:'delivered'}),false);
+assert.equal(undatedOpenOrder({delivery_at:'2026-11-05T00:00:00Z',status:'pending'}),false);
+assert.equal(earlierPayment({payment_method:'manual'}),null);
+assert.equal(earlierPayment({payment_method:'constructor'}),null);
+assert.match(earlierPayment({payment_method:'paypal'}).note,/test funds/);
+console.log('Operational orders: calendar dates, accepted identity, missing dates and factual earlier payments passed.');
+
+const row={id:3,items:[],fulfilment_snapshot:{customer:{name:'Accepted name',phone:'+60123456789'}}};
+assert.equal(matchesOrderSearch(row,'ORD-00003','ORD-00003'),true);
+assert.equal(matchesOrderSearch({...row,id:30},'ORD-00003','ORD-00030'),false);
+assert.equal(matchesOrderSearch({...row,id:1},'ORD-00003','ORD-00001'),false);
+assert.equal(matchesOrderSearch(row,'Accepted','ORD-00003'),true);
