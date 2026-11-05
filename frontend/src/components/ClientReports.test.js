@@ -22,6 +22,12 @@ assert.throws(()=>dailyReport({...daily,undated_open_count:-1},daily.date,1),{co
 assert.equal(dailyReport(daily,'2026-11-03',1),daily);
 assert.equal(periodReport(sales,sales.start,sales.end),sales);
 assert.equal(printableSlip(order,12),order);
+const scoped={...daily,receipt:'not_received',day_count:2,day_received_count:1,day_not_received_count:1};
+assert.equal(dailyReport(scoped,daily.date,1,'not_received'),scoped);
+for(const bad of [{...scoped,receipt:'received'},{...scoped,day_count:3}])assert.throws(()=>dailyReport(bad,daily.date,1,'not_received'),{code:'INVALID_RESPONSE'});
+for(const bad of [{...sales,total_sales:'99.00'},{...sales,days:[...sales.days,...sales.days]},{...sales,days:[{...sales.days[0],date:'2026-11-31'}]}, {...sales,menus:[null]}])assert.throws(()=>periodReport(bad,sales.start,sales.end),{code:'INVALID_RESPONSE'});
+for(const bad of [{...order,total:'99.00'},{...order,payment_method:{}},{...order,items:[null]},{...order,items:[{...order.items[0],food_total:'99.00'}]}])assert.throws(()=>printableSlip(bad,12),{code:'INVALID_RESPONSE'});
+
 for(const read of [()=>dailyReport(daily,'2026-11-04',1),()=>dailyReport(daily,'2026-11-03',2),
  ()=>dailyReport({...daily,orders:[order,order]},daily.date,1),
  ()=>dailyReport({...daily,orders:[{...order,total:'NaN'}]},daily.date,1),
@@ -36,17 +42,19 @@ try{
  const render=props=>renderToStaticMarkup(h(OrderSlip,props));
  const html=render({order});
  assert.match(html,/Customer name \/ Nama/);assert.match(html,/Phone \/ Telefon/);assert.match(html,/Address \/ Alamat/);
- assert.match(html,/Saved street/);assert.match(html,/RM 29\.50/);assert.match(html,/DuitNow QR/);
+ assert.match(html,/Saved street/);assert.match(html,/RM 29\.50/);assert.match(html,/QR \/ bank transfer/);
  assert.match(html,/Payment: unpaid/);assert.match(html,/not proof of payment/);
  assert.match(html,/&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
  assert.doesNotMatch(html,/<script>|<b>menu<\/b>|email|password|preparation/i);
  const pickup=render({order:{...order,delivery_method:'pickup',address_lines:[]}});
  assert.match(pickup,/Collection location/);assert.match(pickup,/Pickup shelf/);assert.doesNotMatch(pickup,/Saved street/);
+ assert.match(pickup,/DuitNow QR/);assert.match(pickup,/Collection fee/);
  assert.match(render({order:{...order,receipt_status:'cancelled'}}),/Cancelled/);
  const {DailyOrderReport,PeriodSalesReport}=await server.ssrLoadModule('/src/components/ClientReports.jsx');
  const initial=renderToStaticMarkup(h(MemoryRouter,null,h('div',null,h(DailyOrderReport),h(PeriodSalesReport))));
  assert.match(initial,/Daily order summary/);assert.match(initial,/Delivery \/ collection date/);assert.match(initial,/Sales by delivery date/);
  assert.match(initial,/Loading report/);assert.doesNotMatch(initial,/RM 0\.00|Download sales CSV/);
+ assert.match(initial,/Daily receipt status/);assert.match(initial,/aria-pressed="true">All orders/);assert.match(initial,/>Not received<\/button>/);
  const {StoreContext}=await server.ssrLoadModule('/src/contexts/StorefrontContext.js');
  const {OrderContext}=await server.ssrLoadModule('/src/contexts/OrderContext.js');
  const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
@@ -62,7 +70,7 @@ try{
  const customer=renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store:{ordering_mode:'simple'}}},h(OrderContext.Provider,{value:{orders:[oldOrder],fetchOrders:()=>{},ordersLoading:false,ordersError:''}},h(UIContext.Provider,{value:{formatOrderNumber:id=>'ORD-'+id,setAlert:()=>{}}},h(CustomerOrders))))));
  assert.match(customer,/Earlier payment record/);assert.doesNotMatch(customer,/href="\/payment\/paypal|Continue to payment|Delivery request #/);
  const {default:Manual}=await server.ssrLoadModule('/src/components/ManualPayment.jsx');
- const oldTransfer=renderToStaticMarkup(h(StoreContext.Provider,{value:{store:{ordering_mode:'simple'}}},h(Manual,{order:{...oldOrder,ordering_mode:'scheduled',payment_method:'manual',payment_instructions:{qr_url:'https:\/\/example.com\/old.png'}}})));
+ const oldTransfer=renderToStaticMarkup(h(StoreContext.Provider,{value:{store:{ordering_mode:'simple'}}},h(Manual,{order:{...oldOrder,ordering_mode:'scheduled',payment_method:'manual',payment_instructions:{qr_url:'https://example.com/old.png'}}})));
  assert.match(oldTransfer,/Earlier bank-transfer arrangement/);assert.doesNotMatch(oldTransfer,/href=|Transfer RM/);
  console.log('Client reports: date/request validation, safe print rendering, accepted totals, pickup details and honest loading states passed.');
 }finally{await server.close();}

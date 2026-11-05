@@ -3,6 +3,36 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Daily receipt filters and report review — 5 November 2026
+
+No schema or forecasting/model change. Staff-only `GET
+/api/admin/reports/daily-orders/` accepts optional `receipt=all|not_received|received`
+(default `all`, retaining the prior scope). `count`, quantities, menu totals,
+amounts, orders and pagination follow that filter. Additional response fields are
+`receipt`, `day_count`, `day_received_count` and `day_not_received_count`; the day
+counts describe all non-cancelled operational orders for that Malaysia handover
+date, independent of the filter. Cancelled and generated-history exclusions are
+unchanged. Count queries are aggregated and remain bounded independently of the
+number of orders. Missing dates are still reported without inventing handover
+dates. Reports remain read-only and staff-protected with private/no-store cache
+policy; no receipt-image bytes are loaded.
+
+Orders → Daily summary persists the date and receipt filter in its URL, applies
+one scope to both quantities and order slips, and returns to page 1 when a refresh
+removes the current pagination page. Not received is not a claim that food has
+not already been prepared. Daily, sales and individual print views recheck on
+return to the page; old figures stay hidden and print/export actions are unavailable
+while a new request is pending. Their response validation rejects mismatched scope, invalid calendar
+dates, duplicate identities/days and inconsistent item/day/overall money totals.
+
+The sales definition remains paid-and-received orders by agreed Malaysia date,
+excluding generated histories/test payments. Order value includes unpaid orders
+and remains distinct from sales. CSV and per-order printing keep their existing
+permissions and accepted snapshots. Printing is explicit after preview, not an
+automatic page-load action. Delivery manual-payment slips now say **QR / bank
+transfer**; QR-only collection says **DuitNow QR**. Print tools identify when the
+snapshot was loaded and are hidden in the printed output.
+
 ## Packaging and stock workflow review — 5 November 2026
 
 No schema, forecasting or model changes. Packaging shortage checks now return

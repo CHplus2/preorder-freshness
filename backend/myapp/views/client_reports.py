@@ -4,7 +4,7 @@ from datetime import datetime, time, timedelta, timezone as datetime_timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from django.db.models import F, Q, Sum
+from django.db.models import Count, F, Q, Sum
 from django.db.models.functions import TruncDate
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -72,6 +72,7 @@ def order_row(order):
 class DailyInput(serializers.Serializer):
     date = serializers.DateField()
     page = serializers.IntegerField(min_value=1, max_value=100000, default=1)
+    receipt = serializers.ChoiceField(choices=['all', 'not_received', 'received'], default='all')
 
 
 @api_view(['GET'])
@@ -82,15 +83,23 @@ def daily_orders(request):
     day, page = form.validated_data['date'], form.validated_data['page']
     dated = handover_dates(operational_orders(), day, day)
     active = dated.exclude(status='cancelled')
-    count = active.count()
+    day_counts = active.aggregate(total=Count('pk'), received=Count('pk', filter=Q(status='delivered')))
+    day_count, day_received = day_counts['total'], day_counts['received']
+    receipt = form.validated_data['receipt']
+    if receipt == 'received':
+        active = active.filter(status='delivered')
+    elif receipt == 'not_received':
+        active = active.exclude(status='delivered')
+    count = day_received if receipt == 'received' else day_count-day_received if receipt == 'not_received' else day_count
     offset = (page - 1) * PAGE_SIZE
     rows = active.select_related('user', 'address').prefetch_related('items').order_by('delivery_at', 'pk')[offset:offset + PAGE_SIZE]
     menus, truncated = menu_totals(active)
     summary = active.aggregate(food=Sum('total_amount'), delivery=Sum('shipping_fee'))
     return Response(dict(date=day, page=page, page_size=PAGE_SIZE, count=count, has_more=offset + PAGE_SIZE < count,
+        receipt=receipt, day_count=day_count, day_received_count=day_received, day_not_received_count=day_count-day_received,
         undated_open_count=operational_orders().filter(delivery_at__isnull=True).exclude(status__in=['delivered','cancelled']).count(),
         cancelled_count=dated.filter(status='cancelled').count(),
-        received_count=active.filter(status='delivered').count(),
+        received_count=0 if receipt == 'not_received' else day_received,
         quantity=OrderItem.objects.filter(order__in=active).aggregate(n=Sum('quantity'))['n'] or 0,
         food_total=money(summary['food']), delivery_fee=money(summary['delivery']),
         order_value=money((summary['food'] or ZERO) + (summary['delivery'] or ZERO)),

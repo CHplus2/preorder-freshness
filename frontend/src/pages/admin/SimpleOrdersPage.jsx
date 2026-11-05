@@ -24,9 +24,10 @@ import './SimpleOrdersPage.css';
 const config=()=>({headers:{'X-CSRFToken':getCookie('csrftoken')}});
 export default function SimpleOrdersPage(){
  const [params,setParams]=useSearchParams();const daily=params.get('view')==='daily',day=summaryDay(params.get('date'));
+ const receipt=['all','not_received','received'].includes(params.get('receipt'))?params.get('receipt'):'all';
  return <main className="simple-orders"><header><div><p className="simple-orders-eyebrow">Kitchen orders</p><h1>Orders</h1><p>{daily?'Review menu quantities and preview customer slips for one day.':'Confirm receipt after the customer has their food. Payments are recorded separately.'}</p></div><Link className="order-workspace-link" to="/admin/reports#period-sales">Sales report</Link></header>
   <nav className="order-workspace-nav" aria-label="Orders workspace"><Link to="/admin/orders" aria-current={!daily?'page':undefined}>Order queue</Link><Link to={dailyOrdersUrl(day)} aria-current={daily?'page':undefined}>Daily summary</Link></nav>
-  {daily?<DailyOrderReport key={day} initialDate={day} onDateChange={date=>setParams({view:'daily',date})}/>:<SimpleOrderQueue key={params.toString()}/>}
+  {daily?<DailyOrderReport key={day+receipt} initialDate={day} initialReceipt={receipt} onDateChange={(date,status)=>setParams({view:'daily',date,receipt:status})} onReceiptChange={status=>setParams({view:'daily',date:day,receipt:status})}/>:<SimpleOrderQueue key={params.toString()}/>}
  </main>;
 }
 function SimpleOrderQueue(){

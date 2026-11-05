@@ -84,6 +84,22 @@ class ClientReportTests(TestCase):
         self.order(delivery_at=None)
         self.assertEqual([o['id'] for o in self.daily().json()['orders']], [first.pk, last.pk])
 
+    def test_daily_receipt_filter_keeps_menu_totals_and_orders_in_the_same_scope(self):
+        pending=self.order()
+        received=self.order(status='delivered',payment_status='paid')
+        self.order(status='cancelled')
+        for scope,expected in [('all',[pending.pk,received.pk]),('not_received',[pending.pk]),('received',[received.pk])]:
+            data=self.daily(receipt=scope).json()
+            self.assertEqual(data['receipt'],scope)
+            self.assertEqual(data['day_count'],2)
+            self.assertEqual(data['day_received_count'],1)
+            self.assertEqual(data['day_not_received_count'],1)
+            self.assertEqual(data['count'],len(expected))
+            self.assertEqual(data['quantity'],len(expected)*3)
+            self.assertEqual(data['menus'][0]['quantity'],len(expected)*3)
+            self.assertEqual([row['id'] for row in data['orders']],expected)
+        self.assertEqual(self.daily(receipt='paid').status_code,400)
+
     def test_daily_counts_undated_open_orders_without_using_placement_date(self):
         self.order(delivery_at=None)
         self.order(delivery_at=None,status='delivered')
