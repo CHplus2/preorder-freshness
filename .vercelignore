@@ -9,6 +9,16 @@
 backend/backups/**
 screenshots/**
 .git/**
+# Development and report evidence are not needed to build or serve the site.
+escrow/**
+tests/**
+docs/**
+# Retain the small inputs used by existing operator management commands.
+!docs/DAPUR-KITA-STARTER-DATA.json
+!docs/DAPUR-KITA-DEMO-ORDER-MAPPING.json
+backend/**/test*.py
+frontend/**/*.test.js
+frontend/**/*.test.mjs
 # Direct CLI uploads carry this verified archive privately without a Git commit.
 !.freshcast-deploy/
 !.freshcast-deploy/runtime-bundle.tar.gz

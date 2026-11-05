@@ -1,8 +1,10 @@
 """Check the root-relative file that Vercel's Django detector selects."""
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -41,3 +43,52 @@ for route in ['/', '/checkout', '/escrow-demo']:
         result = subprocess.run([sys.executable, '-c', code], cwd=ROOT, env=env,
                                 capture_output=True, text=True, timeout=120)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_runtime_without_development_sources(self):
+        """Exercise WSGI, collected assets and the ABI in a reduced runtime tree."""
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ('app.py', 'pyproject.toml'):
+                shutil.copy2(ROOT / name, root / name)
+            shutil.copytree(ROOT / 'backend', root / 'backend', ignore=shutil.ignore_patterns(
+                'venv', '.venv', '__pycache__', 'staticfiles', 'backups', '.env', '.env.*',
+                '*.sqlite3', 'test*.py', 'tests'))
+            shutil.copytree(ROOT / 'frontend/dist', root / 'frontend/dist')
+            shutil.copytree(ROOT / 'frontend/src/contracts', root / 'frontend/src/contracts')
+            env = os.environ.copy()
+            env.update(PYTHON_DOTENV_DISABLED='1', DJANGO_SETTINGS_MODULE='config.settings',
+                       VERCEL='1', VERCEL_URL='entrypoint-check.vercel.app',
+                       DATABASE_URL='postgresql://unused:unused@127.0.0.1:1/unused',
+                       DATABASE_SCHEMA='django_app', DEBUG='False',
+                       ESCROW_SEPOLIA_ENABLED='false',
+                       SECRET_KEY='isolated-entrypoint-test-only-not-for-production')
+            code = r"""
+from pathlib import Path
+import sys
+root = Path.cwd()
+sys.path.insert(0, str(root / 'backend'))
+import django
+django.setup()
+from django.core.management import call_command
+call_command('collectstatic', interactive=False, verbosity=0)
+import app
+from django.test import Client
+from myapp.services.escrow import runtime_hash
+assert runtime_hash().startswith('0x')
+client = Client()
+for route in ['/', '/menu', '/checkout', '/escrow-demo']:
+    response = client.get(route, HTTP_HOST='entrypoint-check.vercel.app', secure=True)
+    assert response.status_code == 200, (route, response.status_code)
+    assert b'id="root"' in response.content
+asset = next((root / 'frontend/dist/assets').glob('*.js'))
+response = client.get('/static/assets/' + asset.name,
+                      HTTP_HOST='entrypoint-check.vercel.app', secure=True)
+assert response.status_code == 200, response.status_code
+assert b''.join(response.streaming_content) == asset.read_bytes()
+response = client.get('/api/payments/escrow/config/',
+                      HTTP_HOST='entrypoint-check.vercel.app', secure=True)
+assert response.status_code == 200 and response.json()['enabled'] is False
+"""
+            result = subprocess.run([sys.executable, '-c', code], cwd=root, env=env,
+                                    capture_output=True, text=True, timeout=120)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
