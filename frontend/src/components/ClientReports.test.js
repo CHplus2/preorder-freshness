@@ -48,7 +48,7 @@ try{
  assert.doesNotMatch(html,/<script>|<b>menu<\/b>|email|password|preparation/i);
  const pickup=render({order:{...order,delivery_method:'pickup',address_lines:[]}});
  assert.match(pickup,/Collection location/);assert.match(pickup,/Pickup shelf/);assert.doesNotMatch(pickup,/Saved street/);
- assert.match(pickup,/DuitNow QR/);assert.match(pickup,/Collection fee/);
+ assert.match(pickup,/Bank QR/);assert.match(pickup,/Collection fee/);
  assert.match(render({order:{...order,receipt_status:'cancelled'}}),/Cancelled/);
  const {DailyOrderReport,PeriodSalesReport}=await server.ssrLoadModule('/src/components/ClientReports.jsx');
  const initial=renderToStaticMarkup(h(MemoryRouter,null,h('div',null,h(DailyOrderReport),h(PeriodSalesReport))));

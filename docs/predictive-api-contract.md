@@ -3,6 +3,38 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Receipt submission, saved contact and bank payment wording — 5 November 2026
+
+No endpoint or schema changes. Customer-facing payment choices use **Bank QR /
+bank transfer**, with **Bank QR** for pickup. The existing `duitnow_qr_url` field
+is retained for compatibility and holds the owner's receiving QR image; its
+name does not establish a DuitNow integration or bank verification. Instructions
+ask customers to use a banking app that supports the receiving QR and check the
+recipient and amount. Historical explicitly recorded payment methods remain
+historical facts.
+
+In simple checkout, choosing a valid receipt image now starts its private upload
+automatically. A file selected while a same-selection availability check is
+running remains queued until that check succeeds. Re-renders or focus changes
+do not restart an active upload. Errors offer an explicit retry; stale/unmounted
+requests cannot attach evidence to another checkout or session. Changing basket,
+fee, payment settings or delivery selection still invalidates the proof scope.
+The final action is **Place preorder**, not an online bank charge; payment stays
+unpaid until staff verification. The disabled action now has a nearby next-step
+message. Existing content, size, ownership, price-scope and duplicate-receipt
+checks remain authoritative on the server.
+
+Passkey checkout continues to use the authenticated customer name/phone. Staff
+and older password accounts now prefill their saved `/api/account/` first/last
+name; a slow response cannot overwrite an edited checkout name. A failed read
+leaves that field editable. These accounts do not acquire a customer passkey
+profile or invented phone number. Customer name/phone account matching remains
+unchanged. Malaysian `012…` and `+6012…` formats already share server-side
+normalisation; the forms now explain that contact numbers are saved with +60.
+A passkey proves possession of a credential, not ownership of the contact phone.
+Account-required checkout remains the current agreed behaviour; a guest-order
+workflow would be a separate client decision.
+
 ## Delivery settings and final workflow review — 5 November 2026
 
 No schema, model or server endpoint changes. Simple-mode **Save delivery

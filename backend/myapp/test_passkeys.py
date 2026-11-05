@@ -84,6 +84,11 @@ class PasskeyTests(TestCase):
         self.assertEqual(len(profile['passkeys']),1)
         self.assertNotIn('public_key',profile['passkeys'][0]);self.assertNotIn('credential_id',profile['passkeys'][0])
 
+    def test_registration_accepts_local_phone_and_saves_international_contact(self):
+        self.contact['phone']='012 345 6789'
+        self.register()
+        self.assertEqual(self.client.get('/api/check-auth/').data['customer_account']['phone'],'+60123456789')
+
     def test_new_device_signin_loads_original_account_not_matching_phone(self):
         key=self.register();other=self.guest()
         other_id=other.get('/api/check-auth/').data['user_id']

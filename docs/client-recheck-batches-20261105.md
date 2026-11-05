@@ -85,3 +85,13 @@ test and recorded activity; it does not prove that GitHub scheduling is enabled
 or that Gmail delivered a message to the inbox. Keep the existing selected
 schedule, not a second cron job. Phone-only customer accounts use manual
 call/WhatsApp drafts; no unapproved automatic messaging service was added.
+
+## Checkout follow-up — 5 November 2026
+
+The receipt selector now uploads automatically, with progress/error/retry feedback
+and a next-step message for disabled submission. Saved staff/legacy profile names
+prefill checkout, alongside the existing passkey customer profile. Current payment
+UI uses generic bank QR/transfer terms; the stored QR API field is unchanged.
+Phone-format hints explain existing Malaysian normalisation. No migration,
+production bank image, bank connection, real payment or email send is involved.
+See [checkout follow-up evidence](evidence/20261105-checkout-followup/README.md).

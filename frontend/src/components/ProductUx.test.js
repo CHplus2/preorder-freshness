@@ -67,10 +67,10 @@ try{
  const {default:PaymentOptions}=await server.ssrLoadModule('/src/components/PaymentOptions.jsx');
  const payment=p=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(PaymentOptions,{value:'cod',onChange:()=>{},...p})));
  const html=payment({manualEnabled:true});
- assert.doesNotMatch(html,/value="cod"/);assert.match(html,/DuitNow QR/);
+ assert.doesNotMatch(html,/value="cod"/);assert.match(html,/Bank QR/);
  const demo=html.slice(html.indexOf('<details'));
  assert.match(demo,/Demo credit wallet/);assert.doesNotMatch(demo,/<details[^>]*\sopen/);
- assert.doesNotMatch(payment({manualEnabled:false}),/DuitNow QR/);
+ assert.doesNotMatch(payment({manualEnabled:false}),/Bank QR/);
  assert.match(payment({value:'wallet'}),/demo wallet selected/);
  assert.match(payment({pickup:true}),/Cash at collection/);
  assert.doesNotMatch(payment({pickup:true}),/Cash on delivery/);

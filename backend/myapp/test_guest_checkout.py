@@ -79,6 +79,16 @@ class GuestCheckoutTests(TestCase):
         self.assertEqual(self.place(customer={'name':'Another name','phone':'0123456789'}).status_code,400)
         self.assertFalse(Order.objects.exists())
 
+    def test_checkout_accepts_local_and_international_spelling_of_account_phone(self):
+        from .services.guest_ordering import customer_details
+        user=User.objects.get(pk=self.client.get('/api/check-auth/').data['user_id'])
+        for phone in ('0123456789','012 345 6789','+60123456789','+60 12 345 6789','60123456789'):
+            with self.subTest(phone=phone):
+                customer,address=customer_details({**self.body,'customer':{'name':'Local customer','phone':phone}},'standard',user)
+                self.assertEqual(customer,{'name':'Local customer','phone':'+60123456789'})
+                self.assertEqual(address['phone'],'+60123456789')
+        self.assertFalse(Order.objects.exists())
+
     def test_anonymous_start_requires_csrf_and_never_looks_up_phone(self):
         c=APIClient(enforce_csrf_checks=True)
         self.assertEqual(c.post('/api/guest-session/',{},format='json').status_code,403)

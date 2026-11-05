@@ -1,0 +1,15 @@
+{
+  "checks": [
+    "Local 012 registration normalises to +60; account name and phone prefilled at checkout",
+    "Generic bank QR and transfer label; clear missing receipt instruction",
+    "Automatic upload validates file; failed request blocks placement; retry succeeds without selecting file again",
+    "Changing delivery time invalidates old proof before placement",
+    "File selected during a focus/availability recheck is queued and sends exactly one upload",
+    "Uploaded receipt allows actual unpaid order placement; retry returns the same order",
+    "Staff checkout uses saved Account settings name across reloads",
+    "Late profile response cannot overwrite an edited checkout name",
+    "Local 012 format accepted on actual checkout and stored as +60"
+  ],
+  "browser_errors": [],
+  "automatic_upload_requests": 1
+}
