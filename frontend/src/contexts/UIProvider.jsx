@@ -2,8 +2,10 @@ import {UIContext} from './UIContext';
 import { useState, useRef, useCallback } from "react";
 
 export default function UIProvider({ children }) {
+    const [customerAccess,setCustomerAccess]=useState(null);
     const [showLogin, setShowLogin] = useState(null);
     const [showSignup, setShowSignup] = useState(null);
+    const openCustomerAccess=useCallback((options={})=>{setShowLogin(false);setShowSignup(false);setCustomerAccess({mode:'create',...options})},[]);
     const [dropdownOpen, setDropdownOpen] = useState(null);
     const [alert, updateAlert] = useState({ message: "", type: "", id: 0 });
     const notificationSequence = useRef(0);
@@ -43,6 +45,7 @@ export default function UIProvider({ children }) {
 
     const value = {
         modalMotion,
+        customerAccess,setCustomerAccess,openCustomerAccess,
         showLogin, setShowLogin,
         showSignup, setShowSignup,
         dropdownOpen, setDropdownOpen,

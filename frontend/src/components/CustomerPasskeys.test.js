@@ -12,11 +12,11 @@ try{
  const cart={cart:[{id:1,quantity:1,product:{id:2,name:'Meal',price:12}}],cartLoading:false,pricingReady:true,promotion:{},total:12,finalTotal:17};
  const render=(node,auth)=>renderToStaticMarkup(h(MemoryRouter,null,h(AuthContext.Provider,{value:{isAuthenticated:true,isSessionCurrent:()=>true,...auth}},h(UIContext.Provider,{value:{setAlert:()=>{},formatPrice:n=>'RM '+n}},h(OrderContext.Provider,{value:{}},h(CartContext.Provider,{value:cart},node))))));
  const guest=render(h(Account),{isGuest:true});
- assert.match(guest,/Create account with a passkey/);assert.match(guest,/Sign in with a passkey/);
+ assert.match(guest,/Create account with a passkey/);assert.match(guest,/Already have an account/);assert.match(guest,/>Sign in<\/button>/);
  assert.match(guest,/Your name/);assert.match(guest,/Phone number/);
  assert.doesNotMatch(guest,/type="password"|type="email"|Email address/);
  const gate=render(h(Checkout),{isGuest:true});
- assert.match(gate,/Sign in to place your preorder/);assert.match(gate,/account\?next=checkout/);
+ assert.match(gate,/Sign in to place your preorder/);assert.match(gate,/Create account or sign in<\/button>/);
  assert.doesNotMatch(gate,/Payment receipt|Cash on delivery|Place preorder ·/);
  const account=render(h(Account),{customerAccount:{name:'Local account',phone:'+60123456789'}});
  assert.match(account,/Your account/);assert.match(account,/Add another passkey/);assert.match(account,/Save contact details/);

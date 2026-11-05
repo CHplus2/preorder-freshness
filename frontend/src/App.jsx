@@ -20,6 +20,7 @@ import RequireAuth from "./hoc/RequireAuth";
 import GroceryLogin from "./components/LoginModal/GroceryLogin";
 import GrocerySignup from "./components/SignupModal/GrocerySignup";
 import DeleteProduct from "./components/DeleteProductModal/DeleteProduct";
+const CustomerAccessModal=lazy(()=>import('./components/CustomerAccessModal'));
 const ProductsPage=lazy(()=>import("./pages/customer/ProductsPage"));
 const ProductsDetailPage=lazy(()=>import("./pages/customer/ProductDetailPage"));
 const CartPage=lazy(()=>import("./pages/customer/CartPage"));
@@ -240,7 +241,7 @@ function AppContent() {
     reveal();const observer=new ResizeObserver(reveal);observer.observe(nav);
     return()=>observer.disconnect();
   },[location.pathname]);
-  const { showLogin, setShowLogin, showSignup, dropdownOpen, setDropdownOpen, alert, setAlert } = useUI();
+  const { customerAccess,openCustomerAccess,showLogin, setShowLogin, showSignup, dropdownOpen, setDropdownOpen, alert, setAlert } = useUI();
   const dismissNotification=useCallback(()=>setAlert({message:'',type:''}),[setAlert]);
   const { isAuthenticated, isAdmin, isGuest, logout, startGuest, authPending, authError } = useAuth();
   useEffect(()=>{
@@ -274,13 +275,14 @@ function AppContent() {
         </nav>}
         <div className="business-header-actions">
           {isAuthenticated && !ownerPage && <Link to="/cart" className="basket-link" aria-label={`Basket, ${basketStatus}`}><ShoppingBag size={19}/><span aria-hidden="true">{cartLoading || cartUpdating?'…':cartError?'!':basketCount}</span></Link>}
-          {isAuthenticated===false && (store.ordering_mode==='simple'&&!ownerPage?<Link className="login-btn" to="/account">Customer sign in</Link>:<button className="login-btn" onClick={()=>setShowLogin(true)}>Sign in</button>)}
-          {isAuthenticated && <div className="user-dropdown" ref={accountMenu}><button ref={accountToggle} className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} aria-controls="account-navigation" onClick={()=>{setMobileOpen(false);setDropdownOpen(!dropdownOpen);}}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content" id="account-navigation"><Link to="/account" onClick={()=>setDropdownOpen(false)}>{isGuest?'Create account / Sign in':'Account settings'}</Link><Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to={store.ordering_mode==='scheduled'?'/admin/planner':'/admin/orders'} onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}{isGuest && <button type="button" onClick={()=>{setDropdownOpen(false);setShowLogin(true)}}>Kitchen staff sign in</button>}<button className="logout-btn" onClick={logout}>{isGuest?'End this browser session':'Sign out'}</button></div>}</div>}
+          {(isAuthenticated===false||isGuest)&&(store.ordering_mode==='simple'&&!ownerPage?<button type="button" className="login-btn" onClick={()=>openCustomerAccess()} aria-label="Create account or sign in">Account</button>:<button type="button" className="login-btn" onClick={()=>setShowLogin(true)}>{ownerPage?'Kitchen sign in':'Sign in'}</button>)}
+          {isAuthenticated && !isGuest && <div className="user-dropdown" ref={accountMenu}><button ref={accountToggle} className="user-icon" aria-label="Account menu" aria-expanded={dropdownOpen || false} aria-controls="account-navigation" onClick={()=>{setMobileOpen(false);setDropdownOpen(!dropdownOpen);}}><User size={20}/></button>{dropdownOpen && <div className="dropdown-content" id="account-navigation"><Link to="/account" onClick={()=>setDropdownOpen(false)}>Account settings</Link><Link to="/orders" onClick={()=>setDropdownOpen(false)}>My orders</Link>{isAdmin && <Link to={store.ordering_mode==='scheduled'?'/admin/planner':'/admin/orders'} onClick={()=>setDropdownOpen(false)}>Kitchen dashboard</Link>}<button className="logout-btn" onClick={logout}>Sign out</button></div>}</div>}
           {!ownerPage && <button ref={mobileToggle} className="mobile-menu-toggle" aria-label={mobileOpen?'Close navigation':'Open navigation'} aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={()=>{setDropdownOpen(false);setMobileOpen(!mobileOpen);}}>{mobileOpen?<X size={23}/>:<Menu size={23}/>}</button>}
         </div>
       </header>
       {mobileOpen && !ownerPage && <nav ref={mobileNavigation} className="mobile-navigation" id="mobile-navigation" aria-label="Mobile navigation">{navigation.map(([url,label])=><Link key={url} to={url} onClick={closeMenu} aria-current={isCurrentSection(location.pathname,url)?'page':undefined}>{label}</Link>)}{isAuthenticated && <Link to="/orders" onClick={closeMenu}>My orders</Link>}{isAdmin && <Link to={store.ordering_mode==='scheduled'?'/admin/planner':'/admin/orders'} onClick={closeMenu}>Kitchen dashboard</Link>}</nav>}
 
+      {customerAccess&&!showLogin&&<Suspense fallback={null}><CustomerAccessModal/></Suspense>}
       <AnimatePresence>
         {showSignup && (
           <GrocerySignup />

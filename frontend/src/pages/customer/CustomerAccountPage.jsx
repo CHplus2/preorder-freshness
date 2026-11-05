@@ -1,3 +1,4 @@
+import CustomerAccessForm from '../../components/CustomerAccessForm';
 import {useEffect,useState} from 'react';
 import {Link,useNavigate,useSearchParams} from 'react-router-dom';
 import axios from 'axios';
@@ -8,13 +9,21 @@ import {passkeysSupported,passkeyError} from '../../utils/passkeys';
 import './CustomerAccountPage.css';
 
 export default function CustomerAccountPage(){
+ const {customerAccount,isAdmin}=useAuth(),{setShowLogin}=useUI(),navigate=useNavigate(),[params]=useSearchParams();
+ const destination=['checkout','orders','cart'].includes(params.get('next'))?'/'+params.get('next'):null;
+ if(isAdmin)return <main className="customer-account"><h1>Kitchen account</h1><Link to="/admin/orders">Open kitchen orders</Link></main>;
+ if(!customerAccount)return <main className="customer-account"><CustomerAccessForm onComplete={()=>{if(destination)navigate(destination)}} onStaffSignIn={()=>setShowLogin(true)}/></main>;
+ return <CustomerAccountDetails/>;
+}
+function CustomerAccountDetails(){
  const {customerAccount,isAuthenticated,isAdmin,authPending,passkeyAction,isSessionCurrent,checkAuth}=useAuth();
  const {setAlert}=useUI(),navigate=useNavigate(),[params]=useSearchParams();
  const destination=['checkout','orders','cart'].includes(params.get('next'))?'/'+params.get('next'):null;
  const [name,setName]=useState(customerAccount?.name||''),[phone,setPhone]=useState(customerAccount?.phone||'');
  const [label,setLabel]=useState('My passkey'),[keys,setKeys]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[attempt,setAttempt]=useState(0);
  const supported=passkeysSupported();
- useEffect(()=>{if(customerAccount){setName(customerAccount.name);setPhone(customerAccount.phone)}},[customerAccount?.name,customerAccount?.phone]);
+ const [savedContact,setSavedContact]=useState(customerAccount);
+ if(customerAccount&&(customerAccount.name!==savedContact?.name||customerAccount.phone!==savedContact?.phone)){setSavedContact(customerAccount);setName(customerAccount.name);setPhone(customerAccount.phone)}
  useEffect(()=>{
   if(!customerAccount)return;
   const controller=new AbortController();
@@ -32,7 +41,6 @@ export default function CustomerAccountPage(){
   setAlert({type:'success',message:'Passkey saved. Your basket and orders are linked to your account.'});
   if(destination)navigate(destination);
  })};
- const signin=()=>run(async()=>{await passkeyAction('signin');setAlert({type:'success',message:'Signed in with your passkey.'});if(destination)navigate(destination)});
  const save=event=>{event.preventDefault();run(async()=>{
   await passkeyAction('reauth');
   await axios.patch('/api/account/customer/',{name,phone},{timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
@@ -47,7 +55,6 @@ export default function CustomerAccountPage(){
  return <main className="customer-account"><header><h1>{customerAccount?'Your account':'Save your orders with a passkey'}</h1><p>{customerAccount?'Your contact details and secure sign-in.':'Use your fingerprint, face, device PIN or security key. No email, password or SMS needed.'}</p></header>
   {!supported&&<p className="account-message" role="status">Passkeys need a supported browser and a secure connection. Open this website over HTTPS.</p>}
   {error&&<p className="account-message account-error" role="alert">{error}</p>}
-  {!customerAccount&&<section className="customer-account-card"><h2>Already have an account?</h2><p>Choose your saved passkey. On another device, use a synced passkey or your browser’s “Use another device” option.</p><button type="button" disabled={!supported||busy||authPending} onClick={signin}>Sign in with a passkey</button></section>}
   <section className="customer-account-card"><h2>{customerAccount?'Contact details':'Create your account'}</h2>
    <form onSubmit={customerAccount?save:register}><fieldset disabled={busy||authPending||isAuthenticated!==true}><legend className="sr-only">Customer details</legend><div className="account-contact-grid"><label>Your name<input required autoComplete="name" maxLength="150" value={name} onChange={e=>setName(e.target.value)}/></label><label>Phone number<input required type="tel" autoComplete="tel" maxLength="30" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="e.g. 012 345 6789"/></label></div><p className="account-help">The kitchen uses your phone number to coordinate orders. It does not receive a sign-in code.</p>
     <button disabled={!supported||isAuthenticated!==true} type="submit">{busy||authPending?'Confirming…':customerAccount?'Save contact details':'Create account with a passkey'}</button>

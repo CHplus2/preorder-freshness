@@ -3,7 +3,7 @@ import axios from 'axios';
 import {getCookie} from '../utils/cookieUtils';
 import {apiError} from '../utils/apiError';
 import {useAuth} from '../contexts/AuthContext';
-export default function CheckoutProofUpload({amount,disabled,selection,qrUrl,instructions,onUploaded}){
+export default function CheckoutProofUpload({amount,disabled,selection,qrUrl,instructions,onUploaded,confirmed=true}){
  const [file,setFile]=useState(null),[proof,setProof]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const [failedQrUrl,setFailedQrUrl]=useState('');
  const controller=useRef(null),lock=useRef(false),{isSessionCurrent}=useAuth();
@@ -21,9 +21,9 @@ export default function CheckoutProofUpload({amount,disabled,selection,qrUrl,ins
   }catch(e){if(!axios.isCancel(e)&&isSessionCurrent())setError(apiError(e));}finally{lock.current=false;setBusy(false)}
  };
  return <div className="checkout-proof">
-  <p><strong>Pay RM {amount.toFixed(2)}</strong> using the kitchen’s QR code. Confirm the recipient and amount in your banking app.</p>
+  {confirmed?<><p><strong>Pay RM {amount.toFixed(2)}</strong> {qrUrl?(instructions?'using the kitchen’s QR code or bank details below.':'using the kitchen’s QR code below.'):'using the kitchen’s bank details below.'} Confirm the recipient and amount in your banking app.</p></>:<p role="status">Rechecking payment details. Wait for the confirmed total before paying.</p>}
   <p className="checkout-hint">Already paid? Do not pay twice. Keep your receipt and contact the kitchen if the order amount changes or checkout cannot complete.</p>
-  {failedQrUrl===qrUrl?<p role="alert" className="checkout-error">The receiving QR image could not load. Open the code using the link below, or contact the kitchen before paying.</p>:<img className="checkout-qr-image" src={qrUrl} alt="Kitchen DuitNow QR code" referrerPolicy="no-referrer" onError={()=>setFailedQrUrl(qrUrl)}/>}<a href={qrUrl} target="_blank" rel="noopener noreferrer">Open DuitNow QR code</a>{instructions&&<p className="checkout-payment-instructions">{instructions}</p>}
+  {confirmed&&qrUrl&&<>{failedQrUrl===qrUrl?<p role="alert" className="checkout-error">The receiving QR image could not load. Open the code using the link below, or contact the kitchen before paying.</p>:<img className="checkout-qr-image" src={qrUrl} alt="Kitchen DuitNow QR code" referrerPolicy="no-referrer" onError={()=>setFailedQrUrl(qrUrl)}/>}<a href={qrUrl} target="_blank" rel="noopener noreferrer">Open DuitNow QR code</a></>}{confirmed&&instructions&&<p className="checkout-payment-instructions">{instructions}</p>}
   <label>Payment receipt image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={disabled||busy} onChange={e=>{setFile(e.target.files?.[0]||null);setProof(null);onUploaded(null);setError('')}}/></label>
   <p className="checkout-hint">JPG, PNG or WebP, up to 4 MB. Visible only to you and kitchen staff.</p>
   <button type="button" disabled={disabled||busy||!file} onClick={upload}>{busy?'Uploading receipt…':proof?'Replace receipt':'Upload receipt'}</button>

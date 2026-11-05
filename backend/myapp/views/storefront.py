@@ -15,8 +15,6 @@ class StoreSerializer(serializers.ModelSerializer):
         enabled = attrs.get('manual_payment_enabled', getattr(self.instance, 'manual_payment_enabled', False))
         instructions = attrs.get('bank_transfer_instructions', getattr(self.instance, 'bank_transfer_instructions', ''))
         qr = attrs.get('duitnow_qr_url', getattr(self.instance, 'duitnow_qr_url', ''))
-        if enabled and getattr(self.instance,'ordering_mode','simple')=='simple' and not qr:
-            raise serializers.ValidationError({'duitnow_qr_url':'Add your business DuitNow QR image before enabling QR payment.'})
         if enabled and not (instructions.strip() or qr):
             raise serializers.ValidationError('Add bank transfer instructions or a DuitNow QR image before enabling manual payments.')
         opening = attrs.get('kitchen_open_hour', getattr(self.instance, 'kitchen_open_hour', 8))

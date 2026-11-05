@@ -1,0 +1,34 @@
+import {useEffect,useRef,useState} from 'react';
+import {useAuth} from '../contexts/AuthContext';
+import {useUI} from '../contexts/UIContext';
+import {passkeysSupported,passkeyError} from '../utils/passkeys';
+import './CustomerAccess.css';
+export default function CustomerAccessForm({initialMode='create',onComplete,onStaffSignIn}){
+ const {isAuthenticated,authPending,authError,startGuest,passkeyAction,isSessionCurrent}=useAuth();
+ const {setAlert}=useUI();
+ const [mode,setMode]=useState(initialMode),[name,setName]=useState(''),[phone,setPhone]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ const pending=useRef(false),errorRef=useRef(null),supported=passkeysSupported(),create=mode==='create';
+ useEffect(()=>{if(error){errorRef.current?.focus();errorRef.current?.scrollIntoView({block:'nearest'});}},[error]);
+ const submit=async event=>{
+  event.preventDefault();if(pending.current||authPending)return;
+  pending.current=true;setBusy(true);setError('');
+  try{
+   await passkeyAction(create?'register':'signin',create?{name,phone,label:'My passkey'}:{});
+   setAlert({type:'success',message:create?'Account created. Your basket and orders are saved.':'Signed in successfully.'});
+   onComplete?.();
+  }catch(e){if(isSessionCurrent())setError(passkeyError(e));}
+  finally{pending.current=false;if(isSessionCurrent())setBusy(false);}
+ };
+ return <div className="customer-access-form"><h2>{create?'Create your account':'Welcome back'}</h2><p>{create?'Save your orders with your name and phone number.':'Sign in using your saved passkey.'}</p>
+  <p className="customer-access-help">Use your fingerprint, face or device PIN. No email, password or SMS needed.</p>
+  {!supported&&<p role="status" className="account-message">Use a browser that supports passkeys and open this website over HTTPS.</p>}
+  {(error||authError)&&<div ref={errorRef} tabIndex={-1} role="alert" className="account-message account-error">{error||authError}{authError&&isAuthenticated===false&&<button type="button" disabled={authPending} onClick={startGuest}>Try again</button>}</div>}
+  <form onSubmit={submit}><fieldset disabled={busy||authPending||create&&isAuthenticated!==true}><legend className="sr-only">{create?'Create customer account':'Customer sign in'}</legend>
+   {create&&<><label>Your name<input data-initial-focus required autoComplete="name" maxLength="150" value={name} onChange={e=>setName(e.target.value)}/></label><label>Phone number<input required type="tel" autoComplete="tel" maxLength="30" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="e.g. 012 345 6789"/></label></>}
+   <button className="customer-access-primary" data-initial-focus={!create?true:undefined} type="submit" disabled={!supported||busy||authPending||create&&isAuthenticated!==true}>{busy||authPending?'Confirming…':create?'Create account with a passkey':'Sign in with a passkey'}</button>
+  </fieldset></form>
+  <p className="customer-access-switch">{create?'Already have an account?':'New here?'} <button type="button" disabled={busy||authPending} onClick={()=>{setError('');setMode(create?'signin':'create')}}>{create?'Sign in':'Create an account'}</button></p>
+  <details className="customer-access-help"><summary>Using another device?</summary><p>Use a synced passkey or your browser’s “Use another device” option. Keep a backup passkey: your name and phone number alone cannot recover the account.</p></details>
+  {onStaffSignIn&&<div className="customer-access-staff"><span>Manage this kitchen?</span><button type="button" disabled={busy||authPending} onClick={onStaffSignIn}>Kitchen staff sign in</button></div>}
+ </div>;
+}

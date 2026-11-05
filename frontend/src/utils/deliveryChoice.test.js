@@ -29,3 +29,7 @@ assert.equal(activeDeliveryDay(dayRecord,scope(rows,'pickup'),now),'');
 assert.equal(activeDeliveryDay(record,scope(),now),'2030-01-02');
 saveDeliveryChoice(storage,dayRecord);assert.deepEqual(readDeliveryChoice(storage,now),dayRecord);
 assert.equal(readDeliveryChoice(storage,Date.parse('2030-01-03T00:00:00Z')),null);
+
+const simpleKitchen={...store,ordering_mode:'simple'};
+assert.equal(scope(rows,'standard','A',0,'user:1:customer',simpleKitchen),scope(rows,'standard','A',0,'user:1:customer',{...simpleKitchen,delivery_fee_myr:10,delivery_area_fees:{A:'10.00'}}));
+assert.notEqual(scope(rows,'standard','A',0,'user:1:customer',simpleKitchen),scope(rows,'standard','B',0,'user:1:customer',simpleKitchen));

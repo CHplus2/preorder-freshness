@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {manualPaymentAvailable,confirmedCheckoutPrice} from './checkoutPayment.js';
+const bank={manual_payment_enabled:true,bank_transfer_instructions:'Local fixture bank',duitnow_qr_url:''};
+assert.equal(manualPaymentAvailable(bank,'standard'),true);assert.equal(manualPaymentAvailable(bank,'pickup'),false);
+assert.equal(manualPaymentAvailable({...bank,duitnow_qr_url:'https://example.com/qr.png'},'pickup'),true);
+assert.equal(manualPaymentAvailable({...bank,manual_payment_enabled:false},'standard'),false);
+const price={food_subtotal:'24.00',discount:'0.00',delivery_fee:'10.00',total:'34.00'};
+assert.equal(confirmedCheckoutPrice(price,{total:24,discount:0,shipping:10,finalTotal:34}),true);
+assert.equal(confirmedCheckoutPrice(price,{total:24,discount:0,shipping:0,finalTotal:24}),false);
+assert.equal(confirmedCheckoutPrice({...price,total:'NaN'},{total:24,discount:0,shipping:10,finalTotal:34}),false);
+console.log('Checkout payment: configured transfer methods, QR-only collection and server-confirmed total passed.');

@@ -14,7 +14,7 @@ export default function AuthProvider({children}){
  const accountChangeBusy=useRef(false);
  const [authError,setAuthError]=useState(''),[authPending,setAuthPending]=useState(false);
  const clearAuthError=useCallback(()=>setAuthError(''),[]);
- const {setAlert,setDropdownOpen,setShowSignup,setShowLogin}=useUI();
+ const {setAlert,setDropdownOpen,setShowSignup,setShowLogin,setCustomerAccess}=useUI();
  const cancelAuthChecks=useCallback(()=>{++authRequest.current;controller.current?.abort()},[]);
  const invalidate=useCallback(()=>{
   cancelAuthChecks();
@@ -54,7 +54,7 @@ export default function AuthProvider({children}){
    invalidate();announceSessionChange();
    const next=await checkAuth();
    if(!next?.isAuthenticated){const message='The account session could not be verified. Refresh this page and sign in before continuing.';setAuthError(message);return message;}
-   setAlert({message:'',type:''});setShowLogin(false);setShowSignup(false);return null;
+   setAlert({message:'',type:''});setShowLogin(false);setShowSignup(false);setCustomerAccess(null);return next;
   }catch(error){const message=accountRequestError(error,url==='/api/signup/'?'signup':'signin');setAuthError(message);return message}
   finally{accountChangeBusy.current=false;setAuthPending(false)}
  };
@@ -69,7 +69,7 @@ export default function AuthProvider({children}){
    const next=await checkAuth();
    if(!next?.isAuthenticated||(!next.customerAccount&&action!=='reauth'))throw new Error('Your account session could not be verified. Refresh before continuing.');
    return next;
-  }catch(error){throw new Error(passkeyError(error));}
+  }catch(error){throw new Error(passkeyError(error),{cause:error});}
   finally{accountChangeBusy.current=false;setAuthPending(false)}
  };
  const startGuest=useCallback(async()=>{
@@ -84,13 +84,13 @@ export default function AuthProvider({children}){
  },[checkAuth,invalidate]);
  const logout=async()=>{
   if(accountChangeBusy.current)return;
-  accountChangeBusy.current=true;
+  accountChangeBusy.current=true;setAuthPending(true);
   try{
    await axios.post('/api/logout/',{},{withCredentials:true,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    invalidate();commit({authenticated:false});announceSessionChange();
    setAlert({message:'',type:''});setDropdownOpen(false);
   }catch(error){setAlert({type:'error',message:accountRequestError(error,'logout')})}
-  finally{accountChangeBusy.current=false}
+  finally{accountChangeBusy.current=false;setAuthPending(false)}
  };
  // Every account/role boundary remounts private providers and pages. Requests
  // captured by an old tree cannot refill a new account's basket/order/wallet.

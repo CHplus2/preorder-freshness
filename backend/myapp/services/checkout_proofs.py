@@ -7,14 +7,21 @@ from rest_framework import serializers
 from ..models import CheckoutProof
 
 
-def price_scope(items, store, delivery_at, method, area):
+def checkout_pricing(items, store, method):
     from .fulfilment import fee
     items=list(items)
     subtotal=sum((row.product.price*row.quantity for row in items),Decimal('0'))
     discount=(subtotal*Decimal(store.bulk_discount_percent)/100).quantize(Decimal('.01')) if sum(r.quantity for r in items)>=store.bulk_minimum else Decimal('0')
-    amount=subtotal-discount+fee(subtotal,store,method)
+    shipping=fee(subtotal,store,method)
+    return {key:format(value.quantize(Decimal('.01')),'.2f') for key,value in dict(food_subtotal=subtotal,discount=discount,delivery_fee=shipping,total=subtotal-discount+shipping).items()}
+
+
+def price_scope(items, store, delivery_at, method, area):
+    items=list(items)
+    amount=Decimal(checkout_pricing(items,store,method)['total'])
     values=[sorted((r.product_id,r.quantity,str(r.product.price)) for r in items),
-        delivery_at.astimezone(dt_timezone.utc).isoformat(),method,area,getattr(store,'arrival_window_minutes',0),str(amount)]
+        delivery_at.astimezone(dt_timezone.utc).isoformat(),method,area,getattr(store,'arrival_window_minutes',0),str(amount),
+        [store.manual_payment_enabled,store.bank_transfer_instructions,store.duitnow_qr_url]]
     return amount,hashlib.sha256(json.dumps(values,separators=(',',':')).encode()).hexdigest()
 
 

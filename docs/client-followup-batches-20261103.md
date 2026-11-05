@@ -23,6 +23,27 @@ frozen. Do not treat an implemented source change as a verified live deployment.
 | 2 | Passkey account registration/login, named customer profile and checkout prefill, account recovery/cross-device limits | Implemented/tested; owner confirmed running migration 0027 on 4 November; source published as `4be9c09`; owner confirmation recorded as `6dea316` |
 | 3 | Delivery-due owner email reminders for the current workflow, without preparation reminders or duplicate schedules | Implemented/tested 4 November; same worker/schedule, no live email or scheduler changes claimed |
 | 4 | Operational daily summary entry under Orders, retained sales reporting/print preview, and reviewed cleanup of explicitly fictional historical records/references | Implemented/tested 5 November; optional audited reference-correction SQL prepared, not applied to production |
+| 5 | Checkout-only area selection and authoritative fee/payment totals; bank-only delivery support; customer modal and visible staff sign-in | Implemented/tested 5 November; no new migration; source publication remains separate from Vercel Ready status |
+
+## Checkout/account update — 5 November 2026
+
+The basket now contains food editing and food totals. Area, method and time are
+chosen once at checkout. A server-priced quote must agree with the displayed
+total before payment details appear; a fee-only refresh keeps the chosen time.
+QR/bank transfer is selected initially when configured. Settings → **QR & bank
+transfer** → **Save payment settings** saves the receiving image/instructions and
+enable switch. Delivery can use bank details without a QR image; collection
+retains its QR-only requirement. Image receipts remain private evidence and
+orders stay unpaid until verified. No personal bank data was installed by this
+code release.
+
+Header **Account** and the checkout account gate open a customer modal with
+name/phone/passkey creation, an existing-account sign-in switch and **Kitchen
+staff sign in**. The footer and direct kitchen routes also expose staff login.
+Staff credentials and role checks stay unchanged. The account page remains for
+saved details and backup passkeys. Existing account isolation is retained.
+
+See [local validation and UI evidence](evidence/20261105-checkout-account-access/README.md).
 
 ## Batch 1 findings and changes
 

@@ -34,9 +34,10 @@ def save_upload(request):
     from django.contrib.auth.models import User
     User.objects.select_for_update().get(pk=request.user.pk)
     store=Storefront.objects.filter(pk=1).first() or Storefront()
-    if store.ordering_mode != 'simple' or not store.manual_payment_enabled or not store.duitnow_qr_url:
-        raise serializers.ValidationError('QR payment is unavailable. Choose delivery cash if offered, or contact the kitchen.')
+    from ..services.manual_payment import available
     store,method,area=request_store(store,request.data,require_area=True)
+    if store.ordering_mode != 'simple' or not available(store,method):
+        raise serializers.ValidationError('QR payment is required for collection. For delivery, choose an available bank transfer, QR or cash option.')
     delivery=serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
     items=list(CartItem.objects.filter(user=request.user).select_related('product'))
     validate_delivery(items,delivery,store);check_cart_ingredients(items,delivery);check_cart_packaging(items)

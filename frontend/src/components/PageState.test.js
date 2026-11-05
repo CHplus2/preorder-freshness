@@ -10,8 +10,8 @@ try{
  const {AuthContext}=await server.ssrLoadModule('/src/contexts/AuthContext.js');
  const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
  const render=auth=>renderToStaticMarkup(h(MemoryRouter,null,h(UIContext.Provider,{value:{setShowLogin:()=>{}}},h(AuthContext.Provider,{value:auth},h(RequireAuth,{message:'Admin access required'},'PRIVATE KITCHEN')))));
- const signedOut=render({isAuthenticated:false,isAdmin:false});assert.match(signedOut,/<h1>Sign in to continue/);assert.match(signedOut,/<button[^>]*>Sign in<\/button>/);assert.doesNotMatch(signedOut,/PRIVATE KITCHEN/);
- const denied=render({isAuthenticated:true,isAdmin:false});assert.match(denied,/Kitchen access required/);assert.match(denied,/My account/);assert.doesNotMatch(denied,/PRIVATE KITCHEN/);
+ const signedOut=render({isAuthenticated:false,isAdmin:false});assert.match(signedOut,/<h1>Sign in to continue/);assert.match(signedOut,/<button[^>]*>Kitchen sign in<\/button>/);assert.doesNotMatch(signedOut,/PRIVATE KITCHEN/);
+ const denied=render({isAuthenticated:true,isAdmin:false});assert.match(denied,/Kitchen access required/);assert.match(denied,/My account/);assert.match(denied,/<button[^>]*>Kitchen sign in<\/button>/);assert.doesNotMatch(denied,/PRIVATE KITCHEN/);
  assert.match(render({isAuthenticated:true,isAdmin:true}),/PRIVATE KITCHEN/);
  assert.match(render({isAuthenticated:null,isAdmin:null}),/Checking account access/);
  const failed=renderToStaticMarkup(h(PageState,{title:'Page unavailable',description:'Reload to retry.',error:true},h('button',null,'Reload')));assert.match(failed,/<main/);assert.match(failed,/role="alert"/);assert.match(failed,/<h1>Page unavailable/);

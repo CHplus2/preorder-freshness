@@ -148,6 +148,40 @@ class GuestCheckoutTests(TestCase):
         self.assertEqual(free.status_code,201,free.data)
         self.assertEqual(Order.objects.get(pk=free.data['order_id']).shipping_fee,0)
 
+    def test_delivery_bank_details_without_qr_accept_image_proof_and_stay_unpaid(self):
+        staff=APIClient();staff.force_authenticate(self.owner)
+        changed=staff.patch('/api/storefront/',{'manual_payment_enabled':True,'duitnow_qr_url':'',
+            'bank_transfer_instructions':'Fixture Bank / Local kitchen / fictional receiving details'},format='json')
+        self.assertEqual(changed.status_code,200,changed.data)
+        proof=self.upload();placed=self.place(payment='manual',payment_proof_id=proof['id'])
+        self.assertEqual(placed.status_code,201,placed.data)
+        saved=Order.objects.get(pk=placed.data['order_id']);self.assertEqual(saved.payment_status,'unpaid')
+        self.assertEqual(saved.payment_method,'manual');self.assertIn('Fixture Bank',saved.payment_instructions['instructions'])
+        self.assertFalse(PaymentEvent.objects.exists())
+
+    def test_bank_only_configuration_cannot_replace_pickup_qr_rule(self):
+        self.store.duitnow_qr_url='';self.store.bank_transfer_instructions='Fixture receiving bank';self.store.save()
+        response=self.client.post('/api/checkout-proofs/',{**self.select,'delivery_method':'pickup','delivery_area':'','image':receipt_image()},format='multipart')
+        self.assertEqual(response.status_code,400,response.data)
+        self.assertEqual(self.place(payment='manual',delivery_method='pickup',delivery_area='',expected_total='24.00').status_code,400)
+        self.assertFalse(Order.objects.exists());self.assertFalse(CheckoutProof.objects.exists())
+
+    def test_changed_bank_recipient_invalidates_old_unfinished_proof_without_stock_deduction(self):
+        proof=self.upload();self.store.bank_transfer_instructions='Updated fictional receiving account';self.store.save()
+        response=self.place(payment='manual',payment_proof_id=proof['id'])
+        self.assertEqual(response.status_code,400,response.data);self.assertFalse(Order.objects.exists())
+        self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,1000)
+
+    def test_quote_returns_authoritative_area_fee_and_free_threshold_before_payment(self):
+        self.store.delivery_area_fees={'North':'10.00','South':'8.00'};self.store.save()
+        quote=self.client.post('/api/orders/quote/',self.select,format='json')
+        self.assertEqual(quote.status_code,200,quote.data)
+        self.assertEqual(quote.data['pricing'],dict(food_subtotal='24.00',discount='0.00',delivery_fee='10.00',total='34.00'))
+        self.store.free_delivery_minimum_myr=20;self.store.save()
+        free=self.client.post('/api/orders/quote/',self.select,format='json')
+        self.assertEqual(free.data['pricing']['delivery_fee'],'0.00');self.assertEqual(free.data['pricing']['total'],'24.00')
+        self.assertFalse(Order.objects.exists());self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,1000)
+
     def test_valid_qr_upload_stays_unpaid_and_has_private_access_and_no_original_bytes(self):
         proof=self.upload();r=self.place(payment='manual',payment_proof_id=proof['id'])
         self.assertEqual(r.status_code,201,r.data)

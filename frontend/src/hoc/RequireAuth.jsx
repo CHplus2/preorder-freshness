@@ -30,7 +30,7 @@ export default function RequireAuth({ children, message = "Please Log in to view
     if (isAuthenticated === false || (message === "Admin access required" && isAdmin === false )) {
         const signedOut=isAuthenticated===false;
         return <PageState title={signedOut?'Sign in to continue':'Kitchen access required'} description={signedOut?'Sign in to view this page. Your saved orders and account details will be available after signing in.':'This workspace is available to kitchen staff. You can still manage your own account and orders.'}>
-            {signedOut?<button type="button" onClick={()=>setShowLogin(true)}>Sign in</button>:<Link to="/account">My account</Link>}<Link to="/menu">Browse the menu</Link>
+            {signedOut||message==='Admin access required'?<button type="button" onClick={()=>setShowLogin(true)}>{message==='Admin access required'?'Kitchen sign in':'Sign in'}</button>:<Link to="/account">My account</Link>}{!signedOut&&message==='Admin access required'&&<Link to="/account">My account</Link>}<Link to="/menu">Browse the menu</Link>
         </PageState>;
     }
 

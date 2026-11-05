@@ -3,6 +3,39 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Checkout pricing and account access — 5 November 2026
+
+No schema, forecasting model or predictive endpoint changes. Simple-mode
+`POST /api/orders/quote/` additionally returns `pricing` with fixed two-decimal
+strings: `{food_subtotal, discount, delivery_fee, total}`. This uses the same
+Decimal discount and selected-area/free-delivery rules as order placement.
+Quotes remain advisory and do not allocate ingredients or packaging. The browser
+requires this server price to match its current basket before showing receiving
+details or allowing payment-proof submission/order placement. It refreshes stale
+store pricing; a price-only refresh retains the preferred date/time but invalidates
+unfinished payment evidence. The existing final `expected_total` check remains.
+
+In simple mode, staff can enable manual payment with a receiving QR image, bank
+instructions, or both. Delivery accepts configured QR/bank transfer with private
+image evidence, or cash. Self-collection still requires a configured QR image and
+manual payment; bank instructions alone do not enable collection payment. The
+proof digest now includes the enabled flag, QR URL and bank instructions, so an
+unfinished upload cannot be claimed after the receiving details change. Existing
+accepted orders retain their snapshots. Proof uploads remain authenticated,
+sanitized, limited to JPG/PNG/WebP images up to 4 MB and private to their owner and
+staff. A proof is never automatic bank verification or a paid ledger event.
+`GET /api/admin/setup-checklist/` adds `checkout.bank_transfer_ready` to the
+staff-only receiving-payment configuration status.
+
+The simple basket now shows food totals; method, area, date/time and final fee
+are chosen once at checkout. Unselected declared areas show “Choose an area”
+instead of a provisional “Free” delivery claim. Customer entry from the header
+and checkout opens a modal, initially name/phone/passkey registration, with an
+existing-account sign-in switch. `/account` remains the accessible fallback and
+saved-contact/backup-passkey management page. Staff can enter through the customer
+modal, footer or protected kitchen route; staff credentials and role checks are
+unchanged. Private-provider session isolation and WebAuthn validation are retained.
+
 ## Owner-run recipe stock receipt — 4 November 2026
 
 No API, schema, dashboard or model changes. The owner-authorized inventory

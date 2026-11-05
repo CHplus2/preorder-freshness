@@ -1,5 +1,5 @@
 import {basketAvailabilityKey,deliveryInput} from './deliverySlots.js';
-import {fulfilmentKey} from './fulfilment.js';
+import {fulfilmentSelectionKey} from './fulfilment.js';
 
 export const DELIVERY_CHOICE_KEY='basketDeliveryChoice';
 export function chosenDeliveryInput(value,now=Date.now()){
@@ -21,7 +21,7 @@ export function chosenDeliveryDay(value,now=Date.now()){
  return value>=today && value<=last?value:'';
 }
 export const deliveryChoiceScope=(account,cart,store,method,area,minutes)=>JSON.stringify([account,
- basketAvailabilityKey([...cart].sort((a,b)=>a.id-b.id)),fulfilmentKey(store,method,area,minutes)]);
+ basketAvailabilityKey([...cart].sort((a,b)=>a.id-b.id)),fulfilmentSelectionKey(store,method,area,minutes)]);
 export function activeDeliveryChoice(record,scope,now=Date.now()){
  return record?.version===1 && record.scope===scope?chosenDeliveryInput(record.value,now):'';
 }

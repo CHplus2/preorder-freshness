@@ -11,3 +11,8 @@ export const fulfilmentTimes=(store,method)=>{
  return store?.ordering_mode==='simple'?[(store[kind+'_start_time']||'07:30').slice(0,5),(store[kind+'_end_time']||'11:00').slice(0,5)]:fulfilmentHours(store,method).map(h=>String(h).padStart(2,'0')+':00');
 };
 export const timeLabel=value=>{const [h,m]=value.split(':').map(Number);return `${h%12||12}${m?':'+String(m).padStart(2,'0'):''}${h>=12?'pm':'am'}`};
+
+// A preferred time is not a reservation. Simple-mode price changes recheck the
+// quote without discarding the customer's date/time; method, area and hours
+// still scope the choice. Scheduled-mode behaviour remains unchanged.
+export const fulfilmentSelectionKey=(store,...args)=>fulfilmentKey(store?.ordering_mode==='simple'?{...store,delivery_fee_myr:undefined,free_delivery_minimum_myr:undefined,delivery_area_fees:undefined}:store,...args);

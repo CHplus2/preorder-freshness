@@ -179,8 +179,9 @@ def place_order(request):
         customer,client_address=customer_details(request.data,method,user)
         if payment not in ('manual','cod') or method == 'pickup' and payment != 'manual':
             raise ValidationError('Delivery accepts QR payment or cash. Self-collection accepts QR payment only.')
-        if payment == 'manual' and not (store.manual_payment_enabled and store.duitnow_qr_url):
-            raise ValidationError('QR payment is unavailable. Contact the kitchen or choose delivery cash.')
+        from ..services.manual_payment import available as manual_available
+        if payment == 'manual' and not manual_available(store,method):
+            raise ValidationError('Collection requires QR payment. For delivery, choose an available bank transfer, QR or cash option.')
         if payment == 'cod' and request.data.get('payment_proof_id'):
             raise ValidationError('Cash orders do not need payment proof.')
         if any(request.data.get(k) for k in ('email_reminder','email_dispatch_updates','email_time_updates')):
@@ -390,7 +391,8 @@ def preparation_quote(request):
     check_cart_packaging(items)
     if simple(store):
         check_cart_ingredients(items, delivery)
-        return Response(dict(**timing, preparation_at=None, preparation_end_at=None, **plan_snapshot(plan)))
+        from ..services.checkout_proofs import checkout_pricing
+        return Response(dict(**timing, preparation_at=None, preparation_end_at=None, pricing=checkout_pricing(items,store,method), **plan_snapshot(plan)))
     from ..services.discovery import shopping_preview
     return Response(dict(**timing, preparation_at=plan['start'], preparation_end_at=plan['end'],
         procurement_required=bool(shopping_preview(items, plan['start'], plan['end'])), **plan_snapshot(plan)))
