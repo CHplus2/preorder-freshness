@@ -6,7 +6,7 @@
     "app.py": {
       "maxDuration": 60,
       "includeFiles": "{backend/predictive_ai/data/*.csv,backend/predictive_ai/artifacts/demand_model.cbm,backend/predictive_ai/artifacts/metrics.json,backend/predictive_ai/artifacts/runtime-bundle.tar.gz,frontend/src/contracts/preorderEscrow.json}",
-      "excludeFiles": "{frontend/node_modules/**,frontend/public/**,frontend/scripts/**,frontend/src/components/**,frontend/src/contexts/**,frontend/src/features/**,frontend/src/pages/**,frontend/src/hooks/**,frontend/src/utils/**,frontend/src/assets/**,backend/venv/**,backend/**/test*.py,.venv/**,venv/**,backend/backups/**,**/*.sqlite3,screenshots/**,.git/**,tests/**,escrow/**,docs/evidence/**,.freshcast-deploy/**}"
+      "excludeFiles": "{**/node_modules/**,**/venv/**,{backend/backups,screenshots,.git,.venv,venv,tests,escrow,docs/evidence,.freshcast-deploy}/**,**/*.sqlite3,frontend/{public,scripts}/**,frontend/src/{components,contexts,features,pages,hooks,utils,assets}/**,**/test*.py}"
     }
   }
 }

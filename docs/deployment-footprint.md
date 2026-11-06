@@ -26,6 +26,9 @@ delete migration records, or change database settings.
 - `vercel.json` also excludes original frontend photos, build scripts and React
   source directories from the Python function. These remain available during the
   frontend build. The generated `frontend/dist` remains in the runtime.
+  Nested brace alternatives keep the exclusion string within Vercel's
+  256-character schema limit. Regression checks cover both include/exclude
+  lengths, glob matching and preservation of the built frontend and model inputs.
 - The escrow verification manifest stays at
   `frontend/src/contracts/preorderEscrow.json`, where the server reads it.
   Existing portfolio source and historical payment handlers remain in Git.
