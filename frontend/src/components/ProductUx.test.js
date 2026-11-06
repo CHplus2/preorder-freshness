@@ -125,12 +125,12 @@ try{
  assert.match(contributionSummary({...contributionBase,shown:0,order_count:0}),/No orders were placed/);
  assert.match(contributionSummary(contributionBase),/date placed/);
  const contributionRow={order:1,status:'pending',realised:false,food_contribution:null,net_food_revenue:'0',known_ingredient_cost:'0',accepted_packaging_cost:'0',missing:['Missing cooking evidence'],trace:[]};
- const orderEvidence=changes=>renderToStaticMarkup(createElement(OrderContribution,{row:{...contributionRow,...changes}}));
- assert.match(orderEvidence({}),/Not realised yet/);
- assert.match(orderEvidence({status:'delivered'}),/Outcome records incomplete/);
- assert.match(orderEvidence({status:'delivered',realised:true}),/Cost records incomplete/);
- assert.match(orderEvidence({status:'delivered',realised:true,payment_status:'unpaid'}),/Payment evidence incomplete/);
- assert.match(orderEvidence({status:'cancelled'}),/No cooked outcome recorded/);
+ const orderEvidence=changes=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(OrderContribution,{row:{...contributionRow,...changes}})));
+ assert.match(orderEvidence({}),/Not received yet/);
+ assert.match(orderEvidence({status:'delivered'}),/Ingredient use not recorded/);
+ assert.match(orderEvidence({status:'delivered',realised:true}),/Cost records missing/);
+ assert.match(orderEvidence({status:'delivered',realised:true,payment_status:'unpaid'}),/Payment not confirmed/);
+ assert.match(orderEvidence({status:'cancelled'}),/Cancelled · no received-order contribution/);
  assert.match(orderEvidence({status:'delivered',realised:true,food_contribution:'0.00',missing:[]}),/RM 0.00 food contribution/);
  assert.match(orderEvidence({status:'delivered',realised:true,food_contribution:'-2.00',missing:[]}),/RM -2.00 food contribution/);
  assert.match(orderEvidence({}),/missing costs are not treated as zero/);

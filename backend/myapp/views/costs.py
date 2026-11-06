@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from ..models import Product, InventoryItem, InventoryLog, OperatingExpense, WasteRecord
+from ..services.menu_costs import current_menu_costs
 
 class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -83,17 +84,13 @@ def cost_report(request):
     if start>end or (end-start).days>366:
         raise ValidationError('Choose a date range of up to 367 days, with start before end.')
     menus=[]
-    for p in Product.objects.prefetch_related('ingredients__raw_material').order_by('name'):
-        recipe=list(p.ingredients.all())
-        missing=[i.raw_material.name for i in recipe if i.raw_material.estimated_unit_cost is None]
-        if not recipe: missing.append('Recipe not recorded')
-        if p.packaging_cost is None: missing.append('Packaging cost')
-        ingredient=sum((i.quantity_required*i.raw_material.estimated_unit_cost for i in recipe if i.raw_material.estimated_unit_cost is not None),Decimal('0'))
-        total=ingredient+p.packaging_cost if not missing else None
+    for p in Product.objects.prefetch_related('ingredients__raw_material','packaging_requirements__packaging_item').order_by('name'):
+        ingredient,packaging,missing=current_menu_costs(p)
+        total=ingredient+packaging if not missing else None
         contribution=p.price-total if total is not None else None
         menus.append({'id':p.pk,'name':p.name,'price':str(p.price),'missing':missing,
-            'ingredient_cost':str(ingredient.quantize(Decimal('0.01'))) if recipe and not any(i.raw_material.estimated_unit_cost is None for i in recipe) else None,
-            'packaging_cost':str(p.packaging_cost) if p.packaging_cost is not None else None,
+            'ingredient_cost':str(ingredient.quantize(Decimal('0.01'))) if ingredient is not None else None,
+            'packaging_cost':str(packaging.quantize(Decimal('0.01'))) if packaging is not None else None,
             'estimated_contribution':str(contribution.quantize(Decimal('0.01'))) if contribution is not None else None,
             'estimated_margin_percent':str((contribution/p.price*100).quantize(Decimal('0.1'))) if contribution is not None and p.price>0 else None})
     costs=OperatingExpense.objects.filter(date__range=(start,end),voided=False)

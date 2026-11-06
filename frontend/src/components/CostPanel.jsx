@@ -1,45 +1,106 @@
 import {useEffect,useState,useRef} from 'react';
 import axios from 'axios';
+import {Link} from 'react-router-dom';
 import {apiError,readApiError} from '../utils/apiError';
 import {getCookie} from '../utils/cookieUtils';
 import {malaysiaDate} from '../utils/planner';
+import {stockQuantity} from '../utils/stockShortage';
 import {costReport,costMaterials,costLots,costExpenses,costMenuSelection} from '../utils/costResponse';
 import PricingPreview from './PricingPreview';
+import CostAssumptions from './CostAssumptions';
 import useOrderCatalogue from '../hooks/useOrderCatalogue';
-const money=v=>v==null?'Not recorded':'RM '+Number(v).toFixed(2);
+const money=value=>value==null?'Not recorded':'RM '+Number(value).toFixed(2);
+const categories={utilities:'Utilities',delivery:'Courier & transport',labour:'Labour',marketing:'Marketing',other:'Other overhead'};
+
 export default function CostPanel(){
  const [report,setReport]=useState(null),[materials,setMaterials]=useState([]),[lots,setLots]=useState([]),[expenses,setExpenses]=useState([]);
- const [includeArchived,setIncludeArchived]=useState(false);
+ const [includeArchived,setIncludeArchived]=useState(false),[loading,setLoading]=useState(true);
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);
  const {catalogue,error:catalogueError}=useOrderCatalogue(retry);
  const [range,setRange]=useState(()=>({start:malaysiaDate(new Date(Date.now()-27*86400000)),end:malaysiaDate(new Date())}));
+ const [applied,setApplied]=useState(range);
  const [expense,setExpense]=useState({date:malaysiaDate(new Date()),category:'utilities',amount:'',note:''});
- const [waste,setWaste]=useState({inventory_item:'',quantity:'',reason:''});
- const expenseKey=useRef(crypto.randomUUID()),wasteKey=useRef(crypto.randomUUID());
- const feedback=useRef(null);
- useEffect(()=>{if(error || message){feedback.current?.scrollIntoView({block:'center'});feedback.current?.focus({preventScroll:true})}},[error,message]);
- useEffect(()=>{const c=new AbortController();
- Promise.all([axios.get('/api/admin/costs/',{params:range,signal:c.signal}),axios.get('/api/admin/raw-materials/',{signal:c.signal}),axios.get('/api/admin/inventory-items/',{signal:c.signal}),axios.get('/api/admin/expenses/',{signal:c.signal})]).then(([a,b,d,e])=>{const report=costReport(a.data),materials=costMaterials(b.data),lots=costLots(d.data),expenses=costExpenses(e.data);setReport(report);setMaterials(materials);setLots(lots);setExpenses(expenses)}).catch(e=>{if(!axios.isCancel(e))setError(readApiError(e))});return()=>c.abort()},[range,retry]);
- const mutate=async(url,data,method='post')=>{if(busy)return false;setBusy(true);setError('');setMessage('');try{await axios[method](url,data,{headers:{'X-CSRFToken':getCookie('csrftoken')}});setReport(null);setRetry(n=>n+1);setMessage('Saved.');return true}catch(e){setError(apiError(e));return false}finally{setBusy(false)}};
- const visibleMenus=report && catalogue ? costMenuSelection(report.menus,catalogue,includeArchived) : [];
- return <section id="costs" tabIndex={-1} className="cost-workspace"><h2>Costs, wastage and pricing</h2><p>Menu estimates use today's ingredient costs and packaging. They exclude discounts, labour, delivery, overhead and tax; they are not net profit.</p>
- <div className="admin-fields">{['start','end'].map(key=><label key={key}>{key==='start'?'Period starts':'Period ends'}<input type="date" value={range[key]} onChange={e=>{if(e.target.value){setReport(null);setError('');setRange({...range,[key]:e.target.value});}}}/></label>)}</div>
- {(error || message) && <div ref={feedback} tabIndex={-1} role={error?'alert':'status'} className="cost-feedback"><p>{error || message}</p>{error && <button type="button" disabled={busy} onClick={()=>{setReport(null);setError('');setMessage('');setRetry(n=>n+1)}}>Refresh cost records</button>}</div>}
- {!report && !error && <p role="status">Loading costs...</p>}
- {report && <><div className="admin-metrics"><article><span>Operating expenses in period</span><strong>{money(report.operating_expenses)}</strong></article><article><span>Recorded wastage cost in period</span><strong>{money(report.known_waste_cost)}</strong><small>{report.unpriced_waste_records} waste records have unknown costs, excluded from this total.</small></article></div>
- <h3>Menu contribution estimates · per portion</h3><p>Contribution = menu price minus ingredient estimate minus packaging. Dates above filter expenses and wastage, not these current recipe estimates.</p>
- <div className="cost-menu-scope"><label><input type="checkbox" checked={includeArchived} onChange={e=>setIncludeArchived(e.target.checked)}/>Include archived menus in pricing tools</label><p>Archived items are hidden by default. This changes this view only; historical order outcomes are unchanged.</p></div>
- {catalogueError && <p role="alert">Menu availability could not be loaded: {catalogueError} <button type="button" onClick={()=>setRetry(n=>n+1)}>Retry menu availability</button></p>}
- <PricingPreview key={`${retry}:${includeArchived}`} menus={visibleMenus} unavailableReason={catalogueError?'Pricing tools are waiting for menu availability. Retry above.':!catalogue?'Loading menu availability…':''}/>
- {catalogue && <details className="settings-group"><summary>Recipe cost estimates · {visibleMenus.length} menus</summary>{visibleMenus.length===0 && <p>No menus match this view.</p>}{visibleMenus.map(m=><article className="admin-order-summary" key={m.id}><h3>{m.name}{m.selling_status==='archived'?' · Archived':m.selling_status==='paused'?' · Paused':''}</h3><p>Price {money(m.price)} / Ingredients {money(m.ingredient_cost)} / Packaging {money(m.packaging_cost)}</p>{m.missing.length?<p>Complete these costs first: {m.missing.join(', ')}.</p>:<p><strong>Estimated contribution: {money(m.estimated_contribution)}{m.estimated_margin_percent!==null && ` (${m.estimated_margin_percent}%)`}</strong> before other costs and discounts.</p>}</article>)}</details>}
- <details className="settings-group"><summary>Ingredient cost assumptions</summary><p>Enter RM per ingredient inventory unit. RM 12 per kg is RM 0.012 per gram. Update these when supplier prices change. Set packaging costs in Menus.</p>{materials.map(m=><form className="cost-input-row" key={m.id} onSubmit={e=>{e.preventDefault();mutate('/api/admin/raw-materials/'+m.id+'/',{estimated_unit_cost:m.estimated_unit_cost===''?null:m.estimated_unit_cost},'patch')}}><label>{m.name} · RM/{m.unit}<input type="number" min="0" step="0.000001" value={m.estimated_unit_cost ?? ''} onChange={e=>setMaterials(rows=>rows.map(x=>x.id===m.id?{...x,estimated_unit_cost:e.target.value}:x))}/></label><button disabled={busy}>Save cost</button></form>)}</details>
- <details className="settings-group"><summary>Record an operating expense</summary><p>Use for overhead, courier fees, labour or marketing. Do not enter ingredient purchases or packaging here and also count them as recipe costs when calculating a margin.</p>
- <form onSubmit={async e=>{e.preventDefault();if(await mutate('/api/admin/expenses/',{...expense,request_id:expenseKey.current})){expenseKey.current=crypto.randomUUID();setExpense({...expense,amount:'',note:''})}}}>
- <div className="admin-fields"><label>Date<input type="date" required value={expense.date} onChange={e=>setExpense({...expense,date:e.target.value})}/></label><label>Category<select value={expense.category} onChange={e=>setExpense({...expense,category:e.target.value})}>{['utilities','delivery','labour','marketing','other'].map(c=><option key={c}>{c}</option>)}</select></label><label>Amount (RM)<input type="number" required min="0.01" step="0.01" value={expense.amount} onChange={e=>setExpense({...expense,amount:e.target.value})}/></label><label>Receipt / description<input required maxLength={300} value={expense.note} onChange={e=>setExpense({...expense,note:e.target.value})}/></label></div><button disabled={busy}>Record expense</button></form></details>
- <details className="settings-group"><summary>Record ingredient wastage</summary><p>This deducts quantity from the selected batch and records its cost at that time. Use this for discarded ingredients, not items already deducted for cooking. Check the quantity before saving.</p>
- <form onSubmit={async e=>{e.preventDefault();if(await mutate('/api/admin/waste/',{...waste,request_id:wasteKey.current})){wasteKey.current=crypto.randomUUID();setWaste({inventory_item:'',quantity:'',reason:''})}}}><label>Batch<select required value={waste.inventory_item} onChange={e=>setWaste({...waste,inventory_item:e.target.value})}><option value="">Choose stock</option>{lots.filter(l=>Number(l.quantity)>0).map(l=><option key={l.id} value={l.id}>{l.raw_material_name} / {l.batch_code || '#'+l.id} / {l.quantity} {l.unit} remaining</option>)}</select></label><div className="admin-fields"><label>Quantity (batch inventory unit)<input type="number" required min="0.001" step="0.001" value={waste.quantity} onChange={e=>setWaste({...waste,quantity:e.target.value})}/></label><label>Reason<input required maxLength={300} value={waste.reason} onChange={e=>setWaste({...waste,reason:e.target.value})}/></label></div><button disabled={busy}>Record waste and deduct stock</button></form></details>
- <details className="settings-group"><summary>Expense ledger</summary><p className="ledger-scope">Latest 100 records across all dates, including voided entries.</p>{expenses.length===0 && <p className="ledger-empty">No operating expenses recorded yet. Use “Record an operating expense” above to add your first entry.</p>}{expenses.map(e=><article className="admin-order-summary" key={e.id}><strong>{e.date} · {e.category} · {money(e.amount)}</strong><p>{e.note}</p>{e.voided?<span>Voided — excluded from totals</span>:<button disabled={busy} onClick={()=>mutate('/api/admin/expenses/'+e.id+'/void/',{})}>Void incorrect entry</button>}</article>)}</details>
- <details className="settings-group"><summary>Wastage ledger</summary><p className="ledger-scope">Selected period: {range.start} to {range.end} · latest 100 records.</p>{report.waste.length===0 && <p className="ledger-empty">No wastage recorded in this period. Choose a different period or record discarded ingredients above.</p>}{report.waste.map(w=><article className="admin-order-summary" key={w.id}><strong>{w.material}: {w.quantity} {w.unit} · {money(w.cost)}</strong><p>{w.date} · {w.reason}</p></article>)}</details>
- </>}
- </section>
+ const [waste,setWaste]=useState({inventory_item:'',quantity:'',reason:''}),[reviewWaste,setReviewWaste]=useState(false),[voiding,setVoiding]=useState(null);
+ const expenseKey=useRef(crypto.randomUUID()),wasteKey=useRef(crypto.randomUUID()),feedback=useRef(null);
+ useEffect(()=>{if(error){feedback.current?.focus({preventScroll:true})}},[error]);
+ useEffect(()=>{
+  const controller=new AbortController();
+  Promise.all([
+   axios.get('/api/admin/costs/',{params:applied,signal:controller.signal}),
+   axios.get('/api/admin/raw-materials/',{signal:controller.signal}),
+   axios.get('/api/admin/inventory-items/',{signal:controller.signal}),
+   axios.get('/api/admin/expenses/',{signal:controller.signal}),
+  ]).then(([a,b,d,e])=>{
+   const next={report:costReport(a.data),materials:costMaterials(b.data),lots:costLots(d.data),expenses:costExpenses(e.data)};
+   if(controller.signal.aborted)return;
+   setReport(next.report);setMaterials(next.materials);setLots(next.lots);setExpenses(next.expenses);
+  }).catch(error=>{if(!controller.signal.aborted)setError(readApiError(error))})
+   .finally(()=>{if(!controller.signal.aborted)setLoading(false)});
+  return()=>controller.abort();
+ },[applied,retry]);
+ const refresh=()=>{setError('');setLoading(true);setRetry(value=>value+1)};
+ const mutate=async(url,data,method='post',notice='Record saved.')=>{
+  if(busy||loading)return false;
+  setBusy(true);setError('');setMessage('');
+  try{
+   await axios[method](url,data,{headers:{'X-CSRFToken':getCookie('csrftoken')}});
+   setLoading(true);setRetry(value=>value+1);setMessage(notice);return true;
+  }catch(error){setError(apiError(error));return false}finally{setBusy(false)}
+ };
+ const disabled=busy||loading;
+ const visibleMenus=report&&catalogue?costMenuSelection(report.menus,catalogue,includeArchived):[];
+ const selectedLot=lots.find(lot=>String(lot.id)===String(waste.inventory_item));
+ const wasteValid=selectedLot&&Number(waste.quantity)>0&&Number(waste.quantity)<=Number(selectedLot.quantity)&&waste.reason.trim();
+ return <section id="costs" tabIndex={-1} className="cost-workspace" aria-busy={loading}>
+  <header className="sales-panel-heading"><div><h2>Costs & pricing</h2><p>Compare current menu costs. Keep expenses and discarded stock recorded when you need them.</p></div><button type="button" disabled={disabled} onClick={refresh}>{loading?'Refreshing…':'Refresh costs'}</button></header>
+  <form className="sales-date-filter" onSubmit={event=>{event.preventDefault();setError('');setLoading(true);setApplied({...range});setRetry(value=>value+1)}}>
+   <label>Expenses & wastage from<input type="date" required value={range.start} max={range.end} onChange={event=>setRange({...range,start:event.target.value})}/></label>
+   <label>To<input type="date" required value={range.end} min={range.start} onChange={event=>setRange({...range,end:event.target.value})}/></label><button disabled={disabled}>Apply dates</button>
+  </form>
+  {(error||message)&&<div ref={feedback} tabIndex={-1} role={error?'alert':'status'} className={error?'cost-feedback cost-feedback--error':'cost-feedback'}><p>{error||message}</p>{error&&<button type="button" disabled={disabled} onClick={refresh}>Try loading again</button>}</div>}
+  {!report&&!error&&<p role="status">Loading cost records…</p>}
+  {report&&<>
+   <div className="cost-summary-grid"><article><span>Operating expenses</span><strong>{money(report.operating_expenses)}</strong><small>{report.start} to {report.end}</small></article><article><span>Recorded wastage cost</span><strong>{money(report.known_waste_cost)}</strong><small>{report.unpriced_waste_records?`${report.unpriced_waste_records} entries have no recorded purchase cost; total is incomplete.`:'From discarded ingredients in this period.'}</small></article></div>
+   <p className="cost-scope-note">The dates filter expenses and wastage. Pricing tools below use current recipes and cost estimates.</p>
+   {catalogueError&&<p role="alert">Menus could not be loaded. <button type="button" onClick={refresh}>Try again</button></p>}
+   <PricingPreview key={`${retry}:${includeArchived}`} menus={visibleMenus} unavailableReason={catalogueError?'Load the menu list before comparing prices.':!catalogue?'Loading menus…':''}/>
+   <details className="cost-section"><summary><span>Current recipe estimates</span><small>{visibleMenus.length} menus · food costs per selling unit</small></summary><div className="cost-section-body">
+    <p>Menu price minus ingredient and packaging costs. Delivery, labour and overhead are excluded, so this is not net profit.</p>
+    <label className="cost-inline-check"><input type="checkbox" checked={includeArchived} onChange={event=>setIncludeArchived(event.target.checked)}/>Include archived menus</label>
+    <div className="cost-menu-grid">{visibleMenus.map(menu=><article key={menu.id}><h3>{menu.name}{menu.selling_status==='archived'?' · Archived':menu.selling_status==='paused'?' · Paused':''}</h3><dl><div><dt>Menu price</dt><dd>{money(menu.price)}</dd></div><div><dt>Ingredients</dt><dd>{money(menu.ingredient_cost)}</dd></div><div><dt>Packaging</dt><dd>{money(menu.packaging_cost)}</dd></div></dl>{menu.missing.length?<p className="cost-incomplete">Estimate unavailable. Add missing costs: {menu.missing.join('; ')}.</p>:<p><strong>{money(menu.estimated_contribution)}</strong> food contribution per unit{menu.estimated_margin_percent!==null&&` (${menu.estimated_margin_percent}%)`}.</p>}</article>)}</div>
+    {!visibleMenus.length&&<p>No menus in this view.</p>}<p><Link to="/admin/packaging">Edit assigned packaging costs</Link> · <Link to="/admin/products">Review menu recipes</Link></p>
+   </div></details>
+   <CostAssumptions materials={materials} busy={disabled} onSave={(id,cost)=>mutate(`/api/admin/raw-materials/${id}/`,{estimated_unit_cost:cost},'patch','Ingredient cost saved.')}/>
+   <div className="cost-record-grid">
+    <details className="cost-section" id="expense-form"><summary><span>Record an expense</span><small>Utilities, courier fees, labour or marketing</small></summary><div className="cost-section-body">
+     <p>Record business spending here. Ingredient and packaging purchases belong in their stock records; recording them twice would overstate costs.</p>
+     <form className="cost-entry-form" onSubmit={async event=>{event.preventDefault();if(await mutate('/api/admin/expenses/',{...expense,request_id:expenseKey.current},'post','Expense recorded.')){expenseKey.current=crypto.randomUUID();setExpense({...expense,amount:'',note:''})}}}>
+      <fieldset disabled={disabled}><legend className="sr-only">Expense details</legend><div className="cost-form-grid">
+       <label>Date<input type="date" required max={malaysiaDate(new Date())} value={expense.date} onChange={event=>setExpense({...expense,date:event.target.value})}/></label>
+       <label>Category<select value={expense.category} onChange={event=>setExpense({...expense,category:event.target.value})}>{Object.entries(categories).map(([key,label])=><option value={key} key={key}>{label}</option>)}</select></label>
+       <label>Amount (RM)<input type="number" required min="0.01" step="0.01" value={expense.amount} onChange={event=>setExpense({...expense,amount:event.target.value})}/></label>
+       <label>Receipt reference or description<input required maxLength={300} value={expense.note} onChange={event=>setExpense({...expense,note:event.target.value})}/></label>
+      </div><button>Save expense</button></fieldset>
+     </form>
+    </div></details>
+    <details className="cost-section" id="waste-form"><summary><span>Record ingredient wastage</span><small>Discarded ingredients · reduces batch stock</small></summary><div className="cost-section-body">
+     <p>Use this when ingredients are discarded. Food already allocated to an order has been deducted; do not record it again here.</p>
+     <form className="cost-entry-form" onSubmit={async event=>{
+      event.preventDefault();if(!wasteValid)return;if(!reviewWaste){setReviewWaste(true);return}
+      if(await mutate('/api/admin/waste/',{...waste,request_id:wasteKey.current},'post','Wastage recorded and stock deducted.')){wasteKey.current=crypto.randomUUID();setWaste({inventory_item:'',quantity:'',reason:''});setReviewWaste(false)}
+     }}>
+      <fieldset disabled={disabled||reviewWaste}><legend className="sr-only">Wastage details</legend>
+       <label>Ingredient batch<select required value={waste.inventory_item} onChange={event=>setWaste({...waste,inventory_item:event.target.value,quantity:''})}><option value="">Choose a batch</option>{lots.filter(lot=>Number(lot.quantity)>0).map(lot=><option key={lot.id} value={lot.id}>{lot.raw_material_name} · {lot.batch_code||'#'+lot.id} · {stockQuantity(lot.quantity)} {lot.unit}</option>)}</select></label>
+       <div className="cost-form-grid"><label>Quantity to discard{selectedLot?` (${selectedLot.unit})`:''}<input type="number" required min="0.001" step="0.001" max={selectedLot?.quantity} value={waste.quantity} onChange={event=>setWaste({...waste,quantity:event.target.value})}/></label><label>Reason<input required maxLength={300} placeholder="For example, damaged or spoiled" value={waste.reason} onChange={event=>setWaste({...waste,reason:event.target.value})}/></label></div>
+      </fieldset>
+      {reviewWaste?<div className="cost-review" role="group" aria-label="Confirm wastage deduction"><h3>Review stock deduction</h3>{selectedLot&&<><p>Discard <strong>{stockQuantity(waste.quantity)} {selectedLot.unit} of {selectedLot.raw_material_name}</strong> from {selectedLot.batch_code||'batch #'+selectedLot.id}.</p><p>Remaining: {stockQuantity(Math.max(0,Number(selectedLot.quantity)-Number(waste.quantity)))} {selectedLot.unit}. Reason: {waste.reason}.</p></>}{!wasteValid&&<p role="alert">The batch or available quantity changed. Go back and review it before saving.</p>}<div className="cost-form-actions"><button type="button" disabled={disabled} onClick={()=>setReviewWaste(false)}>Go back</button><button type="submit" disabled={disabled||!wasteValid}>Confirm &amp; deduct stock</button></div></div>:<button type="submit" disabled={disabled||!wasteValid}>Review wastage</button>}
+     </form>
+    </div></details>
+   </div>
+   <details className="cost-section"><summary><span>Expense history</span><small>Latest 100 entries · all dates</small></summary><div className="cost-section-body">
+    {!expenses.length&&<p>No expenses recorded yet.</p>}{expenses.map(entry=><article className="cost-ledger-row" key={entry.id}><div><strong>{categories[entry.category]||entry.category} · {money(entry.amount)}</strong><p>{entry.date} · {entry.note}</p></div>{entry.voided?<span>Voided · excluded from totals</span>:voiding===entry.id?<div className="cost-review"><p>Exclude this expense from totals? The original entry will remain in the history.</p><div className="cost-form-actions"><button type="button" disabled={disabled} onClick={()=>setVoiding(null)}>Go back</button><button type="button" disabled={disabled} onClick={async()=>{if(await mutate(`/api/admin/expenses/${entry.id}/void/`,{},'post','Expense voided.'))setVoiding(null)}}>Confirm void</button></div></div>:<button type="button" disabled={disabled} onClick={()=>setVoiding(entry.id)}>Void entry</button>}</article>)}
+   </div></details>
+   <details className="cost-section"><summary><span>Wastage history</span><small>{report.start} to {report.end} · latest 100 entries</small></summary><div className="cost-section-body">{!report.waste.length&&<p>No wastage recorded in this period.</p>}{report.waste.map(entry=><article className="cost-ledger-row" key={entry.id}><div><strong>{entry.material} · {stockQuantity(entry.quantity)} {entry.unit}</strong><p>{entry.date} · {entry.reason}</p></div><span>{money(entry.cost)}</span></article>)}</div></details>
+  </>}
+ </section>;
 }

@@ -25,6 +25,28 @@ class CostsAndFreshnessTests(TestCase):
         self.raw.estimated_unit_cost=None;self.raw.save()
         self.assertIsNone(self.client.get('/api/admin/costs/').json()['menus'][0]['estimated_contribution'])
 
+    def test_cost_report_uses_assigned_packaging_like_checkout(self):
+        from .models import PackagingItem,ProductPackaging,Order,OrderItem
+        self.menu.packaging_cost=Decimal('9.99');self.menu.save()
+        bowl=PackagingItem.objects.create(name='Bowl',quantity=20,unit_cost='.40')
+        label=PackagingItem.objects.create(name='Label',quantity=40,unit_cost='.05')
+        ProductPackaging.objects.create(product=self.menu,packaging_item=bowl,quantity_per_item=1)
+        ProductPackaging.objects.create(product=self.menu,packaging_item=label,quantity_per_item=2)
+        row=self.client.get('/api/admin/costs/').json()['menus'][0]
+        self.assertEqual(row['packaging_cost'],'0.50');self.assertEqual(row['estimated_contribution'],'8.50')
+        order=Order.objects.create(user=self.owner,ordering_mode='simple')
+        item=OrderItem.objects.create(order=order,product=self.menu,product_name=self.menu.name,quantity=1,unit_price=10,subtotal=10)
+        item.refresh_from_db();self.assertEqual(item.packaging_unit_cost,Decimal(row['packaging_cost']))
+
+    def test_unpriced_assigned_packaging_never_falls_back_to_a_manual_zero(self):
+        from .models import PackagingItem,ProductPackaging
+        self.menu.packaging_cost=0;self.menu.save()
+        supply=PackagingItem.objects.create(name='Bowl',quantity=20,unit_cost=None)
+        ProductPackaging.objects.create(product=self.menu,packaging_item=supply,quantity_per_item=1)
+        row=self.client.get('/api/admin/costs/').json()['menus'][0]
+        self.assertIsNone(row['packaging_cost']);self.assertIsNone(row['estimated_contribution'])
+        self.assertIn('Bowl: packaging unit cost',row['missing'])
+
     def test_waste_deducts_once_and_preserves_cost(self):
         data={'request_id':str(uuid4()),'inventory_item':self.lot.pk,'quantity':'100','reason':'Damaged'}
         self.assertEqual(self.client.post('/api/admin/waste/',data).status_code,201)

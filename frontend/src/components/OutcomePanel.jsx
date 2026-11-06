@@ -3,40 +3,41 @@ import axios from 'axios';
 import {contributionReport} from '../utils/costResponse';
 import {readApiError} from '../utils/apiError';
 import {ContributionSummary,OrderContribution} from './ContributionEvidence';
-const date=d=>new Date(d).toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'});
+const date=value=>new Date(value).toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'});
 export default function OutcomePanel(){
-  const [exporting,setExporting]=useState(false),[exportError,setExportError]=useState('');
-  const [range,setRange]=useState(()=>({start:date(Date.now()-27*86400000),end:date(Date.now())}));
-  const [applied,setApplied]=useState(range),[report,setReport]=useState(null),[error,setError]=useState('');
-  const download=async()=>{
-    if(exporting || !report)return;
-    setExporting(true);setExportError('');
-    try{
-      const result=await axios.get('/api/admin/contribution/export/',{params:{start:report.start,end:report.end},responseType:'blob'});
-      const url=URL.createObjectURL(result.data),link=document.createElement('a');
-      link.href=url;link.download=`food-contribution-${report.start}-to-${report.end}.csv`;
-      document.body.appendChild(link);link.click();link.remove();
-      setTimeout(()=>URL.revokeObjectURL(url),1000);
-    }catch(e){
-      if(e.response?.data instanceof Blob){try{e.response.data=JSON.parse(await e.response.data.text());}catch{e.response.data=null;}}
-      setExportError(readApiError(e));
-    }finally{setExporting(false);}
-  };
-  useEffect(()=>{const c=new AbortController();
-    axios.get('/api/admin/contribution/',{params:applied,signal:c.signal})
-      .then(a=>setReport(contributionReport(a.data))).catch(e=>{if(!axios.isCancel(e))setError(readApiError(e))});return()=>c.abort();},[applied]);
-  return <section id="order-contribution" tabIndex={-1} className="dk-panel"><h2>Order contribution</h2>
-    <p>Recorded food revenue minus recorded batch ingredient costs and accepted packaging estimates. This is an order outcome, not a current-recipe estimate or net profit.</p>
-    <form className="fyp-form inline" onSubmit={e=>{e.preventDefault();setReport(null);setError('');setExportError('');setApplied({...range})}}>
-      <label>Orders placed from<input type="date" required value={range.start} onChange={e=>setRange({...range,start:e.target.value})}/></label>
-      <label>Through<input type="date" required min={range.start} value={range.end} onChange={e=>setRange({...range,end:e.target.value})}/></label><button>Apply / refresh</button>
-    </form>{error && <p role="alert">{error}</p>}
-    {!report && !error && <p role="status">Loading outcomes…</p>}
-    {report && <><ContributionSummary report={report}/><details className="contribution-help"><summary>How contribution is calculated</summary><p>{report.definition}</p><p>Generated forecast history may have paid/delivered flags without any actual cooking or batch consumption. It can support a forecast scenario while historical contribution remains unavailable. Updating current ingredient estimates does not backfill those records.</p></details>
-      <button type="button" disabled={exporting} onClick={download}>{exporting?'Preparing export…':'Download contribution CSV'}</button>
-      <p>Exports all orders placed from {report.start} through {report.end}, up to 5,000 orders. Larger ranges must be narrowed. Export values reflect records at download time; blank contribution means unavailable. No customer contact details are included.</p>
-      {exportError && <p role="alert">{exportError}</p>}
-      {report.rows.map(row=><OrderContribution key={row.order} row={row}/>)}
-    </>}
-  </section>;
+ const [exporting,setExporting]=useState(false),[exportError,setExportError]=useState('');
+ const [range,setRange]=useState(()=>({start:date(Date.now()-27*86400000),end:date(Date.now())}));
+ const [applied,setApplied]=useState(range),[report,setReport]=useState(null),[error,setError]=useState('');
+ const download=async()=>{
+  if(exporting||!report)return;
+  setExporting(true);setExportError('');
+  try{
+   const result=await axios.get('/api/admin/contribution/export/',{params:{start:report.start,end:report.end},responseType:'blob'});
+   const url=URL.createObjectURL(result.data),link=document.createElement('a');
+   link.href=url;link.download=`food-contribution-${report.start}-to-${report.end}.csv`;
+   document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(error){
+   if(error.response?.data instanceof Blob){try{error.response.data=JSON.parse(await error.response.data.text())}catch{error.response.data=null}}
+   setExportError(readApiError(error));
+  }finally{setExporting(false)}
+ };
+ useEffect(()=>{
+  const controller=new AbortController();
+  axios.get('/api/admin/contribution/',{params:applied,signal:controller.signal})
+   .then(({data})=>{if(!controller.signal.aborted)setReport(contributionReport(data))})
+   .catch(error=>{if(!controller.signal.aborted)setError(readApiError(error))});
+  return()=>controller.abort();
+ },[applied]);
+ return <section id="order-contribution" tabIndex={-1} className="dk-panel contribution-panel"><header className="sales-panel-heading"><div><h2>Food contribution by order</h2><p>Food sales after discounts, minus recorded ingredient and packaging costs. Delivery, labour and overhead are excluded; this is not net profit.</p></div></header>
+  <form className="sales-date-filter" onSubmit={event=>{event.preventDefault();setReport(null);setError('');setExportError('');setApplied({...range})}}>
+   <label>Orders placed from<input type="date" required value={range.start} max={range.end} onChange={event=>setRange({...range,start:event.target.value})}/></label>
+   <label>To<input type="date" required min={range.start} value={range.end} onChange={event=>setRange({...range,end:event.target.value})}/></label><button>View orders</button>
+  </form>
+  {error&&<p role="alert">{error}</p>}{!report&&!error&&<p role="status">Loading order costs…</p>}
+  {report&&<><ContributionSummary report={report}/>
+   <div className="contribution-toolbar"><button type="button" disabled={exporting} onClick={download}>{exporting?'Preparing export…':'Download contribution CSV'}</button><details className="contribution-help"><summary>About this report & export</summary><p>{report.definition}</p><p>The page shows up to 200 orders. CSV exports include up to 5,000 matching orders with no customer contact details. Blank contribution means it cannot be calculated. Narrow the range if it is too large.</p><p>Current ingredient estimates cannot fill missing historical purchase costs. Generated forecast history can have paid/received flags without complete cost records.</p></details></div>
+   {exportError&&<p role="alert">{exportError}</p>}
+   <div className="contribution-order-list">{report.rows.map(row=><OrderContribution key={row.order} row={row}/>)}</div>
+  </>}
+ </section>;
 }

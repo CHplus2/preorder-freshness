@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {costUnits,displayUnitCost,inventoryUnitCost} from './costEntry.js';
+assert.equal(costUnits('g')[0].label,'kg');assert.equal(costUnits('ml')[0].label,'litre');
+assert.equal(inventoryUnitCost('12',1000),'0.012000');
+assert.equal(inventoryUnitCost('8.50',1000),'0.008500');
+assert.equal(inventoryUnitCost('0',1000),'0.000000');
+assert.equal(inventoryUnitCost('',1000),null);
+assert.equal(inventoryUnitCost('0.012',1),'0.012000');
+assert.equal(displayUnitCost('0.012000',1000),'12');assert.equal(displayUnitCost(null,1000),'');
+for(const value of ['NaN','Infinity','-1'])assert.throws(()=>inventoryUnitCost(value,1000));
+assert.throws(()=>inventoryUnitCost('0.0000001',1000),/too small/);
+console.log('Cost entry: kg/litre conversion, explicit zero, unknown costs and precision safeguards passed.');

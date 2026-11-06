@@ -2094,3 +2094,36 @@ confirms that a completed external refund has already been made. Pending refund
 resolution remains available. The existing staff API, payment idempotency and
 provider restrictions stay unchanged; the form does not send bank refunds.
 No predictive/model/evaluation behaviour changes.
+
+
+### 6 November 2026 — Sales, pricing and contribution workspace
+
+Sales now separates period sales, current costs/pricing and recorded order
+contribution. Optional historical analytics and forecasts mount when opened;
+existing predictive endpoints, models, artifacts and evaluation are unchanged.
+Date filters apply on submission, not on each date keystroke.
+
+The staff cost report and pricing comparison share `current_menu_costs`.
+Assigned packaging requirements use quantity per selling unit multiplied by the
+supply's current unit cost, matching checkout's packaging estimate. With no
+assigned supplies, the existing manual packaging estimate remains the fallback.
+Unknown assigned supply costs remain unknown, even if the manual estimate is
+zero. Ingredient quantities and estimated per-inventory-unit costs retain Decimal
+arithmetic. Comparisons are read-only and do not alter menu prices, bulk offers,
+accepted orders or historical allocation costs. No API fields or schema changed.
+
+The ingredient editor accepts familiar RM/kg and RM/litre values and converts
+them to the existing six-decimal RM/g or RM/ml API value. Blank means unknown;
+explicit zero remains zero. The browser rejects negative, non-finite and
+unrepresentably tiny positive costs before submission. Existing staff API
+validation still applies.
+
+Wastage now has a browser review step showing the exact deduction and remaining
+balance before confirmation. Expense voiding also requires confirmation. The
+existing staff authorisation, server row locks, request IDs and atomic stock
+writes remain authoritative. Refreshes retain form state; they do not silently
+submit deductions. Contribution wording separates orders not received, missing
+payment evidence and missing historical cost records. Current recipe estimates
+never backfill unavailable accepted-order costs; food contribution is not net
+profit. Local fixture tests verify these behaviours, not live business records
+or a production deployment. No migration is required.

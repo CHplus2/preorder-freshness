@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from ..models import Product, Storefront
+from ..services.menu_costs import current_menu_costs
 
 
 class PricingInput(serializers.Serializer):
@@ -27,18 +28,9 @@ def pricing_preview(request):
     form = PricingInput(data=request.data)
     form.is_valid(raise_exception=True)
     data = form.validated_data
-    product = get_object_or_404(Product.objects.prefetch_related('ingredients__raw_material'), pk=data['product'])
+    product = get_object_or_404(Product.objects.prefetch_related('ingredients__raw_material','packaging_requirements__packaging_item'), pk=data['product'])
     store = Storefront.objects.filter(pk=1).first() or Storefront()
-    recipe = list(product.ingredients.all())
-    missing = [i.raw_material.name + ': ingredient unit cost' for i in recipe if i.raw_material.estimated_unit_cost is None]
-    if not recipe:
-        missing.append('Recipe not recorded')
-    if any(i.quantity_required <= 0 for i in recipe):
-        missing.append('Recipe quantities must be positive')
-    if product.packaging_cost is None:
-        missing.append('Packaging cost not recorded')
-    ingredient = sum((i.quantity_required * i.raw_material.estimated_unit_cost for i in recipe
-                      if i.raw_material.estimated_unit_cost is not None), Decimal('0'))
+    ingredient,packaging_unit,missing = current_menu_costs(product)
     portions = data['portions']
     current_discount = Decimal(store.bulk_discount_percent) if portions >= store.bulk_minimum else Decimal('0')
 
@@ -46,9 +38,8 @@ def pricing_preview(request):
         gross = price * portions
         reduction = (gross * discount / 100).quantize(Decimal('0.01'))
         revenue = gross - reduction
-        ingredients = ingredient * (1 + increase / 100) * portions if recipe and not any(
-            i.raw_material.estimated_unit_cost is None for i in recipe) else None
-        packaging = product.packaging_cost * portions if product.packaging_cost is not None else None
+        ingredients = ingredient * (1 + increase / 100) * portions if ingredient is not None else None
+        packaging = packaging_unit * portions if packaging_unit is not None else None
         additional = data['additional_cost_per_portion'] * portions
         total_cost = ingredients + packaging + additional if not missing else None
         value = revenue - total_cost if total_cost is not None else None

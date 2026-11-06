@@ -35,6 +35,24 @@ class PricingPreviewTests(TestCase):
         self.assertEqual(self.material.estimated_unit_cost,Decimal('0.02'))
         self.assertEqual(self.store.bulk_discount_percent,10)
 
+    def test_preview_and_cost_report_share_assigned_packaging_and_preserve_precision(self):
+        from .models import PackagingItem,ProductPackaging
+        supply=PackagingItem.objects.create(name='Label',quantity=200,unit_cost=Decimal('.001250'))
+        ProductPackaging.objects.create(product=self.product,packaging_item=supply,quantity_per_item=3)
+        result=self.preview(portions=100,ingredient_increase_percent='0',additional_cost_per_portion='0').data
+        self.assertEqual(result['baseline']['packaging_cost'],'0.38')
+        self.assertEqual(result['proposed']['packaging_cost'],'0.38')
+        supply.refresh_from_db();self.assertEqual(supply.quantity,200)
+        self.product.refresh_from_db();self.assertEqual(self.product.packaging_cost,1)
+
+    def test_unpriced_assigned_packaging_blocks_profit_estimate(self):
+        from .models import PackagingItem,ProductPackaging
+        supply=PackagingItem.objects.create(name='Bowl',quantity=20,unit_cost=None)
+        ProductPackaging.objects.create(product=self.product,packaging_item=supply,quantity_per_item=1)
+        result=self.preview().data
+        self.assertIsNone(result['proposed']['packaging_cost']);self.assertIsNone(result['proposed']['contribution'])
+        self.assertIn('Bowl: packaging unit cost',result['missing'])
+
     def test_baseline_threshold_and_explicit_scenario_discount(self):
         result=self.preview(portions=9).data
         self.assertEqual(result['baseline']['discount_percent'],'0')
