@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {settingsPayload,savedSettings} from './settingsWorkspace.js';
+import {accountPasskeys} from './accountPasskeys.js';
+const draft={name:'New kitchen name',service_area:'Kuching',bulk_minimum:10,bulk_discount_percent:'25',delivery_enabled:false,manual_payment_enabled:false,duitnow_qr_url:'Unsaved image',private_field:'excluded'};
+assert.deepEqual(settingsPayload('identity',draft),{name:'New kitchen name',service_area:'Kuching'});
+assert.deepEqual(settingsPayload('promotion',draft),{bulk_minimum:10,bulk_discount_percent:'25'});
+assert.deepEqual(settingsPayload('payments',draft),{duitnow_qr_url:'Unsaved image',manual_payment_enabled:false});
+assert.throws(()=>settingsPayload('unrecognised',draft));
+const saved=savedSettings(draft,{name:'Saved kitchen name',bulk_discount_percent:0,delivery_enabled:true},['name']);
+assert.equal(saved.name,'Saved kitchen name');assert.equal(saved.bulk_discount_percent,'25');assert.equal(saved.delivery_enabled,false);assert.equal(saved.duitnow_qr_url,'Unsaved image');
+assert.equal(draft.name,'New kitchen name');assert.throws(()=>savedSettings(draft,{},['name']));
+const key={id:1,label:'My phone',created_at:'2026-11-06T00:00:00Z'};
+assert.deepEqual(accountPasskeys({passkeys:[key]}),[key]);
+for(const rows of [null,[],[key,key],[{...key,id:0}],[{...key,label:''}],[{...key,created_at:'invalid'}]])assert.throws(()=>accountPasskeys({passkeys:rows}),{code:'INVALID_RESPONSE'});
+console.log('Settings: isolated section payloads, preserved unsaved drafts and validated passkey lists passed.');

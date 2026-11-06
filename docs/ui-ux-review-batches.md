@@ -55,8 +55,24 @@ calculated deadlines, generated references, mandatory adjustment reasons,
 version conflicts/reload, protected deletion and review-before-removal. These
 are isolated fixtures; no live inventory records or expiry rules were changed.
 
+## Batch 4: Settings and account pages
+
+Implemented independently saved, collapsible Settings sections with direct links
+that open nested controls. Saving one section preserves other drafts. Diagnostics
+and setup checks load on first opening; email testing remains an explicit action.
+Staff account forms have consistent spacing and save/error feedback. Customer
+accounts can retry passkey-list reads, add backups with native confirmation, and
+review a named key before removal; last-key protection is retained.
+
+Validation: scoped-save and passkey-response utilities, settings/account/email
+render tests, production build, and local Chromium at desktop and 390px. Browser
+checks include independent saves, direct links and keyboard focus, lazy reads,
+staff contacts and real WebAuthn ceremonies using virtual test devices. The
+backend run passed 82 tests; four environment-specific checks were skipped. No
+live emails or account records were changed by these isolated checks.
+
 ## Remaining batches
-4. Settings and account pages: plain language, sections and profile forms.
+
 5. Menu, basket and checkout: responsive cards, totals, forms and feedback.
 6. Sign-in, registration and chatbot dialogs: focus, recovery and mobile layouts.
 

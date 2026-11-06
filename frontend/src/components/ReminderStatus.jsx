@@ -3,11 +3,11 @@ import axios from 'axios';
 import EmailDeliveryCheck from './EmailDeliveryCheck';
 import {reminderStatus,activitySummary,workerTime,workerOutcome} from '../utils/reminderStatus';
 
-export default function ReminderStatus(){
+export default function ReminderStatus({embedded=false}){
  const [status,setStatus]=useState(null),[error,setError]=useState(''),[revision,setRevision]=useState(0);
  useEffect(()=>{const c=new AbortController();axios.get('/api/admin/reminder-status/',{signal:c.signal,timeout:15000}).then(({data})=>setStatus(reminderStatus(data))).catch(e=>{if(!axios.isCancel(e))setError('Email status could not be checked. Try refreshing.');});return()=>c.abort()},[revision]);
- return <section className="settings-group reminder-monitor" id="reminders" tabIndex={-1} aria-labelledby="reminder-monitor-title">
-  <div className="reminder-monitor-heading"><h2 id="reminder-monitor-title">Order email reminders</h2><button type="button" disabled={!status && !error} onClick={()=>{setStatus(null);setError('');setRevision(v=>v+1);}}>Refresh status</button></div>
+ return <section className="settings-group reminder-monitor" id={embedded?undefined:'reminders'} tabIndex={-1} aria-labelledby="reminder-monitor-title">
+  <div className="reminder-monitor-heading"><h2 className={embedded?'sr-only':undefined} id="reminder-monitor-title">Order email reminders</h2><button type="button" disabled={!status && !error} onClick={()=>{setStatus(null);setError('');setRevision(v=>v+1);}}>Refresh status</button></div>
   <p>Review your kitchen’s order reminders and recent email checks.</p>
   {error?<p role="alert" className="admin-notice error">{error}</p>:!status?<p role="status">Checking email status…</p>:<ReminderEvidence status={status}/>}
   <p className="reminder-status-timestamp">Refreshing status does not send email.</p>

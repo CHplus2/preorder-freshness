@@ -2,8 +2,9 @@ import {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
 import {apiError} from '../utils/apiError';
+import {revealSettingsTarget} from '../utils/settingsWorkspace';
 
-export default function SetupChecklist() {
+export default function SetupChecklist({embedded=false}) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -16,8 +17,8 @@ export default function SetupChecklist() {
       .finally(()=>{if (!controller.signal.aborted) setLoading(false);});
     return ()=>controller.abort();
   }, [refresh]);
-  return <section className="setup-checklist dk-panel" id="setup" aria-labelledby="setup-heading">
-    <h2 id="setup-heading">Set up your kitchen</h2>
+  return <section className="setup-checklist dk-panel" id={embedded?undefined:'setup'} aria-labelledby="setup-heading">
+    <h2 id="setup-heading" className={embedded?'sr-only':undefined}>Set up your kitchen</h2>
     <p>Work through these steps using your saved business details. Refresh after editing menus or inventory.</p>
     <button type="button" disabled={loading} onClick={()=>{setLoading(true);setError('');setRefresh(n=>n+1);}}>{loading?'Checking setup…':'Refresh checks'}</button>
     {error && <p role="alert">{error} Use Refresh checks to try again.</p>}
@@ -33,8 +34,7 @@ export default function SetupChecklist() {
         {step.affected_count > 0 && <p>{step.affected_count} menus need attention: {step.examples.map(p=>p.name).join(', ')}{step.affected_count>step.examples.length?' (first 10 shown)':''}.</p>}
         {step.href.startsWith('/admin/settings#') ? <a href={step.href} onClick={event=>{
           if(event.button!==0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)return;
-          const target=document.getElementById(step.href.split('#')[1]);
-          if(target){event.preventDefault();target.scrollIntoView({block:'start'});(target.matches('input,textarea')?target:target.querySelector('input,textarea'))?.focus({preventScroll:true});}
+          const id=step.href.split('#')[1];if(revealSettingsTarget(id)){event.preventDefault();window.history.replaceState(null,'','#'+id);}
         }}>{step.action}</a> : <Link to={step.href}>{step.action}</Link>}
       </li>)}</ol>
       <h3>Inventory follow-up</h3>

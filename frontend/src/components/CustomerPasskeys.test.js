@@ -26,7 +26,7 @@ try{
  assert.doesNotMatch(account,/Sign in with a passkey|Create your account|type="email"/);
  const {StoreContext}=await load('contexts/StorefrontContext.js'),{default:RequireAuth}=await load('hoc/RequireAuth.jsx');
  const {default:StaffAccount}=await load('pages/customer/AccountPage.jsx');
- const staff=renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store:{ordering_mode:'simple'}}},h(AuthContext.Provider,{value:{isAdmin:true}},h(StaffAccount)))));
+ const staff=renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store:{ordering_mode:'simple'}}},h(AuthContext.Provider,{value:{isAdmin:true}},h(UIContext.Provider,{value:{setAlert:()=>{}}},h(StaffAccount))))));
  assert.match(staff,/Your staff account/);assert.match(staff,/Staff profile/);assert.match(staff,/Open email reminder settings/);
  assert.match(staff,/empty account email does not switch off kitchen reminders/);
  assert.doesNotMatch(staff,/Delivery address|Sign-in email &amp; delivery reminders|My orders/);

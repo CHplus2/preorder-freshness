@@ -2186,3 +2186,38 @@ response tests, a production frontend build, and real local Chromium checks.
 Browser checks cover native validation, calculated dates, quantity-adjustment
 reasons, stale edits/reload, protected deletion, exact packaging deductions and
 390px dialogs/history. These use isolated fixture records, not live Supabase.
+
+
+### 6 November 2026 — Settings and own-account workspace
+
+Settings now presents independently saved sections. Kitchen profile, story,
+promotion and scheduled-workflow cooking settings use explicit allowlisted PATCH
+payloads. Returned fields merge only into the saved section, preserving drafts in
+other sections. QR, pickup and delivery retain their existing scoped saves and
+validation. The scheduled workflow keeps a save action for its fulfilment terms.
+No section changes ordering mode, order snapshots, account roles or model data.
+Existing staff-only storefront authorisation remains authoritative.
+
+Links to pickup, delivery fees, QR, contacts and other nested sections open their
+containing disclosures before focus/scroll. Natural input tab stops are preserved.
+Setup checks and reminder status load when first opened and remain mounted after
+that. Opening/refreshing reminder status does not invoke the email-send endpoint.
+Current phone/passkey customers remain outside automatic email subscriptions;
+kitchen reminder recipients and optional staff sign-in email remain separate.
+
+Staff profile saves provide inline and transient success feedback; errors receive
+focus within their form. Customer passkey-list failures now offer retry rather
+than endless loading. Passkey responses reject malformed/duplicate entries.
+Backup registration still requires recent native WebAuthn confirmation. Removal
+first identifies the selected key in a dialog, then uses the existing reauth and
+DELETE endpoint. The server still prevents removing the final key and invalidates
+sessions tied to removed keys. Phone numbers remain contact data, not credentials.
+
+Checks: scoped payload/draft-preservation utilities, rendered settings/account,
+email and reminder tests, production build and real local Chromium at desktop
+and 390px. Browser checks exercise independent saves, deep links, lazy reads,
+staff phone normalisation, native WebAuthn registration/reauthentication, retry,
+backup registration and removal. The focused backend run passed 82 tests and
+skipped four environment-specific checks. Isolated fixtures and virtual test
+authenticators were used; no live emails, bank changes or database corrections
+were made. No migration or predictive/model/evaluation change is required.
