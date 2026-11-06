@@ -2,6 +2,23 @@
 
 ## Follow-up visual review — owner feedback on 6 November
 
+### Sign-in scrollbar regression
+
+Overlapping native dialogs previously saved separate body-overflow snapshots.
+Closing the older dialog first could unlock the background prematurely; closing
+the remaining dialog could then restore `hidden` with no dialog left. Shared
+scroll-lock ownership now restores the original per-axis inline styles only
+after the final dialog closes. Cleanup is idempotent and preserves original
+CSS priorities. Authentication, dismissal guards and dialog focus rules remain
+unchanged.
+
+Validation: four lock-lifecycle regression tests, focused dialog/account render
+checks, scoped lint and production build passed. Local Chromium reproduced the
+original failure before the change and verified both closing orders, StrictMode,
+wheel scrolling, original CSS priorities, repeated customer/staff switches,
+failed/successful staff login, direct admin login, menu-editor Escape and packaging
+Cancel. Tests used isolated fixtures; no live accounts or stock were changed.
+
 The earlier six batches are the first review pass, not a guarantee that all
 visual defects were caught. The owner's subsequent page-specific feedback is
 being handled in this follow-up sequence:

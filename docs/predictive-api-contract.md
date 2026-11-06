@@ -2383,3 +2383,17 @@ production build, five existing backend freshness-maths tests and isolated local
 Chromium at desktop, 390px and 320px. Browser checks cover lazy reads, malformed
 responses, retry, empty/unknown/zero records, overlapping exclusions and mobile
 navigation/footer reachability. No live writes, emails or migration were required.
+
+### 6 November 2026 — sign-in scrollbar cleanup
+
+Shared native dialogs now coordinate ownership of the body's scroll lock.
+Overlapping authentication/admin dialogs can close in either order without
+leaving the page locked or unlocking a still-open dialog. The final cleanup
+restores the original inline overflow axes and priorities; repeated cleanup is
+safe. This is a frontend lifecycle correction only. No API, authentication
+credential/session policy, stock calculation or predictive/model change.
+Validation: four ownership/cleanup regression tests, focused dialog/account
+render checks, scoped lint, production build and isolated Chromium on phone and
+desktop viewports. The browser verified background locking, scrolling after
+final closure, staff login/switching and admin dialog dismissal. No live data or
+email writes; no database migration required.

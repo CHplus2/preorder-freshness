@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import './ModalDialog.css';
 import {useUI} from '../contexts/UIContext';
+import {lockBodyScroll} from '../utils/bodyScrollLock';
 
 // Native modal semantics contain keyboard focus and make the page behind inert.
 export default function ModalDialog({ children, onDismiss, label, fallbackFocusSelector }) {
@@ -9,14 +10,13 @@ export default function ModalDialog({ children, onDismiss, label, fallbackFocusS
   useEffect(() => {
     const dialog = ref.current;
     const opener = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
     dialog.showModal();
     dialog.querySelector('[data-initial-focus]')?.focus();
-    document.body.style.overflow = 'hidden';
+    const unlockScroll = lockBodyScroll();
     return () => {
       dialog.close();
+      unlockScroll();
       setAlert(current=>current.type==='error'?{message:'',type:''}:current);
-      document.body.style.overflow = previousOverflow;
       if (opener?.isConnected) opener.focus();
       else if(fallbackFocusSelector)document.querySelector(fallbackFocusSelector)?.focus();
     };
