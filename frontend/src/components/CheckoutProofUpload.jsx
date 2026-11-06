@@ -30,21 +30,21 @@ export default function CheckoutProofUpload({amount,disabled,selection,qrUrl,ins
   upload();
  },[attempt,disabled,selection,amount,isSessionCurrent,onUploaded]);
  const choose=file=>{
+  if(!file)return;
   controller.current?.abort();const id=++sequence.current;
   setProof(null);onUploaded(null);setError('');setAttempt(null);
-  if(!file)return;
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)){setError('Choose a JPG, PNG or WebP receipt image.');return;}
   if(file.size>4*1024*1024){setError('Choose a receipt image up to 4 MB.');return;}
   setAttempt({id,file});
  };
  return <div className="checkout-proof" aria-busy={busy}>
-  {proof?<p><strong>Receipt attached for RM {amount.toFixed(2)}.</strong> Place your preorder below to send it to the kitchen for payment review.</p>:confirmed?<p><strong>Payment amount: RM {amount.toFixed(2)}</strong> {qrUrl?(instructions?'Use the kitchen’s QR code or bank details below.':'Use the kitchen’s QR code below.'):'Use the kitchen’s bank details below.'} Use a banking app that supports this payment and check the recipient and amount before confirming.</p>:<p role="status">Rechecking payment details. Wait for the confirmed total before paying.</p>}
+  {!proof&&confirmed?<p><strong>Payment amount: RM {amount.toFixed(2)}</strong> {qrUrl?(instructions?'Use the kitchen’s QR code or bank details below.':'Use the kitchen’s QR code below.'):'Use the kitchen’s bank details below.'} Use a banking app that supports this payment and check the recipient and amount before confirming.</p>:!proof&&<p role="status">Rechecking payment details. Wait for the confirmed total before paying.</p>}
   <p className="checkout-hint">Already paid? Do not pay twice. Keep your receipt and contact the kitchen if the order amount changes or checkout cannot complete.</p>
   {confirmed&&qrUrl&&<>{failedQrUrl===qrUrl?<p role="alert" className="checkout-error">The receiving QR image could not load. Open the code using the link below, or contact the kitchen before paying.</p>:<img className="checkout-qr-image" src={qrUrl} alt="Kitchen receiving QR code" referrerPolicy="no-referrer" onError={()=>setFailedQrUrl(qrUrl)}/>}<a href={qrUrl} target="_blank" rel="noopener noreferrer">Open payment QR code</a></>}{confirmed&&instructions&&<p className="checkout-payment-instructions">{instructions}</p>}
   <label>Payment receipt image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={disabled||busy} onChange={e=>choose(e.target.files?.[0]||null)}/></label>
   <p className="checkout-hint">Uploads automatically when selected. JPG, PNG or WebP, up to 4 MB. Visible only to you and kitchen staff.</p>
   {busy&&<p role="status">{disabled?'Receipt selected. Waiting for the availability check…':'Uploading receipt…'}</p>}
-  {proof&&<div className="checkout-proof-saved" role="status"><strong>Receipt uploaded</strong><p>The kitchen will verify this payment after you place your preorder. Do not pay again.</p><a href={proof.url} target="_blank" rel="noopener noreferrer">View uploaded receipt</a></div>}
+  {proof&&<div className="checkout-proof-saved" role="status"><strong>Receipt uploaded</strong><p>Ready to attach to your RM {amount.toFixed(2)} preorder. The kitchen will verify the transfer after you place it. Do not pay again.</p><a href={proof.url} target="_blank" rel="noopener noreferrer">View uploaded receipt</a></div>}
   {error&&<div role="alert" className="checkout-error"><p>{error}</p>{attempt&&<button type="button" disabled={disabled||busy} onClick={()=>choose(attempt.file)}>Retry receipt upload</button>}</div>}
  </div>;
 }

@@ -23,7 +23,7 @@ export default function AvailabilityResult({checking, error, quote, selectionKey
     content = requestMode?<><strong>Kitchen confirmation needed</strong><p>You can send this time to the kitchen for review. No payment will be taken and no preparation time is reserved until confirmed.</p>{quote.plan.review_reason && <details><summary>Why kitchen confirmation is needed</summary><p>{quote.plan.review_reason}</p></details>}</>:<><strong>Choose another available time</strong><p>This time cannot be scheduled with the current kitchen bookings. Choose one of the suggested alternatives above, or ask the kitchen to review this time.</p></>;
   }
   else if (quote?.plan.ordering_mode==='simple') {
-    tone='success';content=<><strong>Your order details are ready</strong><p>Recorded ingredient and packaging stock covers this basket for the selected date. Stock is checked again and deducted when you place the order.</p></>;
+    tone='success';content=<><strong>Food is available for this basket</strong><p>Recorded ingredient and packaging stock covers this basket for the selected date. Stock is checked again and deducted when you place the order.</p></>;
   }
   else if (quote) {
     tone = 'success';

@@ -71,9 +71,24 @@ staff contacts and real WebAuthn ceremonies using virtual test devices. The
 backend run passed 82 tests; four environment-specific checks were skipped. No
 live emails or account records were changed by these isolated checks.
 
+## Batch 5: Menu, basket and checkout
+
+Aligned menu service hours with minute-aware checkout settings and directed time
+selection to checkout. The basket keeps quantities and food totals without a
+second area/time form. Checkout checks fulfilment/time before contact details,
+then payment. Mobile placement controls remain visible with clear total and
+next-step guidance. Inputs and the save-contact checkbox have consistent sizes;
+loading is distinct from errors. Empty receipt selections preserve uploaded proof.
+
+Validation: 96 backend tests, focused menu/basket/checkout/recommendation render
+checks, production build, and local Chromium at 390px and desktop. Browser checks
+cover quantity/discount totals, guest-to-account continuity, real passkeys,
+receipt rejection/preservation, area fees, QR-only collection, cash delivery and
+exact ingredient/packaging deductions. All records and payment images are local
+fixtures; no live transaction or order was made.
+
 ## Remaining batches
 
-5. Menu, basket and checkout: responsive cards, totals, forms and feedback.
 6. Sign-in, registration and chatbot dialogs: focus, recovery and mobile layouts.
 
 Each batch will be checked against the existing client workflow. This list is

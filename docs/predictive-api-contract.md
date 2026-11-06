@@ -2221,3 +2221,36 @@ backup registration and removal. The focused backend run passed 82 tests and
 skipped four environment-specific checks. Isolated fixtures and virtual test
 authenticators were used; no live emails, bank changes or database corrections
 were made. No migration or predictive/model/evaluation change is required.
+
+
+### 6 November 2026 — menu, basket and checkout flow
+
+The menu header now uses the same `fulfilmentTimes` and minute-aware labels as
+checkout. Simple-workflow delivery/collection times no longer fall back to old
+whole-hour preparation-era fields. Scheduled-workflow hour settings retain their
+existing meaning. Menu copy directs time selection to checkout; the basket keeps
+food quantities/totals and does not introduce another area/time form.
+
+Simple checkout now checks fulfilment and time before contact details, followed
+by payment. The shared journey names the final step Checkout for both delivery
+and collection. An action panel shows the current food/estimated/confirmed total
+and why placement is blocked. It remains visible at the bottom on small screens;
+contact fields, radios, checkboxes and summary controls have consistent sizing.
+Loading pricing is a status message, with alert/retry reserved for actual errors.
+A successful stock quote describes basket availability, not completed contact
+or payment details.
+
+Selecting no replacement receipt leaves an already uploaded proof attached.
+Selecting an invalid replacement still clears it and shows the file error.
+The existing selection/amount scope, upload request guard, private proof endpoint,
+quote recheck, CSRF checks and order idempotency remain unchanged. An uploaded
+receipt is not a verified payment. No delivery fee, discount, allocation, payment
+policy, recommendation formula or server endpoint changed.
+
+Validation: 96 backend tests, focused rendered menu/recommendation/basket/payment
+checks, production build, and real Chromium interactions at 390px and desktop.
+Isolated tests cover basket quantity/discounts, account registration, time-first
+stock checks, receipt format rejection, empty chooser/focus rechecks, QR delivery,
+QR-only collection, cash delivery, area fees and exact ingredient/packaging
+allocation. Synthetic local images and virtual passkeys were used; no real bank
+transfer or live order was created. No migration or predictive/model change.
