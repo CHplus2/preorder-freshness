@@ -10,6 +10,7 @@ import {apiError} from '../utils/apiError';
 import {paypalRecovery,paypalStatus} from '../utils/paypalResponse';
 import {Link} from 'react-router-dom';
 import PayPalRecovery from './PayPalRecovery';
+import './PaymentRecords.css';
 
 export default function PaymentRecords({order, onSaved}) {
   const {setAlert}=useUI();
@@ -18,12 +19,14 @@ export default function PaymentRecords({order, onSaved}) {
   const [kind,setKind]=useState('receipt'),[outcome,setOutcome]=useState('completed');
   const [reference,setReference]=useState(''),[note,setNote]=useState(''),[revision,setRevision]=useState(0);
   const [notice,setNotice]=useState('');
+  const [showRefund,setShowRefund]=useState(false),[refundConfirmed,setRefundConfirmed]=useState(false);
   const retry=useRef(null);
   const checking=useRef(false);
   useEffect(()=>{const c=new AbortController();
-    axios.get(`/api/admin/orders/${order.id}/payments/`,{signal:c.signal}).then(r=>{if(!r.data || !Array.isArray(r.data.events) || !['unpaid','paid','refunded'].includes(r.data.payment_status))throw invalidResponse();paypalRecovery(r.data.paypal_recovery);setData(r.data);setOutcome('completed');setKind(r.data.payment_status==='unpaid'?'receipt':'refund')}).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});
+    axios.get(`/api/admin/orders/${order.id}/payments/`,{signal:c.signal}).then(r=>{if(!r.data || !Array.isArray(r.data.events) || !['unpaid','paid','refunded'].includes(r.data.payment_status))throw invalidResponse();paypalRecovery(r.data.paypal_recovery);setData(r.data);setOutcome(r.data.payment_status==='unpaid'?'completed':'');setKind(r.data.payment_status==='unpaid'?'receipt':'refund');setShowRefund(!!r.data.unresolved_refund);setRefundConfirmed(false)}).catch(e=>{if(!axios.isCancel(e))setError(apiError(e))});
     return()=>c.abort();},[order.id,revision]);
   const save=async e=>{e.preventDefault();if(busy || !data)return;setBusy(true);setError('');
+    if(kind==='refund'&&(!outcome||outcome==='completed'&&!refundConfirmed)){setBusy(false);setError('Choose the refund result and confirm completed refunds before recording.');return;}
     const body={kind,outcome:kind==='receipt'?'completed':outcome,reference,note,resolves:data.unresolved_refund};
     const key=JSON.stringify(body);
     try{if(retry.current?.key!==key)retry.current={key,id:crypto.randomUUID()};
@@ -53,19 +56,24 @@ export default function PaymentRecords({order, onSaved}) {
       {!historical && order.payment_method==='escrow' && <p>Funding and refunds are verified on-chain. Released/refunded credit is withdrawn separately. <Link to={'/payment/escrow?order='+order.id}>Manage escrow & verify payment</Link></p>}
       {!historical && order.payment_method==='paypal' && <PayPalRecovery recovery={data.paypal_recovery} paymentStatus={data.payment_status} busy={busy} onCheck={checkPayPal}/>}
       {!historical && order.payment_method==='paypal' && data.payment_status==='paid' && <p>Sandbox test funds only. A refund record here does not send a PayPal refund. Complete any test refund in the PayPal Sandbox dashboard first, then record its reference.</p>}
-      {!historical && order.payment_method!=='escrow' && data.payment_status!=='refunded' && !(order.payment_method==='paypal' && data.payment_status==='unpaid') && <form className="fyp-form" onSubmit={save}>
+      {!historical&&data.payment_status==='paid'&&order.payment_method!=='escrow'&&!showRefund&&<p><button type="button" onClick={()=>{setShowRefund(true);setOutcome('');setRefundConfirmed(false)}}>{order.payment_method==='wallet'?'Return test credits':'Record a refund already made'}</button></p>}
+      {!historical && order.payment_method!=='escrow' && data.payment_status!=='refunded' && (data.payment_status==='unpaid'||showRefund) && !(order.payment_method==='paypal' && data.payment_status==='unpaid') && <form className="fyp-form payment-record-form" onSubmit={save}>
         <label>Action<select value={kind} onChange={e=>setKind(e.target.value)}>
           {data.payment_status==='unpaid'?<option value="receipt">Confirm full payment received</option>:<option value="refund">Record full refund</option>}
         </select></label>
-        {kind==='refund' && <label>Refund outcome<select value={outcome} onChange={e=>setOutcome(e.target.value)}>
+        {kind==='refund'&&<p>Use this only to document a refund outcome. For bank or cash payments, this form does not return money to the customer.</p>}
+        {kind==='refund' && <label>Refund outcome<select required value={outcome} onChange={e=>{setOutcome(e.target.value);setRefundConfirmed(false)}}>
+          <option value="" disabled>Choose the actual result</option>
           <option value="completed">Completed {order.payment_method==='wallet'?'— return demo credits now':'— funds already returned externally'}</option>
           {!data.unresolved_refund && <option value="pending">Pending — no funds recorded as returned</option>}
           <option value="failed">Failed — no funds returned</option>
         </select></label>}
         {data.unresolved_refund && <p>Resolve pending refund #{data.unresolved_refund} before starting another.</p>}
+        {kind==='refund'&&outcome==='completed'&&<label className="refund-confirmation"><input type="checkbox" required checked={refundConfirmed} onChange={e=>setRefundConfirmed(e.target.checked)}/>{order.payment_method==='wallet'?'I understand this will return the recorded test credits.':`I confirm RM ${data.amount} has already been returned to the customer outside this website.`}</label>}
         <label>Verification / transaction reference<input required maxLength={200} value={reference} onChange={e=>setReference(e.target.value)}/></label>
         <label>Notes<textarea maxLength={500} value={note} onChange={e=>setNote(e.target.value)}/></label>
-        <button disabled={busy}>{busy?'Recording…':'Record verified outcome'}</button>
+        <button disabled={busy||kind==='refund'&&(!outcome||outcome==='completed'&&!refundConfirmed)}>{busy?'Recording…':kind==='refund'?'Save refund record':'Confirm payment received'}</button>
+        {kind==='refund'&&!data.unresolved_refund&&<button type="button" disabled={busy} onClick={()=>{setShowRefund(false);setRefundConfirmed(false);setError('')}}>Cancel</button>}
       </form>}
     </>}
   </section>;

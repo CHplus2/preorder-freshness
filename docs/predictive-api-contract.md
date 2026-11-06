@@ -2068,3 +2068,29 @@ signs in with the new password. These tests do not prove live SMTP/inbox deliver
 Passwordless customer accounts are excluded from password email recovery; their
 recovery route is an existing synced/backup passkey, not an unverified phone.
 No predictive endpoints, model artifacts or evaluation changed.
+
+### 6 November 2026 — accidental refund correction and deliberate refund entry
+
+Menu stock remains database-derived: the read-only snapshot queries current
+eligible InventoryItem balances, ProductIngredient quantities and assigned active
+PackagingItem balances. A new response/page refresh recalculates the estimate;
+there is no pushed live counter or editable finished-menu stock value. Checkout
+still rechecks dated eligibility and deducts physical allocations once.
+
+For the owner's specifically reported accidental manual refund on order #159,
+`deploy/sql/correct_order_159_accidental_refund.sql` is a narrow, owner-run
+correction. It matches the RM28 amount, original receipt/refund references,
+actor and Malaysia timestamp seconds, and requires exactly those two events.
+It preserves a private original-event snapshot in OrderAmendment, removes only
+that mistaken refund, restores the order payment status to paid, and preserves
+the original receipt, private proof, order IDs/status and physical stock.
+Changed or additional events cause a rollback. An operation marker prevents a
+repeat from undoing a later real refund. No schema, bank or email action occurs.
+Preparing/publishing this script is not evidence it ran on the live database.
+
+PaymentRecords no longer opens a refund form automatically for a paid order.
+The owner explicitly opens the refund action, chooses the actual outcome and
+confirms that a completed external refund has already been made. Pending refund
+resolution remains available. The existing staff API, payment idempotency and
+provider restrictions stay unchanged; the form does not send bank refunds.
+No predictive/model/evaluation behaviour changes.
