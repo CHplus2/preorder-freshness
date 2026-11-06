@@ -3,6 +3,32 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Account navigation and order actions follow-up — 6 November 2026
+
+Presentation and in-memory navigation changes only; no endpoint, schema, model,
+passkey ceremony or staff-password authentication change. Customer sign-in has an
+explicit return to account creation; staff sign-in has an explicit return to the
+customer account. A staff detour preserves the customer form's name/phone draft,
+mode and allowlisted checkout destination in existing UI state, without browser
+storage or sending the draft to the staff-login API. Closing or authenticating
+clears that state. Returning from a direct admin route opens customer registration
+on the menu; returning from checkout keeps the checkout context.
+
+Account dialogs keep pending-operation guards and single error surfaces. An
+optional focus fallback restores the header account entry if a switched dialog's
+original opener no longer exists; other dialogs retain their previous behaviour.
+Staff profile names/phone remain independently saved using PATCH `/api/account/`.
+The readonly sign-in reference is separated visually, and its save action is
+sized to its label. Queue and daily-summary Preview & print links remain protected
+slip routes in safe new tabs; printing is still an explicit user action.
+
+Validation: focused account/order render tests, lint, build and isolated Chromium
+at desktop and small phone widths. Browser checks cover drafts/return paths,
+errors/pending guards, virtual WebAuthn, focus, profile persistence and explicit
+printing. Existing backend suites discovered 34 tests: 31 passed, three skipped
+on SQLite. No live deployment, account changes, email or model evaluation was
+performed.
+
 ## Basket ordering dates and responsive suggestions — 6 November 2026
 
 No endpoint, schema or model change. The simple checkout passes its current cart

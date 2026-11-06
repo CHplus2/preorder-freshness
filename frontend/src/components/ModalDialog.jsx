@@ -3,7 +3,7 @@ import './ModalDialog.css';
 import {useUI} from '../contexts/UIContext';
 
 // Native modal semantics contain keyboard focus and make the page behind inert.
-export default function ModalDialog({ children, onDismiss, label }) {
+export default function ModalDialog({ children, onDismiss, label, fallbackFocusSelector }) {
   const {setAlert}=useUI();
   const ref = useRef(null);
   useEffect(() => {
@@ -18,8 +18,9 @@ export default function ModalDialog({ children, onDismiss, label }) {
       setAlert(current=>current.type==='error'?{message:'',type:''}:current);
       document.body.style.overflow = previousOverflow;
       if (opener?.isConnected) opener.focus();
+      else if(fallbackFocusSelector)document.querySelector(fallbackFocusSelector)?.focus();
     };
-  }, [setAlert]);
+  }, [setAlert,fallbackFocusSelector]);
   const containTab=event=>{
     if(event.key!=='Tab')return;
     const fields=[...ref.current.querySelectorAll('a[href],button,input,select,textarea,summary,[contenteditable="true"],[tabindex]')]

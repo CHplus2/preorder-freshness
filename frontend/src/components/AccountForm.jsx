@@ -1,7 +1,7 @@
 import {useStorefront} from '../contexts/StorefrontContext';
 import {useEffect,useRef,useState} from 'react';
-import {Link,useNavigate} from 'react-router-dom';
-import {X} from 'lucide-react';
+import {Link,useLocation,useNavigate} from 'react-router-dom';
+import {ArrowLeft,X} from 'lucide-react';
 import {useAuth} from '../contexts/AuthContext';
 import {useUI} from '../contexts/UIContext';
 import ModalDialog from './ModalDialog';
@@ -11,12 +11,18 @@ import './AccountForms.css';
 export default function AccountForm({create=false}) {
   const staffOnly=useStorefront()?.store?.ordering_mode==='simple';
   const {login,signup,authError,clearAuthError,authPending}=useAuth();
-  const {setShowLogin,setShowSignup,openCustomerAccess}=useUI();
-  const navigate=useNavigate();
+  const {setShowLogin,setShowSignup,openCustomerAccess,customerAccess,setCustomerAccess}=useUI();
+  const navigate=useNavigate(),{pathname}=useLocation();
   const [account,setAccount]=useState({identifier:'',first_name:'',password:'',confirmPassword:'',email:''}),[localError,setLocalError]=useState(''),[usernameOnly,setUsernameOnly]=useState(false);
   const error=localError || authError,errorRef=useRef(null),confirmRef=useRef(null),submitting=useRef(false);
   useEffect(()=>{if(errorRef.current){errorRef.current.focus();errorRef.current.scrollIntoView({block:'nearest'});}},[error]);
-  const dismiss=()=>{if(authPending||submitting.current)return;clearAuthError();setShowLogin(false);setShowSignup(false);};
+  const dismiss=()=>{if(authPending||submitting.current)return;clearAuthError();setShowLogin(false);setShowSignup(false);setCustomerAccess?.(null)};
+  const backToCustomer=()=>{
+    if(authPending||submitting.current)return;
+    const intent=customerAccess||{mode:'create'};
+    dismiss();if(pathname.startsWith('/admin/'))navigate('/menu');
+    openCustomerAccess?.(intent);
+  };
   const switchMode=()=>{clearAuthError();setShowLogin(create);setShowSignup(!create);};
   const change=event=>{setAccount(previous=>({...previous,[event.target.name]:event.target.value}));setLocalError('');clearAuthError();};
   const submit=async event=>{
@@ -27,11 +33,11 @@ export default function AccountForm({create=false}) {
     try{const result=await (create?signup({email:account.email,first_name:account.first_name,password:account.password,confirmPassword:account.confirmPassword}):login({[usernameOnly?'username':'identifier']:account.identifier,password:account.password}));if(staffOnly&&result?.isAdmin)navigate('/admin/orders');}
     finally{submitting.current=false;}
   };
-  return <ModalDialog label={create?'Create account':'Sign in'} onDismiss={dismiss}><div className="modal-overlay account-overlay"><section className="modal-content account-form-card" aria-labelledby="account-form-title">
+  return <ModalDialog label={create?'Create account':'Sign in'} onDismiss={dismiss} fallbackFocusSelector="[data-account-entry]"><div className="modal-overlay account-overlay"><section className="modal-content account-form-card" aria-labelledby="account-form-title">
     <button className="account-close" type="button" aria-label="Close account dialog" disabled={authPending} onClick={dismiss}><X size={21} aria-hidden="true"/></button>
+    {staffOnly&&<button type="button" className="account-back-button" disabled={authPending} onClick={backToCustomer}><ArrowLeft size={17} aria-hidden="true"/>Back to customer account</button>}
     <span className="dk-eyebrow">{staffOnly?'KITCHEN STAFF':'YOUR KITCHEN ACCOUNT'}</span><h2 id="account-form-title">{staffOnly?'Kitchen sign in':create?'Create your account':'Welcome back'}</h2>
     <p className="account-form-intro">{staffOnly?'Sign in with your staff email or username and password.':create?'Save your delivery details and follow your orders.':'Sign in to order food and follow your deliveries.'}</p>
-    {staffOnly&&<p className="account-form-hint"><button type="button" className="account-legacy-toggle" disabled={authPending} onClick={()=>{dismiss();navigate('/menu');openCustomerAccess?.()}}>Customer account: create or sign in</button></p>}
     {error && <div className="account-form-error" role="alert" tabIndex={-1} ref={errorRef}>{error}</div>}
     <form onSubmit={submit} aria-busy={authPending || false}>
       <fieldset disabled={authPending} className="account-form-fields">{create?<>

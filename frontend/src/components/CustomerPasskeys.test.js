@@ -15,7 +15,7 @@ try{
  assert.match(landing,/Create account or sign in<\/button>/);assert.match(landing,/Kitchen staff sign in/);
  assert.doesNotMatch(landing,/<form|type="password"|type="email"/);
  const guest=render(h(AccessForm),{isGuest:true});
- assert.match(guest,/Create account with a passkey/);assert.match(guest,/Already have an account/);assert.match(guest,/>Sign in<\/button>/);
+ assert.match(guest,/Create account with a passkey/);assert.match(guest,/Already have an account/);assert.match(guest,/>Sign in<svg/);
  assert.match(guest,/Your name/);assert.match(guest,/Phone number/);
  assert.doesNotMatch(guest,/type="password"|type="email"|Email address/);
  const gate=render(h(Checkout),{isGuest:true});

@@ -26,10 +26,15 @@ being handled in this follow-up sequence:
    The basket shortcut sits in normal page flow while the finder is open and
    returns to its floating position when closed. Remove and Edit basket actions
    have consistent visible controls.
-3. **Account, sign-in and order actions.** Improve staff-profile spacing and
-   save-button sizing; make returning from staff sign-in to customer registration
-   explicit. Review the signed-out entry label, modal links, and preview/print
-   actions in Orders.
+3. **Account, sign-in and order actions — completed.** Staff and customer
+   sign-in have explicit arrow/back controls. Switching through staff sign-in
+   preserves the in-memory customer draft and checkout return path; closing it
+   clears the draft, and successful authentication retains the existing account
+   guards. Account dialogs restore the header entry if their original opener was
+   removed during a switch. The signed-out entry reads Join / sign in. Staff
+   profiles separate the sign-in reference from editable names/phone and use a
+   compact save button. Queue and daily-summary print actions use outlined
+   controls with printer icons, safe new tabs and unchanged explicit printing.
 4. **Public storage information and navigation.** Present date-based storage
    counts and optional average explanation more compactly. Review header/footer
    navigation and link hierarchy while retaining food-safety qualifications.
@@ -52,6 +57,16 @@ shortcut recovery, separate pickup hours, a cash placement with the expected
 fee/discount and stock deductions, responsive suggestion controls, one-menu
 alternatives, optional budgets and unobstructed basket navigation. No live
 customer, payment or inventory records were used or changed.
+
+Batch 3 validation: focused account/order render tests, scoped lint, production
+build and isolated Chromium at desktop, 390px and a 320px short viewport. Browser
+checks cover registration/sign-in/staff return paths, retained checkout context,
+cleared errors, pending guards, virtual native passkey registration, focus return,
+staff-profile spacing/save/phone normalisation, and queue/daily print previews.
+Printing is invoked only by the explicit print button. Existing passkey,
+password-sign-in and checkout-contact backend suites discovered 34 tests: 31
+passed, three environment-specific checks skipped. No live accounts, email or
+customer records were changed. Public storage/footer review remains batch 4.
 
 Financial scope: Sales reports revenue, while Costs & pricing shows estimated
 food contribution and margin when ingredient and packaging costs are known.
