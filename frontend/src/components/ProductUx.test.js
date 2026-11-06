@@ -106,7 +106,7 @@ try{
  const inBasket=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(BasketDeliveryDays,{cart:[meal('Monday',[0]),meal('Saturday',[5])],value:'',showBasketLink:false})));
  assert.match(inBasket,/no delivery weekday in common/);
  assert.doesNotMatch(inBasket,/href="\/cart"/);
- assert.match(basket([meal('Saturday',[5])],'2026-10-11T16:00'),/cannot be delivered/);
+ assert.match(basket([meal('Saturday',[5])],'2026-10-11T16:00'),/not offered on this day/);
  const {default:MenuPreorderRules}=await server.ssrLoadModule('/src/components/MenuPreorderRules.jsx');
  const rules=product=>renderToStaticMarkup(createElement(MenuPreorderRules,{product}));
  assert.equal(rules({}),'');

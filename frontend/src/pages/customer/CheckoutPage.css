@@ -75,6 +75,10 @@
 .checkout-submit-dock{display:flex;flex-wrap:wrap;gap:10px;min-width:0}.checkout-submit-dock .checkout-next-step{flex:0 0 100%;min-width:0;margin:0;font:500 13px/1.5 system-ui,sans-serif;color:#405b42;overflow-wrap:anywhere}
 .checkout-next-step>a{display:flex;align-items:center;min-height:44px;color:#285a3e;text-underline-offset:4px;line-height:1.5}
 .checkout-submit-dock>.checkout-submit{flex:1 1 200px}.checkout-container .checkout-section-heading{margin-bottom:18px}.checkout-container .delivery-time-picker{margin-bottom:12px}
+.checkout-summary .checkout-edit-basket{display:inline-flex;align-items:center;gap:8px;min-height:44px;box-sizing:border-box;border:1px solid #c9d4c3;border-radius:8px;background:#fff;padding:9px 12px;text-decoration:none;color:#31563c;font-size:.8rem;font-weight:600}
+.checkout-summary .checkout-edit-basket:hover{background:#f4f7ef}
+.client-checkout .simple-time-picker .simple-date-fields label{margin:0}
+.client-checkout .simple-time-picker .simple-date-fields input{font-weight:400}
 .checkout-container .fulfilment-choices input:is([type=checkbox],[type=radio]){width:18px;max-width:18px;height:18px;min-height:18px;padding:0;border-radius:3px;flex:0 0 18px}
 .checkout-container .fulfilment-methods label{margin:0}.checkout-container .fulfilment-choices .fulfilment-express{font-size:13px;font-weight:500;margin-bottom:0}
 .checkout-container .availability-result{font-size:13px;margin-bottom:0;padding:14px 16px}.availability-result>strong{font-size:14px}.availability-result summary{min-height:44px;align-content:center;font-size:13px}.availability-result details{margin-top:8px}

@@ -3,6 +3,36 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Basket ordering dates and responsive suggestions — 6 November 2026
+
+No endpoint, schema or model change. The simple checkout passes its current cart
+into the date picker. Offered weekdays/fixed dates and order cutoffs are combined
+across all items; up to seven upcoming ordering dates are derived locally within
+90 days, skipping ended handover hours. Delivery and pickup keep their own time
+bounds. These are menu-offer matches, not inventory reservations or stock promises.
+
+Invalid manual dates receive adjacent guidance and native validity state and do
+not enter shared checkout selection. A changed/invalid selection clears the old
+quote through the existing selection-scoped quote hook. A local 30-second clock
+check also catches ended hours or cutoffs without polling the API. Choosing an
+offered date still requires a valid time, then the existing POST
+`/api/orders/quote/` checks stock and pricing; placement rechecks everything on the
+server. Scheduled ordering retains its existing availability controls.
+
+Basket details remain accessible under Item details, with unit prices/quantities
+visible. Suggestion controls align responsively; optional budget comparison and
+explicit replacement of a one-menu basket are unchanged. Opening the finder puts
+the basket shortcut in page flow, keeping the form clear; closing it restores the
+floating shortcut. No current inventory, area fees or menu days are hardcoded.
+
+Validation: date boundary/intersection tests, focused component tests, lint,
+production build and isolated mobile/desktop Chromium. The existing simple-order,
+preorder-window and basket-guide backend suites discovered 74 tests: 72 passed,
+two PostgreSQL-only checks skipped on SQLite. Browser checks include invalid-date
+quote suppression, stale-result clearing, date recovery, a complete cash checkout
+with fee/discount and ingredient/packaging deductions, and responsive forms.
+No live payment, data changes, email or model evaluation was performed.
+
 ## Settings and shared admin controls follow-up — 6 November 2026
 
 Presentation only; no endpoint, schema, reminder eligibility, cost arithmetic or

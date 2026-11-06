@@ -3,3 +3,7 @@
 .basket-delivery-days p { margin:8px 0 0; }
 .basket-delivery-days [role="alert"] { color:#853919; }
 .basket-delivery-days a { display:inline-flex; align-items:center; min-height:44px; margin-top:12px; text-decoration:underline; text-underline-offset:4px; }
+.cart-storefront .basket-delivery-days{margin:0;padding:16px 18px;background:#fafbf9;border-color:#dce2d8;border-radius:10px;font-size:.875rem;line-height:1.6}
+.cart-storefront .basket-delivery-days>strong{font:600 .875rem/1.5 system-ui,sans-serif;color:#334a3a}
+.cart-storefront .basket-delivery-days p{font-size:.875rem;margin:6px 0 0}
+.cart-storefront .basket-delivery-days .basket-days-note{font-size:.8rem;color:#60705d;margin-top:8px}

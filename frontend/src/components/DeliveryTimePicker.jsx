@@ -2,13 +2,16 @@ import {fulfilmentTimes} from '../utils/fulfilment';
 import {useStorefront} from '../contexts/StorefrontContext';
 import ArrivalWindowChoice from './ArrivalWindowChoice';
 import {arrivalLabel,makeArrivalWindow} from '../utils/arrivalWindow';
-import {useId,useState} from 'react';
+import {useEffect,useId,useRef,useState} from 'react';
 import {defaultDeliveryDay,malaysiaInput,simpleTimeIssue} from '../utils/simpleDeliveryTime';
 import {timeLabel} from '../utils/fulfilment';
 import {Link} from 'react-router-dom';
 import BasketSlots from './BasketSlots';
-import {basketAvailabilityKey} from '../utils/deliverySlots';
-import {deliveryDayIssue} from '../utils/deliveryDays';
+import {basketAvailabilityKey,deliveryDateLabel} from '../utils/deliverySlots';
+import {basketDaysText,deliveryDayIssue} from '../utils/deliveryDays';
+import {basketDateIssue,upcomingBasketDates} from '../utils/basketOrderingDates';
+import {CalendarDays,ArrowRight} from 'lucide-react';
+import './OrderingDateChoices.css';
 
 function ScheduledDeliveryTimePicker({cart,value='',day='',onSelect,disabled=false,allowRequest=false,requestMode=false,onRequestMode,refreshKey='',selectionUnavailable=false,method='standard',windowMinutes=0,onWindowChange}) {
  const [editing,setEditing]=useState(()=>!value);
@@ -44,23 +47,33 @@ export default function DeliveryTimePicker(props){
  const {store}=useStorefront();
  return store.ordering_mode==='scheduled'?<ScheduledDeliveryTimePicker {...props}/>:<SimpleTimePicker {...props} store={store}/>;
 }
-function SimpleTimePicker({value='',day='',method='standard',onSelect,disabled,store,windowMinutes,onWindowChange}){
- const [openedAt]=useState(()=>Date.now());
+function SimpleTimePicker({cart=[],value='',day='',method='standard',onSelect,disabled,store,windowMinutes,onWindowChange}){
+ const [now,setNow]=useState(()=>Date.now());
+ useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),30000);return()=>clearInterval(timer)},[]);
  const pickup=method==='pickup',[opening,closing]=fulfilmentTimes(store,method);
- const [chosenDay,setDay]=useState(()=>value.slice(0,10)||day||defaultDeliveryDay(closing,openedAt));
+ const dates=upcomingBasketDates(cart,closing,now);
+ const [chosenDay,setDay]=useState(()=>value.slice(0,10)||day||(cart.length?dates[0]||'':defaultDeliveryDay(closing,now)));
  const [clock,setClock]=useState(()=>value.slice(11));
- const issueId=useId();
+ const issueId=useId(),dateHelpId=useId(),dateErrorId=useId(),dateInput=useRef(null);
  // An invalid draft stays visible; only valid selections enter shared checkout state.
  const [syncedValue,setSyncedValue]=useState(value);
  if(value!==syncedValue){setSyncedValue(value);if(value){setDay(value.slice(0,10));setClock(value.slice(11));}}
- const issue=simpleTimeIssue(chosenDay,clock,opening,closing);
- const choose=(date,time)=>{setDay(date);setClock(time);onSelect(date&&time&&!simpleTimeIssue(date,time,opening,closing)?date+'T'+time:'');};
+ const dateIssue=basketDateIssue(cart,chosenDay,closing,now),issue=simpleTimeIssue(chosenDay,clock,opening,closing,now);
+ useEffect(()=>{dateInput.current?.setCustomValidity(dateIssue)},[dateIssue]);
+ useEffect(()=>{if(value&&(dateIssue||issue))onSelect('')},[value,dateIssue,issue,onSelect]);
+ const choose=(date,time)=>{setDay(date);setClock(time);onSelect(date&&time&&!basketDateIssue(cart,date,closing,now)&&!simpleTimeIssue(date,time,opening,closing,now)?date+'T'+time:'');};
+ const common=basketDaysText(cart),incompatible=deliveryDayIssue(cart,'',now);
  return <div className="delivery-time-picker simple-time-picker">
   {!pickup&&onWindowChange&&<ArrivalWindowChoice value={windowMinutes} onChange={onWindowChange} disabled={disabled}/>}
-  <p>Choose when to receive your food. Ingredient and packaging stock will be checked for your chosen date.</p>
-  <label>Delivery or collection date<input required type="date" min={malaysiaInput(openedAt).slice(0,10)} max={malaysiaInput(openedAt+90*86400000).slice(0,10)} value={chosenDay} disabled={disabled} onChange={e=>choose(e.target.value,clock)}/></label>
-  <label>{pickup?'Collection':'Delivery'} time<input required type="time" step="60" min={opening} max={closing} value={clock} disabled={disabled} aria-invalid={!!issue} aria-describedby={issue?issueId:undefined} onChange={e=>choose(chosenDay,e.target.value)}/></label>
+  <p className="delivery-picker-intro">Choose one date and time for the whole basket.</p>
+  {cart.length>0&&<div className="basket-ordering-dates" id={dateHelpId}>
+   <p className="basket-offered-days"><CalendarDays size={18} aria-hidden="true"/><span><strong>Offered for this basket</strong>{common&&!incompatible?<span>{common}</span>:<span>These items need separate ordering dates.</span>}</span></p>
+   {dates.length>0?<><p className="ordering-dates-label">Upcoming ordering dates</p><div className="ordering-date-choices" role="group" aria-label="Upcoming ordering dates">{dates.map(date=><button type="button" key={date} disabled={disabled} aria-label={deliveryDateLabel(date)} aria-pressed={chosenDay===date} onClick={()=>choose(date,clock)}><time dateTime={date}><span>{new Date(date+'T12:00:00+08:00').toLocaleDateString('en-MY',{timeZone:'Asia/Kuala_Lumpur',weekday:'short'})}</span><strong>{new Date(date+'T12:00:00+08:00').toLocaleDateString('en-MY',{timeZone:'Asia/Kuala_Lumpur',day:'numeric',month:'short'})}</strong></time></button>)}</div></>:<p className="ordering-date-empty">{incompatible||'No upcoming date matches these menus within the next 90 days.'} <Link to="/cart">Edit basket<ArrowRight size={14} aria-hidden="true"/></Link></p>}
+   <p className="ordering-dates-note">Dates match the menus’ offered days and cutoffs. Ingredient and packaging stock is checked after you choose a time.</p>
+  </div>}
+  <div className="simple-date-fields"><div className="simple-date-field"><label>Delivery or collection date<input ref={dateInput} required type="date" min={malaysiaInput(now).slice(0,10)} max={malaysiaInput(now+90*86400000).slice(0,10)} value={chosenDay} disabled={disabled} aria-invalid={!!dateIssue} aria-describedby={dateIssue?`${dateHelpId} ${dateErrorId}`:cart.length?dateHelpId:undefined} onChange={e=>choose(e.target.value,clock)}/></label>{dateIssue&&<p id={dateErrorId} role="alert" className="ordering-date-error">{dateIssue} {dates.length>0&&'Choose one of the ordering dates above.'}</p>}</div>
+  <label>{pickup?'Collection':'Delivery'} time<input required type="time" step="60" min={opening} max={closing} value={clock} disabled={disabled} aria-invalid={!!issue&&!dateIssue} aria-describedby={issue&&!dateIssue?issueId:undefined} onChange={e=>choose(chosenDay,e.target.value)}/></label></div>
   <p className="delivery-picker-hint">{timeLabel(opening)}–{timeLabel(closing)} · Malaysia time</p>
-  {issue&&<p id={issueId} role="alert" className="settings-field-error">{issue}</p>}
+  {!dateIssue&&issue&&<p id={issueId} role="alert" className="ordering-date-error">{issue}</p>}
  </div>;
 }

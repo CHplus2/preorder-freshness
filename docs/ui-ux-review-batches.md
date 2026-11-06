@@ -14,11 +14,18 @@ being handled in this follow-up sequence:
    reminder evidence uses neutral cards with a working history shortcut.
    Website revision remains accessible under Technical details. Packaging cost
    guidance explains unknown versus genuine zero cost; no costs are invented.
-2. **Basket, checkout and suggestions.** Reduce repeated product/unit details,
-   align suggestion fields, and surface the basket's common offered weekdays
-   beside the date selector. Provide suitable upcoming dates without suggesting
-   that a weekday match reserves stock or confirms availability. Review the
-   persistent basket bar, remove controls and checkout/basket action links.
+2. **Basket, checkout and suggestions — completed.** Basket cards keep prices,
+   selling units and quantity controls visible; contents and individual schedules
+   move into Item details. Shared ordering days use a compact summary. Checkout
+   shows offered days beside its date field and up to seven upcoming ordering
+   dates, derived from every menu's weekdays, fixed dates and cutoffs. Closed
+   handover days are skipped. Invalid manual dates are explained beside the field,
+   invalidate the draft, and clear shared selection/old quotes before stock checks.
+   Delivery and pickup keep their own hours. Dates do not promise recorded stock.
+   Suggestion inputs align in three/two/one columns with optional search rules.
+   The basket shortcut sits in normal page flow while the finder is open and
+   returns to its floating position when closed. Remove and Edit basket actions
+   have consistent visible controls.
 3. **Account, sign-in and order actions.** Improve staff-profile spacing and
    save-button sizing; make returning from staff sign-in to customer registration
    explicit. Review the signed-out entry label, modal links, and preview/print
@@ -34,6 +41,17 @@ deep links/focus and confirm that status/history actions make no mutations.
 The existing packaging/cost backend suite passed 33 tests, including assigned
 packaging totals and missing-cost behaviour. No live records or email were
 changed. Live Vercel deployment is a separate check.
+
+Batch 2 validation: date-unit checks cover weekday intersections, fixed sale
+windows, exact cutoff boundaries, closed handover hours, Malaysia dates and the
+90-day horizon. Focused rendered-component checks and build pass. Existing order,
+preorder-window and basket-guide backend tests discovered 74 tests: 72 passed,
+two PostgreSQL-only concurrency checks skipped on SQLite. Isolated Chromium
+checks verify no quote for an invalid weekday, removal of stale availability,
+shortcut recovery, separate pickup hours, a cash placement with the expected
+fee/discount and stock deductions, responsive suggestion controls, one-menu
+alternatives, optional budgets and unobstructed basket navigation. No live
+customer, payment or inventory records were used or changed.
 
 Financial scope: Sales reports revenue, while Costs & pricing shows estimated
 food contribution and margin when ingredient and packaging costs are known.

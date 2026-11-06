@@ -20,7 +20,7 @@ try{
  const render=node=>renderToStaticMarkup(providers.reduceRight((child,[context,value])=>h(context.Provider,{value},child),h(MemoryRouter,null,node)));
  const {default:AdminOrders}=await load('pages/admin/AdminOrdersPage.jsx');
  const owner=render(h(AdminOrders));
- assert.match(owner,/Mark received/);assert.match(owner,/Not received/);assert.match(owner,/Payment records/);
+ assert.match(owner,/Mark received/);assert.match(owner,/Not received/);assert.match(owner,/Review payment/);
  assert.doesNotMatch(owner,/Open Planner|Food ready|Preparation starts|Plan delivery &amp; preparation|Out for delivery/);
  orderState.adminOrders=Array.from({length:158},(_,index)=>({...order,id:index+1,
   status:index<2?'pending':index<152?'delivered':'cancelled',
@@ -42,6 +42,10 @@ try{
  const picker=render(h(Picker,{value:'2026-11-02T10:00',onSelect:()=>{}}));
  assert.match(picker,/type="time"/);assert.match(picker,/type="date"/);
  assert.doesNotMatch(picker,/Need a different time|preparation|kitchen bookings/);
+ const offered=render(h(Picker,{cart:[{product:{name:'Monday menu',delivery_weekdays:[0]}}],onSelect:()=>{}}));
+ assert.match(offered,/Offered for this basket/);assert.match(offered,/Upcoming ordering dates/);assert.match(offered,/stock is checked after/);
+ const incompatible=render(h(Picker,{cart:[{product:{name:'Monday menu',delivery_weekdays:[0]}},{product:{name:'Tuesday menu',delivery_weekdays:[1]}}],onSelect:()=>{}}));
+ assert.match(incompatible,/no delivery weekday in common/);assert.match(incompatible,/Edit basket/);assert.doesNotMatch(incompatible,/role="group" aria-label="Upcoming ordering dates"/);
  const {default:Recipe}=await load('components/RecipeEditor.jsx');
  const recipe=render(h(Recipe,{value:{ingredients:[],preparation_tasks:[],lead_hours:24,daily_capacity:30},onChange:()=>{}}));
  assert.match(recipe,/Recipe &amp; preorder settings/);assert.match(recipe,/Collection &amp; delivery weekdays/);

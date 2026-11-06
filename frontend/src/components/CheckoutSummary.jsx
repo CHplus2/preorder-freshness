@@ -1,6 +1,6 @@
 import {useSyncExternalStore} from 'react';
 import {Link} from 'react-router-dom';
-import {ChevronDown} from 'lucide-react';
+import {ChevronDown,PencilLine} from 'lucide-react';
 import MenuPhoto from './MenuPhoto';
 import SellingDetails from './SellingDetails';
 import {unitLabel} from '../utils/sellingDetails';
@@ -17,7 +17,7 @@ export default function CheckoutSummary({cart,total,discount,shipping,finalTotal
  return <aside className="checkout-summary" aria-label="Order summary" aria-busy={updating}>
   <details open={expanded}>
    <summary><span><h2>Your preorder</h2><small>{count} {count===1?'item':'items'}<span className="checkout-summary-view"> · View details</span><span className="checkout-summary-hide"> · Hide details</span></small></span><span className="checkout-summary-preview"><strong>{updating?'Updating…':formatPrice(shownTotal)}</strong><ChevronDown size={18} aria-hidden="true"/></span></summary>
-   <div className="checkout-summary-body"><Link className="checkout-edit-basket" to="/cart">Edit basket</Link>
+   <div className="checkout-summary-body"><Link className="checkout-edit-basket" to="/cart"><PencilLine size={15} aria-hidden="true"/>Edit basket</Link>
     {updating && <p role="status" className="checkout-hint">Updating basket and totals…</p>}
     {cart.map(item=><div className="checkout-summary-item" key={item.id}>
      {item.product.image_url && <MenuPhoto className="checkout-summary-photo" src={item.product.image_url} sizes="48px" alt="" loading="lazy" onError={event=>{event.currentTarget.hidden=true;}}/>}

@@ -21,12 +21,14 @@ export function deliveryDayIssue(cart, value, now=Date.now()) {
  if(closed.length)return `Ordering has closed for ${closed.map(({product:p})=>p.name).join(', ')} on this date. Choose a later offered date or contact the kitchen.`;
  const weekday=(new Date(`${date}T12:00:00Z`).getUTCDay()+6)%7;
  const blocked=cart.filter(item=>item.product.delivery_weekdays?.length && !item.product.delivery_weekdays.includes(weekday));
- return blocked.length ? `${blocked.map(item=>item.product.name).join(', ')} cannot be delivered on this day. Choose ${common.map(day=>days[day]).join(', ')}.` : '';
+ return blocked.length ? `${blocked.map(item=>item.product.name).join(', ')} ${blocked.length===1?'is':'are'} not offered on this day. Choose ${common.map(day=>days[day]).join(', ')}.` : '';
 }
 export function basketDaysText(cart) {
  const dates=commonSpecificDates(cart);
  if(dates!==null)return offeredDatesText(dates);
  const common=basketDeliveryDays(cart);
- return common.length===7?'Any weekday':common.map(day=>days[day]).join(', ');
+ if(common.length===7)return 'Every day';
+ if(common.length>=3 && common.every((day,index)=>!index||day===common[index-1]+1))return `${days[common[0]]}–${days[common.at(-1)]}`;
+ return common.map(day=>days[day]).join(', ');
 }
 export const basketCutoffs=cart=>cart.filter(({product:p})=>p.order_cutoff_time).map(({product:p})=>`${p.name}: ${cutoffText(p)}.`);

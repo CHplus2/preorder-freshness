@@ -1,0 +1,24 @@
+.simple-time-picker .basket-ordering-dates{border:1px solid #d8dfd9;border-radius:10px;padding:16px;margin:16px 0;background:#fafbf9;min-width:0}
+.simple-time-picker .basket-offered-days{display:flex;align-items:flex-start;gap:10px;margin:0;font-size:.875rem;line-height:1.6;color:#334a3b}
+.basket-offered-days>svg{flex-shrink:0;margin-top:3px}
+.basket-offered-days strong,.basket-offered-days>span>span{display:block;font-size:inherit}
+.basket-offered-days strong{font-weight:600;margin-bottom:3px}
+.simple-time-picker .ordering-dates-label{font-size:.8rem;font-weight:600;margin:16px 0 8px;color:#4e6254}
+.ordering-date-choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px}
+.simple-time-picker .ordering-date-choices button{border:1px solid #c5d1c5;border-radius:8px;min-height:44px;min-width:44px;padding:9px 12px;margin:0;background:#fff;color:#31563c;font:500 .8rem/1.5 system-ui,sans-serif;box-shadow:none;transform:none;cursor:pointer}
+.simple-time-picker .ordering-date-choices button:hover:not(:disabled){background:#edf3eb;border-color:#7a987e}
+.simple-time-picker .ordering-date-choices button[aria-pressed=true]{background:#285a3e;border-color:#285a3e;color:#fff}
+.simple-time-picker .ordering-date-choices button:disabled{opacity:.55;cursor:not-allowed}
+.ordering-date-choices time{display:flex;flex-direction:column;align-items:center;gap:3px}
+.ordering-date-choices time>span{font-size:.75rem;font-weight:400}
+.ordering-date-choices time>strong{font-size:.8rem;font-weight:600;white-space:nowrap}
+.simple-time-picker .ordering-dates-note,.simple-time-picker .ordering-date-empty{font-size:.8rem;line-height:1.65;color:#5a675e;margin:12px 0 0}
+.ordering-date-empty a{display:inline-flex;align-items:center;gap:8px;min-height:44px;color:#285a3e;text-underline-offset:4px}
+.simple-time-picker .simple-date-fields{display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:16px;margin:18px 0 0}
+.simple-date-field{min-width:0}
+.simple-time-picker .simple-date-fields label{display:grid;gap:8px;margin:0;font-size:.875rem;line-height:1.5;min-width:0}
+.simple-time-picker .simple-date-fields input{width:100%;min-width:0;box-sizing:border-box;font-weight:400}
+.simple-time-picker .simple-date-fields input[aria-invalid=true]{border-color:#a36f54;background:#fffaf6}
+.simple-time-picker .ordering-date-error{border-left:3px solid #9a735b;background:#fbf6ef;border-radius:4px;padding:12px 14px;margin:14px 0 0;font-size:.875rem;line-height:1.65;color:#734d36}
+.simple-time-picker :is(button,input,a):focus-visible{outline:3px solid #b28d46;outline-offset:3px}
+@media(max-width:520px){.simple-time-picker .simple-date-fields{grid-template-columns:minmax(0,1fr);gap:16px}.simple-time-picker .basket-ordering-dates{padding:14px}.simple-time-picker .ordering-date-choices button{flex:1 0 88px;padding-inline:8px}}
