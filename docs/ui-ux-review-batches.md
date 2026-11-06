@@ -2,6 +2,26 @@
 
 ## Follow-up visual review — owner feedback on 6 November
 
+### Inventory stock-check controls
+
+The stock-target form uses a scoped grid with zero label/control margins and
+equal-height inputs/action; phone layouts stack the fields. Date to check and
+Units per menu replace ambiguous planning labels. An example distinguishes an
+equal-quantity target across all offered menus from actual customer orders.
+Results show the combined unit count and an expandable list of included menus.
+The check remains read-only and uses the existing recipe/date/stock rules.
+
+Menu rename behaviour remains unchanged: order lines keep their accepted
+`product_name` and price as snapshots, alongside a nullable menu foreign key.
+Editing a current menu does not rewrite old order lines.
+
+Validation: focused stock-response/render tests, scoped lint, production build
+and 26 existing backend stock/report tests passed. Local Chromium measured equal
+input/button bottoms at 1366px, 1024px and 768px, then verified equal-width stacked
+controls without page overflow at 390px and 320px. It checked the eight-menu
+target arithmetic, included names, stale-result clearing and GET-only requests.
+No live inventory, orders or menu names were changed.
+
 ### Sign-in scrollbar regression
 
 Overlapping native dialogs previously saved separate body-overflow snapshots.

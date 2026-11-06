@@ -8,7 +8,7 @@ try{
  const {default:StockReadiness}=await server.ssrLoadModule('/src/components/StockReadiness.jsx');
  const {AuthContext}=await server.ssrLoadModule('/src/contexts/AuthContext.js');
  const render=disabled=>renderToStaticMarkup(h(MemoryRouter,null,h(AuthContext.Provider,{value:{isSessionCurrent:()=>true}},h(StockReadiness,{today:'2026-11-05',onAddIngredient:()=>{},disabled}))));
- const html=render(false);assert.match(html,/Check ingredients &amp; packaging/);assert.match(html,/does not add stock or reserve orders/);assert.match(html,/Units of each offered menu/);assert.match(html,/max="2027-02-03"/);assert.match(html,/max="100"/);
+ const html=render(false);assert.match(html,/Check stock for your menus/);assert.match(html,/does not add stock or reserve orders/);assert.match(html,/Date to check/);assert.match(html,/Units per menu/);assert.match(html,/aria-describedby="stock-target-example"/);assert.match(html,/5 units of 2 offered menus means 10 units in total/);assert.match(html,/not a summary of customer orders/);assert.match(html,/max="2027-02-03"/);assert.match(html,/max="100"/);
  assert.doesNotMatch(html,/Recorded stock covers|Stock to replenish|Download stock worksheet/);
  assert.match(render(true),/<button disabled="" type="submit">Check stock/);
  console.log('Stock check UI: honest read-only entry, bounded date/quantity and no invented availability before loading passed.');

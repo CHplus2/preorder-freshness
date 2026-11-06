@@ -2397,3 +2397,18 @@ render checks, scoped lint, production build and isolated Chromium on phone and
 desktop viewports. The browser verified background locking, scrolling after
 final closure, staff login/switching and admin dialog dismissal. No live data or
 email writes; no database migration required.
+
+### 6 November 2026 — inventory stock-target clarity
+
+The inventory stock-target form now labels its inputs Date to check and Units
+per menu, explains that one quantity applies to every offered menu, and shows
+the combined target plus an optional included-menu list. Controls share a
+baseline and height on desktop/tablet and stack on phones. The existing
+`GET /api/admin/stock-readiness/` request/response contract and calculations are
+unchanged; no stock receipt, reservation or order write is introduced. Menu
+renaming still preserves accepted order-line name/price snapshots. No migration
+or predictive/model change is required.
+Validation: focused frontend tests, scoped lint/build, 26 existing backend
+stock/report tests and isolated local Chromium at desktop/tablet/phone widths.
+Checks covered measured alignment, target arithmetic, included menu names,
+stale-result clearing and GET-only requests. No live data was changed.
