@@ -7,6 +7,7 @@ import {useUI} from '../../contexts/UIContext';
 import PasswordField from '../../components/PasswordField';
 import PageLoading from '../../components/PageLoading';
 import {useAuth} from '../../contexts/AuthContext';
+import {useStorefront} from '../../contexts/StorefrontContext';
 import '../../components/AccountForms.css';
 
 export default function RecoveryPage(){
@@ -20,7 +21,8 @@ function RecoveryContent({initialHash}){
   // Reading is pure: StrictMode may call initializers twice before mounting.
   const [credentials,setCredentials]=useState(()=>resetCredentials(initialHash));
   const [form,setForm]=useState({username:'',email:'',password:'',confirm:''}),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState(''),[done,setDone]=useState(false);
-  const {setShowLogin}=useUI();
+  const {setShowLogin,openCustomerAccess}=useUI();
+  const simple=useStorefront()?.store?.ordering_mode==='simple';
   const errorRef=useRef(null),submitting=useRef(false);
   const reset=credentials.uid!==null || credentials.token!==null;
   const completeLink=Boolean(credentials.uid && credentials.token && credentials.uid.length<=100 && credentials.token.length<=150);
@@ -40,7 +42,8 @@ function RecoveryContent({initialHash}){
     }catch(error){setError(accountRequestError(error,reset?'reset':'recovery'));}
     finally{submitting.current=false;setBusy(false);}
   };
-  return <main className="recovery-page"><span className="dk-eyebrow">ACCOUNT HELP</span><h1>{done?'Password updated':reset?'Choose a new password':'Recover your account'}</h1><p>{reset?'Use a password you haven’t used for this kitchen account before.':'Enter the email saved with your account. If it belongs to more than one older account, include your username below. Accounts without an email need help from the kitchen.'}</p>
+  return <main className="recovery-page"><span className="dk-eyebrow">ACCOUNT HELP</span><h1>{done?'Password updated':reset?'Choose a new password':simple?'Staff password recovery':'Recover your account'}</h1><p>{reset?'Use a password you haven’t used for this kitchen account before.':simple?'For kitchen staff with a saved account email. Customer accounts use a passkey instead of a password.':'Enter the email saved with your account. If it belongs to more than one older account, include your username below. Accounts without an email need help from the kitchen.'}</p>
+    {simple&&!reset&&<section className="recovery-passkey-help"><h2>Customer sign-in</h2><p>Use a saved or synced passkey, or your browser’s option to use another device. Your name and phone number alone cannot restore account access.</p><button type="button" onClick={()=>openCustomerAccess({mode:'signin',next:'/account'})}>Sign in with a passkey</button></section>}
     <section className="recovery-card" aria-label="Password recovery">
       {message && <p className="recovery-message" role="status">{message}</p>}
       {error && <div className="account-form-error" role="alert" tabIndex={-1} ref={errorRef}>{error}</div>}

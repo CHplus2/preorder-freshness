@@ -16,7 +16,7 @@ export default function AccountForm({create=false}) {
   const [account,setAccount]=useState({identifier:'',first_name:'',password:'',confirmPassword:'',email:''}),[localError,setLocalError]=useState(''),[usernameOnly,setUsernameOnly]=useState(false);
   const error=localError || authError,errorRef=useRef(null),confirmRef=useRef(null),submitting=useRef(false);
   useEffect(()=>{if(errorRef.current){errorRef.current.focus();errorRef.current.scrollIntoView({block:'nearest'});}},[error]);
-  const dismiss=()=>{clearAuthError();setShowLogin(false);setShowSignup(false);};
+  const dismiss=()=>{if(authPending||submitting.current)return;clearAuthError();setShowLogin(false);setShowSignup(false);};
   const switchMode=()=>{clearAuthError();setShowLogin(create);setShowSignup(!create);};
   const change=event=>{setAccount(previous=>({...previous,[event.target.name]:event.target.value}));setLocalError('');clearAuthError();};
   const submit=async event=>{
@@ -28,9 +28,9 @@ export default function AccountForm({create=false}) {
     finally{submitting.current=false;}
   };
   return <ModalDialog label={create?'Create account':'Sign in'} onDismiss={dismiss}><div className="modal-overlay account-overlay"><section className="modal-content account-form-card" aria-labelledby="account-form-title">
-    <button className="account-close" type="button" aria-label="Close account dialog" onClick={dismiss}><X size={21} aria-hidden="true"/></button>
-    <span className="dk-eyebrow">YOUR KITCHEN ACCOUNT</span><h2 id="account-form-title">{staffOnly?'Kitchen sign in':create?'Create your account':'Welcome back'}</h2>
-    <p className="account-form-intro">{staffOnly?'For kitchen staff. Customers create an account with their name, phone number and a passkey.':create?'Save your delivery details and follow your orders.':'Sign in to order food and follow your deliveries.'}</p>
+    <button className="account-close" type="button" aria-label="Close account dialog" disabled={authPending} onClick={dismiss}><X size={21} aria-hidden="true"/></button>
+    <span className="dk-eyebrow">{staffOnly?'KITCHEN STAFF':'YOUR KITCHEN ACCOUNT'}</span><h2 id="account-form-title">{staffOnly?'Kitchen sign in':create?'Create your account':'Welcome back'}</h2>
+    <p className="account-form-intro">{staffOnly?'Sign in with your staff email or username and password.':create?'Save your delivery details and follow your orders.':'Sign in to order food and follow your deliveries.'}</p>
     {staffOnly&&<p className="account-form-hint"><button type="button" className="account-legacy-toggle" disabled={authPending} onClick={()=>{dismiss();navigate('/menu');openCustomerAccess?.()}}>Customer account: create or sign in</button></p>}
     {error && <div className="account-form-error" role="alert" tabIndex={-1} ref={errorRef}>{error}</div>}
     <form onSubmit={submit} aria-busy={authPending || false}>
@@ -42,7 +42,7 @@ export default function AccountForm({create=false}) {
       {create && <><p id="password-hint" className="account-form-hint">At least 8 characters. Avoid common passwords, only numbers, or a password similar to your name or email.</p><PasswordField label="Confirm password" inputRef={confirmRef} name="confirmPassword" value={account.confirmPassword} onChange={change} required autoComplete="new-password"/></>}
       </fieldset><button className="account-primary" disabled={authPending} type="submit">{authPending?(create?'Creating account…':'Signing in…'):(create?'Create account':'Sign in')}</button>
     </form>
-    {!create && <div className="account-signin-help"><Link className="account-recovery-link" to="/recover" onClick={dismiss}>Forgot your password?</Link>{!staffOnly&&<button type="button" className="account-legacy-toggle" aria-pressed={usernameOnly} disabled={authPending} onClick={()=>{setUsernameOnly(value=>!value);setLocalError('');clearAuthError();}}>{usernameOnly?'Use email or username':'Use an exact older username'}</button>}</div>}
+    {!create && <div className="account-signin-help"><Link className="account-recovery-link" to="/recover" aria-disabled={authPending||undefined} onClick={event=>{if(authPending){event.preventDefault();return}dismiss()}}>Forgot your password?</Link>{!staffOnly&&<button type="button" className="account-legacy-toggle" aria-pressed={usernameOnly} disabled={authPending} onClick={()=>{setUsernameOnly(value=>!value);setLocalError('');clearAuthError();}}>{usernameOnly?'Use email or username':'Use an exact older username'}</button>}</div>}
     {!staffOnly && <div className="account-form-switch"><span>{create?'Already have an account?':'New to the kitchen?'}</span><button type="button" disabled={authPending} onClick={switchMode}>{create?'Sign in':'Create an account'}</button></div>}
   </section></div></ModalDialog>;
 }

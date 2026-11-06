@@ -3,6 +3,36 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Account and Kitchen help dialog UX — 6 November 2026
+
+No endpoint, database schema, passkey protocol or model changes. Customer
+accounts retain name/phone/passkey registration and native passkey sign-in;
+staff password sign-in/recovery stays separate. Mode changes focus the initial
+control and clear stale errors; pending account writes block dismissal and
+navigation to password recovery. Recovery explains that a customer needs a saved
+or synced passkey rather than a staff password-reset email.
+
+The client validates GET/POST `/api/help/` responses before display: supported
+capability languages, bounded answer text, supported topic/mode, internal-only
+navigation/menu paths, distinct menu entries and unit-price × quantity totals.
+React renders response text as text. English/Malay/Chinese guidance and explicit
+Groq opt-in remain; unavailable capabilities retain the local guide. Closing help
+cancels its readonly answer request without making a basket write.
+
+The existing `/api/help/shop/` and signed `/api/help/cart/` preview/confirmation
+contract remains unchanged, including server authentication, CSRF and idempotency.
+A confirmed addition cannot be dismissed while pending. If its subsequent basket
+read fails, Refresh basket repeats only GET `/api/cart/`, not the addition. The
+simple client workflow selects delivery time at checkout; scheduled mode keeps
+its existing post-add availability controls.
+
+Validation: focused frontend response/component checks, scoped lint, production
+build, and isolated Chromium checks for three-language help, malformed-answer
+retry, virtual native passkeys, staff recovery, pending guards and exactly one
+basket mutation after read failure. The backend suite discovered 84 tests: 79
+passed, five skipped on SQLite. No live deployment, email, AI response or payment
+was verified; predictive artifacts and evaluation are unchanged.
+
 ## Stock readiness and coordinated client-data refresh — 6 November 2026
 
 Staff-only GET `/api/admin/stock-readiness/` accepts `date` (Malaysia today through

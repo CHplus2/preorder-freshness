@@ -14,7 +14,7 @@
     "test:checkout": "node src/utils/deliveryChoice.test.js && node src/components/ArrivalWindow.test.js && node src/components/Handover.test.js && node src/components/DeliveryEmail.test.js && node src/utils/deliverySlots.test.js && node src/utils/checkoutPresentation.test.js && node src/components/AvailabilityResult.test.js && node src/components/CheckoutUx.test.js && node src/utils/simpleDeliveryTime.test.js && node src/utils/checkoutPayment.test.js && node src/components/OrderingFlowUx.test.js",
     "test:predictive": "node --test src/features/predictive/api.test.js src/features/predictive/decisionMath.test.js src/features/predictive/decisionBrief.test.js src/features/predictive/replayEvidence.test.js src/features/predictive/riskTradeoff.test.js src/features/predictive/riskLens.test.js src/features/predictive/rescueOutcome.test.js src/features/predictive/localApi.test.js src/features/predictive/kitchenDecision.test.js src/features/predictive/ingredientPresentation.test.js src/features/predictive/stockFlow.test.js",
     "test:paypal": "node src/utils/paypalResponse.test.js && node src/components/PayPalPayment.test.js",
-    "test:shopping": "node src/utils/shoppingResponse.test.js && node src/components/ShoppingAssistant.test.js",
+    "test:shopping": "node src/utils/shoppingResponse.test.js && node src/components/ShoppingAssistant.test.js && node src/utils/kitchenHelpResponse.test.js",
     "images": "node scripts/prepare-menu-photos.mjs",
     "images:update": "node scripts/prepare-menu-photos.mjs --update-catalog",
     "prebuild": "npm run images",
@@ -25,7 +25,7 @@
     "test:ordering": "node src/utils/simpleOrdering.test.js && node src/components/SimpleOrdering.test.js",
     "test:guest": "node src/utils/contactPhone.test.js && node src/components/GuestCheckout.test.js && node src/utils/deliveryAreaEditor.test.js",
     "test:reports": "node src/components/ClientReports.test.js && node src/utils/operationalOrders.test.js && node src/components/OrderPaymentsUx.test.js",
-    "test:accounts": "node src/components/CustomerPasskeys.test.js && node src/components/SettingsAccountUx.test.js",
+    "test:accounts": "node src/components/CustomerPasskeys.test.js && node src/components/SettingsAccountUx.test.js && node src/components/DialogsUx.test.js",
     "test:packaging": "node src/utils/packaging.test.js",
     "test:stock": "node src/utils/stockReadiness.test.js && node src/utils/inventoryAttention.test.js && node src/components/StockReadiness.test.js"
   },

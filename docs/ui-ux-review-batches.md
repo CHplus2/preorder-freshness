@@ -87,9 +87,32 @@ receipt rejection/preservation, area fees, QR-only collection, cash delivery and
 exact ingredient/packaging deductions. All records and payment images are local
 fixtures; no live transaction or order was made.
 
-## Remaining batches
+## Batch 6: Sign-in, registration and Kitchen help
 
-6. Sign-in, registration and chatbot dialogs: focus, recovery and mobile layouts.
+Aligned customer/staff dialog typography and controls. Customer registration keeps
+name, phone and a passkey; staff sign-in keeps password credentials. Switching
+customer modes moves focus and clears stale errors without losing entered details.
+Staff recovery explains the separate customer passkey route. Pending sign-in and
+confirmed basket additions block dismissal; readonly help requests can be cancelled.
 
-Each batch will be checked against the existing client workflow. This list is
-not a claim that all pages have already been reviewed or changed.
+Kitchen help opens with quick topics and retains English, Malay, Chinese and
+explicit AI consent. Answers are validated for bounded content, supported modes,
+internal links and quantity totals before display. Food planning retains a signed
+review/confirmation before changing the basket. Failed basket reads after an
+addition offer a refresh without repeating the addition. For the current client
+workflow, delivery-time selection stays at checkout; scheduled mode retains its
+existing availability controls. Primary-action hover and disabled colours stay
+legible, and Escape restores the help launcher even after a submitted button loses
+focus.
+
+Validation: focused response and rendered-component checks, production build,
+scoped lint, and local Chromium mobile/desktop interactions. Virtual native
+passkeys exercise real registration and sign-in APIs; browser checks also cover
+language/topic changes, malformed-response retry, staff recovery, pending guards,
+and cart-refresh recovery with exactly one addition. The focused backend suite
+passed 79 tests; five environment-specific tests were skipped on SQLite. These
+checks use isolated records, no real AI request, bank transaction or live email.
+
+The six planned UI/UX batches are complete. Live deployment and real-device
+feedback remain separate checks; this is not a claim that every possible defect
+has been eliminated.
