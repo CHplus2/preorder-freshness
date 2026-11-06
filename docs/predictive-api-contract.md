@@ -3,6 +3,30 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Settings and shared admin controls follow-up — 6 November 2026
+
+Presentation only; no endpoint, schema, reminder eligibility, cost arithmetic or
+model changes. Setup checks retain the same recorded counts, checkout state,
+menu-review links and evidence limits, with optional details for long lists and
+explanations. Settings navigation and setup/courier actions use explicit action
+controls; QR/area deep links retain reveal/focus behaviour. Stale email evidence
+remains distinct from sending failures or proof of scheduler operation. Its
+Review sending schedule action opens history locally; status refresh remains a
+read and never initiates a worker or email.
+
+Native admin selects retain keyboard behaviour with consistent visible arrows.
+Packaging assignment inputs/removal actions and sales date filters share aligned
+control edges. Optional packaging-cost guidance keeps unknown distinct from zero.
+Existing contribution calculations include assigned packaging estimates when
+known and stay unavailable for missing required costs; no prices are fabricated.
+The website revision remains available in optional technical information.
+
+Validation: focused frontend render/utility tests, scoped lint, production build,
+and local desktop/mobile Chromium checks using isolated records. The existing
+packaging/cost backend suite passed 33 tests. No live data, real email, payment,
+model artifact or evaluation was changed; source publication is not verification
+of a successful live deployment.
+
 ## Account and Kitchen help dialog UX — 6 November 2026
 
 No endpoint, database schema, passkey protocol or model changes. Customer

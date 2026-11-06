@@ -140,6 +140,6 @@ export default function StoreSettingsPage(){
   <SettingsDisclosure id="reminders" title="Email reminders" description="Kitchen reminders, test email and sending history" lazy><ReminderStatus embedded/></SettingsDisclosure>
   <SettingsDisclosure id="setup" title="Kitchen setup checks" description="Review saved menus, stock and ordering settings" lazy><SetupChecklist key={setupRevision} embedded/></SettingsDisclosure>
   <SettingsDisclosure id="courier-tools" title="Courier handover" description="Booking and coordinating a delivery"><CourierConnectionStatus/></SettingsDisclosure>
-  <SettingsDisclosure id="advanced-settings" title="Backups & website information" description="Recovery downloads and website version"><BackupDownloads/><p className="settings-version">Website version <code>{typeof __FRESHCAST_REVISION__==='string'?__FRESHCAST_REVISION__:'development'}</code></p></SettingsDisclosure>
+  <SettingsDisclosure id="advanced-settings" title="Backups & website information" description="Recovery downloads and support details"><BackupDownloads/><details className="settings-technical"><summary>Technical details</summary><p className="settings-version">Website version <code>{typeof __FRESHCAST_REVISION__==='string'?__FRESHCAST_REVISION__:'development'}</code></p><p>Use this version when reporting a website issue.</p></details></SettingsDisclosure>
  </main>;
 }

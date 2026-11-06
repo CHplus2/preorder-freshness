@@ -151,7 +151,8 @@ export default function PackagingPage(){
     <label>Packaging name<input data-initial-focus required name="name" maxLength="100" value={draft.name} onChange={field} placeholder="e.g. 750 ml meal container"/></label>
     {modal.kind==='new'&&<label>Opening stock (pieces)<input required type="number" name="quantity" min="0" max="1000000" step="1" value={draft.quantity} onChange={field}/></label>}
     <label>Low-stock threshold (pieces)<input required type="number" name="reorder_level" min="0" max="1000000" step="1" value={draft.reorder_level} onChange={field}/></label>
-    <label>Cost per piece (RM, optional)<input type="number" name="unit_cost" min="0" max="99999999" step="0.000001" value={draft.unit_cost} onChange={field}/></label>
+    <label>Cost per piece (RM, optional)<input aria-describedby="packaging-cost-help" type="number" name="unit_cost" min="0" max="99999999" step="0.000001" value={draft.unit_cost} onChange={field}/></label>
+    <p id="packaging-cost-help" className="packaging-cost-help">Used in food contribution calculations. Leave blank if unknown; enter 0 only for packaging that costs nothing.</p>
     {modal.kind==='edit'&&<label className="packaging-check"><input type="checkbox" name="is_active" checked={draft.is_active} onChange={field}/>Available for new orders</label>}
     {modal.kind==='edit'&&<p>Archiving keeps the stock history. Remove archived packaging from menu assignments before accepting new orders.</p>}
    </>}

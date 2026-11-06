@@ -1,0 +1,22 @@
+/* Keep native menus, with a consistent visible arrow and room for long labels. */
+body :is(.admin-shell,.packaging-dialog) select:not([multiple]):is(:not([size]),[size="1"]) {
+ appearance:none;
+ padding-inline-end:42px;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23566a5c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+ background-position:right 14px center !important;
+ background-size:16px 16px !important;
+ background-repeat:no-repeat !important;
+}
+:dir(rtl) :is(.admin-shell,.packaging-dialog) select:not([multiple]):is(:not([size]),[size="1"]) {background-position:left 14px center !important}
+body .admin-action-link {
+ display:inline-flex;align-items:center;justify-content:center;gap:9px;
+ min-height:44px;box-sizing:border-box;padding:9px 13px;
+ border:1px solid #ccd5cf;border-radius:8px;background:#fff;color:#285a3e;
+ font:600 13px/1.5 system-ui,sans-serif;text-decoration:none;
+}
+body .admin-action-link:hover {background:#f4f6f4;border-color:#9cac9f}
+body .admin-action-link:focus-visible {outline:3px solid #b88a37;outline-offset:3px}
+.admin-action-link svg {flex-shrink:0}
+@media(forced-colors:active){
+ body :is(.admin-shell,.packaging-dialog) select:not([multiple]):is(:not([size]),[size="1"]) {appearance:auto;background-image:none !important;padding-inline-end:12px}
+}

@@ -1,5 +1,48 @@
 # Website UI/UX review — November 2026
 
+## Follow-up visual review — owner feedback on 6 November
+
+The earlier six batches are the first review pass, not a guarantee that all
+visual defects were caught. The owner's subsequent page-specific feedback is
+being handled in this follow-up sequence:
+
+1. **Settings and shared admin controls — completed.** Native dropdowns have a
+   consistent arrow inset and text padding. Packaging assignment rows and sales
+   date filters align their inputs/actions. Settings shortcut navigation and
+   setup/courier actions use deliberate controls rather than inherited prose
+   underlines. Setup checks separate counts, actions and optional explanations;
+   reminder evidence uses neutral cards with a working history shortcut.
+   Website revision remains accessible under Technical details. Packaging cost
+   guidance explains unknown versus genuine zero cost; no costs are invented.
+2. **Basket, checkout and suggestions.** Reduce repeated product/unit details,
+   align suggestion fields, and surface the basket's common offered weekdays
+   beside the date selector. Provide suitable upcoming dates without suggesting
+   that a weekday match reserves stock or confirms availability. Review the
+   persistent basket bar, remove controls and checkout/basket action links.
+3. **Account, sign-in and order actions.** Improve staff-profile spacing and
+   save-button sizing; make returning from staff sign-in to customer registration
+   explicit. Review the signed-out entry label, modal links, and preview/print
+   actions in Orders.
+4. **Public storage information and navigation.** Present date-based storage
+   counts and optional average explanation more compactly. Review header/footer
+   navigation and link hierarchy while retaining food-safety qualifications.
+
+Batch 1 validation: focused render/utility tests, scoped lint, production build,
+and isolated Chromium at 1366px and 390px. Browser checks measure aligned control
+edges, check native select keyboard behaviour and arrow spacing, verify settings
+deep links/focus and confirm that status/history actions make no mutations.
+The existing packaging/cost backend suite passed 33 tests, including assigned
+packaging totals and missing-cost behaviour. No live records or email were
+changed. Live Vercel deployment is a separate check.
+
+Financial scope: Sales reports revenue, while Costs & pricing shows estimated
+food contribution and margin when ingredient and packaging costs are known.
+Order contribution uses allocated ingredient batch costs and the packaging
+estimate saved at acceptance. Unknown costs remain unavailable. Delivery costs,
+payment fees, labour and overhead are excluded from food contribution, so it is
+not net profit. This batch does not alter these calculations or force unknown
+prices to zero.
+
 ## Batch 1: Sales and costs
 
 Implemented separate Sales overview, Costs & pricing, and Order contribution

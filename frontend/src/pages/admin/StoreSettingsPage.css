@@ -40,3 +40,65 @@
 /* Sections save independently; less-used tools load when first opened. */
 .settings-page{max-width:1020px;margin-inline:auto}.settings-page .settings-shortcuts{display:flex;gap:8px;margin:0 0 24px;padding:0 0 18px;border-bottom:1px solid #d6dfd1}.settings-page .settings-shortcuts a{border:1px solid #c8d4c4;border-radius:10px;background:#fff;padding:9px 14px;font-size:.875rem;font-weight:600;text-decoration:none;min-height:44px;box-sizing:border-box}.settings-page .dk-settings{gap:16px;margin-bottom:16px}.settings-page .settings-disclosure{margin:0 0 16px;padding:0;border-radius:12px;scroll-margin-top:110px}.settings-page .dk-settings>.settings-disclosure{margin:0}.settings-page .settings-disclosure>summary{position:relative;padding:20px 52px 20px 22px;list-style:none;min-height:44px;box-sizing:border-box;margin:0;line-height:1.5}.settings-disclosure>summary::-webkit-details-marker{display:none}.settings-disclosure>summary>span{font-size:1.05rem;font-weight:650}.settings-disclosure>summary>small{display:block;font-size:.85rem;line-height:1.6;font-weight:400;color:#586953;margin-top:5px}.settings-disclosure>summary::after{content:'+';position:absolute;right:22px;top:20px;font-size:1.4rem;color:#285a3e}.settings-disclosure[open]>summary::after{content:'−'}.settings-page .settings-disclosure[open]>summary{border-bottom:1px solid #d6dfd1;margin:0}.settings-disclosure-body{padding:22px;min-width:0}.settings-section-form>p:first-child{margin-top:0;font-size:.9rem;line-height:1.65;color:#586953}.settings-page .settings-section-form .settings-field label{font-size:.875rem;line-height:1.5;font-weight:600}.settings-page .settings-section-form :is(input,textarea){font:inherit;margin:0;box-sizing:border-box;min-height:44px}.settings-page .settings-section-form textarea{min-height:104px;resize:vertical}.settings-section-save{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:20px;margin-top:22px;border-top:1px solid #d6dfd1}.settings-section-save button{min-height:44px}.settings-section-save [role=status]{font-size:.875rem;color:#285a3e}.settings-page .settings-disclosure-body>.settings-group,.settings-page .settings-disclosure-body>.dk-panel{border:0;padding:0;margin:0;box-shadow:none}.settings-page .settings-disclosure-body .reminder-monitor-heading{justify-content:flex-end}.settings-page .settings-disclosure-body .reminder-monitor-heading:has(h2.sr-only){margin-bottom:12px}.settings-page .settings-disclosure-body .settings-group .settings-group{margin-top:16px}.settings-page :is(input,select,textarea,button,a,summary):focus-visible{outline:3px solid #bb9350;outline-offset:3px}.settings-page .settings-field-error{border:1px solid #dba89c;border-radius:9px;background:#fff4f0;color:#803827;padding:12px 14px;line-height:1.6;margin:16px 0;font-size:.875rem}.settings-page .settings-disclosure-body .fulfilment-settings-fields{border:0;padding:0}.settings-page .settings-disclosure-body .pickup-setup,.settings-page .settings-disclosure-body .delivery-setup{min-width:0}.settings-page .settings-version{font-size:.8rem;color:#586953;overflow-wrap:anywhere}@media(max-width:600px){.settings-page .settings-shortcuts{display:grid;grid-template-columns:1fr 1fr}.settings-page .settings-shortcuts a{justify-content:center;font-size:.8rem;padding:9px}.settings-page .settings-disclosure>summary{padding:18px 44px 18px 18px}.settings-disclosure-body{padding:18px}.settings-section-save button{width:100%}.settings-page .settings-disclosure-body .admin-fields{grid-template-columns:minmax(0,1fr)}.settings-page .reminder-queue-grid{grid-template-columns:1fr}.settings-page .reminder-monitor .admin-table-scroll table{min-width:480px}}
 .settings-page .settings-disclosure-body #fulfilment>h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* Shortcuts and record actions are controls; prose links remain underlined. */
+.settings-page .settings-shortcuts a:hover{background:#f4f6f4;border-color:#9cac9f}
+.settings-page .setup-steps a.admin-action-link{margin:0;text-decoration:none}
+.settings-page .setup-checklist-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.settings-page .setup-checklist-heading p{margin:0;max-width:55ch;font-size:.875rem;color:#59675e;line-height:1.65}
+.settings-page .setup-checklist-heading button{margin:0;flex-shrink:0}
+.settings-page .setup-progress-label{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 10px;font-size:.875rem}
+.setup-progress-label span{font-size:.8rem;color:#59675e}
+.settings-page .setup-checklist progress{display:block;max-width:none;width:100%;height:8px;margin:0 0 24px;accent-color:#597763}
+.settings-page .setup-checkout-status{margin:24px 0}
+.settings-page .setup-checkout-status h3,.settings-page .setup-inventory h3{font:650 1rem/1.5 system-ui,sans-serif;margin:0 0 14px}
+.setup-checkout-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.setup-checkout-grid article{display:flex;align-items:flex-start;flex-direction:column;border:1px solid #dce2df;border-radius:10px;padding:18px;min-width:0}
+.settings-page .setup-checkout-grid h4{font:600 .875rem/1.5 system-ui,sans-serif;margin:0}
+.settings-page .setup-checkout-grid p{font-size:.875rem;line-height:1.6;margin:8px 0 16px}
+.setup-checkout-grid .admin-action-link{margin-top:auto}
+.settings-page .setup-steps{display:grid;gap:0;list-style:none;padding:0;margin:24px 0;border-block:1px solid #dce2df}
+.settings-page .setup-steps>li{padding:20px 0;border-bottom:1px solid #e6eae7;min-width:0}
+.settings-page .setup-steps>li:last-child{border-bottom:0}
+.setup-step-heading{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.setup-step-heading>svg{flex-shrink:0;color:#607667}
+.settings-page .setup-step-heading h3{flex:1;min-width:150px;font:600 .9rem/1.5 system-ui,sans-serif;margin:0}
+.setup-step-status{font:500 .75rem/1.5 system-ui,sans-serif;color:#536159;padding:4px 9px;border:1px solid #d9dfda;border-radius:6px;background:#f6f7f6}
+.settings-page .setup-steps>li>p{margin:10px 0 14px;font-size:.875rem;line-height:1.65;color:#59675e;max-width:75ch}
+.settings-page .setup-affected{margin:0 0 12px}
+.settings-page .setup-affected summary,.settings-page .setup-explanation summary,.settings-page .settings-technical summary{font-size:.8rem;line-height:1.5;font-weight:600;min-height:44px;box-sizing:border-box;padding:12px 0;cursor:pointer}
+.settings-page .setup-affected p,.settings-page .setup-explanation p,.settings-page .settings-technical p{font-size:.8rem;line-height:1.7;color:#59675e;margin:0 0 12px}
+.settings-page .setup-caption{font-size:.8rem;color:#59675e;line-height:1.7;margin:12px 0 16px}
+.setup-inventory-counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0;border:1px solid #dce2df;border-radius:10px;overflow:hidden}
+.setup-inventory-counts>div{display:flex;flex-direction:column;padding:16px;border-right:1px solid #e1e6e2;min-width:0}
+.setup-inventory-counts>div:last-child{border-right:0}
+.setup-inventory-counts dt{flex:1;font-size:.75rem;line-height:1.6;color:#59675e}
+.setup-inventory-counts dd{font:600 1.5rem/1.3 system-ui,sans-serif;font-variant-numeric:tabular-nums;margin:8px 0 0;color:#314138}
+.settings-page .setup-explanation{border-top:1px solid #e1e6e2;margin-top:22px;padding-top:6px}
+.settings-page .setup-checked{font-size:.75rem;margin-bottom:0}
+.settings-page .settings-technical{margin-top:22px;border-top:1px solid #dce2df;padding-top:8px}
+/* Email checks report evidence, rather than implying a green success state. */
+.reminder-monitor .reminder-run-summary{background:#fff;border:1px solid #dce2df;border-radius:10px;padding:18px 20px;margin:20px 0}
+.reminder-monitor .reminder-run-summary h3{font-size:.9rem;margin:0 0 8px}
+.reminder-monitor .reminder-run-summary>p{font-size:.875rem;line-height:1.65;margin:8px 0;color:#435249}
+.reminder-monitor .reminder-run-summary>.reminder-status-timestamp{font-size:.75rem;color:#627067}
+.reminder-monitor .reminder-schedule-note{display:flex;align-items:flex-start;gap:10px;padding-top:14px;margin:14px 0 0;border-top:1px solid #e3e7e4;color:#635c49}
+.reminder-schedule-note>svg{flex-shrink:0;margin-top:3px;color:#8b744b}
+.reminder-monitor .reminder-schedule-note p{font-size:.8rem;line-height:1.65;margin:0;color:#5c625d}
+.reminder-monitor .reminder-schedule-note button{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:4px 0 0;padding:6px 0;border:0;border-radius:4px;background:transparent;color:#285a3e;font-size:.8rem;font-weight:600;box-shadow:none}
+.reminder-monitor .reminder-schedule-note button:hover{background:transparent;color:#193b28;text-decoration:underline;text-underline-offset:4px}
+.reminder-monitor .reminder-readiness{gap:0;border-bottom:1px solid #dce2df}
+.reminder-monitor .reminder-readiness>div{border:0;padding:4px 0 16px;border-radius:0}
+.reminder-monitor .reminder-queue-grid>div{background:#fafbfa;border-color:#dce2df}
+.reminder-monitor .reminder-queue-grid strong{font-size:22px;color:#314138}
+.reminder-monitor .reminder-contact-note{font-size:.8rem;line-height:1.7;color:#59675e;max-width:65ch}
+@media(max-width:600px){
+ .setup-checkout-grid{grid-template-columns:minmax(0,1fr)}
+ .setup-inventory-counts{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .setup-inventory-counts>div:nth-child(2){border-right:0}
+ .setup-inventory-counts>div:nth-child(-n+2){border-bottom:1px solid #e1e6e2}
+ .setup-step-status{margin-left:29px}
+ .settings-page .setup-checklist-heading{gap:10px}
+ .settings-page .setup-progress-label{align-items:flex-start;flex-direction:column;gap:6px}
+ .reminder-monitor .reminder-run-summary{padding:16px}
+}
