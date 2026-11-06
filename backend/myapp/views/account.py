@@ -3,21 +3,53 @@ from rest_framework import serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.db import transaction
+from ..models import CustomerAccount
+from ..services.handover import contact_number
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(max_length=30, required=False, allow_blank=True)
+
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.instance is not None and not self.instance.is_staff:
+            fields.pop('phone', None)
+        return fields
+
+    def validate_phone(self, value):
+        return contact_number(value)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.is_staff:
+            data['phone'] = CustomerAccount.objects.filter(user=instance).values_list('phone', flat=True).first() or ''
+        return data
+
+    def update(self, instance, validated_data):
+        phone = validated_data.pop('phone', serializers.empty)
+        instance = super().update(instance, validated_data)
+        if instance.is_staff and phone is not serializers.empty:
+            # CustomerAccount is the existing contact-profile table. Staff still
+            # use password sign-in and cannot register customer passkeys.
+            CustomerAccount.objects.update_or_create(user=instance, defaults={
+                'name': (instance.get_full_name() or instance.username)[:150], 'phone': phone})
+        return instance
+
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name']
+        fields = ['username', 'first_name', 'last_name', 'phone']
         read_only_fields = ['username']
 
 
 @api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def account_profile(request):
     serializer = ProfileSerializer(request.user)
     if request.method == 'PATCH':
-        serializer = ProfileSerializer(request.user, data=request.data, partial=True)
+        user = User.objects.select_for_update().get(pk=request.user.pk)
+        serializer = ProfileSerializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
     return Response(serializer.data)

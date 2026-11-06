@@ -89,6 +89,16 @@ class PasskeyTests(TestCase):
         self.register()
         self.assertEqual(self.client.get('/api/check-auth/').data['customer_account']['phone'],'+60123456789')
 
+    def test_registration_rejects_prefix_only_then_accepts_full_011_mobile(self):
+        self.contact['phone']='011'
+        result=self.post('register/options',self.contact)
+        self.assertEqual(result.status_code,400,result.data)
+        self.assertIn('full phone number',str(result.data))
+        self.assertFalse(CustomerAccount.objects.exists());self.assertFalse(CustomerPasskey.objects.exists())
+        self.contact['phone']='011 1234 5678'
+        self.register()
+        self.assertEqual(self.client.get('/api/check-auth/').data['customer_account']['phone'],'+601112345678')
+
     def test_new_device_signin_loads_original_account_not_matching_phone(self):
         key=self.register();other=self.guest()
         other_id=other.get('/api/check-auth/').data['user_id']

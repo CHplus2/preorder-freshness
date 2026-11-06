@@ -8,7 +8,8 @@ export function accountDetails(data,address=false,allowEmpty=false) {
   if(address && allowEmpty && (data===null || data===''))return {...emptyAddress};
   const keys=address?addressFields:['username','first_name','last_name'];
   if(!data || Array.isArray(data) || !keys.every(key=>typeof data[key]==='string'))throw invalidResponse();
-  return Object.fromEntries(keys.map(key=>[key,data[key]]));
+  if(!address&&data.phone!==undefined&&typeof data.phone!=='string')throw invalidResponse();
+  return {...Object.fromEntries(keys.map(key=>[key,data[key]])),...(!address&&typeof data.phone==='string'?{phone:data.phone}:{})};
 }
 
 export const isPastOrder=order=>['delivered','cancelled'].includes(order.status);

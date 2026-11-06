@@ -29,7 +29,9 @@ try{
  const render=(node,method='standard',changes={})=>renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store:{...store,...changes}}},h(AuthContext.Provider,{value:{isGuest:false,customerAccount:{name:'Local customer',phone:'+60123456789'},isAuthenticated:true,isSessionCurrent:()=>true}},h(UIContext.Provider,{value:{formatPrice:n=>'RM '+Number(n).toFixed(2)}},h(OrderContext.Provider,{value:{placeOrder:()=>{}}},h(CartContext.Provider,{value:{cart:[row],cartLoading:false,pricingReady:true,promotion:{...store,...changes},fulfilmentMethod:method,deliveryArea:'North',...{total:24,discount:0,SHIPPING_FEE:method==='pickup'?0:4.5,finalTotal:method==='pickup'?24:28.5}}},node)))))));
  const checkout=render(h(Checkout));
  assert.match(checkout,/Your name/);assert.match(checkout,/Phone number/);assert.match(checkout,/Full delivery address/);
- assert.match(checkout,/Cash on delivery/);assert.match(checkout,/Using your account details/);assert.match(checkout,/Edit name or phone/);
+ assert.match(checkout,/Cash on delivery/);assert.match(checkout,/Saved details are filled in/);assert.match(checkout,/Save these contact details to my account/);
+ assert.match(checkout,/value="Local customer"/);assert.match(checkout,/value="\+60123456789"/);
+ assert.doesNotMatch(checkout,/readOnly|readonly/);
  assert.doesNotMatch(checkout,/type="password"|type="email"|PayPal|Demo credit wallet|Save delivery address/);
  const pickup=render(h(Checkout),'pickup');assert.doesNotMatch(pickup,/Cash on delivery|Full delivery address/);assert.match(pickup,/Self-collection accepts QR payment only/);
  const settings=render(h(Settings,{store,onChange:()=>{},onSavePickup:()=>{}}));

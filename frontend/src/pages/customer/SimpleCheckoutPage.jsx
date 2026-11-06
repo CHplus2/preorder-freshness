@@ -12,6 +12,8 @@ import DeliveryTimePicker from '../../components/DeliveryTimePicker';
 import AvailabilityResult from '../../components/AvailabilityResult';
 import CheckoutSummary from '../../components/CheckoutSummary';
 import CheckoutProofUpload from '../../components/CheckoutProofUpload';
+import ContactPhoneField from '../../components/ContactPhoneField';
+import {contactPhone} from '../../utils/contactPhone';
 import useDeliveryQuote from '../../hooks/useDeliveryQuote';
 import {basketAvailabilityKey} from '../../utils/deliverySlots';
 import {fulfilmentKey,fulfilmentSelectionKey,methodsFor} from '../../utils/fulfilment';
@@ -22,21 +24,23 @@ export default function SimpleCheckoutPage(){
  const {cart,cartLoading,cartError,cartUpdating,pricingReady,pricingError,refreshCart,refreshPricing,promotion,pricingRefreshing=false,
   fulfilmentMethod='standard',deliveryArea='',chooseFulfilment,preferredDelivery='',preferredDeliveryDay='',chooseDeliveryTime,
   total,discount,SHIPPING_FEE,finalTotal}=useCart();
- const {isSessionCurrent,customerAccount,isGuest,isAdmin}=useAuth(),{placeOrder}=useOrder(),{formatPrice,openCustomerAccess}=useUI(),navigate=useNavigate();
- const [enteredName,setName]=useState(''),[enteredPhone,setPhone]=useState(''),[address,setAddress]=useState(''),[notes,setNotes]=useState('');
- const nameEdited=useRef(false),hasCustomerAccount=!!customerAccount;
+ const {isSessionCurrent,customerAccount,isGuest,isAdmin,passkeyAction,checkAuth}=useAuth(),{placeOrder}=useOrder(),{formatPrice,openCustomerAccess}=useUI(),navigate=useNavigate();
+ const [enteredName,setName]=useState(null),[enteredPhone,setPhone]=useState(null),[profile,setProfile]=useState(null),[address,setAddress]=useState(''),[notes,setNotes]=useState('');
+ const [saveContact,setSaveContact]=useState(false),hasCustomerAccount=!!customerAccount;
  // Staff and older password accounts keep their name in the existing profile.
- // Passkey customer details come directly from the authenticated session.
+ // Late profile responses cannot overwrite entries already edited at checkout.
  useEffect(()=>{
   if(hasCustomerAccount||isGuest)return;
   const controller=new AbortController();
   axios.get('/api/account/',{signal:controller.signal,timeout:15000}).then(({data})=>{
-   if(controller.signal.aborted||!isSessionCurrent()||nameEdited.current)return;
-   if(typeof data?.first_name==='string'&&typeof data?.last_name==='string')setName([data.first_name.trim(),data.last_name.trim()].filter(Boolean).join(' '));
+   if(controller.signal.aborted||!isSessionCurrent())return;
+   if(typeof data?.first_name==='string'&&typeof data?.last_name==='string')setProfile({name:[data.first_name.trim(),data.last_name.trim()].filter(Boolean).join(' '),phone:typeof data.phone==='string'?data.phone:''});
   }).catch(()=>{/* Keep the editable field available if the profile cannot load. */});
   return()=>controller.abort();
  },[hasCustomerAccount,isGuest,isSessionCurrent]);
- const name=customerAccount?.name??enteredName,phone=customerAccount?.phone??enteredPhone;
+ const savedName=customerAccount?.name??profile?.name??'',savedPhone=customerAccount?.phone??profile?.phone??'';
+ const name=enteredName??savedName,phone=enteredPhone??savedPhone;
+ const contactChanged=name.trim()!==savedName.trim()||contactPhone(phone).number!==contactPhone(savedPhone).number;
  const [payment,setPayment]=useState(''),[proof,setProof]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const [receiptUploaded,setReceiptUploaded]=useState(false);
  const pending=useRef(false),errorRef=useRef(null);
@@ -61,12 +65,14 @@ export default function SimpleCheckoutPage(){
   pending.current=true;setBusy(true);setError('');
   try{
    if(!isSessionCurrent())throw new Error('Your browser session changed. Reload checkout before continuing.');
+   if(saveContact&&contactChanged&&customerAccount)await passkeyAction('reauth');
    await placeOrder(null,method,{throwOnError:true,body:{
     delivery_at:preferredDelivery+':00+08:00',delivery_method:fulfilmentMethod,delivery_area:deliveryArea,arrival_window_minutes:0,
-    customer:{name,phone},delivery_address:pickup?undefined:{line1:address},expected_total:finalTotal.toFixed(2),
+    customer:{name,phone},save_contact:saveContact,delivery_address:pickup?undefined:{line1:address},expected_total:finalTotal.toFixed(2),
     payment_proof_id:method==='manual'?activeProof.id:undefined,
     handover:{mode:'in_person',notes,contact_phone:phone,contact_method:'phone'}
    }});
+   if(saveContact)await checkAuth();
    navigate('/orders',{state:{formPayment:true}});
   }catch(err){setError(apiError(err));requestAnimationFrame(()=>errorRef.current?.focus());}
   finally{pending.current=false;setBusy(false)}
@@ -81,7 +87,9 @@ export default function SimpleCheckoutPage(){
    <fieldset disabled={busy||cartUpdating} className="client-checkout-main">
     <legend className="sr-only">Preorder details</legend>
     <section className="checkout-section"><FulfilmentChoices store={promotion} value={fulfilmentMethod} area={deliveryArea} onChange={(next,area)=>{chooseFulfilment(next,area);setPayment('');setProof(null)}}/></section>
-    <section className="checkout-section"><h2>Your details</h2>{isGuest&&<p className="checkout-hint"><Link to="/account?next=checkout">Create an account or sign in</Link> to keep your orders available on another device.</p>}{customerAccount?<p className="checkout-hint">Using your account details. <Link to="/account?next=checkout">Edit name or phone</Link></p>:<p className="checkout-hint">Your saved account name is filled in when available. <Link to="/account?next=checkout">Account settings</Link></p>}<div className="client-contact-fields"><label>Your name<input required readOnly={!!customerAccount} autoComplete="name" maxLength="150" value={name} onChange={e=>{nameEdited.current=true;setName(e.target.value)}}/></label><label>Phone number<input required readOnly={!!customerAccount} type="tel" autoComplete="tel" maxLength="30" placeholder="e.g. 012 345 6789" value={phone} onChange={e=>setPhone(e.target.value)}/></label></div><p className="checkout-hint">The kitchen uses this number to coordinate your order. Both 012 345 6789 and +60 12 345 6789 are accepted; Malaysian numbers are saved with +60.</p>
+    <section className="checkout-section"><h2>Your details</h2><p className="checkout-hint">Saved details are filled in when available. You can edit them here for this order.</p><div className="client-contact-fields"><label>Your name<input required autoComplete="name" maxLength="150" value={name} onChange={e=>setName(e.target.value)}/></label><ContactPhoneField value={phone} onChange={setPhone}/></div><p className="checkout-hint">Use your full number, for example 011 1234 5678 or +60 11 1234 5678. The kitchen uses it to coordinate your order.</p>
+     {(isAdmin||customerAccount)&&<label className="checkout-save-contact"><input type="checkbox" checked={saveContact} onChange={e=>setSaveContact(e.target.checked)}/>Save these contact details to my account for future orders</label>}
+     {saveContact&&contactChanged&&customerAccount&&<p className="checkout-hint">Your passkey will confirm the account update when you place this order.</p>}
      {!pickup&&<label>Full delivery address<textarea required autoComplete="street-address" rows="3" maxLength="500" placeholder="House / unit, street, town and postcode" value={address} onChange={e=>setAddress(e.target.value)}/></label>}
      <details className="client-extra-notes"><summary>Handover instructions (optional)</summary><label>Instructions for the kitchen<textarea maxLength="500" rows="2" value={notes} onChange={e=>setNotes(e.target.value)}/></label><p className="checkout-hint">Food is handed to a person. Contact the kitchen to agree any unattended delivery.</p></details>
     </section>

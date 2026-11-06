@@ -11,6 +11,8 @@ test('missing address is legitimate only on initial read; malformed responses ca
   }
   const profile={username:'buyer',first_name:'A',last_name:'B',is_staff:true};
   assert.deepEqual(accountDetails(profile),{username:'buyer',first_name:'A',last_name:'B'});
+  assert.equal(accountDetails({...profile,phone:'+601112345678'}).phone,'+601112345678');
+  assert.throws(()=>accountDetails({...profile,phone:null}),{code:'INVALID_RESPONSE'});
   assert.deepEqual(accountDetails({...emptyAddress,id:1,user:2},true),emptyAddress);
   assert.throws(()=>accountDetails({...emptyAddress,phone:null},true),{code:'INVALID_RESPONSE'});
 });

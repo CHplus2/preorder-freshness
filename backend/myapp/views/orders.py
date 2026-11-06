@@ -325,6 +325,9 @@ def place_order(request):
             from ..services.simple_ordering import deduct_at_placement
             deduct_at_placement(order, user)
 
+    if client_mode:
+        from ..services.guest_ordering import save_checkout_contact
+        save_checkout_contact(request, customer)
     cart_items.delete()
 
     if payment == "wallet":

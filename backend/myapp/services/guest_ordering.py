@@ -33,14 +33,36 @@ class DeliveryAddressInput(serializers.Serializer):
 def customer_details(data, method, user=None):
     form = CustomerInput(data=data.get('customer', {}));form.is_valid(raise_exception=True)
     customer = dict(form.validated_data)
-    if user is not None and hasattr(user,'customer_account') and not user.is_staff:
-        account = user.customer_account
-        if customer != {'name':account.name,'phone':account.phone}:
-            raise serializers.ValidationError('Your account contact details changed. Refresh checkout before placing your order.')
-        customer = {'name':account.name,'phone':account.phone}
+    # Contact details are editable order facts, never a way to choose an account.
+    # Saving them back to the signed-in profile is a separate, explicit choice.
     address = {}
     if method != 'pickup':
         form = DeliveryAddressInput(data=data.get('delivery_address', {}));form.is_valid(raise_exception=True)
         address = dict(recipient_name=customer['name'],phone=customer['phone'],line1=form.validated_data['line1'],
             line2='',city='',state='',postal_code='',country='Malaysia')
     return customer,address
+
+
+def save_checkout_contact(request, customer):
+    """Called only inside a successful placement transaction, for this user."""
+    from ..models import CustomerAccount
+    save = serializers.BooleanField().run_validation(request.data.get('save_contact', False))
+    if not save:
+        return
+    user = request.user
+    if user.is_staff:
+        CustomerAccount.objects.update_or_create(user=user, defaults=customer)
+        first, _, last = customer['name'].partition(' ')
+        user.first_name, user.last_name = first, last
+        user.save(update_fields=['first_name', 'last_name'])
+        return
+    account = CustomerAccount.objects.select_for_update().filter(user=user).first()
+    if not account:
+        raise serializers.ValidationError('Use Account settings to save contact details for this existing account.')
+    if customer == {'name': account.name, 'phone': account.phone}:
+        return
+    # Keep the existing passkey confirmation rule for customer profile changes.
+    from ..views.passkeys import recent
+    recent(request)
+    account.name, account.phone = customer['name'], customer['phone']
+    account.save(update_fields=['name', 'phone', 'updated_at'])

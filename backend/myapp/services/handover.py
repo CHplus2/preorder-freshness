@@ -14,7 +14,9 @@ def contact_number(value):
         digits = '60' + digits[1:]
     elif not value.startswith('+') and not digits.startswith('60'):
         raise serializers.ValidationError('Include the country code, for example +60123456789.')
-    if not 8 <= len(digits) <= 15 or digits.startswith('0'):
+    if len(digits) < 8:
+        raise serializers.ValidationError('Enter the full phone number, not only a prefix such as 011 (for example, 011 1234 5678).')
+    if len(digits) > 15 or digits.startswith('0'):
         raise serializers.ValidationError('Enter a valid phone number, for example +60123456789.')
     return '+' + digits
 

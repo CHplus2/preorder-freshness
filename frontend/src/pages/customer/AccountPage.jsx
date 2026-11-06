@@ -1,4 +1,5 @@
 import OrderEmailSettings from '../../components/OrderEmailSettings';
+import ContactPhoneField from '../../components/ContactPhoneField';
 import {useEffect,useState} from 'react';
 import {Link,useLocation} from 'react-router-dom';
 import axios from 'axios';
@@ -52,7 +53,7 @@ export default function AccountPage(){
 }
 function KitchenAccount(){
  return <main className="checkout-container account-settings kitchen-account"><header className="customer-page-heading"><span className="dk-eyebrow">KITCHEN WORKSPACE</span><h1>Your staff account</h1><p>Your staff profile and sign-in details. Business settings are managed separately.</p><nav className="customer-shortcuts" aria-label="Kitchen account shortcuts"><Link to="/admin/orders">Orders</Link><Link to="/admin/settings">Kitchen settings</Link></nav></header><div className="account-sections">
-  <AccountSection title="Staff profile" url="/api/account/" intro="Change your display name here. Your existing staff username and password still work.">{(value,edit)=><div className="address-fields"><p className="field-wide kitchen-username">Staff username: <strong>{value.username}</strong></p>{['first_name','last_name'].map((key,i)=><label key={key}>{i?'Last name':'First name'}<input maxLength={150} autoComplete={i?'family-name':'given-name'} value={value[key]} onChange={e=>edit({...value,[key]:e.target.value})}/></label>)}</div>}</AccountSection>
+  <AccountSection title="Staff profile" url="/api/account/" intro="Save your name and phone for checkout. Your staff sign-in details stay the same.">{(value,edit)=><div className="address-fields"><p className="field-wide kitchen-username">Staff username: <strong>{value.username}</strong></p>{['first_name','last_name'].map((key,i)=><label key={key}>{i?'Last name':'First name'}<input maxLength={150} autoComplete={i?'family-name':'given-name'} value={value[key]} onChange={e=>edit({...value,[key]:e.target.value})}/></label>)}<ContactPhoneField required={false} label="Phone number (optional)" value={value.phone||''} onChange={phone=>edit({...value,phone})}/></div>}</AccountSection>
   <section className="checkout-section"><h2>Kitchen delivery reminders</h2><p className="account-section-intro">Check the recipient, send a test email and see reminder activity in Kitchen settings.</p><p className="account-help">The kitchen’s reminder recipient and email sender are separate from your sign-in email. An empty account email does not switch off kitchen reminders.</p><Link className="customer-order-help" to="/admin/settings#reminders">Open email reminder settings</Link></section>
   <details className="kitchen-account-security"><summary>Sign-in email &amp; recovery (optional)</summary><OrderEmailSettings staff/></details>
  </div></main>;

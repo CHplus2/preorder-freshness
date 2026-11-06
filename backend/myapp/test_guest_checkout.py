@@ -75,9 +75,52 @@ class GuestCheckoutTests(TestCase):
         self.assertFalse(Order.objects.exists());self.assertFalse(CheckoutProof.objects.exists())
         self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,1000)
 
-    def test_account_contact_changes_reject_stale_checkout(self):
-        self.assertEqual(self.place(customer={'name':'Another name','phone':'0123456789'}).status_code,400)
+    def test_checkout_contact_edit_is_order_only_without_explicit_save(self):
+        result=self.place(customer={'name':'Another name','phone':'011 1234 5678'})
+        self.assertEqual(result.status_code,201,result.data)
+        order=Order.objects.get(pk=result.data['order_id'])
+        self.assertEqual(order.fulfilment_snapshot['customer'],{'name':'Another name','phone':'+601112345678'})
+        account=CustomerAccount.objects.get(user=order.user)
+        self.assertEqual(account.name,'Local customer');self.assertEqual(account.phone,'+60123456789')
+
+    def test_save_contact_requires_recent_confirmation_and_rolls_back_failed_order(self):
+        result=self.place(customer={'name':'Updated name','phone':'011 1234 5678'},save_contact=True)
+        self.assertEqual(result.status_code,403,result.data)
         self.assertFalse(Order.objects.exists())
+        self.stock.refresh_from_db();self.box.refresh_from_db()
+        self.assertEqual(self.stock.quantity,1000);self.assertEqual(self.box.quantity,20)
+        account=CustomerAccount.objects.get(user_id=self.client.get('/api/check-auth/').data['user_id'])
+        self.assertEqual(account.name,'Local customer')
+
+    def test_explicit_contact_save_is_atomic_with_placement_and_keeps_earlier_order_snapshot(self):
+        session=self.client.session;session['passkey_verified_at']=timezone.now().timestamp();session.save()
+        result=self.place(customer={'name':'Updated name','phone':'011 1234 5678'},save_contact=True)
+        self.assertEqual(result.status_code,201,result.data)
+        order=Order.objects.get(pk=result.data['order_id'])
+        account=CustomerAccount.objects.get(user=order.user)
+        self.assertEqual((account.name,account.phone),('Updated name','+601112345678'))
+        before=dict(order.fulfilment_snapshot['customer'])
+        account.name='Later contact';account.save()
+        order.refresh_from_db();self.assertEqual(order.fulfilment_snapshot['customer'],before)
+
+    def test_invalid_prefix_never_places_order_or_deducts_stock(self):
+        result=self.place(customer={'name':'Local customer','phone':'011'},save_contact=True)
+        self.assertEqual(result.status_code,400,result.data)
+        self.assertIn('full phone number',str(result.data))
+        self.assertFalse(Order.objects.exists())
+        self.stock.refresh_from_db();self.assertEqual(self.stock.quantity,1000)
+
+    def test_staff_checkout_saves_contact_for_next_checkout_without_creating_a_passkey(self):
+        self.client.force_login(self.owner)
+        self.client.post('/api/cart/',dict(product_id=self.product.pk,quantity=2),format='json')
+        result=self.place(customer={'name':'Kitchen Owner','phone':'011 1234 5678'},save_contact=True)
+        self.assertEqual(result.status_code,201,result.data)
+        profile=self.client.get('/api/account/').data
+        self.assertEqual(profile['phone'],'+601112345678')
+        self.assertEqual((profile['first_name'],profile['last_name']),('Kitchen','Owner'))
+        auth=self.client.get('/api/check-auth/').data
+        self.assertTrue(auth['is_admin']);self.assertNotIn('customer_account',auth)
+        self.assertFalse(CustomerAccount.objects.get(user=self.owner).passkeys.exists())
 
     def test_checkout_accepts_local_and_international_spelling_of_account_phone(self):
         from .services.guest_ordering import customer_details

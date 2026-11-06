@@ -2031,3 +2031,40 @@ direction; the UI never substitutes a placement date for a missing delivery.
 Sorting keeps status/search/date filters, resets the visible page and clears
 bulk selections. This is a read-only client sort of the existing staff list;
 no order IDs, stored dates, API fields or database schema changed.
+
+### 6 November 2026 — full phone numbers and checkout contact profiles
+
+Simple checkout prefills the saved customer name/phone or the staff profile name
+and phone. Both fields remain editable for the current order; the account user ID
+still comes only from the authenticated session. No phone/name lookup chooses or
+authenticates an account. A prefix such as `011` is rejected with full-number
+guidance. Existing supported complete local/international formats still normalise
+to `+60` for Malaysia. The shared browser phone field displays an inline error
+and sets form validity before submission, including on account creation.
+
+`POST /api/orders/place/` adds optional boolean `save_contact` (default false).
+With false, edits affect only the new order's contact/address snapshots. With
+true, the signed-in staff or existing customer contact profile is updated inside
+the placement transaction. Changed customer profiles keep the existing recent
+passkey-confirmation requirement; checkout confirms this before submission.
+Failure rolls back the profile, order and stock changes together. A retry of a
+completed checkout retains the existing idempotency behaviour and does not change
+its original profile/stock facts again. Previous order snapshots remain unchanged.
+Legacy password customers without a customer contact profile can still enter
+order details; this additional save choice is not offered for those accounts.
+
+The own-account `GET/PATCH /api/account/` adds optional `phone` for staff profiles.
+It uses the existing contact-profile table; staff roles, passwords, usernames and
+passkey-registration restrictions stay unchanged. Customer profile changes still
+use `/api/account/customer/` and its existing confirmation gate. Staff profile
+updates normalise the phone before any name update is saved. No migration is
+required. The kitchen reminder sender/recipient are separate from an account's
+optional recovery email.
+
+Account checks cover signed WebAuthn registration with a full `011` number and
+rejection of a prefix-only registration. An isolated mail-backend test follows
+the staff recovery email link through password reset, rejects link reuse and
+signs in with the new password. These tests do not prove live SMTP/inbox delivery.
+Passwordless customer accounts are excluded from password email recovery; their
+recovery route is an existing synced/backup passkey, not an unverified phone.
+No predictive endpoints, model artifacts or evaluation changed.

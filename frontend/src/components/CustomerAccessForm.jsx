@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {useAuth} from '../contexts/AuthContext';
 import {useUI} from '../contexts/UIContext';
 import {passkeysSupported,passkeyError} from '../utils/passkeys';
+import ContactPhoneField from './ContactPhoneField';
 import './CustomerAccess.css';
 export default function CustomerAccessForm({initialMode='create',onComplete,onStaffSignIn}){
  const {isAuthenticated,authPending,authError,startGuest,passkeyAction,isSessionCurrent}=useAuth();
@@ -24,7 +25,7 @@ export default function CustomerAccessForm({initialMode='create',onComplete,onSt
   {!supported&&<p role="status" className="account-message">Use a browser that supports passkeys and open this website over HTTPS.</p>}
   {(error||authError)&&<div ref={errorRef} tabIndex={-1} role="alert" className="account-message account-error">{error||authError}{authError&&isAuthenticated===false&&<button type="button" disabled={authPending} onClick={startGuest}>Try again</button>}</div>}
   <form onSubmit={submit}><fieldset disabled={busy||authPending||create&&isAuthenticated!==true}><legend className="sr-only">{create?'Create customer account':'Customer sign in'}</legend>
-   {create&&<><label>Your name<input data-initial-focus required autoComplete="name" maxLength="150" value={name} onChange={e=>setName(e.target.value)}/></label><label>Phone number<input required type="tel" autoComplete="tel" maxLength="30" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="e.g. 012 345 6789"/></label><p className="customer-access-help">Use 012 345 6789 or +60 12 345 6789. Malaysian numbers are saved with +60.</p></>}
+   {create&&<><label>Your name<input data-initial-focus required autoComplete="name" maxLength="150" value={name} onChange={e=>setName(e.target.value)}/></label><ContactPhoneField value={phone} onChange={setPhone}/><p className="customer-access-help">Use your full number, for example 011 1234 5678 or +60 11 1234 5678.</p></>}
    <button className="customer-access-primary" data-initial-focus={!create?true:undefined} type="submit" disabled={!supported||busy||authPending||create&&isAuthenticated!==true}>{busy||authPending?'Confirming…':create?'Create account with a passkey':'Sign in with a passkey'}</button>
   </fieldset></form>
   <p className="customer-access-switch">{create?'Already have an account?':'New here?'} <button type="button" disabled={busy||authPending} onClick={()=>{setError('');setMode(create?'signin':'create')}}>{create?'Sign in':'Create an account'}</button></p>

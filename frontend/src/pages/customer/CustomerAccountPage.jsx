@@ -5,6 +5,7 @@ import {useAuth} from '../../contexts/AuthContext';
 import {useUI} from '../../contexts/UIContext';
 import {getCookie} from '../../utils/cookieUtils';
 import {passkeysSupported,passkeyError} from '../../utils/passkeys';
+import ContactPhoneField from '../../components/ContactPhoneField';
 import './CustomerAccountPage.css';
 
 export default function CustomerAccountPage(){
@@ -57,7 +58,7 @@ function CustomerAccountDetails(){
   {!supported&&<p className="account-message" role="status">Passkeys need a supported browser and a secure connection. Open this website over HTTPS.</p>}
   {error&&<p className="account-message account-error" role="alert">{error}</p>}
   <section className="customer-account-card"><h2>{customerAccount?'Contact details':'Create your account'}</h2>
-   <form onSubmit={customerAccount?save:register}><fieldset disabled={busy||authPending||isAuthenticated!==true}><legend className="sr-only">Customer details</legend><div className="account-contact-grid"><label>Your name<input required autoComplete="name" maxLength="150" value={name} onChange={e=>setName(e.target.value)}/></label><label>Phone number<input required type="tel" autoComplete="tel" maxLength="30" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="e.g. 012 345 6789"/></label></div><p className="account-help">Use 012 345 6789 or +60 12 345 6789. Malaysian numbers are saved with +60. This is a contact number; it is not verified by SMS.</p>
+   <form onSubmit={customerAccount?save:register}><fieldset disabled={busy||authPending||isAuthenticated!==true}><legend className="sr-only">Customer details</legend><div className="account-contact-grid"><label>Your name<input required autoComplete="name" maxLength="150" value={name} onChange={e=>setName(e.target.value)}/></label><ContactPhoneField value={phone} onChange={setPhone}/></div><p className="account-help">Use your full number, for example 011 1234 5678 or +60 11 1234 5678. This is a contact number; it is not verified by SMS.</p>
     <button disabled={!supported||isAuthenticated!==true} type="submit">{busy||authPending?'Confirming…':customerAccount?'Save contact details':'Create account with a passkey'}</button>
    </fieldset></form>
    {!customerAccount&&<p className="account-help">Your current basket and orders will stay with this account. Keep access to your saved passkey: a name or phone number cannot recover the account.</p>}
