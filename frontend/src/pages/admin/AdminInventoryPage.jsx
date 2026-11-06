@@ -7,10 +7,11 @@ import {malaysiaDate} from '../../utils/planner';
 import ModalDialog from '../../components/ModalDialog';
 import PageLoading from "../../components/PageLoading";
 import {apiError,readApiError} from '../../utils/apiError';
-import ExpiryFields from "../../components/ExpiryFields";
+import {InventoryBatchForm,IngredientForm} from '../../components/InventoryForms';
+import {useUI} from '../../contexts/UIContext';
+import {stockQuantity} from '../../utils/stockShortage';
 import {expiryBreakdown} from '../../utils/expiryEvidence';
-import StorageGuidanceEditor from "../../components/StorageGuidanceEditor";
-import {changeBatchMaterial,validStorageGuidance} from "../../utils/storageGuidance";
+import {validStorageGuidance} from "../../utils/storageGuidance";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {useAuth} from '../../contexts/AuthContext';
@@ -46,6 +47,9 @@ const emptyInventoryItem = {
 
 export default function AdminInventoryPage() {
   const {isSessionCurrent}=useAuth();
+  const {setAlert}=useUI();
+  const writing=useRef(false);
+  const [deleting,setDeleting]=useState(null);
   const [params]=useSearchParams();
   const [today,setToday]=useState(()=>malaysiaDate(new Date()));
   useEffect(()=>{const timer=setInterval(()=>setToday(malaysiaDate(new Date())),60000);return()=>clearInterval(timer)},[]);
@@ -71,7 +75,7 @@ export default function AdminInventoryPage() {
     useState(null);
 
   const [originalQuantity, setOriginalQuantity] = useState(null);
-  const openInventory = item => { setEditingInventoryItem({...item}); setOriginalQuantity(item.quantity); };
+  const openInventory = item => { setError("");setEditingInventoryItem({...item}); setOriginalQuantity(item.quantity); };
 
   const [editingRawMaterial, setEditingRawMaterial] =
     useState(null);
@@ -85,7 +89,7 @@ export default function AdminInventoryPage() {
   const [refreshing, setRefreshing] = useState(false);
 
   const closeForm = (setter) => {
-    if (loading) return;
+    if (loading||writing.current) return;
     setError("");
     setter(null);
   };
@@ -110,7 +114,7 @@ export default function AdminInventoryPage() {
       if(!controller.signal.aborted&&isSessionCurrent())setRefreshing(false);
     }
   },[isSessionCurrent]);
-  const formOpen=!!(newRawMaterial||newInventoryItem||editingInventoryItem||editingRawMaterial);
+  const formOpen=!!(newRawMaterial||newInventoryItem||editingInventoryItem||editingRawMaterial||deleting);
   useEffect(()=>{
     let timer;
     const onReturn=()=>{if(document.visibilityState==='hidden'||formOpen||loading||initialLoading||initialError)return;clearTimeout(timer);timer=setTimeout(refreshRecords,150)};
@@ -163,28 +167,6 @@ export default function AdminInventoryPage() {
     return () => controller.abort();
   }, [retry]);
 
-  useEffect(() => {
-    if (
-      newRawMaterial ||
-      newInventoryItem ||
-      editingInventoryItem ||
-      editingRawMaterial
-    ) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [
-    newRawMaterial,
-    newInventoryItem,
-    editingInventoryItem,
-    editingRawMaterial,
-  ]);
-
   const filteredInventory = useMemo(() => {
     return inventoryItems.filter((item) => {
       const search = searchQuery.toLowerCase();
@@ -229,6 +211,7 @@ export default function AdminInventoryPage() {
   ]);
 
   const handleCreateRawMaterial = async () => {
+    if(writing.current)return;
     if (!validStorageGuidance(newRawMaterial.storage_guidance || [])) {
       setError("Complete each guidance entry with a storage type, whole days (1–3650), source and conditions, or remove the entry to save without it.");
       return;
@@ -238,6 +221,7 @@ export default function AdminInventoryPage() {
       return;
     }
 
+    writing.current=true;
     setLoading(true);
     setError("");
 
@@ -250,21 +234,24 @@ export default function AdminInventoryPage() {
 
       await fetchRawMaterials();
 
-      setNewRawMaterial(null);
+      setIngredientScope("all");setNewRawMaterial(null);setAlert({type:"success",message:"Ingredient added."});
     } catch (err) {
       setError(
         apiError(err,"Could not save this ingredient. Your entries are still here; check the records before trying again.")
       );
     } finally {
+      writing.current=false;
       setLoading(false);
     }
   };
 
   const handleUpdateRawMaterial = async () => {
+    if(writing.current)return;
     if (!validStorageGuidance(editingRawMaterial.storage_guidance || [])) {
       setError("Complete each guidance entry with a storage type, whole days (1–3650), source and conditions, or remove the entry to save without it.");
       return;
     }
+    writing.current=true;
     setLoading(true);
     setError("");
 
@@ -281,38 +268,20 @@ export default function AdminInventoryPage() {
 
       await fetchRawMaterials();
 
-      setEditingRawMaterial(null);
+      setEditingRawMaterial(null);setAlert({type:"success",message:"Ingredient saved."});
     } catch (err) {
       setError(
         apiError(err,"Could not save this ingredient. Your entries are still here; check the records before trying again.")
       );
     } finally {
+      writing.current=false;
       setLoading(false);
     }
   };
 
-  const handleDeleteRawMaterial = async (id) => {
-    const confirmed = window.confirm(
-      "Delete this raw material? This is only possible if it is not being used by products or inventory."
-    );
-
-    if (!confirmed) return;
-
-    try {
-      await axios.delete(
-        `${API_URL}/raw-materials/${id}/`,
-        getAuthConfig()
-      );
-
-      await fetchRawMaterials();
-    } catch {
-      setError(
-        "This raw material cannot be deleted because it is still being used."
-      );
-    }
-  };
-
   const handleCreateInventory = async () => {
+    if(writing.current)return;
+    writing.current=true;
     setLoading(true);
     setError("");
 
@@ -327,17 +296,20 @@ export default function AdminInventoryPage() {
 
       window.dispatchEvent(new Event('inventory-updated'));
 
-      setNewInventoryItem(null);
+      setIngredientScope(currentMaterialIds.has(Number(newInventoryItem.raw_material))?"current":"all");setSelectedRawMaterial(String(newInventoryItem.raw_material));setSearchQuery("");setFreshnessFilter("");setVisibleCount(12);if(Number(newInventoryItem.quantity)===0)setShowEmptyBatches(true);setNewInventoryItem(null);setAlert({type:"success",message:"Stock batch added."});
     } catch (err) {
       setError(
         inventorySaveError(err)
       );
     } finally {
+      writing.current=false;
       setLoading(false);
     }
   };
 
   const handleUpdateInventory = async () => {
+    if(writing.current)return;
+    writing.current=true;
     setLoading(true);
     setError("");
 
@@ -352,43 +324,28 @@ export default function AdminInventoryPage() {
 
       window.dispatchEvent(new Event('inventory-updated'));
 
-      setEditingInventoryItem(null);
+      setEditingInventoryItem(null);setAlert({type:"success",message:"Stock batch saved."});
     } catch (err) {
       setError(
         inventorySaveError(err)
       );
     } finally {
+      writing.current=false;
       setLoading(false);
     }
   };
 
-  const handleDeleteInventory = async (id) => {
-    const confirmed = window.confirm(
-      "Delete this inventory item?"
-    );
-
-    if (!confirmed) return;
-
-    try {
-      await axios.delete(
-        `${API_URL}/inventory-items/${id}/`,
-        getAuthConfig()
-      );
-
-      await fetchInventoryItems();
-    } catch {
-      setError("Failed to delete inventory item.");
-    }
+  const deleteRecord=async event=>{
+    event.preventDefault();if(writing.current)return;writing.current=true;setLoading(true);setError('');
+    try{
+      const path=deleting.kind==='ingredient'?'raw-materials':'inventory-items';
+      await axios.delete(`${API_URL}/${path}/${deleting.item.id}/`,getAuthConfig());
+      if(!isSessionCurrent())return;
+      setDeleting(null);setAlert({type:'success',message:deleting.kind==='ingredient'?'Ingredient deleted.':'Stock batch deleted.'});
+      window.dispatchEvent(new Event('inventory-updated'));await refreshRecords();
+    }catch(error){setError(apiError(error,'Could not delete this record. It may be used by orders, stock movements or recipes.'))}
+    finally{writing.current=false;setLoading(false)}
   };
-
-  const getUnit = (rawMaterialId) => {
-    const material = rawMaterials.find(
-      (item) => item.id === Number(rawMaterialId)
-    );
-
-    return material?.unit || "";
-  };
-
   if (initialLoading) return <PageLoading label="Loading inventory..." />;
   if (initialError) return <main className="admin-inventory-container inventory-workspace"><FreshCastWorkflowContext/>
     <h1>Inventory</h1><p role="alert">{initialError}</p>
@@ -411,9 +368,7 @@ export default function AdminInventoryPage() {
           <button
             className="secondary-btn" disabled={refreshing || !!refreshError}
             onClick={() =>
-              setNewRawMaterial({
-                ...emptyRawMaterial,
-              })
+              (setError(""),setNewRawMaterial({...emptyRawMaterial}))
             }
           >
             Add ingredient
@@ -422,9 +377,7 @@ export default function AdminInventoryPage() {
           <button
             className="add-inventory-btn" disabled={refreshing || !!refreshError}
             onClick={() =>
-              setNewInventoryItem({
-                ...emptyInventoryItem,
-              })
+              (setError(""),setNewInventoryItem({...emptyInventoryItem,received_date:today}))
             }
           >
             Add stock batch
@@ -438,7 +391,7 @@ export default function AdminInventoryPage() {
         </button>
       </InventoryFeedback>
 
-      {error && !newRawMaterial && !newInventoryItem && !editingRawMaterial && !editingInventoryItem && (
+      {error && !newRawMaterial && !newInventoryItem && !editingRawMaterial && !editingInventoryItem && !deleting && (
         <div className="inventory-error">
           {error}
           <button aria-label="Dismiss error" onClick={() => setError("")}>×</button>
@@ -452,7 +405,7 @@ export default function AdminInventoryPage() {
 
       <StockReadiness today={today} disabled={formOpen||loading||refreshing||!!refreshError} onAddIngredient={id=>{if(rawMaterials.some(row=>row.id===id)){setError('');setNewInventoryItem({...emptyInventoryItem,raw_material:String(id),received_date:today});}}}/>
 
-      <InventoryAttention disabled={refreshing || !!refreshError} items={scopedInventoryItems} today={today} onReview={id=>openInventory(inventoryItems.find(item=>item.id===id))}/>
+      <details className="inventory-attention-disclosure"><summary>Review priority batches</summary><InventoryAttention disabled={refreshing || !!refreshError} items={scopedInventoryItems} today={today} onReview={id=>openInventory(inventoryItems.find(item=>item.id===id))}/></details>
 
       <h2 ref={batchHeading} tabIndex={-1} className="inventory-batch-heading">{ingredientScope==='current'?'Current-menu stock batches':'All stock batches'} · {filteredInventory.length}</h2>
       {/* Filters */}
@@ -477,7 +430,7 @@ export default function AdminInventoryPage() {
           }
         >
           <option value="">
-            All Raw Materials
+            All ingredients
           </option>
 
           {scopedMaterials.map((material) => (
@@ -501,7 +454,7 @@ export default function AdminInventoryPage() {
           </option>
           <option value="fresh">Within recorded shelf life</option>
           <option value="expiring">
-            Expiring Soon
+            Due within 3 days
           </option>
           <option value="expired">
             Past recorded deadline
@@ -510,7 +463,7 @@ export default function AdminInventoryPage() {
         </select></label>
 
       </div>
-      <p className="inventory-date-rules">Recorded status uses Malaysia’s current date and the earliest saved deadline: past date = past recorded deadline; today–3 days = attention due; more than 3 days = within recorded date. On hold overrides the date status. These are planning rules, not a physical food-safety test.</p>
+      <details className="inventory-status-help"><summary>How recorded status works</summary><p className="inventory-date-rules">Recorded status uses Malaysia’s current date and the earliest saved deadline: past date = past recorded deadline; today–3 days = attention due; more than 3 days = within recorded date. On hold overrides the date status. These are planning rules, not a physical food-safety test.</p></details>
       <p className="inventory-list-status" role="status">{Math.min(visibleCount,filteredInventory.length)} of {filteredInventory.length} matching batches shown · {inventoryItems.length} recorded{(searchQuery || selectedRawMaterial || freshnessFilter)?' · filters applied':''}. {(searchQuery || selectedRawMaterial || freshnessFilter) && <button type="button" onClick={()=>{setSearchQuery('');setSelectedRawMaterial('');setFreshnessFilter('');setVisibleCount(12)}}>Reset filters</button>}</p>
 
       {/* Inventory table */}
@@ -518,13 +471,13 @@ export default function AdminInventoryPage() {
 
         <thead>
           <tr>
-            <th>Raw Material</th>
+            <th scope="col">Ingredient</th>
             <th>Batch</th>
             <th>Quantity</th>
             <th>Storage Location</th>
             <th>Received</th>
             <th>Expiry</th>
-            <th>Freshness</th>
+            <th scope="col">Recorded status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -553,7 +506,7 @@ export default function AdminInventoryPage() {
                   </td>
 
                   <td data-label="Quantity">
-                    {item.quantity} {item.unit}
+                    {stockQuantity(item.quantity)} {item.unit}
                   </td>
 
                   <td data-label="Storage location">
@@ -599,9 +552,7 @@ export default function AdminInventoryPage() {
                     <button
                       className="danger" disabled={refreshing || !!refreshError}
                       onClick={() =>
-                        handleDeleteInventory(
-                          item.id
-                        )
+                        (setError(""),setDeleting({kind:"batch",item}))
                       }
                     >
                       Delete
@@ -662,9 +613,7 @@ export default function AdminInventoryPage() {
 
                   <button
                     onClick={() =>
-                      setEditingRawMaterial({
-                        ...material,
-                      })
+                      (setError(""),setEditingRawMaterial({...material}))
                     }
                   >
                     Edit
@@ -673,9 +622,7 @@ export default function AdminInventoryPage() {
                   <button
                     className="danger"
                     onClick={() =>
-                      handleDeleteRawMaterial(
-                        material.id
-                      )
+                      (setError(""),setDeleting({kind:"ingredient",item:material}))
                     }
                   >
                     Delete
@@ -693,449 +640,21 @@ export default function AdminInventoryPage() {
 
       </details>
 
-      {/* CREATE RAW MATERIAL MODAL */}
-      {newRawMaterial && (
-        <ModalDialog label="Add ingredient" onDismiss={() => closeForm(setNewRawMaterial)}>
-<div
-          className="modal-overlay"
-          onClick={() =>
-            closeForm(setNewRawMaterial)
-          }
-        >
-          <div
-            className="modal-content form-modal"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
-          >
-
-            <h2>Add ingredient</h2>
-            <InventoryFeedback message={error}/>
-
-            <label htmlFor="admininventorypage-field-1">Name</label>
-
-            <input id="admininventorypage-field-1"
-              value={newRawMaterial.name}
-              placeholder="e.g. Chicken"
-              onChange={(e) =>
-                setNewRawMaterial({
-                  ...newRawMaterial,
-                  name: e.target.value,
-                })
-              }
-            />
-
-            <label htmlFor="admininventorypage-field-2">Unit</label>
-
-            <select id="admininventorypage-field-2"
-              value={newRawMaterial.unit}
-              onChange={(e) =>
-                setNewRawMaterial({
-                  ...newRawMaterial,
-                  unit: e.target.value,
-                })
-              }
-            >
-              <option value="g">Gram (g)</option>
-              <option value="kg">Kilogram (kg)</option>
-              <option value="ml">
-                Millilitre (ml)
-              </option>
-              <option value="l">Litre (l)</option>
-              <option value="unit">Unit</option>
-            </select>
-
-            <StorageGuidanceEditor value={newRawMaterial.storage_guidance || []} disabled={loading} onChange={rows=>setNewRawMaterial({...newRawMaterial,storage_guidance:rows})}/>
-
-            <div className="modal-actions">
-
-              <button
-                onClick={
-                  handleCreateRawMaterial
-                }
-                disabled={loading}
-              >
-                {loading
-                  ? "Creating..."
-                  : "Create"}
-              </button>
-
-              <button
-                disabled={loading}
-                onClick={() =>
-                  closeForm(setNewRawMaterial)
-                }
-              >
-                Cancel
-              </button>
-
-            </div>
-
-          </div>
-        </div>
-</ModalDialog>
-      )}
-
-      {/* EDIT RAW MATERIAL MODAL */}
-      {editingRawMaterial && (
-        <ModalDialog label="Edit ingredient" onDismiss={() => closeForm(setEditingRawMaterial)}>
-<div
-          className="modal-overlay"
-          onClick={() =>
-            closeForm(setEditingRawMaterial)
-          }
-        >
-          <div
-            className="modal-content form-modal"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
-          >
-
-            <h2>Edit ingredient</h2>
-            <InventoryFeedback message={error}/>
-
-            <label htmlFor="admininventorypage-field-3">Name</label>
-
-            <input id="admininventorypage-field-3"
-              value={editingRawMaterial.name}
-              onChange={(e) =>
-                setEditingRawMaterial({
-                  ...editingRawMaterial,
-                  name: e.target.value,
-                })
-              }
-            />
-
-            <label htmlFor="admininventorypage-field-4">Unit</label>
-
-            <select id="admininventorypage-field-4"
-              value={editingRawMaterial.unit}
-              onChange={(e) =>
-                setEditingRawMaterial({
-                  ...editingRawMaterial,
-                  unit: e.target.value,
-                })
-              }
-            >
-              <option value="g">Gram (g)</option>
-              <option value="kg">
-                Kilogram (kg)
-              </option>
-              <option value="ml">
-                Millilitre (ml)
-              </option>
-              <option value="l">Litre (l)</option>
-              <option value="unit">Unit</option>
-            </select>
-
-            <StorageGuidanceEditor value={editingRawMaterial.storage_guidance || []} disabled={loading} onChange={rows=>setEditingRawMaterial({...editingRawMaterial,storage_guidance:rows})}/>
-
-            <div className="modal-actions">
-
-              <button
-                onClick={
-                  handleUpdateRawMaterial
-                }
-                disabled={loading}
-              >
-                {loading
-                  ? "Saving..."
-                  : "Save"}
-              </button>
-
-              <button
-                disabled={loading}
-                onClick={() =>
-                  closeForm(setEditingRawMaterial)
-                }
-              >
-                Cancel
-              </button>
-
-            </div>
-
-          </div>
-        </div>
-</ModalDialog>
-      )}
-
-      {/* CREATE INVENTORY MODAL */}
-      {newInventoryItem && (
-        <ModalDialog label="Add stock batch" onDismiss={() => closeForm(setNewInventoryItem)}>
-<div
-          className="modal-overlay"
-          onClick={() =>
-            closeForm(setNewInventoryItem)
-          }
-        >
-          <form
-            onSubmit={e=>{e.preventDefault();if(!loading)handleCreateInventory();}}
-            className="modal-content form-modal inventory-form"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
-          >
-
-            <h2>Add stock batch</h2>
-            <InventoryFeedback message={error}/>
-
-            <label htmlFor="admininventorypage-field-5">Raw Material</label>
-
-            <select id="admininventorypage-field-5" required
-              value={
-                newInventoryItem.raw_material
-              }
-              onChange={(e) =>
-                setNewInventoryItem(changeBatchMaterial(newInventoryItem,e.target.value?Number(e.target.value):""))
-              }
-            >
-              <option value="">
-                -- Select Raw Material --
-              </option>
-
-              {rawMaterials.map((material) => (
-                <option
-                  key={material.id}
-                  value={material.id}
-                >
-                  {material.name}
-                </option>
-              ))}
-            </select>
-
-            <label htmlFor="admininventorypage-field-6">
-              Quantity
-              {newInventoryItem.raw_material &&
-                ` (${getUnit(
-                  newInventoryItem.raw_material
-                )})`}
-            </label>
-
-            <input id="admininventorypage-field-6" required
-              type="number"
-              min="0"
-              step="0.001"
-              value={
-                newInventoryItem.quantity
-              }
-              onChange={(e) =>
-                setNewInventoryItem({
-                  ...newInventoryItem,
-                  quantity: e.target.value,
-                })
-              }
-            />
-
-            <label htmlFor="admininventorypage-field-7">Batch code (optional)</label>
-
-            <input id="admininventorypage-field-7"
-              value={
-                newInventoryItem.batch_code
-              }
-              placeholder="Leave blank to generate automatically"
-              onChange={(e) =>
-                setNewInventoryItem({
-                  ...newInventoryItem,
-                  batch_code: e.target.value,
-                })
-              }
-            />
-
-            <p className="form-help">Leave blank for an ingredient–received date–batch number reference, such as CHK-20261104-081. You can also keep a supplier’s batch code.</p>
-
-            <label htmlFor="admininventorypage-field-8">Storage Location</label>
-
-            <input id="admininventorypage-field-8"
-              value={
-                newInventoryItem.storage_location
-              }
-              placeholder="Fridge A - Top Shelf - Left"
-              onChange={(e) =>
-                setNewInventoryItem({
-                  ...newInventoryItem,
-                  storage_location:
-                    e.target.value,
-                })
-              }
-            />
-
-            <label htmlFor="admininventorypage-field-9">Received on (when this batch reached you)</label>
-
-            <input id="admininventorypage-field-9" required
-              type="date" max={today}
-              value={
-                newInventoryItem.received_date
-              }
-              onChange={(e) =>
-                setNewInventoryItem({
-                  ...newInventoryItem,
-                  received_date:
-                    e.target.value,
-                })
-              }
-            />
-
-            <ExpiryFields value={newInventoryItem} onChange={setNewInventoryItem} disabled={loading} material={rawMaterials.find(row=>row.id===Number(newInventoryItem.raw_material))}/>
-
-
-            <div className="modal-actions">
-
-              <button
-                type="submit"
-                disabled={loading}
-              >
-                {loading
-                  ? "Adding..."
-                  : "Add stock batch"}
-              </button>
-
-              <button
-                type="button" disabled={loading}
-                onClick={() =>
-                  closeForm(setNewInventoryItem)
-                }
-              >
-                Cancel
-              </button>
-
-            </div>
-
-          </form>
-        </div>
-</ModalDialog>
-      )}
-
-      {/* EDIT INVENTORY MODAL */}
-      {editingInventoryItem && (
-        <ModalDialog label="Edit stock batch" onDismiss={() => closeForm(setEditingInventoryItem)}>
-<div
-          className="modal-overlay"
-          onClick={() =>
-            closeForm(setEditingInventoryItem)
-          }
-        >
-          <form
-            onSubmit={e=>{e.preventDefault();if(!loading)handleUpdateInventory();}}
-            className="modal-content form-modal inventory-form"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
-          >
-
-            <h2>Edit stock batch</h2>
-            <InventoryFeedback message={error}><button type="button" disabled={loading} onClick={async () => {
-              setLoading(true);
-              try {
-                const response = await axios.get(`${API_URL}/inventory-items/${editingInventoryItem.id}/`, getAuthConfig());
-                openInventory(response.data);
-                setError("");
-              } catch (err) { setError(apiError(err, "Could not reload this batch.")); }
-              finally { setLoading(false); }
-            }}>Reload latest batch (discards edits)</button></InventoryFeedback>
-
-            <div className="inventory-fixed-ingredient"><span>Ingredient</span><strong>{editingInventoryItem.raw_material_name || rawMaterials.find(row=>row.id===editingInventoryItem.raw_material)?.name}</strong></div>
-
-            {Number(editingInventoryItem.quantity)!==Number(originalQuantity) && <label>Reason for quantity adjustment<input required maxLength={200} value={editingInventoryItem.adjustment_reason || ''} onChange={e=>setEditingInventoryItem({...editingInventoryItem,adjustment_reason:e.target.value})}/></label>}
-              <label htmlFor="admininventorypage-field-12">
-              Quantity (
-              {editingInventoryItem.unit}
-              )
-            </label>
-
-            <input id="admininventorypage-field-12" required
-              type="number"
-              min="0"
-              step="0.001"
-              value={
-                editingInventoryItem.quantity
-              }
-              onChange={(e) =>
-                setEditingInventoryItem({
-                  ...editingInventoryItem,
-                  quantity: e.target.value,
-                })
-              }
-            />
-
-            <label htmlFor="admininventorypage-field-13">Batch Code</label>
-
-            <input id="admininventorypage-field-13"
-              value={
-                editingInventoryItem.batch_code ||
-                ""
-              }
-              onChange={(e) =>
-                setEditingInventoryItem({
-                  ...editingInventoryItem,
-                  batch_code: e.target.value,
-                })
-              }
-            />
-
-            <p className="form-help">Clear this field to use the standard code. Previous references stay in the batch history.</p>
-
-            <label htmlFor="admininventorypage-field-14">Storage Location</label>
-
-            <input id="admininventorypage-field-14"
-              value={
-                editingInventoryItem.storage_location
-              }
-              onChange={(e) =>
-                setEditingInventoryItem({
-                  ...editingInventoryItem,
-                  storage_location:
-                    e.target.value,
-                })
-              }
-            />
-
-            <label htmlFor="admininventorypage-field-15">Received on (when this batch reached you)</label>
-
-            <input id="admininventorypage-field-15" required
-              type="date" max={today}
-              value={
-                editingInventoryItem.received_date
-              }
-              onChange={(e) =>
-                setEditingInventoryItem({
-                  ...editingInventoryItem,
-                  received_date:
-                    e.target.value,
-                })
-              }
-            />
-
-            <ExpiryFields value={editingInventoryItem} onChange={setEditingInventoryItem} disabled={loading} material={rawMaterials.find(row=>row.id===Number(editingInventoryItem.raw_material))}/>
-
-
-            <div className="modal-actions">
-
-              <button
-                type="submit"
-                disabled={loading}
-              >
-                {loading
-                  ? "Saving..."
-                  : "Save Changes"}
-              </button>
-
-              <button
-                type="button" disabled={loading}
-                onClick={() =>
-                  closeForm(setEditingInventoryItem)
-                }
-              >
-                Cancel
-              </button>
-
-            </div>
-
-          </form>
-        </div>
-</ModalDialog>
-      )}
-
+      {newRawMaterial&&<IngredientForm value={newRawMaterial} onChange={setNewRawMaterial} onSave={handleCreateRawMaterial} onClose={()=>closeForm(setNewRawMaterial)} busy={loading} error={error}/>}
+      {editingRawMaterial&&<IngredientForm value={editingRawMaterial} onChange={setEditingRawMaterial} onSave={handleUpdateRawMaterial} onClose={()=>closeForm(setEditingRawMaterial)} busy={loading} error={error}/>}
+      {newInventoryItem&&<InventoryBatchForm value={newInventoryItem} onChange={setNewInventoryItem} materials={rawMaterials} onSave={handleCreateInventory} onClose={()=>closeForm(setNewInventoryItem)} busy={loading} error={error} today={today}/>}
+      {editingInventoryItem&&<InventoryBatchForm value={editingInventoryItem} onChange={setEditingInventoryItem} materials={rawMaterials} originalQuantity={originalQuantity} onSave={handleUpdateInventory} onClose={()=>closeForm(setEditingInventoryItem)} busy={loading} error={error} today={today} onReload={async()=>{
+        if(writing.current)return;writing.current=true;setLoading(true);
+        try{const response=await axios.get(`${API_URL}/inventory-items/${editingInventoryItem.id}/`,getAuthConfig());openInventory(inventoryRecords([response.data])[0]);setError('')}
+        catch(error){setError(apiError(error,'Could not reload this batch.'))}finally{writing.current=false;setLoading(false)}
+      }}/>}
+      {deleting&&<ModalDialog label={deleting.kind==='ingredient'?'Delete ingredient':'Delete stock batch'} onDismiss={()=>closeForm(setDeleting)}><div className="modal-overlay"><form className="modal-content inventory-entry-form" onSubmit={deleteRecord}>
+        <header><h2>{deleting.kind==='ingredient'?'Delete ingredient?':'Delete stock batch?'}</h2></header>
+        <p><strong>{deleting.kind==='ingredient'?deleting.item.name:deleting.item.raw_material_name}</strong>{deleting.kind==='batch'&&<> · {deleting.item.batch_code||`Batch #${deleting.item.id}`}</>}</p>
+        <p>Deletion cannot be undone. Records used by recipes, orders or stock history may be protected. For discarded ingredients, record wastage instead.</p>
+        <InventoryFeedback message={error}/>
+        <footer><button type="button" disabled={loading} onClick={()=>closeForm(setDeleting)}>Keep record</button><button className="inventory-entry-danger" type="submit" disabled={loading}>{loading?'Deleting…':'Delete record'}</button></footer>
+      </form></div></ModalDialog>}
     </main>
   );
 }

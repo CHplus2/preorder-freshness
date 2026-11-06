@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {createElement as h} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {createServer} from 'vite';
+const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+try{
+ const {InventoryBatchForm,IngredientForm}=await server.ssrLoadModule('/src/components/InventoryForms.jsx');
+ const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
+ const render=node=>renderToStaticMarkup(h(UIContext.Provider,{value:{setAlert:()=>{}}},node));
+ const material={id:1,name:'Chicken <b>raw</b>',unit:'g',storage_guidance:[]};
+ const base={raw_material:1,quantity:'1500.250',received_date:'2026-11-06',expiry_basis:'storage',shelf_life_days:30,guidance_note:'Checked reference',storage_location:'Fridge A'};
+ const props={value:base,materials:[material],onChange:()=>{},onSave:()=>{},onClose:()=>{},today:'2026-11-06'};
+ const create=render(h(InventoryBatchForm,props));
+ assert.match(create,/<form[^>]*class="modal-content inventory-entry-form inventory-form"/);
+ assert.match(create,/Quantity received \(g\)/);assert.match(create,/type="date"[^>]*max="2026-11-06"/);
+ assert.match(create,/Stock deadline: <!-- -->2026-12-06|Stock deadline: 2026-12-06/);
+ assert.match(create,/Batch reference \(optional\)/);assert.doesNotMatch(create,/Reason for quantity adjustment/);
+ assert.match(create,/Chicken &lt;b&gt;raw&lt;\/b&gt;/);assert.doesNotMatch(create,/<b>raw<\/b>/);
+ const edit=render(h(InventoryBatchForm,{...props,value:{...base,id:2,quantity:'1400.250'},originalQuantity:'1500.250'}));
+ assert.match(edit,/Quantity remaining \(g\)/);assert.match(edit,/Reason for quantity adjustment/);assert.match(edit,/1,500.25/);assert.match(edit,/1,400.25/);assert.match(edit,/required=""[^>]*maxLength="200"/);
+ const disabled=render(h(InventoryBatchForm,{...props,busy:true}));assert.match(disabled,/<fieldset[^>]*disabled=""/);
+ const ingredient=render(h(IngredientForm,{value:{name:'',unit:'g',storage_guidance:[]},onChange:()=>{},onSave:()=>{},onClose:()=>{}}));
+ assert.match(ingredient,/Ingredient name<input[^>]*required/);assert.match(ingredient,/Inventory unit/);assert.match(ingredient,/<details class="inventory-entry-optional"><summary>Reusable storage guidance/);
+ console.log('Inventory forms: native validation, conditional date/adjustment fields, precise display, escaped names and busy fieldsets passed.');
+}finally{await server.close()}

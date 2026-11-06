@@ -1,3 +1,4 @@
+import {stockQuantity} from '../utils/stockShortage';
 import {inventoryAttention} from '../utils/inventoryAttention';
 import {useState} from 'react';
 import './InventoryAttention.css';
@@ -12,7 +13,7 @@ export default function InventoryAttention({items,today,onReview,disabled=false}
   {!active?<p>No held, overdue or soon-expiring stock recorded.</p>:<>
    <div className="inventory-priority-tabs" role="group" aria-label="Stock attention priorities">{groups.map(group=><button type="button" key={group.key} aria-pressed={active.key===group.key} onClick={()=>{setChosen(group.key);setExpanded(false)}}>{labels[group.key]} <strong>{group.rows.length}</strong></button>)}</div>
    <section className="inventory-priority-panel" aria-label={labels[active.key]}><p>{advice[active.key]}</p><p className="inventory-recorded-value">Recorded stock value: <strong>{money(active.value)}</strong>{active.unknownCosts>0 && ` · ${active.unknownCosts} ${active.unknownCosts===1?'batch has':'batches have'} no cost; total is incomplete.`}</p>
-    <ul>{(expanded?active.rows:active.rows.slice(0,3)).map(row=><li key={row.id}><div><strong>{row.raw_material_name}</strong><span>{row.quantity} {row.unit} · deadline {row.expiry_date || 'not recorded'}</span><span className="inventory-batch-reference">Batch #{row.id}{row.batch_code?` · ${row.batch_code}`:''}{row.storage_location?` · ${row.storage_location}`:''}</span></div><button type="button" disabled={disabled} onClick={()=>onReview(row.id)} aria-label={`Review batch ${row.batch_code || row.id}`}>Review batch</button></li>)}</ul>
+    <ul>{(expanded?active.rows:active.rows.slice(0,3)).map(row=><li key={row.id}><div><strong>{row.raw_material_name}</strong><span>{stockQuantity(row.quantity)} {row.unit} · deadline {row.expiry_date || 'not recorded'}</span><span className="inventory-batch-reference">Batch #{row.id}{row.batch_code?` · ${row.batch_code}`:''}{row.storage_location?` · ${row.storage_location}`:''}</span></div><button type="button" disabled={disabled} onClick={()=>onReview(row.id)} aria-label={`Review batch ${row.batch_code || row.id}`}>Review batch</button></li>)}</ul>
     {active.rows.length>3 && <div className="inventory-attention-more"><p>Showing {expanded?active.rows.length:3} of {active.rows.length}. Value includes all batches in this group.</p><button type="button" aria-expanded={expanded} onClick={()=>setExpanded(value=>!value)}>{expanded?'Show fewer batches':`Show all ${active.rows.length} batches`}</button></div>}
    </section>
   </>}

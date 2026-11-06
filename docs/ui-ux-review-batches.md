@@ -40,9 +40,22 @@ payment/food statuses, and 390px queue/dialog layouts. The focused backend run
 passed 72 tests; six PostgreSQL-only tests were skipped on SQLite. No live records
 were modified and no live deployment is asserted.
 
-## Remaining batches
+## Batch 3: Inventory and packaging
 
-3. Inventory and packaging: stock/date forms, quantities, tables and errors.
+Implemented shared native ingredient/batch forms, consistent quantities and
+controls, optional guidance/reference sections, clear adjustment previews and
+success feedback. Date rules and stock-check tools remain available. Named
+delete confirmations retain server protection for stock history. Packaging
+removal requires a review of the deduction and balance; receiving stock keeps
+one-step recording. Packaging history becomes labelled records on mobile.
+
+Validation: 47 backend tests, form/expiry/guidance and stock utility checks,
+production build, and local Chromium at desktop and 390px. The browser verifies
+calculated deadlines, generated references, mandatory adjustment reasons,
+version conflicts/reload, protected deletion and review-before-removal. These
+are isolated fixtures; no live inventory records or expiry rules were changed.
+
+## Remaining batches
 4. Settings and account pages: plain language, sections and profile forms.
 5. Menu, basket and checkout: responsive cards, totals, forms and feedback.
 6. Sign-in, registration and chatbot dialogs: focus, recovery and mobile layouts.

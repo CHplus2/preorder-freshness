@@ -31,9 +31,9 @@ function History({item,onClose}) {
   <p>Stock history · newest movements first</p>
   {error?<div role="alert"><p>{error}</p><button type="button" onClick={()=>setRetry(v=>v+1)}>Try again</button></div>:!page?<p role="status">Loading history…</p>:<>
    <div className="packaging-history"><table><thead><tr><th scope="col">When · Malaysia</th><th scope="col">Movement</th><th scope="col">Change</th><th scope="col">Balance</th></tr></thead><tbody>{page.results.map(row=><tr key={row.id}>
-    <td>{new Date(row.created_at).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',dateStyle:'medium',timeStyle:'short'})}</td>
-    <td>{kinds[row.kind]||row.kind}<small>{row.reason}</small>{row.order_id&&<Link to={`/admin/orders?order=${row.order_id}`}>View order #{row.order_id}</Link>}</td>
-    <td>{row.change>0?'+':''}{row.change}</td><td>{row.balance_after}</td>
+    <td data-label="When · Malaysia">{new Date(row.created_at).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',dateStyle:'medium',timeStyle:'short'})}</td>
+    <td data-label="Movement">{kinds[row.kind]||row.kind}<small>{row.reason}</small>{row.order_id&&<Link to={`/admin/orders?order=${row.order_id}`}>View order #{row.order_id}</Link>}</td>
+    <td data-label="Change">{row.change>0?'+':''}{row.change.toLocaleString('en-MY')}</td><td data-label="Balance">{row.balance_after.toLocaleString('en-MY')}</td>
    </tr>)}</tbody></table></div>
    {!page.results.length&&<p>No stock movements recorded.</p>}
    <div className="packaging-actions">{before&&<button type="button" onClick={()=>{setPage(null);setBefore(null)}}>Newest movements</button>}{page.next_before&&<button type="button" onClick={()=>{setPage(null);setBefore(page.next_before)}}>Older movements</button>}</div>
@@ -51,7 +51,7 @@ export default function PackagingPage(){
  const [items,setItems]=useState([]),[menus,setMenus]=useState([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(true),[loadError,setLoadError]=useState('');
  const [tab,setTab]=useState('stock'),[search,setSearch]=useState(''),[filter,setFilter]=useState('current'),[menuFilter,setMenuFilter]=useState('all'),[limit,setLimit]=useState(24);
  const [modal,setModal]=useState(null),[draft,setDraft]=useState(initial),[formError,setFormError]=useState(''),[busy,setBusy]=useState(false);
- const [rows,setRows]=useState([]),[history,setHistory]=useState(null);
+ const [rows,setRows]=useState([]),[history,setHistory]=useState(null),[reviewRemoval,setReviewRemoval]=useState(false);
  const requestId=useRef(null),inFlight=useRef(false),readController=useRef(null),errorRef=useRef(null);
  const load=useCallback(()=>{
   readController.current?.abort();const controller=new AbortController();readController.current=controller;
@@ -71,13 +71,17 @@ export default function PackagingPage(){
  },[load,refresh]);
  useEffect(()=>{if(formError)errorRef.current?.focus()},[formError]);
  function open(kind,item){
-  requestId.current=crypto.randomUUID();setFormError('');setModal({kind,item});
+  requestId.current=crypto.randomUUID();setFormError('');setReviewRemoval(false);setModal({kind,item});
   setDraft(kind==='new'?{...initial}:kind==='adjust'?{direction:'receive',quantity:'',reason:''}:{...item,unit_cost:item?.unit_cost??''});
   setRows(item?.requirements?.map(r=>({...r}))||[]);
  }
  function close(){if(!inFlight.current){setModal(null);setFormError('')}}
  async function save(e){
-  e.preventDefault();if(inFlight.current)return;inFlight.current=true;setBusy(true);setFormError('');
+  e.preventDefault();if(inFlight.current)return;
+  if(modal.kind==='adjust'&&draft.direction==='remove'&&!reviewRemoval){
+   try{const change=packagingChange(draft.direction,draft.quantity);if(modal.item.quantity+change<0)throw new Error('You cannot remove more pieces than the recorded stock.');setFormError('');setReviewRemoval(true)}catch(error){setFormError(error.message)}return;
+  }
+  inFlight.current=true;setBusy(true);setFormError('');
   try{
    const item=modal.item,version=item?.updated_at;
    if(modal.kind==='mapping'){
@@ -132,15 +136,15 @@ export default function PackagingPage(){
   {history&&<History item={history} onClose={()=>setHistory(null)}/>}
   {modal&&<ModalDialog label={modal.kind==='mapping'?'Set menu packaging':modal.kind==='adjust'?'Receive or adjust packaging':modal.kind==='new'?'Add packaging':'Edit packaging'} onDismiss={close}><form className="packaging-dialog" onSubmit={save}>
    <header><h2>{modal.kind==='mapping'?modal.item.name:modal.kind==='adjust'?modal.item.name:modal.kind==='new'?'Add packaging':'Edit packaging'}</h2><button type="button" disabled={busy} onClick={close}>Close</button></header>
-   <fieldset className="packaging-form-fields" disabled={busy}><legend className="sr-only">Packaging details</legend>
+   <fieldset className="packaging-form-fields" hidden={reviewRemoval} disabled={busy||reviewRemoval}><legend className="sr-only">Packaging details</legend>
    {modal.kind==='mapping'?<>
     <p>Pieces required for one selling unit of this menu.</p>
     {rows.map((r,index)=><div className="packaging-requirement" key={index}><label>Packaging<select aria-label="Packaging" required value={r.packaging_item} onChange={e=>setRows(v=>v.map((a,i)=>i===index?{...a,packaging_item:e.target.value}:a))}><option value="">Choose packaging</option>{items.filter(i=>(i.is_active||i.id===Number(r.packaging_item))&&!rows.some((other,j)=>j!==index&&Number(other.packaging_item)===i.id)).map(i=><option key={i.id} value={i.id}>{i.name}{!i.is_active?' · archived':''}</option>)}</select></label><label>Pieces<input type="number" required min="1" max="1000" step="1" value={r.quantity_per_item} onChange={e=>setRows(v=>v.map((a,i)=>i===index?{...a,quantity_per_item:e.target.value}:a))}/></label><button type="button" onClick={()=>setRows(v=>v.filter((_,i)=>i!==index))} aria-label={`Remove packaging row ${index+1}`}>Remove</button></div>)}
     {!rows.length&&<p>No packaging will be deducted for this menu.</p>}
     <button type="button" disabled={rows.length>=30||!items.some(i=>i.is_active)} onClick={()=>setRows(v=>[...v,{packaging_item:'',quantity_per_item:1}])}>Add packaging item</button>
    </>:modal.kind==='adjust'?<>
-    <p>Currently <strong>{modal.item.quantity} pieces</strong> available.</p><div className="packaging-movement-type" role="group" aria-label="Stock update type">{[['receive','Receive stock'],['remove','Remove stock']].map(([value,label])=><label key={value}><input type="radio" name="direction" value={value} checked={draft.direction===value} onChange={field}/>{label}</label>)}</div>
-    <label>{draft.direction==='remove'?'Pieces to remove':'Pieces received'}<input data-initial-focus required type="number" name="quantity" step="1" min="1" max="1000000" value={draft.quantity} onChange={field}/></label>
+    <p>Currently <strong>{modal.item.quantity} pieces</strong> available.</p><div className="packaging-movement-type" role="group" aria-label="Stock update type">{[['receive','Receive stock'],['remove','Remove stock']].map(([value,label])=><label key={value}><input type="radio" name="direction" value={value} disabled={value==='remove'&&modal.item.quantity===0} checked={draft.direction===value} onChange={field}/>{label}</label>)}</div>
+    <label>{draft.direction==='remove'?'Pieces to remove':'Pieces received'}<input data-initial-focus required type="number" name="quantity" step="1" min="1" max={draft.direction==='remove'?Math.min(1000000,modal.item.quantity):1000000} value={draft.quantity} onChange={field}/></label>
     <label>Reason<input required maxLength="200" name="reason" value={draft.reason} onChange={field} placeholder={draft.direction==='remove'?'e.g. Damaged containers removed':'e.g. Supplier receipt'}/></label>
     {draft.quantity!==''&&Number.isInteger(Number(draft.quantity))&&Number(draft.quantity)>0&&<p className="packaging-balance-preview">Balance after saving: <strong>{modal.item.quantity+(draft.direction==='remove'?-1:1)*Number(draft.quantity)} pieces</strong></p>}
    </>:<>
@@ -152,8 +156,9 @@ export default function PackagingPage(){
     {modal.kind==='edit'&&<p>Archiving keeps the stock history. Remove archived packaging from menu assignments before accepting new orders.</p>}
    </>}
    </fieldset>
+   {reviewRemoval&&<div className="packaging-removal-review" role="status"><strong>Review stock removal</strong><p>Current balance: {modal.item.quantity.toLocaleString('en-MY')} pieces.</p><p>Remove {Number(draft.quantity).toLocaleString('en-MY')} pieces of {modal.item.name}. Remaining balance: <strong>{(modal.item.quantity-Number(draft.quantity)).toLocaleString('en-MY')} pieces</strong>.</p><p>Reason: {draft.reason}</p><p>Stock changes only when you confirm below.</p></div>}
    {formError&&<p ref={errorRef} tabIndex={-1} className="packaging-error" role="alert">{formError}</p>}
-   <footer><button type="button" disabled={busy} onClick={close}>Cancel</button><button className="packaging-primary" disabled={busy} type="submit">{busy?'Saving…':modal.kind==='adjust'?'Save stock change':modal.kind==='mapping'?'Save menu packaging':'Save packaging'}</button></footer>
+   <footer><button type="button" disabled={busy} onClick={reviewRemoval?()=>setReviewRemoval(false):close}>{reviewRemoval?'Go back':'Cancel'}</button><button className="packaging-primary" disabled={busy} type="submit">{busy?'Saving…':modal.kind==='adjust'?(reviewRemoval?'Confirm stock removal':draft.direction==='remove'?'Review stock removal':'Record received stock'):modal.kind==='mapping'?'Save menu packaging':'Save packaging'}</button></footer>
   </form></ModalDialog>}
  </main>;
 }
