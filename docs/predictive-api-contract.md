@@ -2127,3 +2127,28 @@ payment evidence and missing historical cost records. Current recipe estimates
 never backfill unavailable accepted-order costs; food contribution is not net
 profit. Local fixture tests verify these behaviours, not live business records
 or a production deployment. No migration is required.
+
+
+### 6 November 2026 — focused order and payment review
+
+The simple Orders queue opens payment review in a native modal, separate from
+food receipt. Cards prioritise actual receipt, payment review and print preview;
+contact, time changes, cancellation and receipt correction remain under order
+details. Receipt confirmation lists the exact order/version snapshots to be
+submitted, including for the existing maximum of 20 selected orders. Payment
+recording does not mark food received. Recording receipt does not record payment.
+
+The payment view names owner-entered transaction/cash references, submitted proof,
+full-order amount and payment history distinctly. Responses are checked for
+valid amounts, known event/status types, unique event IDs, valid timestamps and
+an actual pending-refund target before exposing write forms. Cancelled unpaid
+orders and unsupported provider methods do not offer manual receipt forms.
+Refund completion retains deliberate confirmation; cancelling its entry sends
+no refund request. Dialog dismissal is blocked while a payment write/check is in
+progress, and focus returns to the invoking control. Errors are inline within
+the modal instead of duplicated with a global error popup.
+
+Existing staff-only endpoints, CSRF protection, server verification for provider
+payments, payment request IDs, order-version conflicts and atomic receipt batches
+are unchanged. No payment transfer, schema migration, live data correction or
+predictive/model change is introduced by this UI batch.

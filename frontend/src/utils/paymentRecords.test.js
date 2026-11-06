@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {paymentStatusLabel,paymentMethodLabel,paymentEventLabel,readPaymentRecords} from './paymentRecords.js';
+const receipt={id:1,kind:'receipt',outcome:'completed',amount:'28.00',reference:'1',note:'Owner entry',method:'manual',source:'owner_verified',actor:2,created_at:'2026-11-06T01:18:49Z'};
+const refund={...receipt,id:2,kind:'refund',outcome:'pending',reference:'Bank enquiry'};
+const records={events:[receipt,refund],payment_status:'paid',unresolved_refund:2,amount:'28.00',policy:'Full payment only.'};
+assert.equal(readPaymentRecords(records),records);
+assert.equal(paymentStatusLabel('unpaid'),'Not recorded');
+assert.equal(paymentMethodLabel('cod'),'Cash');
+assert.equal(paymentEventLabel(receipt),'Payment received');
+assert.equal(paymentEventLabel(refund),'Refund pending');
+assert.equal(paymentEventLabel({...refund,outcome:'failed'}),'Refund failed');
+assert.equal(paymentEventLabel({...refund,outcome:'completed'}),'Refund recorded');
+for(const bad of [{...records,amount:'NaN'},{...records,payment_status:'received'},{...records,events:[receipt,receipt]},{...records,unresolved_refund:1},{...records,events:[{...receipt,outcome:'pending'}]},{...records,events:[{...receipt,reference:{}}]},{...records,events:[{...receipt,created_at:'invalid'}]},{...records,events:[{...receipt,amount:'-28.00'}]},{...records,events:[{...receipt,actor:0}]}])assert.throws(()=>readPaymentRecords(bad),{code:'INVALID_RESPONSE'});
+assert.equal(receipt.reference,'1');
+console.log('Payment records: distinct statuses, owner references and malformed/duplicate record rejection passed.');
