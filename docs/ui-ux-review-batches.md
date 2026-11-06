@@ -35,9 +35,14 @@ being handled in this follow-up sequence:
    profiles separate the sign-in reference from editable names/phone and use a
    compact save button. Queue and daily-summary print actions use outlined
    controls with printer icons, safe new tabs and unchanged explicit printing.
-4. **Public storage information and navigation.** Present date-based storage
-   counts and optional average explanation more compactly. Review header/footer
-   navigation and link hierarchy while retaining food-safety qualifications.
+4. **Public storage information and navigation — completed.** Four compact cards
+   separate within-date stock, past-date stock, held stock and records needing
+   review. Safety qualifications stay visible; detailed explanations and the
+   date-based average are optional. Records load on first opening, with explicit
+   refresh/retry and response validation. Unknown averages remain distinct from
+   actual zero. Header links use active/hover/focus states; the footer groups
+   navigation, contact and utility links. Phone/tablet navigation restores focus
+   on close and desktop resize, and Kitchen help sits with contact links on phones.
 
 Batch 1 validation: focused render/utility tests, scoped lint, production build,
 and isolated Chromium at 1366px and 390px. Browser checks measure aligned control
@@ -66,7 +71,17 @@ staff-profile spacing/save/phone normalisation, and queue/daily print previews.
 Printing is invoked only by the explicit print button. Existing passkey,
 password-sign-in and checkout-contact backend suites discovered 34 tests: 31
 passed, three environment-specific checks skipped. No live accounts, email or
-customer records were changed. Public storage/footer review remains batch 4.
+customer records were changed.
+
+Batch 4 validation: storage-response utility checks, focused public-component and
+navigation tests, scoped lint, production build and five existing backend
+freshness-maths tests passed. Isolated Chromium checks at desktop, 390px and
+320px cover lazy requests, refresh/retry, unknown/zero/empty records, malformed
+responses, overlapping held/past-date counts, mobile focus and desktop resize.
+Footer contact/help controls and photo credits remain reachable with a basket.
+No live inventory, customer or email records were changed. No migration is needed.
+All four requested follow-up batches are complete; source publication does not
+establish successful live Vercel deployment or rule out future UI defects.
 
 Financial scope: Sales reports revenue, while Costs & pricing shows estimated
 food contribution and margin when ingredient and packaging costs are known.

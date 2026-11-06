@@ -226,7 +226,21 @@ function AppContent() {
   const basketStatus=cartLoading || cartUpdating?'updating':cartError?'unavailable':`${basketCount} ${basketCount===1?'item':'items'}`;
   const kitchenNav=useRef(null),previousPath=useRef(location.pathname);
   const navigation=ownerPage?ownerLinks:publicLinks;
-  const closeMenu=()=>setMobileOpen(false);
+  const closeMenu=()=>{setMobileOpen(false);if(mobileNavigation.current?.contains(document.activeElement))mobileToggle.current?.focus()};
+  useEffect(()=>{
+    if(!mobileOpen)return;
+    const wide=window.matchMedia('(min-width: 1051px)');
+    const closeOnResize=()=>{
+      if(!wide.matches)return;
+      const hadFocus=mobileNavigation.current?.contains(document.activeElement);
+      setMobileOpen(false);
+      if(hadFocus)requestAnimationFrame(()=>{const nav=document.querySelector('.business-nav');(nav?.querySelector('[aria-current="page"]')||nav?.querySelector('a'))?.focus()});
+    };
+    if(wide.matches)closeOnResize();
+    else (mobileNavigation.current?.querySelector('[aria-current="page"]')||mobileNavigation.current?.querySelector('a'))?.focus();
+    wide.addEventListener('change',closeOnResize);
+    return()=>wide.removeEventListener('change',closeOnResize);
+  },[mobileOpen]);
   useEffect(()=>{
     window.scrollTo({top:0,behavior:'instant'});
     if(previousPath.current!==location.pathname && !document.querySelector('dialog[open]'))document.getElementById('page-content')?.focus({preventScroll:true});

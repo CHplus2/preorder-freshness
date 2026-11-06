@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {storageRecords} from './storageRecords.js';
+const current={recorded_batches:25,assessed_batches:25,within_date_batches:25,unknown_batches:0,expired_batches:0,held_batches:0,average_remaining_percent:100,as_of:'2026-11-06',method:'Date windows; unknown records excluded.'};
+assert.equal(storageRecords(current),current);
+const overlapping={...current,recorded_batches:17,assessed_batches:15,within_date_batches:10,unknown_batches:2,expired_batches:4,held_batches:3,average_remaining_percent:30};
+assert.equal(storageRecords(overlapping),overlapping);
+assert.equal(storageRecords({...current,recorded_batches:2,assessed_batches:2,within_date_batches:0,held_batches:2,expired_batches:1,average_remaining_percent:0}).average_remaining_percent,0);
+assert.equal(storageRecords({...current,recorded_batches:2,assessed_batches:0,within_date_batches:0,unknown_batches:2,average_remaining_percent:null}).average_remaining_percent,null);
+assert.equal(storageRecords({...current,recorded_batches:0,assessed_batches:0,within_date_batches:0,average_remaining_percent:null}).recorded_batches,0);
+for(const bad of [null,{}, {...current,within_date_batches:26},{...current,held_batches:1},{...current,assessed_batches:24},{...current,unknown_batches:-1},{...current,held_batches:'0'},{...current,average_remaining_percent:null},{...current,average_remaining_percent:101},{...current,average_remaining_percent:NaN},{...current,as_of:'2026-02-30'},{...current,method:''},{...overlapping,expired_batches:6},{...current,recorded_batches:0,assessed_batches:0,within_date_batches:0,average_remaining_percent:0}])assert.throws(()=>storageRecords(bad),{code:'INVALID_RESPONSE'});
+console.log('Public storage: overlapping held/past-date counts, true zero versus unknown average, valid date and complete bounded evidence passed.');

@@ -2,8 +2,10 @@ import KitchenHelp from './KitchenHelp';
 import {useEffect,useState} from 'react';
 import {Link,useLocation} from 'react-router-dom';
 import {motion,useReducedMotion} from 'framer-motion';
-import {ArrowUpRight,Plus,Minus} from 'lucide-react';
+import {ArrowUpRight,ArrowRight,UserRound,Plus,Minus} from 'lucide-react';
 import {useStorefront} from '../contexts/StorefrontContext';
+import {isCurrentSection} from '../utils/siteNavigation';
+import './PublicNavigation.css';
 export function Reveal({children,className=''}){
  const reduced=useReducedMotion();
  return <motion.div className={className} initial={reduced?false:{opacity:0,y:22}} whileInView={{opacity:1,y:0}} viewport={{once:true,amount:.1}} transition={{duration:.55,ease:'easeOut'}}>{children}</motion.div>;
@@ -41,6 +43,14 @@ export function FAQ({limit=questions.length}){
  return <div className="business-faq">{items.slice(0,limit).map(([q,a],i)=><section key={q}><button aria-expanded={open===i} aria-controls={`faq-${i}`} onClick={()=>setOpen(open===i?null:i)}>{q}{open===i?<Minus size={18}/>:<Plus size={18}/>}</button><div id={`faq-${i}`} hidden={open!==i}><p>{a}</p></div></section>)}</div>;
 }
 export function BusinessFooter(){
- const {store}=useStorefront();
- return <><footer className="business-footer"><div className="business-footer-top"><div><span className="dk-eyebrow">MAKE ROOM FOR SOMETHING GOOD</span><h2>Your next meal.<br/>One less thing to plan.</h2></div><PrimaryLink>Find your favourite</PrimaryLink></div><div className="business-footer-grid"><div><Link className="brand" to="/">{store.name}</Link><p>{store.tagline}</p></div><div><h3>Explore</h3><Link to="/story">Our story</Link><Link to="/menu">The menu</Link><Link to="/how-it-works">How it works</Link></div><div><h3>Let’s talk food</h3><Link to="/contact">Contact the kitchen</Link>{store.contact_email && <a href={`mailto:${store.contact_email}`}>{store.contact_email}</a>}{store.social_url && <a href={store.social_url} target="_blank" rel="noreferrer">Follow the kitchen ↗</a>}</div></div><KitchenHelp/><div className="business-footer-bottom"><Link to="/admin/orders">Kitchen staff sign in</Link><span>© {new Date().getFullYear()} {store.name}</span><span>A home kitchen storefront · Prices in MYR</span><a href={`${import.meta.env.BASE_URL}menu-images/credits.html`}>Illustrative menu photos · Credits</a></div></footer></>;
+ const {store}=useStorefront(),{pathname}=useLocation();
+ return <footer className="business-footer">
+  <div className="business-footer-top"><div><span className="dk-eyebrow">MAKE ROOM FOR SOMETHING GOOD</span><h2>Your next meal.<br/>One less thing to plan.</h2></div><PrimaryLink>Find your favourite</PrimaryLink></div>
+  <div className="business-footer-grid">
+   <div className="footer-about"><Link className="brand" to="/">{store.name}</Link><p>{store.tagline}</p></div>
+   <nav className="footer-navigation" aria-label="Explore the kitchen"><h3>Explore</h3>{[['/story','Our story'],['/menu','The menu'],['/how-it-works','How it works']].map(([url,label])=><Link key={url} to={url} aria-current={isCurrentSection(pathname,url)?'page':undefined}>{label}</Link>)}</nav>
+   <div className="footer-contact"><h3>Let’s talk food</h3><Link className="footer-contact-link" to="/contact">Contact the kitchen<ArrowRight size={15} aria-hidden="true"/></Link>{store.contact_email&&<a className="footer-email" href={`mailto:${store.contact_email}`}>{store.contact_email}</a>}{store.social_url&&<a className="footer-social" href={store.social_url} target="_blank" rel="noopener noreferrer">Follow the kitchen<ArrowUpRight size={14} aria-hidden="true"/><span className="sr-only"> in a new tab</span></a>}<KitchenHelp/></div>
+  </div>
+  <div className="business-footer-bottom"><nav className="footer-utility" aria-label="Kitchen and website links"><Link to="/admin/orders"><UserRound size={15} aria-hidden="true"/>Kitchen staff sign in</Link><a href={`${import.meta.env.BASE_URL}menu-images/credits.html`}>Illustrative menu photos · Credits</a></nav><div className="footer-legal"><span>© {new Date().getFullYear()} {store.name}</span><span>Prices in MYR</span></div></div>
+ </footer>;
 }

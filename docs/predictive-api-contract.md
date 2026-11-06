@@ -2364,3 +2364,22 @@ stock checks, receipt format rejection, empty chooser/focus rechecks, QR deliver
 QR-only collection, cash delivery, area fees and exact ingredient/packaging
 allocation. Synthetic local images and virtual passkeys were used; no real bank
 transfer or live order was created. No migration or predictive/model change.
+
+### 6 November 2026 — public storage records and navigation
+
+The public storage disclosure now reads `/api/inventory-freshness/` on its first
+opening, with an explicit read-only refresh and retry. Closing/reopening or
+opening nested explanations reuses that snapshot. Response validation checks
+date/count/average consistency before displaying records; failed reads do not
+invent zero counts. Held and expired counts can overlap. Unknown averages remain
+unavailable, while genuine zero is shown as zero. The optional average retains
+the server's calculation explanation and visible date/food-safety qualifications.
+No endpoint, schema, freshness calculation or predictive/model behaviour changed.
+
+Header/footer navigation has grouped links, selected states, touch targets and
+keyboard focus restoration for mobile close/desktop resize. Validation includes
+storage-response and focused public-component/navigation tests, scoped lint,
+production build, five existing backend freshness-maths tests and isolated local
+Chromium at desktop, 390px and 320px. Browser checks cover lazy reads, malformed
+responses, retry, empty/unknown/zero records, overlapping exclusions and mobile
+navigation/footer reachability. No live writes, emails or migration were required.
