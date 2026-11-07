@@ -50,7 +50,7 @@ The supplied video is an edited current local application walkthrough with examp
 
 ## Voiceover and editing
 
-Demo_120s_Narrated.mp4 contains a synthetic draft guide voice and readable captions. Demo_120s_Silent.mp4 is for your live narration. The WAV, TXT and SRT files allow the audio or captions to be replaced. The synthetic voice is not the author's or client's voice.
+Demo_120s_Narrated.mp4 now uses the Kokoro v1.0 af_heart neural voice with conversational narration and matching captions. Demo_120s_Natural_Voice.mp4 is the same updated video under a new filename. Natural_Voice_Preview.mp3 samples the main voice; Bright_Voice_Preview.mp3 offers the brighter af_bella alternative. Neither is a claimed exact TikTok voice. Demo_120s_Silent.mp4 is for your live narration. The WAV, TXT and SRT files allow further editing. The stock synthetic voice is not the author's or client's voice.
 
 No third-party editing app is connected here. The deliverables were assembled locally using browser recording and FFmpeg. Some editors expose APIs or MCP connectors, but using one requires an available connector and the account's permissions. This package does not claim CapCut, Premiere, DaVinci Resolve or Gamma access.
 
