@@ -1,0 +1,94 @@
+Create an academic FYP presentation from the cards below. Use 16:9 slides, deep forest green (#173F32), cream (#F7F4EA), dark text and restrained warm-gold accents. Use large readable text and a clear hierarchy. Do not imitate a cryptocurrency dashboard. Keep the five objective statements verbatim. Use the supplied real application screenshots; do not generate fake interfaces, logos, research findings, participant counts, accuracy claims or business revenue. Keep the two main feature stories, then demonstrate the workflow and discuss testing and limits. Timing below is a provisional 10-minute talk including a 2-minute demonstration, not an official university allocation. Keep speaker notes out of the visible slide body. Use the screenshot filename as a placement instruction, not visible slide text.
+
+Preorders and ingredient records, connected.
+Web-Based Preorder and Freshness Management System for Home-Based Entrepreneurs
+- Case study: Wrap & Bowl Kuch, Kuching
+- Christopher Hansen · 2402081406
+- Supervisor: Ms. Nur Elana Binti Mohd Saferinor
+[Visual: use supplied screenshot menu-current-desktop.png]
+
+---
+
+The gap is the connection between tasks.
+- Advance dates can require separate coordination.
+- Ingredient shelf life is not part of the ordering tools reviewed.
+- A shared marketplace limits independent storefront presentation.
+- Sales information and menu choices need useful, integrated support.
+
+---
+
+The five original objectives
+- 1. To design and develop a web application that supports flexible date-based food preordering and scheduling for home-based food entrepreneurs.
+- 2. To implement a food stock freshness monitoring feature based on ingredient shelf life and storage duration.
+- 3. To develop a personalised single-vendor storefront module that allows sellers to strengthen branding without direct competitor distraction.
+- 4. To implement a sales analytics dashboard that supports data-driven business decision-making for home-based food operators.
+- 5. To develop a menu recommendation system that reduces customer decision fatigue and improves purchase conversion rates.
+
+---
+
+Client feedback shaped the implementation.
+- Iterative development: requirement → implementation → check → feedback.
+- Name and phone details, with passkey access.
+- Morning delivery, area fees and optional collection.
+- Packaging stock, payment evidence and simpler receipt status.
+[Visual: use supplied screenshot settings-current-desktop.png]
+
+---
+
+One order connects the records.
+- Choose food, date, area and payment method.
+- Server checks price, offered days and recorded stock.
+- Acceptance saves order details and deducts ingredients + packaging together.
+- Owner reviews payment and actual food receipt separately.
+[Visual: Customer → server validation → accepted order → ingredient & packaging deductions → owner reports]
+
+---
+
+Feature story 1: a practical preorder journey.
+- Branded menu and clear selling units.
+- Optional date, quantity and whole-order budget suggestions.
+- Area-based delivery fees and checkout date guidance.
+- Private receipt upload or delivery cash; QR-only collection.
+[Visual: use supplied screenshot checkout-current-desktop.png]
+
+---
+
+Feature story 2: dates guide usable stock.
+- Printed date, manufacture-based life or receipt-based storage life.
+- Earlier recorded limits take priority.
+- Held and past-deadline batches are excluded.
+- Stock indicators are date-based—not a physical safety test.
+[Visual: use supplied screenshot batch-date-preview.png]
+
+---
+
+Two-minute application walkthrough
+- Customer: menu → account → checkout → accepted order.
+- Owner: review → ingredient and packaging balances → batch dates → reports.
+- Fallback order: live walkthrough → recorded video → screenshot sequence.
+[Visual: use supplied screenshot my-orders-current-desktop.png]
+
+---
+
+What the testing supports
+- Functional checks: account access, dates, totals, stock, payment evidence and reports.
+- Browser checks: customer and staff journeys, forms and layouts.
+- Skipped checks remain separate from passes.
+- Formal client acceptance and student evaluation are still pending.
+[Visual: use supplied screenshot daily-summary-current-desktop.png]
+
+---
+
+The limits are part of the result.
+- Date records depend on correct owner input and storage practice.
+- Transfers and courier handover remain externally verified.
+- Passkeys require compatible access and a saved credential.
+- Real business impact and paid conversion are not yet measured.
+
+---
+
+A simpler workflow, with connected records.
+- Flexible preorders for one home kitchen.
+- Recorded ingredient life connected to order allocation.
+- Own storefront, practical reports and optional recommendations.
+- Implemented functions tested; user and business outcomes still to evaluate.

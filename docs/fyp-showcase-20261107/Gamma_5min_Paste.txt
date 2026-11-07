@@ -1,0 +1,49 @@
+Create a concise 16:9 academic showcase presentation using forest green and cream. The five original objectives remain unchanged; these cards summarise their themes rather than replace their formal wording. Use real supplied screenshots and do not invent findings or current competitor policies. This five-minute format is an alternative, not the confirmed FYP allocation. Keep business-plan material for questions unless required.
+
+Preorders and ingredient records, connected.
+Web-Based Preorder and Freshness Management System for Home-Based Entrepreneurs
+Christopher Hansen · 2402081406
+Case study: Wrap & Bowl Kuch
+
+---
+
+A home-kitchen workflow needs connected records.
+- Messages can leave preorder dates to be tracked manually.
+- The platforms reviewed do not integrate the required ingredient records and independent storefront in this case study.
+- Malaysian food-poisoning reports motivate attention to ingredient handling; dates alone cannot guarantee safety.
+
+---
+
+One accepted order updates the records.
+- Customer chooses food, date, area and payment method.
+- Server rechecks the total and usable stock.
+- Ingredients and packaging are allocated together.
+- Owner reviews payment and actual food receipt separately.
+
+---
+
+Two main feature stories
+- Customer: clear menu units, offered dates, area fee and checkout total.
+- Owner: documented shelf life, storage duration, earlier limits and held batches.
+- Supporting objectives: own storefront, sales information and optional recommendations.
+
+---
+
+Ninety-second demonstration
+- Menu and prepared-account checkout.
+- Accepted order and evidence state.
+- Ingredient/packaging balance and date-based stock rule.
+- Use the live steps in the playbook; the supplied full recorded fallback is two minutes.
+
+---
+
+Evidence and limits
+- Automated checks and local browser walkthroughs support the tested functions.
+- Client and student evaluation results remain pending.
+- No measured conversion gain or physical food-safety guarantee is claimed.
+
+---
+
+A simpler routine, with connected records.
+A dedicated preorder system adapted to the client through iterative development.
+Thank you — questions.
