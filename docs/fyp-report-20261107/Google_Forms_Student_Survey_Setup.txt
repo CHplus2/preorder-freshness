@@ -1,0 +1,56 @@
+GOOGLE FORMS — STUDENT CUSTOMER-USABILITY SURVEY
+
+Create at https://forms.google.com (or https://forms.new). The Word/PDF files are editable/printable instruments, not a hosted Google Form.
+
+Title: Customer Usability Evaluation — Wrap & Bowl Kuch
+Description: This voluntary academic survey evaluates a home-kitchen preorder website. Please try the assigned customer tasks first. Use the researcher’s test contact details and stop before actual payment or order placement. Do not upload a real bank receipt. Responses are used for this FYP; do not enter your name, phone or email in this questionnaire.
+
+Before sharing: confirm consent/recruitment with your supervisor; preview on a phone; use a supervised test setup; keep the form closed until reviewed.
+
+SETTINGS
+- Turn off email collection and any organisation-only restriction if your approved survey is anonymous/public.
+- Requiring one response usually requires Google sign-in; use only if appropriate for your recruitment plan.
+- Do not shuffle sections/questions: the task instructions and consent must stay first.
+- When ready, publish/enable responses and use the responder link, not the edit link. Current Google Forms may call this Publish; older layouts use Send → link.
+- Link Responses to Google Sheets for analysis if desired.
+
+SECTION 1 — Consent and context
+Consent (required, multiple choice): I have read the purpose and voluntarily agree / I do not agree. Route “I do not agree” to Submit/end.
+Device (multiple choice): Phone / Tablet / Laptop or desktop / Other.
+Experience ordering food online (multiple choice): Never / Occasionally / Frequently.
+Passkey access (multiple choice): Supported and tried / Not supported / Not attempted.
+
+SECTION 2 — Tasks
+Use an offered date and the agreed delivery area. Select three selling units within a feasible whole-order budget, such as RM60. A meal, box or pack is one unit. Stop before actual payment/order placement.
+Task A: ordinary menu browsing. Task B: date suggestions. The researcher assigns/counterbalances A-first and B-first to reduce learning effects.
+Record task success, assistance and measured time separately if conducting the comparison. Do not call self-reported time a stopwatch measurement.
+
+SECTION 3 — Ratings
+Multiple-choice grid rows below; columns: Strongly disagree / Disagree / Neither agree nor disagree / Agree / Strongly agree / Not tried or not applicable.
+S1: I could identify which kitchen I was ordering from.
+S2: The menu price and the meaning of a meal, box or pack were clear.
+S3: I could find an offered date and an allowed delivery/collection time.
+S4: I could see the delivery fee and complete order total before placing an order.
+S5: I understood that uploading a receipt does not mean the kitchen has verified payment.
+S6: The customer account and passkey sign-in instructions were understandable.
+S7: I could return from a dialog or recover from an input error without losing my place.
+S8: The suggestions were relevant to the date, quantity and preferences in my task.
+S9: I understood the difference between Allow a mix and One menu only.
+S10: I could tell whether the suggested complete basket was within or above my budget.
+
+S11 (multiple choice): Compared with ordinary browsing, the suggestions required: Much less effort / Less effort / About the same / More effort / Much more effort / Not compared.
+S12 (multiple choice): If the real menu, price and date suited you, how likely would you be to preorder? Very unlikely / Unlikely / Unsure / Likely / Very likely. This measures intention, not real purchase conversion.
+S13 (multiple choice): Do recorded batch dates alone guarantee that food is physically fresh and safe? Yes / No / Not sure. Do not show the correct answer before the response.
+
+S14: Which screen or step was most confusing, and why? (optional paragraph)
+S15: What would you change to make ordering easier? (optional paragraph)
+S16: Was there anything you could not test, including passkey/device access? (optional paragraph)
+
+OBJECTIVE MAP FOR YOUR REPORT (not a participant rating of hidden staff functions)
+O1: S3–S7 and observed customer task success. O3: S1–S2 and customer comments. O5: S8–S12 plus matched task measurements where conducted. S13 only tests comprehension of the public freshness claim; it does not validate actual inventory calculations. The client should evaluate O2/O4 staff workflows.
+
+CLIENT FORM
+A separate short client follow-up/acceptance form is in the supplied Word/PDF. It can also be made into a separate Google Form; do not give staff-only questions to students. Record real answers after the client uses the system; the earlier meeting is informal requirements feedback, not a backdated interview transcript.
+
+OPTIONAL AUTOMATIC SETUP
+Create_Google_Evaluation_Forms.gs is a Google Apps Script template. Copy its contents into a new project at https://script.new in your own Google account, select createFypEvaluationForms and click Run. Google will request permission to create forms in your account. Review the script and the created forms; it leaves responses closed. Execution logs show the edit and responder URLs. No forms have been created by Codex and no live link is fabricated here.
