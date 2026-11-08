@@ -34,6 +34,11 @@ try {
   const failed = render({error:'No available slot for Granola Bar'});
   assert.match(failed, /No available slot for Granola Bar/);
   assert.doesNotMatch(failed, /Your requested time is available/);
+  const retry=render({error:'Temporarily unavailable',retryable:true,onRetry:()=>{}});
+  assert.match(retry, /<div class="availability-result-actions"><button type="button">Retry availability check<\/button><\/div><\/div>/);
+  assert.doesNotMatch(render({checking:true,retryable:true,onRetry:()=>{}}), /Retry availability check/);
+  assert.doesNotMatch(render({error:'Choose another date',retryable:false,onRetry:()=>{}}), /Retry availability check/);
+
   assert.doesNotMatch(render({quote:null}), /Your requested time is available/);
   const shortages={rows:[{raw_material_id:'7',name:'Chicken boneless trimmed',unit:'g',required:'180',available:'0',shortfall:'180'},{raw_material_id:'8',name:'Salt',unit:'g',required:'15',available:'0',shortfall:'15'}],count:2};
   const stock=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(AvailabilityResult,{error:'Long technical stock message',shortage:shortages,retryable:true,onRetry:()=>{}})));
