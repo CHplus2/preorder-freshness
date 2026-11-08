@@ -22,10 +22,18 @@ export default function GuidedMenu(){
  const {cart=[],cartLoading,cartError,cartUpdating,promotion,chooseFulfilment,fulfilmentMethod,deliveryArea,chooseDeliveryDay,addSuggestedBasket}=useCart();
  const {isAuthenticated,accountKey}=useAuth(),{categories:allCategories}=useProduct(),{formatPrice}=useUI();
  const categories=(Array.isArray(allCategories)?allCategories:[]).filter(category=>category.active_menu_count!==0);
- const generation=useRef(0),request=useRef(null),pending=useRef(false),errorRef=useRef(null),dateRef=useRef(null),helpId=useId();
+ const generation=useRef(0),request=useRef(null),pending=useRef(false),errorRef=useRef(null),dateRef=useRef(null),resultsRef=useRef(null),helpId=useId();
  const scope=JSON.stringify([accountKey,isAuthenticated,cart.map(row=>[row.product.id,row.quantity,row.product.price]),fulfilmentMethod,deliveryArea]);
  const scopeRef=useRef(scope);
  const shown=data?.scope===scope?data:null;
+ useEffect(()=>{
+  const node=resultsRef.current;
+  if(!shown||!node?.getClientRects().length)return;
+  node.focus({preventScroll:true});
+  const header=document.querySelector('.business-header')?.getBoundingClientRect().bottom||0;
+  const toolbar=document.querySelector('.menu-toolbar')?.getBoundingClientRect().bottom||0;
+  window.scrollTo({top:window.scrollY+node.getBoundingClientRect().top-Math.max(header,toolbar)-16,behavior:'instant'});
+ },[shown]);
  const bounds=guideDateBounds();
  const working=busy && requestScope===scope;
  const visibleError=requestScope===scope?error:'';
@@ -90,7 +98,7 @@ export default function GuidedMenu(){
   {working && <p role="status">Checking prices and one shared delivery time for each complete basket…</p>}
   {visibleError && <p className="guide-error" role="alert" tabIndex={-1} ref={errorRef}>{visibleError}</p>}
   {success && success.account===accountKey && <p className="guide-success" role="status">{success.message} <Link to="/cart">View basket</Link></p>}
-  {shown && <>
+  {shown && <div ref={resultsRef} className="guide-results-region" role="region" aria-label="Search results" tabIndex={-1}>
    <p className="guide-search-summary" role="status"><strong>{description.title}</strong><span>{description.details}</span>{description.existing && <span>{description.existing}</span>}</p>
    {!shown.basket_known && <p className="guide-input-help">This preview starts with an empty basket. Sign in to include your saved items before adding.</p>}
    {!shown.plans.length?<div className="guide-empty" role="status"><h3>No matching basket found</h3><p>{basketGuideEmpty(shown.empty_reason,shown.quantity,shown.current_quantity,shown.menu_mode,promotion?.ordering_mode)}</p>
@@ -99,7 +107,7 @@ export default function GuidedMenu(){
    </div>:<GuideBasketResults data={shown} selectedId={selected} onSelect={setSelected} onAdd={add} onReview={()=>chooseDeliveryDay?.(shown.date)} onView={id=>selectRecommendation(shown.session,id)} authenticated={!!isAuthenticated} busyId={addingPlan} disabled={cartUpdating || cartLoading || !!cartError} formatPrice={formatPrice} rangeNotice={rangeNotice}/>}
 
    <details className="guide-method"><summary>How suggestions work</summary><p>{shown.message}</p></details>
-  </>}
+  </div>}
   <p className="guide-input-help">Allergies or dietary needs? Check with the kitchen before ordering.</p>
  </details>;
 }

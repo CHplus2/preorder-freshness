@@ -3,6 +3,28 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Storefront account and navigation UX — 8 November 2026, UI batch 2
+
+HTTP contracts, authorization, passkeys, expiry rules and models are unchanged.
+Guests can still browse and build baskets before account creation is required
+at checkout. The checkout and account entry screens use separate Register/Login
+actions with explicit modes; registration retains the guest basket, while login
+loads the chosen account’s basket. Passkey controls use the same concise labels.
+
+Staff password-reset requests now stay in the sign-in dialog, using the same
+`POST /api/auth/recovery/` payload and generic acknowledgement as the standalone
+request page. Pending requests prevent dismissal, failures retain the email,
+and returning to sign-in clears its password while retaining the identifier.
+The email token still opens `/recover#uid=…&token=…`; fragment removal, validation
+and `POST /api/auth/recovery/confirm/` remain. Customer passkey recovery is not
+replaced by email password reset.
+
+The basket summary stays fixed while the date finder is open, for guests and
+registered customers. Newly returned finder results receive focus below the
+sticky toolbar. Action links use their existing text, icons, hover and focus
+cues without permanent underlines; ordinary explanatory links retain theirs.
+No messages, transfers or courier bookings are automatically sent.
+
 ## Session checks and guest recommendations — 8 November 2026, UI batch 1
 
 No API, schema, stock eligibility or model change. The client only commits a

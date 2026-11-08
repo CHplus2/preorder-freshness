@@ -15,9 +15,5 @@
 @media(max-width:900px){.menu-storefront .guided-menu .guide-search-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.menu-storefront .guided-menu .guide-search-form{grid-template-columns:minmax(0,1fr);gap:18px}.menu-storefront .guided-menu .guide-search-field{grid-template-rows:auto 46px auto}.guide-search-actions button{width:100%}.menu-storefront .guided-menu .guide-search-field :is(input,select){font-size:16px}}
 @media(forced-colors:active){.menu-storefront .guided-menu .guide-search-field select{appearance:auto;background-image:none;padding-right:12px}}
-/* The shortcut stays in the page while the suggestion form needs the space. */
-body:has(.guided-menu[open]) .menu-basket-bar{position:static;left:auto;bottom:auto;transform:none;width:100%;margin:24px 0;box-shadow:none}
-body:has(.guided-menu[open]) .dk-help-toggle{bottom:calc(20px + env(safe-area-inset-bottom))}
-body:has(.guided-menu[open]) .kitchen-chat{bottom:88px;max-height:calc(100dvh - 112px)}
-body:has(.guided-menu[open]) .business-footer{padding-bottom:32px}
 .guided-menu :is(input,select,button,summary){scroll-margin-top:110px;scroll-margin-bottom:140px}
+.guide-results-region{scroll-margin-top:120px;scroll-margin-bottom:150px}.guide-results-region:focus-visible{outline:3px solid #8baf74;outline-offset:5px;border-radius:10px}

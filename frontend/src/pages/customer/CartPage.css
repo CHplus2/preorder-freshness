@@ -320,3 +320,5 @@
 .cart-item-details>summary:focus-visible{outline:3px solid #b28d46;outline-offset:3px}
 @media(max-width:480px){.cart-storefront .cart-right{grid-template-columns:auto minmax(0,1fr) auto;gap:8px}.cart-storefront .remove-btn{grid-column:auto;padding:9px 10px}.cart-storefront .cart-line-total{font-size:.875rem}}
 @media(max-width:360px){.cart-storefront .remove-btn{width:44px;padding:0}.cart-storefront .remove-btn>span{display:none}}
+
+.cart-page-heading>a,.cart-add-more{text-decoration:none}

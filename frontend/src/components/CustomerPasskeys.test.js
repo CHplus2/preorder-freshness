@@ -12,14 +12,14 @@ try{
  const cart={cart:[{id:1,quantity:1,product:{id:2,name:'Meal',price:12}}],cartLoading:false,pricingReady:true,promotion:{},total:12,finalTotal:17};
  const render=(node,auth)=>renderToStaticMarkup(h(MemoryRouter,null,h(AuthContext.Provider,{value:{isAuthenticated:true,isSessionCurrent:()=>true,...auth}},h(UIContext.Provider,{value:{setAlert:()=>{},formatPrice:n=>'RM '+n}},h(OrderContext.Provider,{value:{}},h(CartContext.Provider,{value:cart},node))))));
  const landing=render(h(Account),{isGuest:true});
- assert.match(landing,/Create account or sign in<\/button>/);assert.match(landing,/Kitchen staff sign in/);
+ assert.match(landing,/>Register<\/button>/);assert.match(landing,/>Login<\/button>/);assert.match(landing,/Kitchen staff sign in/);
  assert.doesNotMatch(landing,/<form|type="password"|type="email"/);
  const guest=render(h(AccessForm),{isGuest:true});
- assert.match(guest,/Create account with a passkey/);assert.match(guest,/Already have an account/);assert.match(guest,/>Sign in<svg/);
+ assert.match(guest,/>Register<\/button>/);assert.match(guest,/Already have an account/);assert.match(guest,/>Sign in<svg/);
  assert.match(guest,/Your name/);assert.match(guest,/Phone number/);
  assert.doesNotMatch(guest,/type="password"|type="email"|Email address/);
  const gate=render(h(Checkout),{isGuest:true});
- assert.match(gate,/Sign in to place your preorder/);assert.match(gate,/Create account or sign in<\/button>/);
+ assert.match(gate,/Your basket is ready/);assert.match(gate,/>Register<\/button>/);assert.match(gate,/>Login<\/button>/);
  assert.doesNotMatch(gate,/Payment receipt|Cash on delivery|Place preorder ·/);
  const account=render(h(Account),{customerAccount:{name:'Local account',phone:'+60123456789'}});
  assert.match(account,/Your account/);assert.match(account,/Add another passkey/);assert.match(account,/Save contact details/);

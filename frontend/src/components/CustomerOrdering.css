@@ -4,7 +4,7 @@
 .order-journey [aria-current=step]{color:#244c35;font-weight:650}
 .order-journey [aria-current=step] .order-journey-number{color:#fff;background:#285a3e;border-color:#285a3e}
 .order-journey .is-complete .order-journey-number{color:#285a3e;background:#e9f0e6;border-color:#e9f0e6}
-.order-journey a{color:inherit;text-underline-offset:4px}
+.order-journey a{color:inherit;text-decoration:none;font-weight:600}.order-journey a:focus-visible{outline:3px solid #8baf74;outline-offset:4px}
 .menu-basket-bar{position:fixed;z-index:112;left:50%;bottom:22px;transform:translateX(-50%);width:min(640px,calc(100% - 32px));box-sizing:border-box;display:flex;align-items:center;gap:15px;padding:14px 16px;background:#234f37;color:#fff;border:1px solid #476d51;border-radius:16px;box-shadow:0 12px 40px #1c3f3033}
 .basket-bar-icon{width:44px;height:44px;display:grid;place-items:center;background:#ffffff12;border-radius:12px;flex-shrink:0}
 .basket-bar-copy{display:grid;gap:3px;flex:1;min-width:0;font-size:14px}
@@ -28,3 +28,5 @@ body:has(.order-action-bar) .alert{bottom:125px;z-index:120}
 body:has(.menu-basket-bar) .dk-help-toggle{bottom:118px}
 body:has(.menu-basket-bar) .kitchen-chat{bottom:176px;max-height:calc(100dvh - 194px)}
 @media(max-width:700px){body:has(.order-action-bar) .dk-help-toggle{bottom:104px}body:has(.order-action-bar) .kitchen-chat{bottom:162px;max-height:calc(100dvh - 180px)}}
+
+html:has(.menu-basket-bar){scroll-padding-bottom:150px}

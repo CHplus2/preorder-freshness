@@ -19,7 +19,7 @@
 .account-dialog .account-form-card .account-form-hint{font-size:12px;line-height:1.6;margin-top:-10px}
 .account-recovery-link{display:inline-flex;align-items:center;min-height:44px;font-size:14px;color:#315a3c;text-underline-offset:3px;margin:10px 0 0}
 .account-form-switch{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:16px;padding-top:18px;border-top:1px solid #e0e6db;font-size:14px;color:#52634f}
-.account-form-switch button{border:0;background:none;color:#285a3e;min-height:44px;padding:8px 0;font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:4px;box-shadow:none;margin:0}
+.account-form-switch button{border:0;background:none;color:#285a3e;min-height:44px;padding:8px 0;font-size:14px;font-weight:600;text-decoration:none;box-shadow:none;margin:0}
 .account-form-error{padding:14px;margin:0 0 20px;background:#fff1eb;border:1px solid #d3a892;border-radius:8px;color:#803d26;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
 .account-form-error:focus{outline:2px solid #9a6143;outline-offset:3px}
 .account-form-fields input:focus-visible,.password-control input:focus-visible,.password-toggle:focus-visible,.account-close:focus-visible,.account-primary:focus-visible,.account-form-switch button:focus-visible{outline:3px solid #567c46;outline-offset:3px;box-shadow:none}
@@ -45,3 +45,7 @@
 .account-back-button>svg{flex-shrink:0}
 .account-form-card .account-back-button:hover:not(:disabled),.customer-access-form .account-back-button:hover:not(:disabled){background:#f4f7f0;border-color:#9bac96}
 .account-back-button:disabled{opacity:.55;cursor:not-allowed}
+
+.account-form-card button.account-recovery-link{border:0;background:transparent;padding:8px 0;box-shadow:none;text-decoration:none;font-weight:600;cursor:pointer}.account-form-card .account-recovery-link:focus-visible{outline:3px solid #8baf74;outline-offset:4px}.password-recovery-request .recovery-legacy{margin:0}.password-recovery-request .recovery-legacy>p{font-size:13px;line-height:1.6;margin:8px 0 14px}.password-recovery-request .recovery-message{margin:0 0 20px}
+
+.account-dialog .password-recovery-request .recovery-message{margin:0 0 20px;padding:14px 16px;background:#f6f8f3;border-color:#d8e1d2;color:#40573f}
