@@ -1,0 +1,37 @@
+{
+  "poster_mm": [
+    594.0,
+    841.0
+  ],
+  "orientation": "portrait",
+  "original_objectives_preserved": 5,
+  "pdf_text_bounds": "passed",
+  "text_box_overlap_check": "passed",
+  "workflow_arrow_clearance_pt": 15,
+  "workflow_card_gap_pt": 52,
+  "qr_text_gap_pt": 28,
+  "qr_quiet_zone_modules": 4,
+  "qr_decoding": [
+    {
+      "file": "Public_Menu_QR.png",
+      "decoded_url": "https://preorder-freshness.vercel.app/menu",
+      "format": "QR Code"
+    },
+    {
+      "file": "FYP_Poster_A1.png",
+      "decoded_url": "https://preorder-freshness.vercel.app/menu",
+      "format": "QR Code"
+    },
+    {
+      "file": "Poster_Preview.png",
+      "decoded_url": "https://preorder-freshness.vercel.app/menu",
+      "format": "QR Code"
+    }
+  ],
+  "editable_pptx": "one A1 slide; text, shapes, connectors and pictures are separate objects",
+  "powerpoint_render_verified": false,
+  "report_text_changed": false,
+  "website_css_changed": false,
+  "source_screenshots": "current local application, supplied client photos and isolated example records",
+  "new_user_evaluation_results_claimed": false
+}
