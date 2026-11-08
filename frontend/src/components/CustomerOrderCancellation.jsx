@@ -26,9 +26,10 @@ export default function CustomerOrderCancellation({order,onCancelled,onSaved}){
    const {data}=await axios.post(`/api/orders/${order.id}/cancel/`,{version:order.updated_at,reason},{timeout:20000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    if(!isSessionCurrent()){popup?.close();return}
    if(data?.id!==order.id||data.status!=='cancelled')throw invalidResponse();
+   // Apply the server-confirmed record before the browser hands off to WhatsApp.
+   onSaved?.(data);
    onCancelled?.({id:order.id,contact});setOpen(false);
    if(popup&&!popup.closed){try{popup.location.href=contact.whatsapp}catch{popup.close()}}
-   try{await onSaved?.()}catch{/* Cancellation is confirmed; the persistent success message remains available. */}
   }catch(e){popup?.close();if(isSessionCurrent())setError(apiError(e)+' Refresh My orders to check its status before trying again.')}
   finally{operation.current=false;setBusy(false)}
  };

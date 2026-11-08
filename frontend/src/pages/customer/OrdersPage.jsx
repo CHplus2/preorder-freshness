@@ -36,7 +36,7 @@ export default function OrdersPage() {
  const [cancellation,setCancellation]=useState(null);
   const orderEmail=useOrderEmail();
   const { formatOrderNumber, setAlert } = useUI();
-  const { orders, fetchOrders, ordersLoading, ordersError, orderPage, chooseOrderView, loadMoreOrders, ordersMoreLoading=false, ordersMoreError='' } = useOrder();
+  const { orders, fetchOrders, confirmCancellation, ordersLoading, ordersError, orderPage, chooseOrderView, loadMoreOrders, ordersMoreLoading=false, ordersMoreError='' } = useOrder();
 
   const [filter,setFilter]=useState(null),[limit,setLimit]=useState(10);
   const groups=customerOrderGroups(orders);
@@ -114,7 +114,7 @@ export default function OrdersPage() {
             </div></details>
             {!isPickup(order) && /^https:\/\//.test(order.fulfilment_snapshot?.courier?.url || '') && <a className="customer-track-link" href={order.fulfilment_snapshot.courier.url} target="_blank" rel="noopener noreferrer">Track with {order.fulfilment_snapshot.courier.carrier || 'courier'}<ChevronRight size={16} aria-hidden="true"/></a>}
             {simple?<SimpleDeliveryChange key={order.id+order.updated_at} order={order} onSaved={fetchOrders}/>:<RescheduleOrder order={order} onSaved={fetchOrders}/>}
-            <div className="customer-order-actions">{simple&&<CustomerOrderCancellation order={order} onSaved={fetchOrders} onCancelled={setCancellation}/>}{kitchenOrderContact(store,order).whatsapp?<a className="customer-order-help" href={kitchenOrderContact(store,order).whatsapp} target="_blank" rel="noopener noreferrer">Ask the kitchen on WhatsApp<ChevronRight size={16} aria-hidden="true"/></a>:<Link className="customer-order-help" to={`/contact?order=${order.id}`}>Ask the kitchen about this order<ChevronRight size={16} aria-hidden="true"/></Link>}</div>
+            <div className="customer-order-actions">{simple&&<CustomerOrderCancellation order={order} onSaved={confirmCancellation} onCancelled={setCancellation}/>}{kitchenOrderContact(store,order).whatsapp?<a className="customer-order-help" href={kitchenOrderContact(store,order).whatsapp} target="_blank" rel="noopener noreferrer">Ask the kitchen on WhatsApp<ChevronRight size={16} aria-hidden="true"/></a>:<Link className="customer-order-help" to={`/contact?order=${order.id}`}>Ask the kitchen about this order<ChevronRight size={16} aria-hidden="true"/></Link>}</div>
 
           </article>
         ))

@@ -22,7 +22,7 @@ export default function OrderPrintPage() {
  const validate = useCallback(data=>printableSlip(data,Number(id)),[id]);
  const report = useClientReport(`/api/admin/orders/${encodeURIComponent(id)}/slip/`,validate);
  return <main className="order-slip-page">
-  <div className="order-slip-tools"><Link to={`/admin/orders?order=${id}`}>Back to order</Link><button type="button" disabled={!report.data||report.loading} onClick={()=>window.print()}>Print / Save PDF</button><button type="button" disabled={report.loading} onClick={report.refresh}>Refresh slip</button><p>{report.loadedAt?`Loaded ${report.loadedAt.toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',dateStyle:'medium',timeStyle:'short'})} · Malaysia time. `:''}Refresh after changing an order. Keep printed customer details private.</p></div>
+  <div className="order-slip-tools"><Link to={`/admin/orders?order=${id}`}>Back to order</Link><button type="button" disabled={!report.data||report.loading} onClick={()=>window.print()}>Print or save PDF</button><button type="button" disabled={report.loading} onClick={report.refresh}>Refresh slip</button><p>{report.loadedAt?`Loaded ${report.loadedAt.toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',dateStyle:'medium',timeStyle:'short'})} · Malaysia time. `:''}Refresh after changing an order. Keep printed customer details private.</p></div>
   {report.loading&&<p role="status">Loading order slip…</p>}{report.error&&<p role="alert">{report.error}</p>}
   {report.data&&<OrderSlip order={report.data}/>}
  </main>;

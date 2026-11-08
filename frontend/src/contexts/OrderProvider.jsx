@@ -1,10 +1,10 @@
 import {OrderContext} from './OrderContext';
 import {readCheckout,checkoutAttempt} from '../utils/checkoutStorage';
 import {responseList,invalidResponse} from '../utils/apiResponse';
-import {orderHistoryPage} from '../utils/orderHistory';
+import {orderHistoryPage,orderHistoryReducer} from '../utils/orderHistory';
 import {useUI} from './UIContext';
 import {apiError} from '../utils/apiError';
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useReducer, useCallback, useRef, useEffect } from "react";
 import { getCookie } from "../utils/cookieUtils";
 import { useCart } from "./CartContext";
 import axios from "axios";
@@ -14,11 +14,12 @@ import {accountChanged} from '../utils/sessionScope';
 export default function OrderProvider({ children }) {
     const {isAuthenticated,isAdmin,isSessionCurrent,accountKey}=useAuth();
     const {setAlert} = useUI();
-    const [orders, setOrders] = useState([]);
+    const [history,dispatchHistory] = useReducer(orderHistoryReducer,{rows:[],page:null});
+    const {rows:orders,page:orderPage}=history;
     const [adminOrders, setAdminOrders] = useState([]);
     const [ordersLoading, setOrdersLoading] = useState(true);
     const [ordersError, setOrdersError] = useState('');
-    const [orderPage,setOrderPage]=useState(null),[ordersMoreLoading,setOrdersMoreLoading]=useState(false),[ordersMoreError,setOrdersMoreError]=useState('');
+    const [ordersMoreLoading,setOrdersMoreLoading]=useState(false),[ordersMoreError,setOrdersMoreError]=useState('');
     const orderView=useRef('auto'),orderPageRef=useRef(null),orderRead=useRef(null),orderGeneration=useRef(0);
     useEffect(()=>()=>orderRead.current?.abort(),[]);
     const [adminOrdersLoading, setAdminOrdersLoading] = useState(true);
@@ -43,8 +44,7 @@ export default function OrderProvider({ children }) {
             });
             const page=orderHistoryPage(res.data,view,before);
             if(current()){
-                orderPageRef.current=page;setOrderPage(page);
-                setOrders(old=>append?[...old,...page.rows.filter(row=>!old.some(previous=>previous.id===row.id))]:page.rows);
+                orderPageRef.current=page;dispatchHistory({type:'loaded',page,append});
             }
         } catch (err) {
             if(current())(append?setOrdersMoreError:setOrdersError)(apiError(err));
@@ -56,10 +56,18 @@ export default function OrderProvider({ children }) {
     const loadMoreOrders=()=>readOrders(true);
     const chooseOrderView=view=>{
         if(!['current','history','all'].includes(view))return;
-        orderView.current=view;setOrders([]);
-        setOrderPage(current=>current?{...current,view,count:current.counts[view]}:current);
+        orderView.current=view;dispatchHistory({type:'view',view});
         return readOrders(false);
     };
+
+    const confirmCancellation=useCallback(order=>{
+        if(!isSessionCurrent())return;
+        if(!Number.isSafeInteger(order?.id)||order.id<1||order.status!=='cancelled'
+            ||!Array.isArray(order.items)||!Number.isFinite(Date.parse(order.updated_at)))throw invalidResponse();
+        ++orderGeneration.current;orderRead.current?.abort();
+        dispatchHistory({type:'cancelled',order});
+        setOrdersLoading(false);setOrdersMoreLoading(false);setOrdersError('');setOrdersMoreError('');
+    },[isSessionCurrent]);
 
     const fetchAdminOrders = useCallback(async () => {
         if(!isAdmin || !isSessionCurrent())return;
@@ -127,7 +135,7 @@ export default function OrderProvider({ children }) {
     const value = {
         orders, adminOrders, ordersLoading, ordersError, adminOrdersLoading, adminOrdersError,
         orderPage,chooseOrderView,loadMoreOrders,ordersMoreLoading,ordersMoreError,
-        setOrders, setAdminOrders, fetchOrders, fetchAdminOrders, placeOrder, updateOrder
+        confirmCancellation, setAdminOrders, fetchOrders, fetchAdminOrders, placeOrder, updateOrder
     }
     
     return <OrderContext.Provider value={value}>
