@@ -1,0 +1,21 @@
+{
+  "FYP_Presentation_10min": {
+    "slides": 14,
+    "pdf_pages": 14
+  },
+  "Screenshot_Fallback": {
+    "slides": 8,
+    "pdf_pages": 8
+  },
+  "Design_Backup_Slides": {
+    "slides": 3,
+    "pdf_pages": 3
+  },
+  "timed_seconds": 600,
+  "embedded_video_matches_supplied_mp4": true,
+  "notes_present": true,
+  "pdf_text_within_pages": true,
+  "office_playback_tested": false,
+  "canva_import_tested": false,
+  "live_vercel_model_checked": false
+}

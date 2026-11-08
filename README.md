@@ -1,157 +1,67 @@
-# FreshCast — Kitchen Decision Assistant
+# Preorder and Freshness Management System
 
-**FreshCast** helps a food business spot ingredient shortages and potential waste, understand their causes, and compare purchasing decisions. A separate evaluated-model mode demonstrates food-demand forecasting using public historical data.
+A web application for **Wrap & Bowl Kuch**, a home-based food business in Kuching, Sarawak. This is Christopher Hansen’s final-year project: *Web-Based Preorder and Freshness Management System for Home-Based Entrepreneurs*.
 
-It is integrated into **Dapur Kita**, a React and Django preorder application for a Malaysian home kitchen, connecting dated preorders, menus, ingredient recipes, stock batches and fulfilment. The current client workflow uses guest orders and actual receipt recording; the earlier cooking Planner is retained as historical functionality.
+[Open the menu](https://preorder-freshness.vercel.app/menu) · [Presentation and demo](docs/fyp-presentation-20261108/README.md) · [Report](docs/fyp-report-20261107-final/README.md) · [Editable poster](docs/fyp-poster-handoff-20261108/README.md)
 
-## Open the application
+## Current FYP workflow
 
-- **Dapur Kita storefront:** [Browse the menu](https://preorder-freshness.vercel.app/menu) — public entry point for menus and the customer preorder flow.
-- **FreshCast / judge demonstration:** [Open the Decision Assistant](https://preorder-freshness.vercel.app/admin/ai/decisions?source=local) — staff entry point for connected kitchen planning.
-- **Current source and future work:** [main](https://github.com/CHplus2/preorder-freshness/tree/main).
-- **Frozen FYP website baseline:** [integration/dormathon-demo](https://github.com/CHplus2/preorder-freshness/tree/integration/dormathon-demo), restored to the `ab1a976` application code cited in the report.
+- **Customer accounts:** name and full phone number, with a saved passkey for account access. Kitchen staff use their own staff credentials.
+- **Menu and suggestions:** client photos, categories, selling units, optional personalised suggestions, and a date/quantity/whole-order-budget finder with mixed-menu or one-menu alternatives.
+- **Preorders:** offered dates, morning delivery/collection times and owner-managed delivery areas with their own fees. The client’s delivery window is 7:30–11:00 am; saved business settings determine what is offered.
+- **Payments:** configured bank/QR evidence uploads for manual review. Delivery can also use cash; collection requires QR payment. A receipt upload is not automatic bank confirmation.
+- **Ingredients and packaging:** received stock, documented shelf-life/storage records, earlier limits and holds. Successful order placement checks and deducts eligible ingredients and assigned packaging together.
+- **Owner operations:** accepted order records, payment review, food-received confirmation, daily summaries, printable slips, sales and cost/contribution information.
 
-Owner screens require an existing staff account. Request demonstration access from the project team; credentials are not published in this repository. New work and releases use `main`. Integration is frozen; see [the branch and release note](docs/main-only-workflow.md).
+The normal client workflow does not require cooking-planner approval or a courier API. An order’s accepted names, prices and requirements are retained so later menu edits do not rewrite its history. Recorded dates support stock planning; they do not detect contamination or guarantee food safety.
 
-The five client-feedback batches are implemented on `main`: packaging, placement stock deductions, guest QR/cash checkout, area fees, receipt recording, daily order summaries and printable slips. Start with the [current client guide](docs/CLIENT-USER-GUIDE.md). The FYP report remains an earlier snapshot; the [objective and diagram revision map](docs/client-fyp-feature-map.md) identifies the necessary coordinated changes without rewriting its objectives or documents.
+The development orders and stock used in demonstrations are example records, not proof of real client sales or achieved savings. Formal client/student evaluation is separate from software checks. The five original FYP objectives are unchanged.
 
-Additional client follow-ups, including the newly selected passkey account login,
-are tracked in [the follow-up batches](docs/client-followup-batches-20261103.md).
-Passkey accounts are planned; the current browser-session flow is not presented
-as cross-device account login.
+## Technology and data
 
-## Underlying preorder application
+**React/Vite → Django REST API → PostgreSQL on Supabase.** Vercel hosts the application; Supabase holds the configured application database. Uploaded menu photos are persisted through the application’s photo service, separately from the Git source files. Private payment evidence is not a public source asset.
 
-Customers browse menus and submit a dated delivery or collection preorder with name and phone, without email/password registration. Delivery accepts QR or cash; collection accepts QR only. Owners manage recipes, ingredient/packaging stock, manual payment verification and actual receipt, then print accepted order details or review dated sales. New orders deduct stock at placement and do not require a cooking-plan acceptance step.
+The FYP’s local history forecast is implemented in [kitchen_forecast.py](backend/myapp/services/kitchen_forecast.py). It reads database order history and compares local statistical methods when there is sufficient history; it does not load the separate Genpact CatBoost model. Forecasts based on development records do not establish real-business accuracy.
 
-The [current client guide](docs/CLIENT-USER-GUIDE.md) explains these screens. The [earlier application manual](docs/FYP-USER-MANUAL.md) and [technical handoff](docs/FYP-TECHNICAL-HANDOFF.md) preserve historical implementation context. The FreshCast workflow below is an additional integrated feature; already deducted stock is not allocated again as an undeducted commitment.
+## Related FreshCast project — preserved separately
 
-## FreshCast decision assistant
+**FreshCast is the separate project associated with [integration/dormathon-demo](https://github.com/CHplus2/preorder-freshness/tree/integration/dormathon-demo).** That branch and its forecasting functionality are protected. This `main` README describes the FYP client system.
 
-The decision assistant guides the owner through five steps: **Detect → Categorize → Prioritize → Explain → Decide**.
+The original FreshCast trained model is saved in the GitHub Release [freshcast-model-backup-v1](https://github.com/CHplus2/preorder-freshness/releases/tag/freshcast-model-backup-v1), as `freshcast-runtime-bundle.tar.gz`. It is a release asset, not part of an ordinary source ZIP. Its archive SHA-256 is `697f8e10ee6b2c1b794ee38ec81067477870315fb7c51a1280684e7f0601361a`. Batch 1 downloaded and verified that archive and confirmed the model and matching data/metrics are present; no retraining was performed.
 
-- Convert upcoming confirmed preorders into ingredient requirements using accepted recipe snapshots.
-- Allocate dated inventory using first-expiry-first-out (FEFO), excluding expired, held and otherwise ineligible batches.
-- Identify shortages, ingredients likely to expire unused, and estimated financial exposure where costs are known.
-- Explain the contributing orders, quantities, preparation dates and batch eligibility.
-- Compare a hypothetical purchase, including arrival date, expiry and unit cost, without changing stock or placing an order.
+For restoration and inference paths, see [the model guide](backend/predictive_ai/README.md). Django loads the provisioned model file on the server for inference. Deployment configuration determines whether that bundle is present in a Vercel function; this documentation update does not verify the current live model deployment.
 
-The surrounding application provides menu, recipe, inventory, checkout, order and preparation-planning workflows. See the [application user manual](docs/FYP-USER-MANUAL.md) for those screens.
+Some older FreshCast and payment-lab routes remain in `main` during the requested cleanup. Their source dependencies are being reviewed before removal; this README update does not claim they have already been removed. See [the cleanup and model-preservation audit](docs/FYP-CLEANUP-AUDIT.md).
 
-## Two distinct data modes
+## Local development on Windows
 
-| Mode | Inputs | Output |
-| --- | --- | --- |
-| **My kitchen** — default | Database preorders, accepted recipes and inventory batches | Calculated requirements, shortages, expiry risks and purchase comparisons for known orders. No demand model is used. |
-| **Genpact evaluated model demo** | Public historical weekly meal demand, prices, promotion flags and fulfillment-center information | Genuine CatBoost forecasts, with separately labelled simulated recipes, inventory and supplier assumptions. |
-
-The hosted kitchen records are **fictional demo transactions stored in the database**, not evidence of real customer sales. The local planning flow does not predict additional future customers. Genpact meal and center IDs are not mapped to Dapur Kita menu items; the external model is not presented as an accurate forecast of this shop's customer demand. Frontend fixture mode is also labelled separately.
-
-### Forecast evaluation
-
-The deployed Genpact model was trained through week **135** and evaluated on chronologically held-out weeks **136–145** using prior-only demand features.
-
-| Method | Held-out WAPE |
-| --- | ---: |
-| CatBoost | **28.23%** |
-| Previous-observation baseline | **34.81%** |
-
-WAPE is total absolute prediction error divided by total observed demand, multiplied by 100; lower is better. It is not classification accuracy, and the model does not outperform the baseline on every individual slice. Week 146 forecasts have no observed targets in this dataset. Evaluation uses rolling one-week-ahead history; it does not establish multiweek or own-store forecast performance. See the [data-source explanation](docs/FRESHCAST-DATA-SOURCES.md) and [demo runbook](docs/FRESHCAST-DEMO-RUNBOOK.md).
-
-## Try the demo
-
-1. Sign in as staff and open `/admin/ai/decisions?source=local`.
-2. Check the planning window and coverage: only eligible paid, scheduled, undeducted preorders contribute to requirements. Review excluded orders rather than interpreting them as zero demand.
-3. Select an ingredient and follow the five-step assistant. Inspect the linked preorder and inventory evidence.
-4. Compare a hypothetical purchase using the material's displayed unit. Late arrival or expiry before preparation ends cannot cover the requirement.
-5. Switch the data source to **Genpact** to inspect the separate evaluated-model example. `/admin/ai/inventory?source=live` also includes the illustrated inventory/rescue interface.
-
-The runbook includes a dated example. Records and dates may change; refresh the kitchen data and use the current response rather than promising permanently fixed quantities.
-
-## Run locally on Windows
-
-Prerequisites: **Python 3.13**, **Node.js 24**, npm and Git. From the repository root in PowerShell:
+Use Python 3.13, Node.js 24 and Git. Run from the **repository root** in PowerShell:
 
 ```powershell
-git switch main
-py -3.13 -m venv venv
-.\venv\Scripts\python.exe -m pip install -r requirements.txt -r backend/predictive_ai/requirements-ml.lock
+py -3.13 -m venv backend/venv
+.\backend\venv\Scripts\python.exe -m pip install -r requirements.txt
 npm ci --prefix frontend
 
-# Use local SQLite instead of any inherited hosted database configuration.
+# Explicitly select a local development database, not hosted Supabase.
 $env:PYTHON_DOTENV_DISABLED = '1'
-Remove-Item Env:DATABASE_URL, Env:VERCEL -ErrorAction SilentlyContinue
-$env:SECRET_KEY = (& .\venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(50))")
-.\venv\Scripts\python.exe manage.py migrate
-.\venv\Scripts\python.exe manage.py createsuperuser
-.\venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
+$env:DATABASE_URL = 'sqlite:///dev.sqlite3'
+$env:SECRET_KEY = (& .\backend\venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(50))")
+$env:DEBUG = 'True'
+$env:VERCEL = '0'
+$env:ALLOWED_HOSTS = 'localhost,127.0.0.1'
+$env:PUBLIC_APP_URL = 'http://localhost:5173'
+$env:PASSKEY_ORIGIN = 'http://localhost:5173'
+.\backend\venv\Scripts\python.exe backend/manage.py migrate
+.\backend\venv\Scripts\python.exe backend/manage.py createsuperuser
+.\backend\venv\Scripts\python.exe backend/manage.py runserver 127.0.0.1:8000
 ```
 
-In a second terminal at the repository root:
+In a second terminal at the repository root, run `npm --prefix frontend run dev` and open `http://localhost:5173`. Use that same hostname for passkeys. A new local database needs its own kitchen settings, menus and stock. Optional external services and the FreshCast ML bundle have separate setup requirements; never place their credentials in source code or the frontend.
 
-```powershell
-npm --prefix frontend run dev
-```
+Production migrations are an explicit release step. The build checks database readiness; it does not automatically apply migrations. Do not run tests, data-refresh scripts or development setup against the production database.
 
-Open `http://127.0.0.1:5173/admin/ai/decisions?source=local`. Vite forwards `/api` requests to local Django on port 8000, preserving the existing session login and CSRF protection. A new local database starts without the hosted demo records: configure menus, recipes, dated stock and reviewed preorders using the [application manual](docs/FYP-USER-MANUAL.md). Do not run these migration/setup commands against production.
+## Current presentation materials
 
-### Trained-model bundle
+The [presentation package](docs/fyp-presentation-20261108/README.md) contains a provisional ten-minute deck with the client-photo demo embedded near the end, speaker notes/script, a PDF, screenshot fallback and separate design slides for questions. The official speaking limit remains unconfirmed. The editing guide lists exact poster font settings and explains how to insert genuine evaluation results before final submission.
 
-Git does **not** contain historical CSVs, simulated operational CSVs, model weights or databases. My-kitchen planning works without the ML bundle; Genpact mode requires all eight matched runtime files, including `demand_model.cbm` and `metrics.json`.
-
-Provision a verified bundle outside public/static assets and set server-side `PREDICTIVE_DATA_DIR` and `PREDICTIVE_ARTIFACT_DIR` to its directories. See [model reproduction and local provisioning](backend/predictive_ai/README.md) and the [current Vercel deployment guide](deploy/VERCEL.md) for checksum-verified bundle delivery. Do not retrain inside an API request, expose bundle credentials to React, or assume cloning the repository downloads the model.
-
-## API and architecture
-
-**React + Vite → Django REST API → session/staff authorization → database planning or CatBoost inference.**
-
-The authoritative [JSON API contract](docs/predictive-api-contract.md) documents the five original predictive endpoints, held-out backtest, local planning and purchase scenario. UI response validation preserves source labels, native ingredient units and unknown costs. Hypothetical comparisons do not write inventory records.
-
-## Verification
-
-Use the isolated local database configuration above in a dedicated test terminal:
-
-```powershell
-.\venv\Scripts\python.exe manage.py test myapp --noinput
-npm --prefix frontend test
-npm --prefix frontend run test:predictive
-npm --prefix frontend run test:ux
-npm --prefix frontend run build
-.\venv\Scripts\python.exe -m unittest discover -s tests -v
-npm ci --prefix escrow --ignore-scripts
-npm --prefix escrow test
-```
-
-Both GitHub application/escrow jobs passed for the payment-maintenance release. Local checks exercised the provisioned CatBoost model, database planning, purchase comparisons and browser flows. PostgreSQL-only concurrency tests require PostgreSQL; real-model checks are explicitly skipped when the bundle is absent. See [payment/CI verification](docs/FYP-PAYMENT-MAINTENANCE.md) and the [demo runbook](docs/FRESHCAST-DEMO-RUNBOOK.md) for evidence and limits.
-
-## Scope and documentation
-
-This project extends a pre-existing preorder application; it was not built entirely from scratch during the hackathon. Forecasting data comes from an external public dataset. Store records, rescue exercises and inventory assumptions are labelled according to their source. Financial comparisons are estimates, not achieved savings or proof of food safety. Testnet escrow is a separate unaudited lab, not a checkout payment integration; see [escrow setup and rules](escrow/README.md).
-
-- [Demo walkthrough](docs/FRESHCAST-DEMO-RUNBOOK.md)
-- [API contract](docs/predictive-api-contract.md)
-- [Current deployment and model bundle](deploy/VERCEL.md) — Production and Preview have separate settings; Preview still needs its own database configuration.
-- [Connected kitchen planning](docs/LOCAL-KITCHEN-INTEGRATION.md)
-- [Application user manual](docs/FYP-USER-MANUAL.md) and [technical handoff](docs/FYP-TECHNICAL-HANDOFF.md)
-- [Preserved application documentation index and background](docs/DAPUR-KITA-FYP-README.md)
-
-Detailed implementation reports remain in `docs/`; this README is the entry point for reviewers and developers.
-
-### Responsive menu photos
-
-`npm --prefix frontend run dev` and `npm --prefix frontend run build` generate
-responsive WebP files from the licensed originals before Vite starts. Use Node.js
-24 and `npm ci --prefix frontend` (include optional dependencies for Sharp's
-platform binary). Generated files under `public/menu-images/responsive/` are
-ignored by Git; builds reproduce them. No image server or external image download
-is needed. Known bundled photos use these sizes in the menu, basket, detail and
-owner screens; external owner photo URLs are left alone. A failed optimized image
-falls back to its original URL.
-
-When intentionally replacing or adding a bundled JPEG, review its licence and
-update `docs/DAPUR-KITA-MENU-PHOTOS.json` and the public credits page, then run
-`npm --prefix frontend run images:update` and commit the updated photo catalog.
-The normal build verifies source checksums rather than silently accepting an
-unreviewed replacement. `npm --prefix frontend run test:images` checks encoded
-sizes, aspect ratios, metadata stripping and URL selection. Original JPEGs and
-attribution remain available; generated WebP copies retain the photo's licence.
+Generated reports, posters and presentation downloads are under `docs/` for access from GitHub; `.vercelignore` excludes them from application uploads. Their presence in Git is separate from the function’s runtime storage. Published downloads are preserved during cleanup.
