@@ -11,4 +11,6 @@
 .admin-shell .client-report form>label>input {margin:0;height:44px;min-height:44px}
 .admin-shell .client-report form>button {margin:0;height:44px;align-self:flex-end}
 
-.daily-order-print-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin:24px 0 18px}.daily-order-print-actions a{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:11px 16px;border:1px solid #285a3e;border-radius:8px;background:#285a3e;color:#fff;font-size:14px;font-weight:600;text-decoration:none}.daily-order-print-actions p{flex:1 1 260px;margin:0;font-size:13px;line-height:1.6;color:#536654}
+.daily-order-print-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin:24px 0 18px}.client-report .daily-order-print-actions a.admin-action-link{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:11px 16px;border:1px solid #285a3e;border-radius:8px;background:#285a3e;color:#fff;font-size:14px;font-weight:600;text-decoration:none}.daily-order-print-actions p{flex:1 1 260px;margin:0;font-size:13px;line-height:1.6;color:#536654}
+
+.client-report .daily-order-print-actions a.admin-action-link:is(:hover,:focus-visible){background:#1e4730;border-color:#1e4730;color:#fff}
