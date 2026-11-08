@@ -53,8 +53,6 @@ import StorefrontProvider from './contexts/StorefrontProvider';
 import {useStorefront} from './contexts/StorefrontContext';
 import {HomePage,StoryPage,HowItWorksPage,ContactPage} from './pages/customer/BusinessPages';
 import {BusinessFooter,PageMeta} from './components/BusinessLayout';
-const EscrowOrderPayment=lazy(()=>import('./pages/customer/EscrowOrderPayment'));
-const EscrowDemoPage=lazy(()=>import('./pages/customer/EscrowDemoPage'));
 
 function AnimatedRoutes() {
   const {isAdmin}=useAuth();
@@ -80,8 +78,6 @@ function AnimatedRoutes() {
         <Route path="/account" element={store.ordering_mode==='simple'&&!isAdmin?<CustomerAccountPage/>:<RequireAuth><AccountPage/></RequireAuth>}/>
         <Route path="/recover" element={<RecoveryPage/>}/>
         <Route path="/confirm-email" element={<ConfirmEmailPage/>}/>
-        <Route path="/payment/escrow" element={<RequireAuth><Suspense fallback={<PageLoading label="Loading order escrow…"/>}><EscrowOrderPayment/></Suspense></RequireAuth>}/>
-        <Route path="/escrow-demo" element={<Suspense fallback={<PageLoading label="Loading escrow payment…"/>}><EscrowDemoPage/></Suspense>}/>
         <Route path="/story" element={<StoryPage/>}/>
         <Route path="/how-it-works" element={<HowItWorksPage/>}/>
         <Route path="/contact" element={<ContactPage/>}/>

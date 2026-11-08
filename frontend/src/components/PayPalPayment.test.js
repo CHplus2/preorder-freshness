@@ -7,7 +7,14 @@ try{
  const {default:PaymentOptions}=await server.ssrLoadModule('/src/components/PaymentOptions.jsx');
  const {default:PayPalPayment}=await server.ssrLoadModule('/src/components/PayPalPayment.jsx');
  const {default:PayPalRecovery}=await server.ssrLoadModule('/src/components/PayPalRecovery.jsx');
- const {MemoryRouter}=await import('react-router-dom');
+ const {MemoryRouter,Routes,Route}=await import('react-router-dom');
+ const {default:PaymentPage}=await server.ssrLoadModule('/src/pages/customer/PaymentPage.jsx');
+ for(const method of ['escrow','unknown']){
+  const retired=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:['/payment/'+method]},createElement(Routes,null,createElement(Route,{path:'/payment/:method',element:createElement(PaymentPage)}))));
+  assert.match(retired,/This page isn’t on the menu/);assert.match(retired,/Back to checkout/);
+  assert.doesNotMatch(retired,/Demo credit wallet|Session expired|Fund escrow/);
+ }
+
  const options=enabled=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(PaymentOptions,{value:'cod',onChange:()=>{},paypalEnabled:enabled})));
  assert.doesNotMatch(options(false),/value="paypal"/);
  assert.match(options(true),/<strong>PayPal<\/strong>/);assert.doesNotMatch(options(true),/PayPal Sandbox/);assert.match(options(true),/Test payment/);assert.match(options(true),/No real money is transferred/);

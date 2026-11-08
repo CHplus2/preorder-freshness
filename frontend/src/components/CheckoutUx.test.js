@@ -48,6 +48,10 @@ try{
  const addressError=address({error:'Invalid response'});assert.match(addressError,/Retry saved address/);assert.doesNotMatch(addressError,/Save delivery address|Add delivery address/);
  const saving=address({editing:true,saving:true});assert.match(saving,/<fieldset[^>]*disabled/);assert.match(saving,/Saving…/);
  const options=renderToStaticMarkup(h(MemoryRouter,null,h(PaymentOptions,{value:'cod',onChange:()=>{},disabled:true})));
+ const currentOptions=renderToStaticMarkup(h(PaymentOptions,{value:'manual',onChange:()=>{},manualEnabled:true,paypalEnabled:true,escrowEnabled:true}));
+ assert.ok(currentOptions.includes('Bank QR / bank transfer'));
+ assert.ok(currentOptions.includes('PayPal'));
+ assert.doesNotMatch(currentOptions,/escrow|Sepolia|payment\/escrow/i);
  assert.match(options,/<fieldset[^>]*disabled/);assert.match(options,/<legend>Payment method/);
  const {default:Picker}=await server.ssrLoadModule('/src/components/DeliveryTimePicker.jsx');
  const picker=props=>renderScheduled(h(MemoryRouter,null,h(Picker,{cart:[row],onSelect:()=>{},...props})));

@@ -161,7 +161,7 @@ def place_order(request):
     if not cart_items.exists():
         return Response({"detail": "Cart empty"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if payment not in ('cod', 'wallet', 'paypal', 'manual', 'escrow', 'deferred'):
+    if payment not in ('cod', 'wallet', 'paypal', 'manual', 'deferred'):
         raise ValidationError('Choose a supported payment method.')
     # One lock serialises scheduling across different menus in this single kitchen.
     Storefront.objects.get_or_create(pk=1)
@@ -195,8 +195,6 @@ def place_order(request):
             address = Address.objects.get(id=address_id, user=user)
         except Address.DoesNotExist:
             return Response({'detail': 'Invalid address'}, status=status.HTTP_404_NOT_FOUND)
-    if method == 'pickup' and payment == 'escrow':
-        raise ValidationError('Escrow currently supports delivery orders. Choose another payment method for self-collection.')
     # Lock menus so simultaneous bookings cannot exceed their daily capacity.
     list(Product.objects.select_for_update().filter(id__in=cart_items.values('product_id')).order_by('id'))
     delivery_at = serializers.DateTimeField().run_validation(request.data.get('delivery_at'))
@@ -220,10 +218,6 @@ def place_order(request):
         from ..services.paypal import enabled
         if not enabled():
             raise ValidationError('PayPal is unavailable. Choose another payment method.')
-    if payment == 'escrow':
-        from ..services.escrow import config
-        if not config():
-            raise ValidationError('Sepolia escrow is unavailable. Choose another payment method.')
     # The store/menu locks above protect schedule_order's authoritative capacity
     # check. Review-only requests reserve neither task time nor a daily quota.
     cart_total = sum(item.quantity * item.product.price for item in cart_items)

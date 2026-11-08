@@ -13,7 +13,6 @@ nav {background:#faf9f5; border-bottom:1px solid #dfe3da; padding:18px max(24px,
 .dk-sales-row{display:grid;grid-template-columns:150px 1fr 110px;gap:15px;align-items:center;margin:14px 0;font-size:14px;}@media(max-width:560px){.dk-sales-row{grid-template-columns:95px 1fr 85px;gap:8px;font-size:12px;}}
 
 /* Shared form defaults: reserve room for native arrows and separate labels from fields. */
-.escrow-demo h2 { font-size:21px;margin-bottom:24px; } .escrow-demo h3 { font-size:18px;margin:20px 0 10px; } .escrow-demo input { margin-top:8px; } .escrow-address { overflow-wrap:anywhere;font-size:13px; } .escrow-steps { display:flex;flex-wrap:wrap;gap:14px 35px;padding:20px 24px; } .escrow-demo summary { cursor:pointer;font-weight:650; }
 :root { --card:#fff; --muted:#586854; --primary:#285a3e; --secondary:#285a3e; --danger:#a52f27; --success:#276036; }
 select { padding-right:38px; line-height:1.5; }
 label > input, label > select, label > textarea { display:block; margin-top:8px; }

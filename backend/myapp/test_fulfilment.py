@@ -222,11 +222,20 @@ class FulfilmentTests(TestCase):
         self.assertTrue(order.inventory_deducted)
         self.assertEqual(order.payment_status, 'unpaid')
 
-    def test_pickup_escrow_is_explicitly_unavailable_without_changing_delivery_escrow(self):
+    def test_pickup_rejects_retired_escrow_payment(self):
         body = self.body(); body['payment'] = 'escrow'
         result = self.client.post('/api/orders/place/', body, format='json')
         self.assertEqual(result.status_code, 400, result.data)
-        self.assertIn('delivery orders', str(result.data))
+        self.assertIn('supported payment method', str(result.data))
+
+    def test_delivery_rejects_retired_escrow_without_creating_an_order(self):
+        body = self.body('standard', address_id=self.address.pk, delivery_area='Moyan')
+        body['payment'] = 'escrow'
+        response = self.client.post('/api/orders/place/', body, format='json')
+        self.assertEqual(response.status_code, 400, response.data)
+        self.assertIn('supported payment method', str(response.data))
+        self.assertFalse(Order.objects.exists())
+        self.assertTrue(CartItem.objects.filter(pk=self.cart.pk).exists())
 
     def test_pickup_wallet_debits_food_only_without_an_address(self):
         wallet = Wallet.objects.create(user=self.buyer, wallet_address='fictional-pickup-wallet', balance=25)

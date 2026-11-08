@@ -22,7 +22,7 @@ def main():
     steps=[('backend',[sys.executable,'manage.py','test','myapp','--noinput','--verbosity','2'],ROOT/'backend'),('release',[sys.executable,'-m','unittest','discover','-s','tests','-v'],ROOT)]
     steps += [(name,[npm,'run',name],ROOT/'frontend') for name in [
         'test','test:ux','test:checkout','test:planner','test:recommendations',
-        'test:predictive','test:paypal','test:escrow','test:shopping','test:images',
+        'test:predictive','test:paypal','test:shopping','test:images',
         'lint','build',
     ]]
     sha=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()

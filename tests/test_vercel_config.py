@@ -44,7 +44,7 @@ const retained = [
  'app.py', 'backend/config/settings.py', 'backend/myapp/services/menu_stock.py',
  'backend/myapp/migrations/0023_raw_material.py', 'frontend/dist/index.html',
  'frontend/dist/assets/index-12345678.js', 'frontend/dist/menu-images/food.webp',
- 'frontend/src/contracts/preorderEscrow.json', 'backend/predictive_ai/data/train.csv',
+ 'backend/predictive_ai/data/train.csv',
  'backend/predictive_ai/artifacts/demand_model.cbm',
  'backend/predictive_ai/artifacts/metrics.json',
  'backend/predictive_ai/artifacts/runtime-bundle.tar.gz',
@@ -54,7 +54,7 @@ for (const matches of [file => minimatch(file, config.excludeFiles), picomatch(c
  for (const file of excluded) assert.ok(matches(file), `Development file retained: ${file}`);
  for (const file of retained) assert.ok(!matches(file), `Required runtime file excluded: ${file}`);
 }
-for (const file of retained.filter(file => file.includes('predictive_ai/') || file.includes('/contracts/'))) {
+for (const file of retained.filter(file => file.includes('predictive_ai/'))) {
  assert.ok(minimatch(file, config.includeFiles), `Required input not explicitly included: ${file}`);
 }
 """

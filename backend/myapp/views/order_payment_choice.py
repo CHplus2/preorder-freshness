@@ -12,12 +12,11 @@ from .paypal import unavailable_reason
 
 class PaymentChoice(serializers.Serializer):
     request_id = serializers.UUIDField()
-    payment = serializers.ChoiceField(choices=['paypal', 'manual', 'cod', 'escrow'])
+    payment = serializers.ChoiceField(choices=['paypal', 'manual', 'cod'])
 
 
 def options_for(order, store):
     from ..services.paypal import enabled
-    from ..services.escrow import config
     options = []
     if order.delivery_method == 'pickup':
         options.append(dict(id='cod', label='Cash at collection', note='Pay when you collect your order.'))
@@ -25,8 +24,6 @@ def options_for(order, store):
         options.append(dict(id='paypal', label='PayPal', note='Test payment. No real money is transferred.'))
     if store.manual_payment_enabled and (store.bank_transfer_instructions.strip() or store.duitnow_qr_url):
         options.append(dict(id='manual', label='DuitNow QR / bank transfer', note='The kitchen confirms receipt.'))
-    if order.delivery_method != 'pickup' and config():
-        options.append(dict(id='escrow', label='Escrow payment', note='Sepolia test ETH; server-verified funding.'))
     return options
 
 

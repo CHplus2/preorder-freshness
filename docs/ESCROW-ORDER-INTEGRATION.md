@@ -1,5 +1,7 @@
 # Order-bound Sepolia escrow — 23 October 2026
 
+> Historical implementation record. Escrow was retired from `main` on 8 November 2026; its checkout, pages, APIs, commands and contract CI job are no longer available there. Earlier payment records and protective checks are retained. See [the current cleanup record](FYP-CLEANUP-BATCH2.md). This note does not instruct changes to the frozen integration branch.
+
 Escrow is now an optional checkout payment method (`payment_method=escrow`).
 It is enabled only when the backend configuration below is complete. The older
 `/escrow-demo` remains a standalone wallet tool and cannot pay a food order.

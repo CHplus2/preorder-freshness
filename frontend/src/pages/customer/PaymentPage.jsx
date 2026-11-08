@@ -1,4 +1,5 @@
 import PayPalPage from "./PayPalPage";
+import PageState from "../../components/PageState";
 import {demoAddressId} from "../../utils/checkoutPresentation";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
@@ -10,6 +11,7 @@ import {apiError} from "../../utils/apiError";
 
 export default function PaymentPage(){
     const {method}=useParams();
+    if(!['paypal','wallet'].includes(method))return <PageState title="This page isn’t on the menu." description="This payment method is no longer available. Return to checkout to choose an available method."><Link to="/checkout">Back to checkout</Link><Link to="/orders">My orders</Link></PageState>;
     return method==="paypal"?<PayPalPage/>:<DemoWalletPage/>;
 }
 

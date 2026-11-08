@@ -178,7 +178,6 @@ function OwnerOrders() {
                   RM {(Number(order.total_amount)+Number(order.shipping_fee)).toFixed(2)}
                 </div>
               </div>
-              {order.payment_method==='escrow' && <p className="owner-order-note">Escrow · Sepolia <Link to={'/payment/escrow?order='+order.id}>Manage escrow payment</Link></p>}
               {order.items.some(i=>i.recipe_source?.startsWith('legacy')) && <p className="owner-order-note">Review this older order’s recipe in Planner before preparation.</p>}
               <details className="owner-handover-details"><summary>Handover & contact details</summary><OrderFulfilment order={order} owner/><OrderContactActions order={order}/><CourierHandover key={'tracking-'+order.id+order.updated_at} order={order} onSaved={fetchAdminOrders}/></details>
               {paymentOrder?.id===order.id && <PaymentRecords order={order} onSaved={fetchAdminOrders}/>}

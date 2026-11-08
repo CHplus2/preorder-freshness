@@ -29,13 +29,13 @@ delete migration records, or change database settings.
   Nested brace alternatives keep the exclusion string within Vercel's
   256-character schema limit. Regression checks cover both include/exclude
   lengths, glob matching and preservation of the built frontend and model inputs.
-- The escrow verification manifest stays at
-  `frontend/src/contracts/preorderEscrow.json`, where the server reads it.
-  Existing portfolio source and historical payment handlers remain in Git.
+- Escrow's contract manifest and active payment handlers were removed in batch 2.
+  The function no longer includes or reads that manifest. Existing payment
+  records retain their labels and read-only safeguards.
 - FreshCast's verified model, runtime inputs and original backup archive remain
   supported. No model or evaluation changes are part of this cleanup.
 
-A local inventory found approximately 720 MB in the Python environment, 255 MB in
+A historical local inventory, before batch 2 removed escrow, found approximately 720 MB in the Python environment, 255 MB in
 Node dependencies, 25 MB in built frontend files and 92 KB in the escrow folder.
 These are local disk sizes, not measured deployed Vercel function sizes. The
 Python dependencies are installed separately during deployment; excluding the
@@ -46,7 +46,7 @@ does not reset already recorded usage.
 
 Validation: the entrypoint test stages a reduced tree without development
 sources, collects static assets, imports the actual WSGI application, serves the
-menu/checkout pages and a built JavaScript asset, reads the escrow manifest, and
-checks the disabled escrow configuration endpoint. Bundle provisioning tests
+menu/checkout pages and a built JavaScript asset, and verifies that the retired
+escrow configuration endpoint returns 404. Bundle provisioning tests
 also preserve verified inputs and reject corruption. These checks do not replace
 a successful Vercel deployment or prove that the live SQL replacement ran.

@@ -1,5 +1,7 @@
 # FYP technical handoff: current repository implementation
 
+> This is a historical September inspection, not the latest source guide. Escrow was removed from `main` on 8 November 2026. Follow the [root README](../README.md) and [batch 2 record](FYP-CLEANUP-BATCH2.md) for the current workflow; the earlier findings below are retained as history.
+
 Inspection and local verification: 29 September 2026. Application baseline: `6f8e03e9b5075b88f52d9a966a289d41745119ff`. The working tree was clean at inspection. This handoff adds documentation only; no application fixes were made.
 
 ## Reading this handoff

@@ -10,7 +10,6 @@ import axios from 'axios';
 import {getCookie} from '../utils/cookieUtils';
 import {apiError} from '../utils/apiError';
 import {paypalRecovery,paypalStatus} from '../utils/paypalResponse';
-import {Link} from 'react-router-dom';
 import PayPalRecovery from './PayPalRecovery';
 import './PaymentRecords.css';
 
@@ -97,7 +96,7 @@ export default function PaymentRecords({order,onSaved,onBusyChange,heading}){
     {refundForm&&!data.unresolved_refund&&<button type="button" disabled={busy} onClick={()=>{setShowRefund(false);setRefundConfirmed(false);setError('')}}>Cancel refund entry</button>}</div>
    </form>}
    {order.status==='cancelled'&&data.payment_status==='unpaid'&&!historical&&<p>No new payment can be recorded for a cancelled order.</p>}
-   {!historical&&order.payment_method==='escrow'&&<p>Funding and refunds are verified on-chain. <Link to={'/payment/escrow?order='+order.id}>Manage escrow & verify payment</Link></p>}
+   {!historical&&order.payment_method==='escrow'&&<p>This earlier test-network payment is retained for reference. Escrow payment actions are no longer available.</p>}
    {!historical&&order.payment_method==='paypal'&&<PayPalRecovery recovery={data.paypal_recovery} paymentStatus={data.payment_status} busy={busy} onCheck={checkPayPal}/>}
    {!historical&&order.payment_method==='paypal'&&data.payment_status==='paid'&&<p>A record here does not send a PayPal refund. Complete any test refund in the PayPal Sandbox dashboard first.</p>}
    <details className="payment-record-history"><summary>Payment history <span>({data.events.length})</span></summary><PaymentLedger events={data.events}/></details>

@@ -1,5 +1,7 @@
 # Payment and CI maintenance — 11 October 2026
 
+> Historical implementation record. Escrow was retired from `main` on 8 November 2026; its checkout, pages, APIs, commands and contract CI job are no longer available there. Earlier payment records and protective checks are retained. See [the current cleanup record](FYP-CLEANUP-BATCH2.md). This note does not instruct changes to the frozen integration branch.
+
 Work stays on `integration/dormathon-demo`; no main merge, schema change, model retraining or production data change is required.
 
 ## Failures corrected

@@ -63,9 +63,9 @@ Create a new owner only if you are starting with an empty database. To retain lo
 - Confirm production uses PostgreSQL, not a local `.sqlite3` file.
 - Save a delivery address, leave checkout and return: it should be reused. Edit it and confirm past orders retain their original delivery details.
 
-## Testnet escrow
+## Earlier escrow prototype
 
-`/escrow-demo` is an academic Sepolia demonstration, separate from production orders. See [escrow setup and limitations](escrow/README.md). Deploy the included contract with your own test wallet and enter its address in the demo, or set the public `VITE_TESTNET_ESCROW_ADDRESS` before building. No private wallet key is required or accepted by the app. The included contract cannot be deployed on mainnet.
+Escrow was retired from `main` on 8 November 2026. Do not configure wallet/RPC variables or deploy a contract for the FYP. Earlier payment records remain readable. The [batch 2 record](docs/FYP-CLEANUP-BATCH2.md) describes the removal and links to the previous source revision. FreshCast forecasting is preserved separately.
 
 The code has local build and backend regression checks. Successful Vercel deployment and remote database migration require a reachable Supabase connection and configured Vercel variables; a GitHub push alone does not complete those steps.
 

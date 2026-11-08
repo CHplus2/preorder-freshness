@@ -7,7 +7,7 @@ import {apiError,readApiError} from '../utils/apiError';
 import {invalidResponse} from '../utils/apiResponse';
 import './DeferredOrderPayment.css';
 
-const methods=['paypal','manual','cod','escrow'];
+const methods=['paypal','manual','cod'];
 export default function DeferredOrderPayment({order,onSaved}){
  const {isSessionCurrent}=useAuth();
  const navigate=useNavigate();
@@ -36,7 +36,7 @@ export default function DeferredOrderPayment({order,onSaved}){
    if(!mounted.current || !isSessionCurrent())return;
    if(data?.order_id!==order.id || data.payment_method!==value || !['unpaid','paid','refunded'].includes(data.payment_status))throw invalidResponse();
    onSaved?.();
-   if(['paypal','escrow'].includes(value) && window.location.pathname==='/orders')navigate(`/payment/${value}?order=${order.id}`);
+   if(value==='paypal' && window.location.pathname==='/orders')navigate(`/payment/${value}?order=${order.id}`);
   }catch(e){if(mounted.current && isSessionCurrent()){setUncertain(!e.response || e.response.status>=500 || e.code==='INVALID_RESPONSE');setError(apiError(e));}}
   finally{operation.current=false;if(mounted.current && isSessionCurrent())setBusy(false);}
  }
@@ -44,7 +44,7 @@ export default function DeferredOrderPayment({order,onSaved}){
   {waiting?<p>The kitchen must confirm your preparation plan first. No payment has been taken.</p>:<>
    <p>Your request is saved. Choose payment for this order; this does not create another order or take payment.</p>
    {!data && <button type="button" disabled={busy} onClick={load}>{busy?'Loading payment choices…':'Choose payment'}</button>}
-   {data && (data.reason?<p role="status">{data.reason}</p>:data.options.length?<form onSubmit={save}><fieldset disabled={busy || uncertain}><legend>Payment method for order #{order.id}</legend><div className="deferred-payment-options">{data.options.map(o=><label key={o.id}><input type="radio" name={`order-payment-${order.id}`} value={o.id} checked={value===o.id} onChange={()=>{setValue(o.id);attempt.current=null;}}/><span><strong>{o.label}</strong><small>{o.note}</small></span></label>)}</div></fieldset><button type="submit" disabled={busy || !value}>{busy?'Saving payment choice…':uncertain?'Retry same payment choice':value==='paypal'?'Continue to PayPal':value==='escrow'?'Continue to escrow':'Confirm payment method'}</button></form>:<p>No payment service is available. Contact the kitchen to arrange payment.</p>)}
+   {data && (data.reason?<p role="status">{data.reason}</p>:data.options.length?<form onSubmit={save}><fieldset disabled={busy || uncertain}><legend>Payment method for order #{order.id}</legend><div className="deferred-payment-options">{data.options.map(o=><label key={o.id}><input type="radio" name={`order-payment-${order.id}`} value={o.id} checked={value===o.id} onChange={()=>{setValue(o.id);attempt.current=null;}}/><span><strong>{o.label}</strong><small>{o.note}</small></span></label>)}</div></fieldset><button type="submit" disabled={busy || !value}>{busy?'Saving payment choice…':uncertain?'Retry same payment choice':value==='paypal'?'Continue to PayPal':'Confirm payment method'}</button></form>:<p>No payment service is available. Contact the kitchen to arrange payment.</p>)}
   </>}
   {error && <p role="alert">{error} Refresh order status to check the saved method before starting again.</p>}
  </section>;

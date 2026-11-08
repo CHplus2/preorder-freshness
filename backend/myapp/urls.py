@@ -6,7 +6,6 @@ from .views.packaging import packaging_items, packaging_item, packaging_movement
 from .views.handover import order_handover
 from .views.basket_guide import basket_guide, add_basket_plan
 from .views.order_progress import confirm_order_progress
-from .views.escrow import escrow_config, escrow_payment
 from .views.menu_photos import upload_menu_photo, menu_photo
 from .views.products import product_variants
 from .views.courier import courier_tracking
@@ -95,8 +94,6 @@ urlpatterns = [
     path('help/shop/', shop_suggestions),
     path('help/cart/', shop_cart),
     path('payments/paypal/config/', paypal_config),
-    path('payments/escrow/config/', escrow_config),
-    path('orders/<int:pk>/escrow/', escrow_payment),
     path('payments/paypal/webhook/', paypal_notification),
     path('admin/orders/<int:pk>/paypal/check/', paypal_owner_check),
     path('orders/<int:pk>/paypal/', paypal_payment),

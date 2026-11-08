@@ -55,7 +55,7 @@ def payments(request, pk):
         elif pending:
             raise serializers.ValidationError('Resolve the pending refund before recording another attempt.')
         if order.payment_method == 'escrow':
-            raise serializers.ValidationError('Escrow receipts and refunds require server-verified chain state. Use the escrow payment page to check the order.')
+            raise serializers.ValidationError('This earlier escrow payment is read-only. Escrow actions are no longer supported; existing payment records are retained.')
         if order.payment_method == 'paypal' and kind == 'receipt':
             raise serializers.ValidationError('PayPal receipts require server-verified capture. Use Check PayPal status; do not mark it paid manually.')
         if order.payment_method == 'wallet' and kind == 'receipt':

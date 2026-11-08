@@ -118,11 +118,8 @@ def reschedule_order(request, pk):
     if order.delivery_method == 'pickup' and minutes:
         raise serializers.ValidationError('Self-collection uses one agreed time.')
     store.arrival_window_minutes = minutes
-    from ..services.escrow import locked_delivery, EscrowError
-    try:
-        locked_delivery(order,target, minutes)
-    except EscrowError as error:
-        raise serializers.ValidationError(error.message)
+    from ..services.legacy_payments import guard_legacy_payment_delivery
+    guard_legacy_payment_delivery(order, target, minutes)
     if target == order.delivery_at and minutes == duration(order):
         raise serializers.ValidationError('Choose a different delivery time.')
     if previous and previous['version'] != order.updated_at.isoformat():

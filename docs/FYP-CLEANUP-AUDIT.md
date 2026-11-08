@@ -1,5 +1,7 @@
 # FYP cleanup and forecasting preservation — batch 1
 
+Latest status: [batch 2](FYP-CLEANUP-BATCH2.md) retires the unused escrow flow while preserving historical payment records and all forecasting code. The observations below record batch 1, before those removals.
+
 Reviewed 8 November 2026 on `main`, starting at `8594d97020b0421eaaa403b6f44c68c3f4965e1f`. This batch changes presentation materials and documentation. **No source files or branches have been deleted, and no forecasting behaviour has been changed.**
 
 ## Important forecasting assets are protected

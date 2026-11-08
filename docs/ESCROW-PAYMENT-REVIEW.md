@@ -1,5 +1,7 @@
 # Escrow payment review — 23 October 2026
 
+> Historical implementation record. Escrow was retired from `main` on 8 November 2026; its checkout, pages, APIs, commands and contract CI job are no longer available there. Earlier payment records and protective checks are retained. See [the current cleanup record](FYP-CLEANUP-BATCH2.md). This note does not instruct changes to the frozen integration branch.
+
 The escrow contract supports a working test-chain lifecycle, with wallet-signed
 funding, dispatch, receipt confirmation, dispute, refund and separate withdrawal.
 It remains separate from store checkout. No backend endpoint binds a deal to an

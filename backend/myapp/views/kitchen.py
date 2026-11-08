@@ -257,11 +257,8 @@ def review_order_plan(request, pk):
             raise serializers.ValidationError('Choose an agreed delivery time or find the next available time below.')
         plan = schedule_order(scheduled, target, store, now=now, exclude_order_id=order.pk,
             notice_from=order.created_at if target == order.delivery_at else now)
-    from ..services.escrow import locked_delivery, EscrowError
-    try:
-        locked_delivery(order,target, minutes)
-    except EscrowError as error:
-        raise serializers.ValidationError(error.message)
+    from ..services.legacy_payments import guard_legacy_payment_delivery
+    guard_legacy_payment_delivery(order, target, minutes)
     delivery_changed = target != order.delivery_at or minutes != duration(order)
     if delivery_changed and not reason:
         raise serializers.ValidationError('Record the delivery arrangement agreed with the customer before reviewing a new time.')

@@ -31,7 +31,7 @@ The original FreshCast trained model is saved in the GitHub Release [freshcast-m
 
 For restoration and inference paths, see [the model guide](backend/predictive_ai/README.md). Django loads the provisioned model file on the server for inference. Deployment configuration determines whether that bundle is present in a Vercel function; this documentation update does not verify the current live model deployment.
 
-Some older FreshCast and payment-lab routes remain in `main` during the requested cleanup. Their source dependencies are being reviewed before removal; this README update does not claim they have already been removed. See [the cleanup and model-preservation audit](docs/FYP-CLEANUP-AUDIT.md).
+The retired escrow payment lab, checkout option and API routes have been removed from `main`. Earlier payment records remain readable, with safeguards against manual changes to test-network payments. Other legacy/demo functions are reviewed separately. See [the cleanup and model-preservation audit](docs/FYP-CLEANUP-AUDIT.md).
 
 ## Local development on Windows
 

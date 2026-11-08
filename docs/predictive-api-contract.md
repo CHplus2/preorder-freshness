@@ -3,6 +3,18 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Escrow retirement — 8 November 2026
+
+`main` no longer offers or accepts escrow at checkout or deferred payment selection.
+`/api/payments/escrow/config/` and `/api/orders/<id>/escrow/` are removed (404).
+The two escrow pages and recovery commands are removed. Earlier order/payment
+records and sales exclusions remain; their test-network receipts/refunds cannot
+be recorded manually, and fixed historical invoice deadlines remain protected.
+No schema, forecasting endpoint, dashboard, model file or integration-branch
+change is part of this retirement. Earlier dated escrow notes below describe
+historical implementation, not currently available APIs. See
+[batch 2 cleanup record](FYP-CLEANUP-BATCH2.md).
+
 ## Account navigation and order actions follow-up — 6 November 2026
 
 Presentation and in-memory navigation changes only; no endpoint, schema, model,
@@ -1036,8 +1048,8 @@ open/close hour, buffer minutes, pickup location/instructions and declared area.
 computed server-side. Replanning/rescheduling retains saved fulfilment terms.
 Collection's user-facing completed state is **Collected**, stored as `delivered`
 for existing analytics; pickup cannot transition to `shipped`. Order-linked
-escrow is delivery-only because its contract requires dispatch. Other enabled
-payment paths support pickup. No forecast/model API or model artifact changes.
+escrow was delivery-only in the earlier implementation; it is now retired.
+Other enabled payment paths support pickup. No forecast/model API or model artifact changes.
 See [fulfilment workflow and release notes](HOME-FOOD-FULFILMENT.md).
 
 Product detail/create/update and public `/api/menu/` expose `delivery_dates`
@@ -1659,13 +1671,12 @@ day after `searched_through`; it never treats a service failure as no availabili
 See [delivery-time choices](DELIVERY-TIME-PICKER.md) for verified customer behavior.
 
 
-## Order-bound escrow payment handoff
+## Earlier order-bound escrow payment handoff (retired)
 
-Sepolia escrow checkout is now available when explicitly configured.
-`GET /api/payments/escrow/config/` exposes availability; authenticated
-`GET/POST /api/orders/<id>/escrow/` creates fixed invoices and verifies chain
-evidence before recording payment events. No forecast or browser transaction
-claim alone becomes a paid order. See [implemented contract and setup](ESCROW-ORDER-INTEGRATION.md).
+The optional Sepolia checkout described by the October handoff was removed from
+`main` on 8 November 2026. Its config/order API paths return 404 and no new escrow
+payment can be selected. Existing evidence remains read-only. The
+[October implementation note](ESCROW-ORDER-INTEGRATION.md) is historical.
 
 
 ### Optional selling units and accepted contents (home-food batch 3)
