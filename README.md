@@ -11,7 +11,9 @@ A web application for **Wrap & Bowl Kuch**, a home-based food business in Kuchin
 - **Preorders:** offered dates, morning delivery/collection times and owner-managed delivery areas with their own fees. The client’s delivery window is 7:30–11:00 am; saved business settings determine what is offered.
 - **Payments:** configured bank/QR evidence uploads for manual review. Delivery can also use cash; collection requires QR payment. A receipt upload is not automatic bank confirmation.
 - **Ingredients and packaging:** received stock, documented shelf-life/storage records, earlier limits and holds. Successful order placement checks and deducts eligible ingredients and assigned packaging together.
-- **Owner operations:** accepted order records, payment review, food-received confirmation, daily summaries, printable slips, sales and cost/contribution information.
+- **Owner operations:** accepted order records, payment review, food-received confirmation, daily summaries, one-action printing of all orders in the selected daily view, individual slips, sales and cost/contribution information.
+
+Customers can cancel their own pending orders from My orders, then open an order-specific WhatsApp draft to the configured kitchen number. Payment/refund and unused-stock confirmation remain separate owner actions. Time changes show the recorded limit of reserved ingredients. See [the 8 November client updates](docs/CLIENT-ORDER-UPDATES-20261108.md).
 
 The normal client workflow does not require cooking-planner approval or a courier API. An order’s accepted names, prices and requirements are retained so later menu edits do not rewrite its history. Recorded dates support stock planning; they do not detect contamination or guarantee food safety.
 
@@ -62,6 +64,6 @@ Production migrations are an explicit release step. The build checks database re
 
 ## Current presentation materials
 
-The [presentation package](docs/fyp-presentation-20261108/README.md) contains a provisional ten-minute deck with the client-photo demo embedded near the end, speaker notes/script, a PDF, screenshot fallback and separate design slides for questions. The official speaking limit remains unconfirmed. The editing guide lists exact poster font settings and explains how to insert genuine evaluation results before final submission.
+The [presentation package](docs/fyp-presentation-20261108/README.md) contains a provisional ten-minute deck with the client-photo demo embedded near the end, speaker notes/script, a PDF, screenshot fallback and separate design slides for questions. These presentation materials predate the latest client-order changes; the next requested batch refreshes both demo voices and slides for review. The report revision is on hold until the author reuploads the paper. The official speaking limit remains unconfirmed. The editing guide lists exact poster font settings and explains how to insert genuine evaluation results before final submission.
 
 Generated reports, posters and presentation downloads are under `docs/` for access from GitHub; `.vercelignore` excludes them from application uploads. Their presence in Git is separate from the function’s runtime storage. Published downloads are preserved during cleanup.

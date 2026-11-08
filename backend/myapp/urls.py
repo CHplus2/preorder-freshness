@@ -1,6 +1,7 @@
+from .views.customer_cancellation import customer_cancel_order
 from .views.stock_readiness import stock_readiness
 from .views.simple_delivery import delivery_time
-from .views.client_reports import daily_orders, period_sales, period_sales_csv, order_slip
+from .views.client_reports import daily_orders, period_sales, period_sales_csv, order_slip, daily_order_slips
 from .views.receipt import receipts, cancel_order
 from .views.packaging import packaging_items, packaging_item, packaging_movements, packaging_menus, menu_packaging
 from .views.handover import order_handover
@@ -60,6 +61,7 @@ urlpatterns = [
     path('account/passkeys/reauth/verify/', passkeys.reauth_verify),
     path('account/passkeys/<int:pk>/', passkeys.remove_key),
     path('admin/reports/daily-orders/', daily_orders),
+    path('admin/reports/daily-orders/slips/', daily_order_slips),
     path('admin/reports/period-sales/', period_sales),
     path('admin/reports/period-sales/export/', period_sales_csv),
     path('admin/orders/<int:pk>/slip/', order_slip),
@@ -67,6 +69,7 @@ urlpatterns = [
     path('guest-session/', guest.start),
     path('checkout-proofs/', checkout_proofs.upload),
     path('checkout-proofs/<uuid:pk>/', checkout_proofs.view),
+    path('orders/<int:pk>/cancel/', customer_cancel_order),
     path('orders/<int:pk>/delivery-time/', delivery_time),
     path('admin/orders/receipts/', receipts),
     path('admin/orders/<int:pk>/cancel/', cancel_order),

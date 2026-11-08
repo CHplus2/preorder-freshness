@@ -68,3 +68,19 @@ export function printableSlip(data, id) {
   || data.address_lines.some(value => typeof value !== 'string') || !Number.isFinite(Date.parse(data.printed_at))) throw invalidResponse();
  return data;
 }
+
+
+export const dailySlipsUrl=(day,receipt='all')=>`/admin/orders/print?${new URLSearchParams({date:day,receipt})}`;
+export function dailyPrintableSlips(data,day,receipt){
+ if(!data||data.date!==day||!date(data.date)||data.receipt!==receipt||!['all','received','not_received'].includes(receipt)
+  ||!count(data.count)||data.count>2000||!Array.isArray(data.orders)||data.orders.length!==data.count
+  ||!Number.isFinite(Date.parse(data.printed_at)))throw invalidResponse();
+ const ids=new Set();
+ for(const order of data.orders){
+  printableSlip(order,order?.id);
+  if(ids.has(order.id)||order.receipt_status==='cancelled'||!order.delivery_at||malaysiaDay(new Date(order.delivery_at))!==day
+   ||receipt!=='all'&&order.receipt_status!==receipt)throw invalidResponse();
+  ids.add(order.id);
+ }
+ return data;
+}

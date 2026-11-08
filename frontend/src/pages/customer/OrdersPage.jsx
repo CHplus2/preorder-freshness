@@ -1,3 +1,5 @@
+import CustomerOrderCancellation from '../../components/CustomerOrderCancellation';
+import {kitchenOrderContact,orderReference} from '../../utils/kitchenOrderContact';
 import EarlierPaymentNote from '../../components/EarlierPaymentNote';
 import {earlierPayment} from '../../utils/operationalOrders';
 import {useAuth} from '../../contexts/AuthContext';
@@ -29,7 +31,9 @@ import "./CustomerExperience.css";
 export default function OrdersPage() {
   const location = useLocation();
   const {isGuest}=useAuth()||{};
-  const simple=useStorefront()?.store?.ordering_mode!=='scheduled';
+  const {store}=useStorefront()||{};
+ const simple=store?.ordering_mode!=='scheduled';
+ const [cancellation,setCancellation]=useState(null);
   const orderEmail=useOrderEmail();
   const { formatOrderNumber, setAlert } = useUI();
   const { orders, fetchOrders, ordersLoading, ordersError, orderPage, chooseOrderView, loadMoreOrders, ordersMoreLoading=false, ordersMoreError='' } = useOrder();
@@ -58,8 +62,8 @@ export default function OrdersPage() {
     <main className="orders-container customer-orders">
       <div className="customer-orders-heading customer-page-heading"><div><span className="dk-eyebrow">YOUR PREORDERS</span><h1 className="orders-title">My orders</h1><p>Collection, delivery progress and payments, in one place.</p></div><button type="button" disabled={ordersLoading} onClick={fetchOrders}>{ordersLoading?"Refreshing…":"Refresh order status"}</button></div>
 
-      {ordersError && <p role="alert">{ordersError} <button disabled={ordersLoading} onClick={fetchOrders}>Retry loading orders</button></p>}
-      {ordersLoading && <p role="status">Loading your orders…</p>}
+      {cancellation&&<div className="customer-order-success" role="status"><p>Order #{orderReference(cancellation.id)} is cancelled. {cancellation.contact.whatsapp?'Open WhatsApp to review and send the cancellation message.':'Contact the kitchen about any payment or arrangements.'}</p>{cancellation.contact.whatsapp?<a href={cancellation.contact.whatsapp} target="_blank" rel="noopener noreferrer">Open cancellation message in WhatsApp</a>:<Link to={cancellation.contact.fallback}>Contact the kitchen</Link>}<button type="button" onClick={()=>setCancellation(null)}>Dismiss</button></div>}
+      {(ordersError||ordersLoading)&&<div className="customer-orders-status">{ordersError&&<div className="customer-orders-load-error" role="alert"><p>{ordersError}</p><button disabled={ordersLoading} onClick={fetchOrders}>Retry loading orders</button></div>}{ordersLoading&&<p role="status">Loading your orders…</p>}</div>}
       {!ordersError && (counts.all>0 || orders.length>0) && <><div className="customer-order-filters" role="group" aria-label="Show orders">{[['current','Current'],['history','History'],['all','All orders']].map(([key,label])=><button key={key} type="button" aria-pressed={selected===key} disabled={ordersLoading || ordersMoreLoading} onClick={()=>{if(orderPage)chooseOrderView(key);else{setFilter(key);setLimit(10);}}}>{label}<span>{counts[key]}</span></button>)}</div><p className="customer-order-count" role="status">{ordersLoading?'Loading this order view…':visible.length?`Showing ${displayed.length} of ${orderPage?.count ?? visible.length} ${selected==='all'?'orders':selected==='current'?'current orders':'past orders'}.`:selected==='current'?'No current orders. Completed and cancelled orders are in History.':'No orders in this view.'}</p></>}
       {ordersLoading || ordersError ? null : visible.length > 0 ? (
         displayed.map((order) => (
@@ -110,7 +114,7 @@ export default function OrdersPage() {
             </div></details>
             {!isPickup(order) && /^https:\/\//.test(order.fulfilment_snapshot?.courier?.url || '') && <a className="customer-track-link" href={order.fulfilment_snapshot.courier.url} target="_blank" rel="noopener noreferrer">Track with {order.fulfilment_snapshot.courier.carrier || 'courier'}<ChevronRight size={16} aria-hidden="true"/></a>}
             {simple?<SimpleDeliveryChange key={order.id+order.updated_at} order={order} onSaved={fetchOrders}/>:<RescheduleOrder order={order} onSaved={fetchOrders}/>}
-            <Link className="customer-order-help" to={`/contact?order=${order.id}`}>Ask the kitchen about this order<ChevronRight size={16} aria-hidden="true"/></Link>
+            <div className="customer-order-actions">{simple&&<CustomerOrderCancellation order={order} onSaved={fetchOrders} onCancelled={setCancellation}/>}{kitchenOrderContact(store,order).whatsapp?<a className="customer-order-help" href={kitchenOrderContact(store,order).whatsapp} target="_blank" rel="noopener noreferrer">Ask the kitchen on WhatsApp<ChevronRight size={16} aria-hidden="true"/></a>:<Link className="customer-order-help" to={`/contact?order=${order.id}`}>Ask the kitchen about this order<ChevronRight size={16} aria-hidden="true"/></Link>}</div>
 
           </article>
         ))

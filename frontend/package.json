@@ -24,7 +24,7 @@
     "test:ordering": "node src/utils/simpleOrdering.test.js && node src/components/SimpleOrdering.test.js",
     "test:guest": "node src/utils/contactPhone.test.js && node src/components/GuestCheckout.test.js && node src/utils/deliveryAreaEditor.test.js",
     "test:reports": "node src/components/ClientReports.test.js && node src/utils/operationalOrders.test.js && node src/components/OrderPaymentsUx.test.js",
-    "test:accounts": "node src/components/CustomerPasskeys.test.js && node src/components/SettingsAccountUx.test.js && node src/components/DialogsUx.test.js && node src/utils/bodyScrollLock.test.js",
+    "test:accounts": "node src/components/CustomerPasskeys.test.js && node src/components/SettingsAccountUx.test.js && node src/components/DialogsUx.test.js && node src/utils/bodyScrollLock.test.js && node src/utils/kitchenOrderContact.test.js",
     "test:packaging": "node src/utils/packaging.test.js",
     "test:stock": "node src/utils/stockReadiness.test.js && node src/utils/inventoryAttention.test.js && node src/components/StockReadiness.test.js"
   },

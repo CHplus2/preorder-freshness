@@ -96,19 +96,35 @@ def deduct_at_placement(order, actor):
     order.save(update_fields=['inventory_deducted', 'updated_at'])
 
 
+def accepted_stock_dates(order):
+    """Dates of the actual reserved lots, never an estimate based on new stock."""
+    rows = IngredientConsumption.objects.filter(order_item__order=order,
+        returned_at__isnull=True).select_related('inventory_item')
+    deadlines, held = [], False
+    for row in rows:
+        deadlines.append(min(row.recorded_expiry, row.inventory_item.expiry_date))
+        held = held or row.inventory_item.quarantined
+    return min(deadlines) if deadlines else None, held
+
+
 def check_accepted_stock(order, delivery_at):
-    """A changed date cannot extend the deadline of already allocated lots."""
-    day = timezone.localtime(delivery_at).date()
-    for row in IngredientConsumption.objects.filter(order_item__order=order, returned_at__isnull=True).select_related('inventory_item'):
-        if row.inventory_item.quarantined or day > min(row.recorded_expiry, row.inventory_item.expiry_date):
-            raise ValidationError('Allocated ingredients do not cover that delivery date. Contact the kitchen to review stock before changing the time.')
+    """A changed date cannot extend the deadline of already reserved lots."""
+    latest, held = accepted_stock_dates(order)
+    if held:
+        raise ValidationError('Some ingredients reserved for this order are now on hold. '
+            'Message the kitchen to review the stock before changing the date.')
+    if latest and timezone.localtime(delivery_at).date() > latest:
+        raise ValidationError(f'The ingredients reserved for this order are recorded only through {latest:%d %b %Y}. '
+            'Choose this date or earlier, or message the kitchen about a later date.')
 
 
 def return_unused_stock(order, actor):
     """Explicit owner assertion only; never infer that cancelled food was unused."""
+    if not actor.is_staff:
+        raise ValidationError('Only the kitchen can confirm unused stock for return.')
     if order.stock_returned_at:
         return
-    if order.ordering_mode != 'simple' or order.status != 'pending' or not order.inventory_deducted:
+    if order.ordering_mode != 'simple' or order.status not in ('pending', 'cancelled') or not order.inventory_deducted:
         raise ValidationError('Only an unreceived order with placement allocations can return stock here. Record other stock corrections in Inventory.')
     rows = list(IngredientConsumption.objects.filter(order_item__order=order, allocation_stage='placement',
         returned_at__isnull=True).order_by('inventory_item__raw_material_id', 'recorded_expiry', 'inventory_item_id', 'pk'))
@@ -129,7 +145,7 @@ def return_unused_stock(order, actor):
         InventoryLog.objects.create(inventory_item=batch, change=row.quantity,
             reason='Owner confirmed unused stock returned after cancellation', reference=f'Order #{order.pk}', admin=actor)
     from .packaging import release_packaging
-    release_packaging(order, actor)
+    release_packaging(order, actor, confirmed_unused=True)
     order.stock_returned_at = now
     # inventory_deducted stays true: it is the historical deduction fact. The
     # return timestamp/ledger distinguishes reversal without allowing rededuction.

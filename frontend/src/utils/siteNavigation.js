@@ -1,7 +1,7 @@
 export const publicNavigation=[['/','Home'],['/story','Our story'],['/menu','Menu'],['/how-it-works','How it works'],['/contact','Contact']];
 export const kitchenNavigation=[['/admin/planner','Planner'],['/admin/products','Menus'],['/admin/inventory','Inventory'],['/admin/packaging','Packaging'],['/admin/orders','Orders'],['/admin/reports','Sales'],['/admin/ai/decisions','FreshCast'],['/admin/settings','Settings'],['/admin/customers','Customers'],['/','View storefront']];
 export function isCurrentSection(path,url){
- if(url==='/admin/orders')return path===url || /^\/admin\/orders\/\d+\/print$/.test(path);
+ if(url==='/admin/orders')return path===url || path==='/admin/orders/print' || /^\/admin\/orders\/\d+\/print$/.test(path);
  if(url==='/menu')return path==='/menu' || /^\/products\/[^/]+$/.test(path);
  if(url==='/admin/ai/decisions')return /^\/admin\/ai\/(forecast|inventory|decisions)$/.test(path);
  return path===url;
@@ -24,6 +24,7 @@ const pages={
  '/admin/products':['Menus','Manage menu availability, recipes and cooking steps.'],
  '/admin/inventory':['Inventory','Review ingredient batches, stock levels and expiry dates.'],
  '/admin/packaging':['Packaging','Track packaging stock and the pieces required for each menu.'],
+ '/admin/orders/print':['Print daily orders','Preview all matching order slips for one date and receipt filter.'],
  '/admin/orders':['Orders','Manage kitchen requests, preparation progress and delivery status.'],
  '/admin/reports':['Sales analytics','Review recorded sales, costs and forecast evidence.'],
  '/admin/customers':['Customers','Manage customer accounts and store access.'],

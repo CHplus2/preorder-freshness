@@ -76,7 +76,8 @@ def cancel_order(request, pk):
     order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
     if generated_sales_summary(order):
         raise ValidationError('Generated sales summaries cannot be cancelled as customer requests.')
-    if order.status == 'cancelled':
+    already_cancelled = order.status == 'cancelled'
+    if already_cancelled and (not v['return_unused_stock'] or order.stock_returned_at):
         return Response(OrderSerializer(order, context={'request': request}).data)
     if order.updated_at != v['version']:
         raise Conflict('This order changed. Refresh before cancelling it.')
@@ -89,6 +90,6 @@ def cancel_order(request, pk):
     order.status = 'cancelled'
     order.save(update_fields=['status', 'stock_returned_at', 'updated_at'])
     OrderAmendment.objects.create(order=order, actor=request.user, before=before,
-        after=dict(status='cancelled', change_type='cancellation', reason=v['reason'],
+        after=dict(status='cancelled', change_type='stock_return_after_cancellation' if already_cancelled else 'cancellation', reason=v['reason'],
             unused_stock_returned=v['return_unused_stock']))
     return Response(OrderSerializer(order, context={'request': request}).data)

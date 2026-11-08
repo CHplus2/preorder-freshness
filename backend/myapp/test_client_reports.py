@@ -280,3 +280,41 @@ class ClientReportTests(TestCase):
         self.assertIn('no-store', response['Cache-Control'])
         self.assertEqual(Order.objects.values().get(pk=order.pk), before)
         self.assertEqual(PaymentEvent.objects.count(), 0)
+
+    def test_batch_print_includes_later_pages_and_preserves_receipt_scope(self):
+        pending=[self.order() for _ in range(51)]
+        received=self.order(status='delivered',payment_status='paid')
+        cancelled=self.order(status='cancelled')
+        generated=self.order(status='delivered',payment_status='paid',payment_instructions={'freshcast_synthetic_history':{'version':'1'}})
+        self.order(delivery_at=None)
+        self.assertEqual(len(self.daily().json()['orders']),50)
+        url='/api/admin/reports/daily-orders/slips/'
+        result=self.client.get(url,dict(date='2026-11-03',receipt='all'))
+        self.assertEqual(result.status_code,200,result.data)
+        data=result.json();self.assertEqual(data['count'],52);self.assertEqual(len(data['orders']),52)
+        ids=[row['id'] for row in data['orders']]
+        self.assertEqual(ids,[o.pk for o in pending]+[received.pk]);self.assertNotIn(cancelled.pk,ids);self.assertNotIn(generated.pk,ids)
+        self.assertIn('no-store',result['Cache-Control'])
+        first=data['orders'][0];self.assertEqual(first['phone'],'+60123456789');self.assertEqual(first['address_lines'],['Saved street'])
+        self.assertEqual(first['items'][0]['name'],'Accepted menu');self.assertEqual(first['total'],'29.50')
+        for receipt,count in [('received',1),('not_received',51)]:
+            result=self.client.get(url,dict(date='2026-11-03',receipt=receipt))
+            self.assertEqual(result.data['count'],count)
+            self.assertTrue(all(row['receipt_status']==receipt for row in result.data['orders']))
+
+    def test_batch_print_is_private_read_only_and_rejects_partial_overlimit_sets(self):
+        from unittest.mock import patch
+        self.order();self.order()
+        url='/api/admin/reports/daily-orders/slips/'
+        for actor in [None,self.buyer]:
+            self.client.force_authenticate(actor)
+            response=self.client.get(url,dict(date='2026-11-03'))
+            self.assertIn(response.status_code,[401,403]);self.assertNotIn(b'Accepted buyer',response.content)
+        self.client.force_authenticate(self.staff)
+        self.assertEqual(self.client.post(url,{}).status_code,405)
+        self.assertEqual(self.client.get(url,dict(date='bad')).status_code,400)
+        self.assertEqual(self.client.get(url,dict(date='2026-11-03',receipt='paid')).status_code,400)
+        with patch('myapp.views.client_reports.MAX_PRINT_ORDERS',1):
+            response=self.client.get(url,dict(date='2026-11-03'))
+            self.assertEqual(response.status_code,400);self.assertNotIn('orders',response.data)
+        empty=self.client.get(url,dict(date='2026-11-05')).json();self.assertEqual(empty['count'],0);self.assertEqual(empty['orders'],[])

@@ -50,9 +50,10 @@ def allocate_packaging(order, actor):
             reason=f'Allocated to order #{order.pk}', actor=actor)
 
 
-def release_packaging(order, actor):
+def release_packaging(order, actor, *, confirmed_unused=False):
     # Only unopened/not-yet-prepared packaging is automatically returned.
-    if order.status not in ('pending', 'processing'):
+    if order.status not in ('pending', 'processing') and not (confirmed_unused
+            and order.status == 'cancelled' and order.ordering_mode == 'simple' and actor.is_staff):
         return
     rows = list(OrderPackaging.objects.filter(order_item__order=order, allocated_at__isnull=False,
         released_at__isnull=True).order_by('packaging_item_id', 'id'))
@@ -66,7 +67,8 @@ def release_packaging(order, actor):
         row.save(update_fields=['released_at'])
         PackagingMovement.objects.create(packaging_item=supply, order_packaging=row,
             kind='release', change=row.quantity, balance_after=supply.quantity,
-            reason=f'Order #{order.pk} cancelled before food was ready', actor=actor)
+            reason=('Owner confirmed unused packaging after cancellation' if confirmed_unused else
+                f'Order #{order.pk} cancelled before food was ready'), actor=actor)
 
 
 def assert_available(needed, stock):

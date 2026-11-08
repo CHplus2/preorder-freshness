@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {kitchenOrderContact} from './kitchenOrderContact.js';
+const order={id:18,delivery_at:'2030-01-08T02:00:00Z',delivery_method:'standard',items:[{quantity:2,product_name:'Chicken & salad'}]};
+const contact=kitchenOrderContact({whatsapp_number:'601112345678'},order);
+const url=new URL(contact.whatsapp);assert.equal(url.origin,'https://wa.me');assert.equal(url.pathname,'/601112345678');
+assert.match(url.searchParams.get('text'),/#ORD-00018/);assert.match(url.searchParams.get('text'),/2 × Chicken & salad/);assert.match(contact.text,/My question:/);
+assert.doesNotMatch(contact.text,/cancelled/);
+const cancelled=kitchenOrderContact({whatsapp_number:'601112345678'},order,{cancelled:true,reason:'Changed plans & timing'});
+assert.match(new URL(cancelled.whatsapp).searchParams.get('text'),/Changed plans & timing/);assert.match(cancelled.text,/refund/);
+assert.equal(kitchenOrderContact({whatsapp_number:'601198765432'},order).whatsapp.startsWith('https://wa.me/601198765432?'),true);
+for(const phone of ['', 'https://wa.me/message/FELLMX5ORZODE1','javascript:alert(1)','011'])assert.equal(kitchenOrderContact({whatsapp_number:phone},order).whatsapp,null);
+assert.equal(kitchenOrderContact({},order).fallback,'/contact?order=18');
+console.log('Order contact: configured number, safe encoding, exact order/meal/date context and contact-page fallback passed.');

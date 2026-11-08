@@ -13,3 +13,8 @@
  .order-slip-paper thead{display:table-header-group}.order-slip-paper :is(th,td){font-size:10pt;padding:8px}
  .order-slip-paper h1{font-size:20pt}.order-slip-paper h2{font-size:13pt}
 }
+
+.daily-order-slips{display:grid;gap:28px}.order-slip-paper .order-slip-batch-number{font-size:12px;color:#52644e}
+@media print{.daily-order-slips{display:block}.daily-slips-page .order-slip-paper{break-before:page;page-break-before:always}.daily-slips-page .order-slip-paper:first-child{break-before:auto;page-break-before:auto}.daily-slips-page .order-slip-batch-number{font-size:9pt}}
+
+@media print{body:has(.order-slip-page) .business-footer{display:none!important}}

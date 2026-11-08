@@ -3,7 +3,7 @@ import {createElement as h} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {MemoryRouter} from 'react-router-dom';
 import {createServer} from 'vite';
-import {malaysiaDay,dailyReport,periodReport,printableSlip,slipUrl} from '../utils/clientReports.js';
+import {malaysiaDay,dailyReport,periodReport,printableSlip,slipUrl,dailySlipsUrl,dailyPrintableSlips} from '../utils/clientReports.js';
 
 const order={id:12,name:'Buyer <script>alert(1)</script>',phone:'+60123456789',kitchen:'Kitchen & home',
  receipt_status:'not_received',payment_status:'unpaid',payment_method:'manual',delivery_method:'standard',
@@ -22,6 +22,11 @@ assert.throws(()=>dailyReport({...daily,undated_open_count:-1},daily.date,1),{co
 assert.equal(dailyReport(daily,'2026-11-03',1),daily);
 assert.equal(periodReport(sales,sales.start,sales.end),sales);
 assert.equal(printableSlip(order,12),order);
+const printSet={date:daily.date,receipt:'all',count:1,printed_at:order.printed_at,orders:[order]};
+assert.equal(dailyPrintableSlips(printSet,daily.date,'all'),printSet);
+assert.equal(dailySlipsUrl(daily.date,'received'),'/admin/orders/print?date=2026-11-03&receipt=received');
+for(const bad of [{...printSet,count:2},{...printSet,orders:[order,order],count:2},{...printSet,orders:[{...order,receipt_status:'cancelled'}]},{...printSet,orders:[{...order,delivery_at:'2026-11-04T02:00:00Z'}]}])assert.throws(()=>dailyPrintableSlips(bad,daily.date,'all'),{code:'INVALID_RESPONSE'});
+
 const scoped={...daily,receipt:'not_received',day_count:2,day_received_count:1,day_not_received_count:1};
 assert.equal(dailyReport(scoped,daily.date,1,'not_received'),scoped);
 for(const bad of [{...scoped,receipt:'received'},{...scoped,day_count:3}])assert.throws(()=>dailyReport(bad,daily.date,1,'not_received'),{code:'INVALID_RESPONSE'});
@@ -58,6 +63,8 @@ try{
  const {StoreContext}=await server.ssrLoadModule('/src/contexts/StorefrontContext.js');
  const {OrderContext}=await server.ssrLoadModule('/src/contexts/OrderContext.js');
  const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
+ const {DailySlips}=await server.ssrLoadModule('/src/pages/admin/DailyOrderPrintPage.jsx');
+ const batchMarkup=renderToStaticMarkup(h(DailySlips,{data:printSet}));assert.match(batchMarkup,/Order 1 of 1/);assert.match(batchMarkup,/Saved &lt;b&gt;menu&lt;\/b&gt;/);
  const {default:SimpleOrders}=await server.ssrLoadModule('/src/pages/admin/SimpleOrdersPage.jsx');
  const queueOrder={...order,total_amount:'25.00',shipping_fee:'4.50',status:'pending',user:{username:'opaque-user'},fulfilment_snapshot:{customer:{name:'Saved customer name',phone:'+60123456789'}},items:[{id:1,product_name:'Saved meal',quantity:3,selling_details:{}}]};
  const queue=entry=>renderToStaticMarkup(h(MemoryRouter,{initialEntries:[entry]},h(StoreContext.Provider,{value:{store:{ordering_mode:'simple'}}},h(OrderContext.Provider,{value:{adminOrders:[queueOrder],fetchAdminOrders:()=>{},adminOrdersLoading:false}},h(UIContext.Provider,{value:{formatOrderNumber:id=>'ORD-'+id,setAlert:()=>{}}},h(SimpleOrders))))));

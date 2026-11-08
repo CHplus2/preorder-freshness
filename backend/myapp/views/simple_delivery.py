@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from ..models import Order, Storefront, OrderAmendment
 from ..serializers import OrderSerializer
-from ..services.simple_ordering import validate_delivery, check_accepted_stock
+from ..services.simple_ordering import validate_delivery, check_accepted_stock, accepted_stock_dates
 from ..services.commitments import scheduled_item
 from ..services.fulfilment import order_store
 from .packaging import StrictInput, Conflict
@@ -37,9 +37,20 @@ def delivery_time(request, pk):
     eligible = order.status not in ('delivered','cancelled') and (request.user.is_staff or
         order.delivery_at and order.delivery_at > timezone.now())
     if request.method == 'GET':
+        from ..services.fulfilment import time_bounds
+        selected = order_store(Storefront.objects.filter(pk=1).first() or Storefront(pk=1), order)
+        opening, closing = time_bounds(selected)
+        latest, held = accepted_stock_dates(order)
+        reason = '' if eligible else ('Received or cancelled orders cannot change time here.'
+            if order.status in ('delivered', 'cancelled') else
+            'The agreed time has passed. Message the kitchen to arrange a change.')
+        if eligible and (held or latest and latest < timezone.localdate()):
+            eligible = False
+            reason = 'The ingredients reserved for this order need kitchen review before its time can change.'
         history = order.amendments.filter(after__change_type='delivery_time').order_by('-pk')[:20]
-        return Response(dict(eligible=bool(eligible), version=order.updated_at,
-            reason='' if eligible else 'Contact the kitchen about this order’s delivery record.',
+        return Response(dict(eligible=bool(eligible), version=order.updated_at, reason=reason,
+            stock_latest_date=latest.isoformat() if latest else None,
+            opening_time=opening.strftime('%H:%M'), closing_time=closing.strftime('%H:%M'),
             history=[dict(id=a.pk, at=a.created_at, previous_delivery=a.before.get('delivery_at'),
                 delivery_at=a.after['delivery_at'], reason=a.after['reason']) for a in history]))
     if not eligible:

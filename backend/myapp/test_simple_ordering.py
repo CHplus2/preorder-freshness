@@ -333,3 +333,90 @@ class SimpleOrderingTests(TestCase):
             version=order.updated_at.isoformat(),reason='Not an individual order'),format='json')
         self.assertEqual(result.status_code,400,result.data)
         order.refresh_from_db();self.assertEqual(order.status,'pending')
+
+    def test_customer_cancellation_preserves_stock_payment_and_history_once(self):
+        from .models import PaymentEvent
+        order=self.place();order.payment_status='paid';order.save()
+        event=PaymentEvent.objects.create(order=order,request_id=uuid.uuid4(),kind='receipt',
+            outcome='completed',amount=order.total_amount+order.shipping_fee,method='manual',
+            reference='Local paid-order fixture',source='owner_verified',actor=self.owner)
+        before=(self.early.quantity, self.box.quantity)
+        self.early.refresh_from_db();self.box.refresh_from_db();before=(self.early.quantity,self.box.quantity)
+        body=dict(version=order.updated_at.isoformat(),reason='My plans changed')
+        for _ in range(2):
+            result=self.client.post(f'/api/orders/{order.pk}/cancel/',body,format='json')
+            self.assertEqual(result.status_code,200,result.data)
+        order.refresh_from_db();self.assertEqual(order.status,'cancelled');self.assertEqual(order.payment_status,'paid')
+        self.assertIsNone(order.stock_returned_at)
+        self.assertEqual(OrderAmendment.objects.filter(order=order,after__cancelled_by='customer').count(),1)
+        self.assertEqual(PaymentEvent.objects.get(pk=event.pk).kind,'receipt');self.assertEqual(PaymentEvent.objects.count(),1)
+        self.early.refresh_from_db();self.box.refresh_from_db();self.assertEqual((self.early.quantity,self.box.quantity),before)
+        self.assertFalse(IngredientConsumption.objects.filter(returned_at__isnull=False).exists())
+
+    def test_customer_cancellation_is_scoped_and_rejects_stock_or_status_overrides(self):
+        order=self.place();body=dict(version=order.updated_at.isoformat())
+        for extra in [dict(return_unused_stock=True),dict(status='delivered'),dict(payment_status='refunded')]:
+            result=self.client.post(f'/api/orders/{order.pk}/cancel/',{**body,**extra},format='json')
+            self.assertEqual(result.status_code,400,result.data)
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.post(f'/api/orders/{order.pk}/cancel/',body,format='json').status_code,404)
+        self.client.force_authenticate(None)
+        self.assertIn(self.client.post(f'/api/orders/{order.pk}/cancel/',body,format='json').status_code,[401,403])
+        order.refresh_from_db();self.assertEqual(order.status,'pending')
+
+    def test_customer_cancellation_blocks_received_progress_and_stale_versions(self):
+        order=self.place();body=dict(version=order.updated_at.isoformat())
+        order.save()
+        self.assertEqual(self.client.post(f'/api/orders/{order.pk}/cancel/',body,format='json').status_code,409)
+        for status in ['delivered','cooked','shipped']:
+            order.status=status;order.save();body['version']=order.updated_at.isoformat()
+            result=self.client.post(f'/api/orders/{order.pk}/cancel/',body,format='json')
+            self.assertEqual(result.status_code,400,result.data)
+            order.refresh_from_db();self.assertEqual(order.status,status)
+        self.assertFalse(OrderAmendment.objects.exists())
+
+    def test_customer_cancellation_requires_session_csrf(self):
+        from django.test import Client
+        order=self.place();browser=Client(enforce_csrf_checks=True);browser.force_login(self.buyer)
+        result=browser.post(f'/api/orders/{order.pk}/cancel/',
+            dict(version=order.updated_at.isoformat()),content_type='application/json')
+        self.assertEqual(result.status_code,403)
+        order.refresh_from_db();self.assertEqual(order.status,'pending')
+
+    def test_owner_can_confirm_unused_stock_after_customer_cancellation_once(self):
+        order=self.place()
+        result=self.client.post(f'/api/orders/{order.pk}/cancel/',dict(version=order.updated_at.isoformat()),format='json')
+        self.assertEqual(result.status_code,200,result.data)
+        order.refresh_from_db();self.client.force_authenticate(self.owner)
+        body=dict(version=order.updated_at.isoformat(),reason='Confirmed not prepared or packed',return_unused_stock=True)
+        for _ in range(2):
+            result=self.client.post(f'/api/admin/orders/{order.pk}/cancel/',body,format='json')
+            self.assertEqual(result.status_code,200,result.data)
+        order.refresh_from_db();self.assertEqual(order.status,'cancelled');self.assertIsNotNone(order.stock_returned_at)
+        self.early.refresh_from_db();self.box.refresh_from_db();self.assertEqual(self.early.quantity,400);self.assertEqual(self.box.quantity,20)
+        self.assertEqual(InventoryLog.objects.filter(change__gt=0).count(),1)
+        self.assertEqual(PackagingMovement.objects.filter(kind='release').count(),1)
+        self.assertEqual(OrderAmendment.objects.filter(after__change_type='stock_return_after_cancellation').count(),1)
+
+    def test_time_policy_explains_actual_reserved_deadline_and_rechecks_changes(self):
+        order=self.place();url=f'/api/orders/{order.pk}/delivery-time/'
+        policy=self.client.get(url);self.assertEqual(policy.status_code,200,policy.data)
+        self.assertEqual(policy.data['stock_latest_date'],self.early.expiry_date.isoformat())
+        self.assertTrue(policy.data['eligible']);self.assertEqual(policy.data['opening_time'],'07:30')
+        original=order.delivery_at
+        beyond=timezone.make_aware(timezone.datetime.combine(self.early.expiry_date+timedelta(days=1),timezone.datetime.min.time())).replace(hour=10)
+        body=dict(version=order.updated_at.isoformat(),reason='Later date',delivery_at=beyond.isoformat())
+        response=self.client.patch(url,body,format='json');self.assertEqual(response.status_code,400,response.data)
+        self.assertIn(self.early.expiry_date.strftime('%d %b %Y'),str(response.data))
+        order.refresh_from_db();self.assertEqual(order.delivery_at,original)
+        self.early.quarantined=True;self.early.save()
+        self.assertFalse(self.client.get(url).data['eligible'])
+        body['delivery_at']=self.delivery.replace(hour=11).isoformat()
+        self.assertEqual(self.client.patch(url,body,format='json').status_code,400)
+
+    def test_time_policy_closes_for_received_cancelled_and_past_agreed_times(self):
+        order=self.place();url=f'/api/orders/{order.pk}/delivery-time/'
+        for status in ['delivered','cancelled']:
+            order.status=status;order.save();self.assertFalse(self.client.get(url).data['eligible'])
+        order.status='pending';order.delivery_at=timezone.now()-timedelta(hours=1);order.save()
+        policy=self.client.get(url).data;self.assertFalse(policy['eligible']);self.assertIn('passed',policy['reason'])

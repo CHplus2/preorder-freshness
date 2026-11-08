@@ -3,6 +3,16 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Client order follow-up — 8 November 2026, batch 1
+
+- `POST /api/orders/<id>/cancel/`: authenticated customer's own pending simple-workflow order; strict `version` and optional `reason` only. Ownership, stale versions and closed/progressed records are checked. Replays return the saved cancellation. Stock/payment facts remain unchanged; no refund or WhatsApp message is sent by the API.
+- `POST /api/admin/orders/<id>/cancel/` retains explicit `return_unused_stock`; an owner can now confirm a one-time unused-stock return after customer cancellation, while keeping status cancelled. This is an explicit staff assertion, never automatic customer restocking.
+- `GET /api/orders/<id>/delivery-time/` adds `stock_latest_date` (ISO date or null), `opening_time` and `closing_time` (HH:MM). Existing `eligible`, `version`, `reason` and `history` remain. PATCH rechecks actual reserved-lot dates/holds and preserves the allocation. The boundary is the earliest accepted/current lot deadline, not an arbitrary one-week limit.
+- `GET /api/admin/reports/daily-orders/slips/?date=YYYY-MM-DD&receipt=all|received|not_received` returns the complete matching print set (`date`, `receipt`, `count`, `printed_at`, `orders`) independently of summary pagination. Each row has the existing detailed printable-slip shape. Staff only; private/no-store; excludes cancelled/generated records; oversized sets fail rather than truncate.
+- `/admin/orders/print` is a protected print-preview route. Printing is an explicit user action. My orders WhatsApp drafts use the configured kitchen number and open only after cancellation is confirmed. No forecast/model API or schema changes.
+
+See [the client update record](CLIENT-ORDER-UPDATES-20261108.md) for business boundaries and validation.
+
 ## Escrow retirement — 8 November 2026
 
 `main` no longer offers or accepts escrow at checkout or deferred payment selection.

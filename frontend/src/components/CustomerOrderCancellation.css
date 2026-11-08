@@ -1,0 +1,10 @@
+.customer-orders .customer-order-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:18px;padding-top:18px;border-top:1px solid #e0e6dd}
+.customer-orders .customer-order-actions .customer-order-help{margin:0}
+.customer-cancel-order{min-height:44px;margin:0;padding:10px 15px;border:1px solid #cbb6ae;border-radius:8px;background:#fff;color:#754735;font:600 13px/1.5 system-ui,sans-serif;cursor:pointer}
+.customer-cancel-order:hover{background:#fbf5f1}.customer-cancel-order:focus-visible{outline:3px solid #557950;outline-offset:3px}
+.customer-cancel-dialog{max-width:520px}.customer-cancel-dialog h2{margin:0 0 14px;font-size:22px}.customer-cancel-dialog p{margin:0;font-size:14px;line-height:1.65;color:#4c6052}
+.customer-cancel-dialog form{display:grid;gap:18px;margin-top:20px}.customer-cancel-dialog label{display:grid;gap:8px;margin:0;font-size:14px;font-weight:600;color:#294b35}
+.customer-cancel-dialog textarea{width:100%;box-sizing:border-box;min-height:88px;padding:11px 12px;border:1px solid #bdcbb9;border-radius:8px;background:#fff;color:#263e32;font:400 15px/1.5 system-ui,sans-serif;resize:vertical}
+.customer-cancel-dialog-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:12px}.customer-cancel-dialog-actions button{min-height:44px;padding:10px 16px;margin:0;border:1px solid #c8d4c4;border-radius:8px;background:#fff;color:#294b35;font:600 14px/1.5 system-ui,sans-serif}
+.customer-cancel-dialog-actions .customer-cancel-confirm{background:#744735;color:#fff;border-color:#744735}.customer-cancel-dialog-actions button:disabled{opacity:.6;cursor:wait}.customer-cancel-dialog .customer-cancel-error{padding:12px;border:1px solid #d7b1a5;border-radius:8px;background:#fff8f5;color:#783a29}
+@media(max-width:480px){.customer-orders .customer-order-actions>*{flex:1 1 100%;justify-content:center;text-align:center}.customer-cancel-dialog-actions button{flex:1}}

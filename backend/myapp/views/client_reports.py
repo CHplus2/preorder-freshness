@@ -177,10 +177,7 @@ def period_sales_csv(request):
     return response
 
 
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def order_slip(request, pk):
-    order = get_object_or_404(operational_orders().select_related('user', 'address').prefetch_related('items'), pk=pk)
+def printable_order(order, kitchen, printed_at):
     row = order_row(order)
     saved = order.fulfilment_snapshot
     address = order.delivery_address or ({key: getattr(order.address, key) for key in
@@ -190,9 +187,44 @@ def order_slip(request, pk):
     row.update(phone=saved.get('customer', {}).get('phone') or handover.get('contact_phone') or address.get('phone', ''),
         address_lines=[address.get(key) for key in ('line1', 'line2', 'city', 'state', 'postal_code', 'country') if address.get(key)]
             if order.delivery_method != 'pickup' else [],
-        pickup_location=saved.get('pickup_location', ''),
-        handover_notes=handover.get('notes', ''),
+        pickup_location=saved.get('pickup_location', ''), handover_notes=handover.get('notes', ''),
         handover_location=handover.get('location', '') if handover.get('mode') == 'agreed_place' else '',
-        kitchen=Storefront.objects.filter(pk=1).values_list('name', flat=True).first() or 'Kitchen',
-        printed_at=timezone.now())
-    return Response(row)
+        kitchen=kitchen, printed_at=printed_at)
+    return row
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def order_slip(request, pk):
+    order = get_object_or_404(operational_orders().select_related('user', 'address').prefetch_related('items'), pk=pk)
+    kitchen = Storefront.objects.filter(pk=1).values_list('name', flat=True).first() or 'Kitchen'
+    response = Response(printable_order(order, kitchen, timezone.now()))
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
+MAX_PRINT_ORDERS = 2000
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def daily_order_slips(request):
+    """All matching slips, independently of the summary's 50-row pagination."""
+    form = DailyInput(data=request.query_params)
+    form.is_valid(raise_exception=True)
+    day, receipt = form.validated_data['date'], form.validated_data['receipt']
+    orders = handover_dates(operational_orders(), day, day).exclude(status='cancelled')
+    if receipt == 'received':
+        orders = orders.filter(status='delivered')
+    elif receipt == 'not_received':
+        orders = orders.exclude(status='delivered')
+    orders = list(orders.select_related('user', 'address').prefetch_related('items')
+        .order_by('delivery_at', 'pk')[:MAX_PRINT_ORDERS+1])
+    if len(orders) > MAX_PRINT_ORDERS:
+        raise serializers.ValidationError('Too many orders for one print preview. Choose a receipt-status filter or ask the kitchen to split this print run; no partial set has been printed.')
+    kitchen = Storefront.objects.filter(pk=1).values_list('name', flat=True).first() or 'Kitchen'
+    printed_at = timezone.now()
+    response = Response(dict(date=day, receipt=receipt, count=len(orders), printed_at=printed_at,
+        orders=[printable_order(order, kitchen, printed_at) for order in orders]))
+    response['Cache-Control'] = 'private, no-store'
+    return response
