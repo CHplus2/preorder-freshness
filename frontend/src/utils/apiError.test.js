@@ -12,6 +12,11 @@ test('stock error shows its explanation without the machine-readable code',()=>{
 });
 test('server failures do not expose internals',()=>{assert.ok(!apiError({response:{status:500,data:'<html>password secret</html>'}}).includes('secret'));});
 test('session, timeout and network recovery',()=>{assert.match(apiError({response:{status:403,data:{detail:'CSRF Failed'}}}),/sign in again/);assert.match(apiError({code:'ECONNABORTED'}),/My orders/);assert.match(apiError({}),/connection/);});
+test('missing-session errors give sign-in guidance while other permission failures stay specific',()=>{
+ assert.equal(apiError({response:{status:403,data:{detail:'Authentication credentials were not provided.'}}}),'Please sign in again to continue.');
+ assert.equal(readApiError({response:{status:403,data:{detail:'Authentication credentials were not provided.'}}}),'Please sign in again to continue.');
+ assert.equal(apiError({response:{status:403,data:{detail:'Only staff can edit this record.'}}}),'Only staff can edit this record.');
+});
 test('non-JSON errors use fallback',()=>{assert.equal(apiError({response:{status:404,data:'<html>404</html>'}},'Not found.'),'Not found.');});
 test('read-only failures give retry guidance without order submission instructions',()=>{
   for (const error of [{}, {code:'ECONNABORTED'}, {code:'INVALID_RESPONSE'}, {response:{status:503,data:{reference:'review-123',detail:'secret'}}}]) {

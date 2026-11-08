@@ -22,7 +22,7 @@ export function apiError(error, fallback = 'The request could not be completed.'
     return 'Could not reach the kitchen. Check your connection and try again. If you submitted an order, check My orders first.';
   }
   const {status, data} = error.response;
-  if (status === 401) return 'Please sign in again to continue.';
+  if (status === 401 || status === 403 && data?.detail==='Authentication credentials were not provided.') return 'Please sign in again to continue.';
   if (status === 429) return 'Too many requests. Please wait a moment before trying again.';
   if (status >= 500) return 'The kitchen service is temporarily unavailable. Please try again shortly. If you submitted an order, check My orders first.' + (typeof data?.reference === 'string' ? ` Reference: ${data.reference}` : '');
   const flatten = (value, label = '') => {

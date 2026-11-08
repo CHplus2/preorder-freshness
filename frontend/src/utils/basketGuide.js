@@ -68,13 +68,15 @@ export function basketPlanAdded(value,expected){
  if(['subtotal','discount','shipping','total'].some(key=>moneyCents(value.totals[key])!==moneyCents(expected.plan.totals[key])))throw invalidResponse();
  return value;
 }
-export function basketGuideEmpty(reason,quantity,current,menuMode='mixed'){
+export function basketGuideEmpty(reason,quantity,current,menuMode='mixed',orderingMode='scheduled'){
  if(reason==='existing_menu_mix')return 'Your basket already contains different menus. Allow a mix to keep these items, or edit your basket to use one menu only.';
  if(reason==='quantity_below_basket' && current>100)return `Your basket already has ${current} items. This finder supports up to 100 total items; edit your basket to use it.`;
  if(reason==='quantity_below_basket')return `Your basket already has ${current} items. Choose a total of at least ${current}, or edit your basket first.`;
  if(reason==='basket_needs_review')return 'An existing basket item needs review for this date. Review your basket before building a complete order.';
  if(reason==='no_price_match')return 'No proposed basket matches this budget range. Try another budget or compare both ranges.';
- if(reason==='no_kitchen_times')return 'No common kitchen time was found for these complete baskets. Try another date, quantity or preference.';
+ if(reason==='no_kitchen_times')return orderingMode==='simple'
+  ?'No matching basket is available for this delivery date. Try another date or item count, or contact the kitchen about other arrangements.'
+  :'No common kitchen time was found for these complete baskets. Try another date, quantity or preference.';
  if(menuMode==='same')return `No one-menu option was found for ${quantity} total items. Try another preference, date or quantity.`;
  return `No combination was found for ${quantity} total items. Try another preference, date or quantity.`;
 }

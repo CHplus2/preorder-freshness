@@ -256,7 +256,7 @@ function AppContent() {
   },[location.pathname]);
   const { customerAccess,openCustomerAccess,showLogin, setShowLogin, showSignup, dropdownOpen, setDropdownOpen, alert, setAlert } = useUI();
   const dismissNotification=useCallback(()=>setAlert({message:'',type:''}),[setAlert]);
-  const { isAuthenticated, isAdmin, isGuest, logout, startGuest, authPending, authError } = useAuth();
+  const { isAuthenticated, isAdmin, isGuest, logout, startGuest, authPending, authError, authCheckError, checkAuth } = useAuth();
   useEffect(()=>{
     if(store.ordering_mode==='simple' && isAuthenticated===false && !authPending && !authError && /^\/(?:(?:menu|products|cart|checkout|orders|account|story|how-it-works|contact)(?:\/|$)|$)/.test(location.pathname))startGuest();
   },[store.ordering_mode,isAuthenticated,authPending,authError,startGuest,location.pathname]);
@@ -319,6 +319,7 @@ function AppContent() {
 
       </AnimatePresence>
 
+      {authCheckError&&!showLogin&&!customerAccess&&(isAuthenticated!==null||!/^\/(admin|cart|checkout|orders)(\/|$)/.test(location.pathname))&&<div className="session-check-notice" role="status"><p>{authCheckError}</p><button type="button" disabled={authPending} onClick={checkAuth}>Retry</button></div>}
       <div className={ownerPage?'admin-shell':''} onInvalidCapture={e=>{let node=e.target.parentElement;while(node){if(node.tagName==='DETAILS')node.open=true;node=node.parentElement}}}>{ownerPage && <aside className="admin-sidebar"><span className="admin-sidebar-label">KITCHEN WORKSPACE</span><nav ref={kitchenNav} aria-label="Kitchen management">{ownerLinks.map(([url,label])=><Link key={url} to={url} aria-current={isCurrentSection(location.pathname,url)?'page':undefined}>{label}</Link>)}</nav></aside>}<div id="page-content" className={ownerPage?'admin-content':''} tabIndex="-1"><RouteErrorBoundary route={location.pathname}><Suspense fallback={<PageLoading />}><AnimatedRoutes/></Suspense></RouteErrorBoundary></div></div>
       {!ownerPage && <BusinessFooter/>}
     </>

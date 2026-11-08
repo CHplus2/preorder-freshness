@@ -13,6 +13,7 @@ export default function AuthProvider({children}){
  const scope=useRef(0),identity=useRef(null),authRequest=useRef(0),controller=useRef(null);
  const accountChangeBusy=useRef(false);
  const [authError,setAuthError]=useState(''),[authPending,setAuthPending]=useState(false);
+ const [authCheckError,setAuthCheckError]=useState('');
  const clearAuthError=useCallback(()=>setAuthError(''),[]);
  const {setAlert,setDropdownOpen,setShowSignup,setShowLogin,setCustomerAccess}=useUI();
  const cancelAuthChecks=useCallback(()=>{++authRequest.current;controller.current?.abort()},[]);
@@ -33,22 +34,24 @@ export default function AuthProvider({children}){
   try{
    const {data}=await axios.get('/api/check-auth/',{withCredentials:true,signal:current.signal,timeout:15000});
    if(request!==authRequest.current || current.signal.aborted)return null;
-   return commit(data);
+   const next=commit(data);setAuthCheckError('');return next;
   }catch{
    if(request!==authRequest.current || current.signal.aborted)return null;
-   commit({authenticated:false});return null;
+   // A timeout, server error or malformed response does not prove sign-out.
+   // Keep the last verified identity; protected APIs still enforce the session.
+   setAuthCheckError('Could not check your sign-in. Check your connection and retry.');return null;
   }
  },[commit]);
  useEffect(()=>{
-  checkAuth();
+  const initial=window.setTimeout(checkAuth,0);
   const refresh=()=>{if(!accountChangeBusy.current)checkAuth()};
   const changed=event=>{if(event.key===SESSION_SIGNAL){invalidate();checkAuth()}};
   window.addEventListener('focus',refresh);window.addEventListener('storage',changed);
-  return()=>{cancelAuthChecks();window.removeEventListener('focus',refresh);window.removeEventListener('storage',changed)};
+  return()=>{window.clearTimeout(initial);cancelAuthChecks();window.removeEventListener('focus',refresh);window.removeEventListener('storage',changed)};
  },[checkAuth,invalidate,cancelAuthChecks]);
  const signIn=async(url,account)=>{
   if(accountChangeBusy.current)return 'An account change is already running.';
-  accountChangeBusy.current=true;setAuthPending(true);setAuthError('');
+  accountChangeBusy.current=true;setAuthPending(true);setAuthError('');cancelAuthChecks();
   try{
    await axios.post(url,account,{withCredentials:true,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    invalidate();announceSessionChange();
@@ -74,20 +77,20 @@ export default function AuthProvider({children}){
  };
  const startGuest=useCallback(async()=>{
   if(accountChangeBusy.current)return;
-  accountChangeBusy.current=true;setAuthPending(true);setAuthError('');
+  accountChangeBusy.current=true;setAuthPending(true);setAuthError('');cancelAuthChecks();
   try{
    await axios.post('/api/guest-session/',{},{withCredentials:true,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    invalidate();announceSessionChange();const next=await checkAuth();
    if(!next?.isAuthenticated)throw new Error('Guest session unavailable');
   }catch(error){setAuthError(error.response?.data?.detail || 'Your ordering session could not be opened. Please try again.');}
   finally{accountChangeBusy.current=false;setAuthPending(false)}
- },[checkAuth,invalidate]);
+ },[checkAuth,invalidate,cancelAuthChecks]);
  const logout=async()=>{
   if(accountChangeBusy.current)return;
-  accountChangeBusy.current=true;setAuthPending(true);
+  accountChangeBusy.current=true;setAuthPending(true);cancelAuthChecks();
   try{
    await axios.post('/api/logout/',{},{withCredentials:true,timeout:15000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
-   invalidate();commit({authenticated:false});announceSessionChange();
+   invalidate();commit({authenticated:false});setAuthCheckError('');announceSessionChange();
    setAlert({message:'',type:''});setDropdownOpen(false);
   }catch(error){setAlert({type:'error',message:accountRequestError(error,'logout')})}
   finally{accountChangeBusy.current=false;setAuthPending(false)}
@@ -95,7 +98,7 @@ export default function AuthProvider({children}){
  // Every account/role boundary remounts private providers and pages. Requests
  // captured by an old tree cannot refill a new account's basket/order/wallet.
  const isSessionCurrent=useMemo(()=>()=>scope.current===version,[version]);
- return <AuthContext.Provider value={{...session,isSessionCurrent,checkAuth,startGuest,authError,clearAuthError,authPending,passkeyAction,login:account=>signIn('/api/login/',account),signup:account=>signIn('/api/signup/',account),logout}}>
+ return <AuthContext.Provider value={{...session,isSessionCurrent,checkAuth,startGuest,authError,authCheckError,clearAuthError,authPending,passkeyAction,login:account=>signIn('/api/login/',account),signup:account=>signIn('/api/signup/',account),logout}}>
   <Fragment key={version}>{children}</Fragment>
  </AuthContext.Provider>;
 }

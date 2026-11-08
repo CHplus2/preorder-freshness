@@ -3,6 +3,21 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Session checks and guest recommendations — 8 November 2026, UI batch 1
+
+No API, schema, stock eligibility or model change. The client only commits a
+sign-out after a valid authentication response explicitly reports it. Failed or
+malformed session reads preserve the last verified identity and show Retry;
+initial failures keep protected content unavailable. Login, guest-session and
+logout actions cancel earlier checks so an old response cannot overwrite the
+new session. Existing account/role remounts and server authorization remain.
+
+Guest date-based recommendations remain available. A session-check interruption
+no longer clears their form/results through a false account change. Unavailable
+simple-mode dates use basket/date guidance rather than a cooking-capacity
+explanation. Batches must still cover the delivery date; no shortage bypass or
+advance-restocking workflow is introduced.
+
 ## Customer availability wording — 8 November 2026
 
 Customer stock validation errors retain their HTTP status and machine `code`, but

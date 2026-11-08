@@ -21,6 +21,8 @@ assert.equal(basketPlanAdded(added,expected),added);
 for(const value of [{...added,quantity:9},{...added,added_quantity:9},{...added,session:'different'},{...added,totals:{...totals,total:'100.00'}},{...added,delivery_at:'2026-11-01T16:00:00+08:00'}])assert.throws(()=>basketPlanAdded(value,expected));
 assert.match(basketGuideEmpty('quantity_below_basket',3,4),/already has 4/);assert.match(basketGuideEmpty('quantity_below_basket',3,101),/supports up to 100/);
 assert.match(basketGuideEmpty('no_kitchen_times',3,0),/common kitchen time/);
+assert.match(basketGuideEmpty('no_kitchen_times',3,0,'mixed','simple'),/available for this delivery date/);
+assert.doesNotMatch(basketGuideEmpty('no_kitchen_times',3,0,'mixed','simple'),/ingredient|common kitchen time/);
 assert.match(basketGuideEmpty('no_price_match',3,0),/budget range/);
 console.log('Mixed basket response: total quantity, existing items, whole-order arithmetic, price evidence and atomic-add receipt validation passed.');
 
