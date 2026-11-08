@@ -135,12 +135,12 @@ def deduct_inventory(item, user, order, by_material=None, stage='preparation'):
             remaining -= deduction
 
         if remaining > 0:
-            raise ValidationError(
+            raise ValidationError({'code': 'ingredient_stock_shortage', 'detail':
                 f"Insufficient {ingredient.material_name} "
                 f"for {item.product_name}: short by {remaining.normalize():f} {ingredient.unit}. "
                 "Add usable stock or review the batch records, then try again. "
                 "Expired, held and not-yet-received batches cannot be used."
-            )
+            })
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

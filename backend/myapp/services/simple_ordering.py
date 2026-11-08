@@ -111,11 +111,13 @@ def check_accepted_stock(order, delivery_at):
     """A changed date cannot extend the deadline of already reserved lots."""
     latest, held = accepted_stock_dates(order)
     if held:
-        raise ValidationError('Some ingredients reserved for this order are now on hold. '
-            'Message the kitchen to review the stock before changing the date.')
+        raise ValidationError({'code': 'delivery_date_unavailable',
+            'detail': 'Some ingredients reserved for this order are now on hold. '
+                'Message the kitchen to review the stock before changing the date.'})
     if latest and timezone.localtime(delivery_at).date() > latest:
-        raise ValidationError(f'The ingredients reserved for this order are recorded only through {latest:%d %b %Y}. '
-            'Choose this date or earlier, or message the kitchen about a later date.')
+        raise ValidationError({'code': 'delivery_date_unavailable',
+            'detail': f'The ingredients reserved for this order are recorded only through {latest:%d %b %Y}. '
+                'Choose this date or earlier, or message the kitchen about a later date.'})
 
 
 def return_unused_stock(order, actor):

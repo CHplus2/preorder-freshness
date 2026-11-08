@@ -3,6 +3,23 @@
 Version: `1` (implemented). Current implementation branch: `main`. `integration/dormathon-demo` is the frozen FYP baseline (`ab1a976` application source).
 Dashboard branch: `feature/ai-dashboard`.
 
+## Customer availability wording — 8 November 2026
+
+Customer stock validation errors retain their HTTP status and machine `code`, but
+return only `{code, detail}` with menu/date availability guidance. Ingredient and
+packaging shortage rows, quantities and batch rules remain available to staff.
+The same customer wording applies to basket slot discovery and placement failures,
+including shortages found during the final locked deduction. The browser accepts
+the error code without requiring diagnostic rows.
+
+Delivery-time stock failures use `delivery_date_unavailable`. Customer messages
+ask for kitchen confirmation and retain the current time; staff receive the
+reserved-stock explanation. GET still supplies `stock_latest_date` for the input
+limit, displayed to customers as the latest date they can select online. A held
+or expired allocation disables online changes with a customer-facing contact
+message. No eligibility, allocation, expiry, payment, model or schema rule changes.
+Earlier shortage-payload notes below describe the detailed staff response.
+
 ## Client order follow-up — 8 November 2026, batch 1
 
 - `POST /api/orders/<id>/cancel/`: authenticated customer's own pending simple-workflow order; strict `version` and optional `reason` only. Ownership, stale versions and closed/progressed records are checked. Replays return the saved cancellation. Stock/payment facts remain unchanged; no refund or WhatsApp message is sent by the API.

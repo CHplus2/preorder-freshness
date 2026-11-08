@@ -8,9 +8,20 @@ from rest_framework.response import Response
 
 logger = logging.getLogger(__name__)
 
+CUSTOMER_AVAILABILITY_MESSAGES = {
+    'ingredient_stock_shortage': 'This basket is not available for the selected date. Choose another date, adjust your basket or contact the kitchen to confirm availability.',
+    'packaging_stock_shortage': 'This basket is not available for the selected date. Adjust your basket or contact the kitchen to confirm availability.',
+    'delivery_date_unavailable': 'This date change needs kitchen confirmation. Your current time has been kept. Contact the kitchen to arrange another date.',
+}
+
 def api_exception_handler(exc, context):
     response = exception_handler(exc, context)
     if response is not None:
+        request = context.get('request')
+        if request is not None and not getattr(request.user, 'is_staff', False) and isinstance(response.data, dict):
+            code = response.data.get('code')
+            if isinstance(code, str) and code in CUSTOMER_AVAILABILITY_MESSAGES:
+                response.data = {'code': code, 'detail': CUSTOMER_AVAILABILITY_MESSAGES[code]}
         return response
     set_rollback()
     if isinstance(exc, ProtectedError):

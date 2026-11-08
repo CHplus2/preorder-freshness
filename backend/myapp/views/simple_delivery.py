@@ -46,7 +46,9 @@ def delivery_time(request, pk):
             'The agreed time has passed. Message the kitchen to arrange a change.')
         if eligible and (held or latest and latest < timezone.localdate()):
             eligible = False
-            reason = 'The ingredients reserved for this order need kitchen review before its time can change.'
+            reason = ('The ingredients reserved for this order need kitchen review before its time can change.'
+                if request.user.is_staff else
+                'Contact the kitchen to arrange a new time for this order.')
         history = order.amendments.filter(after__change_type='delivery_time').order_by('-pk')[:20]
         return Response(dict(eligible=bool(eligible), version=order.updated_at, reason=reason,
             stock_latest_date=latest.isoformat() if latest else None,

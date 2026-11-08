@@ -1,5 +1,6 @@
 from ..services.selling import shipping_enquiry
 from ..services.simple_ordering import simple
+from ..exceptions import CUSTOMER_AVAILABILITY_MESSAGES
 import secrets
 import uuid
 from datetime import timedelta
@@ -164,6 +165,8 @@ def basket_slots(request):
         result = next_basket_slots(items, data.validated_data.get('date'), store)
     else:
         result = slot_search(items, data.validated_data['date'], store, limit=24)
+    if not request.user.is_staff and result.get('unavailable_code') in CUSTOMER_AVAILABILITY_MESSAGES:
+        result['unavailable_reason'] = CUSTOMER_AVAILABILITY_MESSAGES[result['unavailable_code']]
     result['arrival_window_minutes'] = data.validated_data['arrival_window_minutes']
     return Response(result)
 

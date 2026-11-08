@@ -106,7 +106,7 @@ export default function SimpleCheckoutPage(){
     {method==='manual'&&transfer&&paymentScope===proofScope&&<CheckoutProofUpload confirmed={priceConfirmed&&!checking&&!quoteError} key={proofScope} scope={proofScope} amount={finalTotal} disabled={!priceConfirmed||!!quoteError||checking||busy} selection={{delivery_at:preferredDelivery+':00+08:00',delivery_method:fulfilmentMethod,delivery_area:deliveryArea,arrival_window_minutes:0}} qrUrl={promotion.duitnow_qr_url} instructions={promotion.bank_transfer_instructions} onUploaded={value=>{setProof(value?{...value,scope:proofScope}:null);if(value)setReceiptUploaded(true)}}/>}
     </section>
     {error&&<div ref={errorRef} tabIndex="-1" role="alert" className="checkout-error">{error}</div>}
-    <p className="checkout-hint">Stock is checked again and deducted when you place your order. QR or bank-transfer payment is marked paid only after the kitchen verifies it.</p>
+    <p className="checkout-hint">Availability is checked again when you place your order. QR or bank-transfer payment is marked paid only after the kitchen verifies it.</p>
     <p className="checkout-hint">{customerAccount?'Your orders are saved to your account. Sign in with your passkey to view them on another device.':<>This preorder is saved to your signed-in account.</>}</p>
     <CheckoutAction busy={busy} disabled={busy||cartLoading||cartUpdating||checking||!quote||!priceConfirmed||!!quoteError||!!areaIssue||!paymentReady} confirmed={!!quote&&priceConfirmed&&!quoteError} shippingPending={areaIssue} foodTotal={total-discount} finalTotal={finalTotal} formatPrice={formatPrice} nextStep={nextStep}/>
 

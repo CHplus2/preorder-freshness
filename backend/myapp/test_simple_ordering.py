@@ -1,5 +1,6 @@
 """Client batch 2: default simple ordering, without cooking-time gates."""
 import uuid
+from unittest.mock import patch
 from datetime import timedelta
 from decimal import Decimal
 from django.contrib.auth.models import User
@@ -143,6 +144,20 @@ class SimpleOrderingTests(TestCase):
             self.assertEqual(self.client.post(f'/api/orders/{path}/',self.body,format='json').status_code,400)
         self.assertFalse(Order.objects.exists())
 
+    def test_final_allocation_shortage_keeps_customer_message_and_rolls_back(self):
+        self.early.quantity=0;self.early.save();self.later.quantity=0;self.later.save()
+        # Simulate availability changing after the advisory/pre-placement check.
+        with patch('myapp.services.simple_ordering.check_cart_ingredients'):
+            response=self.client.post('/api/orders/place/',self.body,format='json')
+        self.assertEqual(response.status_code,400,response.data)
+        self.assertEqual(set(response.data),{'code','detail'})
+        self.assertEqual(response.data['code'],'ingredient_stock_shortage')
+        self.assertNotIn('Rice',str(response.data))
+        self.assertFalse(Order.objects.exists())
+        self.assertFalse(IngredientConsumption.objects.exists())
+        self.box.refresh_from_db();self.assertEqual(self.box.quantity,20)
+        self.assertTrue(CartItem.objects.filter(user=self.buyer).exists())
+
     def test_restocking_one_ingredient_does_not_cover_another_and_same_quote_rechecks_stock(self):
         chicken=RawMaterial.objects.create(name='Chicken boneless trimmed',unit='g')
         ProductIngredient.objects.create(product=self.product,raw_material=chicken,quantity_required=50)
@@ -150,16 +165,18 @@ class SimpleOrderingTests(TestCase):
             response=self.client.post(f'/api/orders/{stage}/',self.body,format='json')
             self.assertEqual(response.status_code,400,response.data)
             self.assertEqual(response.data['code'],'ingredient_stock_shortage')
-            self.assertIn('Chicken boneless trimmed',response.data['detail'])
-            self.assertIn('150 g',response.data['detail'])
-            self.assertIn('0 g',response.data['detail'])
+            self.assertIn('selected date',response.data['detail'])
+            self.assertNotIn('Chicken',str(response.data))
+            self.assertNotIn('shortages',response.data)
+            self.assertNotIn('150 g',str(response.data))
         self.early.quantity+=500;self.early.save()
         still_short=self.client.post('/api/orders/quote/',self.body,format='json')
         self.assertEqual(still_short.status_code,400)
-        self.assertIn('Chicken boneless trimmed',still_short.data['detail'])
+        self.assertIn('selected date',still_short.data['detail'])
         slots=self.client.post('/api/orders/slots/',{'date':self.delivery.date().isoformat()},format='json')
         self.assertEqual(slots.status_code,200,slots.data)
-        self.assertIn('Chicken boneless trimmed',slots.data['unavailable_reason'])
+        self.assertIn('selected date',slots.data['unavailable_reason'])
+        self.assertNotIn('Chicken',slots.data['unavailable_reason'])
         self.assertEqual(slots.data['unavailable_code'],'ingredient_stock_shortage')
         InventoryItem.objects.create(raw_material=chicken,quantity=200,received_date=timezone.localdate(),
             expiry_date=self.delivery.date()+timedelta(days=1),storage_location='Local test fridge')
@@ -174,13 +191,19 @@ class SimpleOrderingTests(TestCase):
         ProductIngredient.objects.create(product=self.product,raw_material=chicken,quantity_required=60)
         ProductIngredient.objects.create(product=self.product,raw_material=salt,quantity_required=5)
         for action in ('quote','place'):
-            r=self.client.post(f'/api/orders/{action}/',self.body,format='json')
-            self.assertEqual(r.status_code,400,r.data)
-            self.assertEqual(r.data['shortage_count'],'2')
-            rows={row['name']:row for row in r.data['shortages']}
-            self.assertEqual(rows['Chicken boneless trimmed']['required'],'180')
-            self.assertEqual(rows['Chicken boneless trimmed']['available'],'0')
-            self.assertEqual(rows['Salt']['shortfall'],'15')
+            customer=self.client.post(f'/api/orders/{action}/',self.body,format='json')
+            self.assertEqual(customer.status_code,400,customer.data)
+            self.assertEqual(set(customer.data),{'code','detail'})
+            self.assertNotIn('Chicken',str(customer.data))
+        CartItem.objects.create(user=self.owner,product=self.product,quantity=3)
+        self.client.force_authenticate(self.owner)
+        r=self.client.post('/api/orders/quote/',self.body,format='json')
+        self.assertEqual(r.status_code,400,r.data)
+        self.assertEqual(r.data['shortage_count'],'2')
+        rows={row['name']:row for row in r.data['shortages']}
+        self.assertEqual(rows['Chicken boneless trimmed']['required'],'180')
+        self.assertEqual(rows['Chicken boneless trimmed']['available'],'0')
+        self.assertEqual(rows['Salt']['shortfall'],'15')
         self.assertFalse(Order.objects.exists());self.assertFalse(InventoryLog.objects.exists())
         self.early.refresh_from_db();self.assertEqual(self.early.quantity,400)
 
@@ -407,10 +430,17 @@ class SimpleOrderingTests(TestCase):
         beyond=timezone.make_aware(timezone.datetime.combine(self.early.expiry_date+timedelta(days=1),timezone.datetime.min.time())).replace(hour=10)
         body=dict(version=order.updated_at.isoformat(),reason='Later date',delivery_at=beyond.isoformat())
         response=self.client.patch(url,body,format='json');self.assertEqual(response.status_code,400,response.data)
-        self.assertIn(self.early.expiry_date.strftime('%d %b %Y'),str(response.data))
+        self.assertEqual(response.data['code'],'delivery_date_unavailable')
+        self.assertIn('current time has been kept',response.data['detail'])
+        self.assertNotIn('ingredients',str(response.data))
         order.refresh_from_db();self.assertEqual(order.delivery_at,original)
         self.early.quarantined=True;self.early.save()
-        self.assertFalse(self.client.get(url).data['eligible'])
+        held_policy=self.client.get(url).data
+        self.assertFalse(held_policy['eligible'])
+        self.assertNotIn('ingredients',held_policy['reason'])
+        self.client.force_authenticate(self.owner)
+        self.assertIn('ingredients',self.client.get(url).data['reason'])
+        self.client.force_authenticate(self.buyer)
         body['delivery_at']=self.delivery.replace(hour=11).isoformat()
         self.assertEqual(self.client.patch(url,body,format='json').status_code,400)
 

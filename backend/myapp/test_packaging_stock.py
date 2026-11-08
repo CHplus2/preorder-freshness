@@ -223,6 +223,12 @@ class PackagingCheckoutTests(PackagingFixture, TestCase):
         response=self.client.post('/api/orders/quote/',body,format='json')
         self.assertEqual(response.status_code,400,response.data)
         self.assertEqual(response.data['code'],'packaging_stock_shortage')
+        self.assertEqual(set(response.data),{'code','detail'})
+        self.assertNotIn('Meal container',str(response.data))
+        CartItem.objects.create(user=self.owner,product=self.product,quantity=3)
+        self.client.force_authenticate(self.owner)
+        response=self.client.post('/api/orders/quote/',body,format='json')
+        self.assertEqual(response.status_code,400,response.data)
         self.assertEqual(response.data['shortage_count'],'2')
         rows={int(row['packaging_item_id']):row for row in response.data['shortages']}
         self.assertEqual(rows[self.box.pk]['required'],'3')

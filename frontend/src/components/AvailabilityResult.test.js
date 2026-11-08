@@ -37,8 +37,9 @@ try {
   assert.doesNotMatch(render({quote:null}), /Your requested time is available/);
   const shortages={rows:[{raw_material_id:'7',name:'Chicken boneless trimmed',unit:'g',required:'180',available:'0',shortfall:'180'},{raw_material_id:'8',name:'Salt',unit:'g',required:'15',available:'0',shortfall:'15'}],count:2};
   const stock=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(AvailabilityResult,{error:'Long technical stock message',shortage:shortages,retryable:true,onRetry:()=>{}})));
-  assert.match(stock,/Some items need restocking/);assert.match(stock,/180 g short/);assert.match(stock,/Salt/);
-  assert.match(stock,/Edit basket/);assert.match(stock,/Ask the kitchen/);assert.match(stock,/Check stock again/);
+  assert.match(stock,/This basket isn’t available for the selected date/);
+  assert.doesNotMatch(stock,/Chicken|Salt|180|Needed|Available 0|Which stock counts|recorded deadline/);
+  assert.match(stock,/Edit basket/);assert.match(stock,/Ask the kitchen/);assert.match(stock,/Check availability again/);assert.match(stock,/href="#checkout-time"/);
   assert.doesNotMatch(stock,/Long technical stock message|Availability could not be confirmed/);
   const {stockShortage}=await server.ssrLoadModule('/src/utils/stockShortage.js');
   const payload={code:'ingredient_stock_shortage',shortages:shortages.rows,shortage_count:'2'};
@@ -49,7 +50,11 @@ try {
   const packagingPayload={code:'packaging_stock_shortage',shortages:[{packaging_item_id:'9',name:'Meal container',unit:'pieces',required:'3',available:'1',shortfall:'2'}],shortage_count:'1'};
   const packagingShortage=stockShortage(packagingPayload);assert.equal(packagingShortage.kind,'packaging');
   const packaging=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(AvailabilityResult,{error:'Packaging shortage',shortage:packagingShortage,retryable:true,onRetry:()=>{}})));
-  assert.match(packaging,/2 pieces short/);assert.match(packaging,/recorded packaging/);assert.match(packaging,/Check stock again/);assert.doesNotMatch(packaging,/recorded deadline/);
+  assert.match(packaging,/This basket isn’t available for the selected date/);assert.match(packaging,/Check availability again/);assert.doesNotMatch(packaging,/Meal container|pieces|recorded packaging|recorded deadline/);
+  const redacted=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(AvailabilityResult,{error:'Unavailable',shortage:{kind:'ingredient'},retryable:true,onRetry:()=>{}})));
+  assert.match(redacted,/Change date or time/);assert.doesNotMatch(redacted,/Unavailable|ingredients/);
+  const simple=render({quote:{...quote,plan:{ordering_mode:'simple'}}});
+  assert.match(simple,/Your selected date and time are available/);assert.doesNotMatch(simple,/ingredient|packaging|deducted/);
   assert.equal(stockShortage({...packagingPayload,shortages:[{...packagingPayload.shortages[0],required:'3.5',shortfall:'2.5'}]}),null);
   const {default: BasketSlots} = await server.ssrLoadModule('/src/components/BasketSlots.jsx');
   const initialSlots=renderToStaticMarkup(createElement(BasketSlots,{value:'',onSelect:()=>{}}));
