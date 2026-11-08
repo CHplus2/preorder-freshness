@@ -70,3 +70,12 @@
 .pd .local-stock-legend strong{font-weight:600}
 .pd .pd-table-wrap:focus-visible{outline:3px solid #446f4f;outline-offset:3px}
 @media(max-width:650px){.pd .fc-steps>li{flex-basis:166px}.pd .local-stock-legend{display:grid;gap:6px}.pd .fc-page-heading{flex-direction:column}.pd .fc-page-heading>button{font-size:14px;padding:10px 14px}}
+
+.pd .fc-review-checklist{margin:24px 0;padding:0;background:transparent;border:0;border-radius:0}
+.pd .fc-review-checklist h3{font:600 1rem/1.5 system-ui,sans-serif;margin:0 0 8px}
+.pd .fc-review-checklist>p{font-size:.85rem;line-height:1.65;margin:8px 0 12px}
+.pd .fc-review-checklist .fc-verification-check{padding:12px 0;align-items:flex-start;border-color:#d5dfd1;font-size:.9rem;line-height:1.6}
+.pd .fc-review-checklist .fc-verification-check input{margin:2px 0 0;min-height:20px;padding:0}
+.pd .fc-review-note{margin:16px 0 0;border:0;padding:0}.pd .fc-review-note>summary{min-height:44px;align-content:center;cursor:pointer;font-size:.85rem}
+.pd .fc-review-checklist .fc-verification-note{margin-top:12px;font-size:.85rem}
+.pd .fc-review-checklist .fc-verification-note textarea{border-color:#becdb7;border-radius:8px;background:#fff;font-size:16px;line-height:1.6}

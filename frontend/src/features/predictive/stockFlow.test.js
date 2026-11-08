@@ -6,7 +6,7 @@ import {createServer} from 'vite';
 
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try {
- const {default:KitchenStockStory}=await server.ssrLoadModule('/src/features/predictive/KitchenStockStory.jsx');
+ const {default:KitchenStockStory,EvidenceNotes}=await server.ssrLoadModule('/src/features/predictive/KitchenStockStory.jsx');
  const {default:StockFlowEvidence}=await server.ssrLoadModule('/src/features/predictive/StockFlowEvidence.jsx');
  const flow={opening_quantity:5400,after_confirmed:5400,confirmed_allocated:0,forecast_consumed:4870.986,
   projected_total_remaining:529.014,projected_expiring_unused:196.891,projected_carried_stock:332.123,
@@ -20,6 +20,9 @@ try {
  const render=risk=>renderToStaticMarkup(createElement(StockFlowEvidence,{risk,window:{start_date:'2026-10-17',end_date:'2026-10-23',horizon_days:7}}));
  const risk={unit:'g',forecast_requirement:4870.986,forecast_shortfall:0,forecast_expiring_unused:196.891,stock_flow:flow};
  const html=render(risk);
+ assert.equal(renderToStaticMarkup(createElement(EvidenceNotes,{risk:{review_reasons:['','  ',null],alert_reason:' '}})),'');
+ const cleanNotes=renderToStaticMarkup(createElement(EvidenceNotes,{risk:{review_reasons:['Check the expiry','  Check the expiry  ',''],alert_reason:'Fallback'}}));
+ assert.equal((cleanNotes.match(/<li/g)||[]).length,1);assert.match(cleanNotes,/Check the expiry/);
  const datedRisk={unit:'g',forecast_requirement:1000,forecast_shortfall:220,forecast_expiring_unused:660,shortfall_quantity:0,
   stock_flow:{after_confirmed:1440,forecast_consumed:780,projected_carried_stock:0,
    batches:[{batch_id:1,expiry_date:'2026-11-11',expires_in_window:true,after_confirmed:1440,forecast_consumed:780,projected_remaining:660}],
@@ -119,6 +122,9 @@ try {
  assert.doesNotMatch(journey,/Saved decisions &amp; follow-up/);
  const finalReview=renderToStaticMarkup(createElement(MemoryRouter,{initialEntries:['/admin/ai/decisions?source=local&step=4']},createElement(KitchenDecisionJourney,{plan,comparison:null,onComparison:()=>{},onClear:()=>{}})));
  assert.match(finalReview,/Saved decisions &amp; follow-up/);
+ assert.match(finalReview,/fc-review-summary/);assert.match(finalReview,/>Save review<\/button>/);assert.match(finalReview,/>Download<\/button>/);
+ assert.doesNotMatch(finalReview,/RECOMMENDATION TO REVIEW|no action approved|class="fc-recommendation"/);
+
  const reviewedRisk={...selected,forecast_shortfall:1234};
  const links={preparation:'/admin/planner',menus:'/admin/products',inventory:'/admin/inventory'};
  const renderReview=action=>renderToStaticMarkup(createElement(MemoryRouter,null,createElement(KitchenWorkflowReview,{action,risk:reviewedRisk,links})));

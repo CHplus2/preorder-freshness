@@ -208,7 +208,7 @@ export default function KitchenDecisionJourney({
       setSave({
         signed: data,
         message:
-          "Signed review saved in this browser with fresh database evidence. Download a copy for your showcase. No operational action executed.",
+          "Review saved in this browser. Download a copy to keep it.",
         revision: data.id,
       });
     } catch (error) {
@@ -525,18 +525,18 @@ export default function KitchenDecisionJourney({
         )}
         {step === 4 && (
           <>
-            <div className="fc-recommendation">
-              <span className="pd-eyebrow">RECOMMENDATION TO REVIEW</span>
-              <h3>
-                {kitchenCase(r).action}
-              </h3>
-              <p>{r.forecast_shortfall>0 ? `Forecast gap: ${stockQuantity(r.forecast_shortfall,r.unit)}. Verify demand and purchase timing before committing.` : `Expected unused at expiry: ${stockQuantity(r.forecast_expiring_unused,r.unit)}. Review batch dates before acting.`}</p>
+            <section className="fc-review-summary" aria-label="Plan to review">
+              <h3>{action.title}</h3>
+              <p>{kitchenCase(r).title}.</p>
+              <dl className="fc-review-facts">
+                <div><dt>Ingredient</dt><dd>{r.ingredient_name}</dd></div>
+                <div><dt>Forecast shortfall</dt><dd>{stockQuantity(r.forecast_shortfall,r.unit)}</dd></div>
+                <div><dt>Unused at expiry</dt><dd>{stockQuantity(r.forecast_expiring_unused,r.unit)}</dd></div>
+                <div><dt>Review by</dt><dd>{r.urgent_by || plan.window.end_date}</dd></div>
+                {r.shortfall_quantity>0 && <div><dt>Confirmed-order shortfall</dt><dd>{stockQuantity(r.shortfall_quantity,r.unit)}</dd></div>}
+              </dl>
               <EvidenceNotes risk={r}/>
-              <p>
-                Chosen alternative: {action.title}. Target review date:{" "}
-                {r.urgent_by || plan.window.end_date}.
-              </p>
-            </div>
+            </section>
             <VerificationChecklist
               reviewed={reviewed}
               setReviewed={setReviewed}
@@ -547,23 +547,22 @@ export default function KitchenDecisionJourney({
                 saveKey.current = null;
               }}
             />
-            <div className="fc-brief-actions">
-              <button onClick={saveReview} disabled={save.busy}>
-                {save.busy ? "Saving evidence…" : "Save decision for follow-up"}
+            <div className="fc-brief-actions fc-review-actions">
+              <button className="admin-primary" onClick={saveReview} disabled={save.busy}>
+                {save.busy ? "Saving…" : "Save review"}
               </button>
-              <button onClick={download}>Download decision slip</button>
-              <Link to={links.planner}>Continue in planner</Link>
-              <Link to={links.inventory}>Continue in inventory</Link>
+              <button onClick={download} disabled={save.busy}>Download</button>
             </div>
             {save.message && <p role="status">{save.message}</p>}
             {save.error && <p role="alert">{save.error}</p>}
-            <p>
-              Reviews are saved in this browser, not in a shared server log.
-              Download a slip to keep it after signing out.
-              Save first to include signed evidence in the download. Downloaded
-              slips also include this session’s worksheet. Neither executes a
-              decision.
-            </p>
+            <nav className="fc-review-links" aria-label="Continue this review">
+              <Link to={links.planner}>Open planner <span aria-hidden="true">→</span></Link>
+              <Link to={links.inventory}>Open inventory <span aria-hidden="true">→</span></Link>
+            </nav>
+            <p className="fc-review-footnote">Reviews stay in this browser. Download a copy to keep after signing out. Saving or downloading does not change orders or stock.</p>
+            <details className="fc-review-storage"><summary>What the download includes</summary>
+              <p>The file includes your current checks, notes and worksheet. Save the review first to include signed evidence from a fresh database snapshot. Unsaved checks and notes reset on a new forecast or page reload.</p>
+            </details>
           </>
         )}
         <div className="fc-journey-controls">

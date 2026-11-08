@@ -2339,6 +2339,20 @@ are unchanged. No payment transfer, schema migration, live data correction or
 predictive/model change is introduced by this UI batch.
 
 
+### 8 November 2026 — FreshCast review layout
+
+The local final review uses a plain selected-action summary with ingredient,
+forecast shortfall, unused-at-expiry and review-date fields. Review reasons omit
+blank and duplicate entries. Personal checks keep their existing stored values;
+optional notes and download details use collapsed sections. Save review and
+Download retain the existing signed-review and draft export handlers. Downloads
+are disabled during a pending save to avoid capturing incomplete save evidence.
+
+The no-bookings message is part of the normal planning context rather than a
+separate notice. The decision panel and expiring/later-stock summaries use thin
+outlines instead of thick coloured top borders. No forecasts, stock allocation,
+review API, model or operational action rules change.
+
 ### 8 November 2026 — FreshCast dated stock explanation
 
 The stock story replaces its filled explanation box with two calculations in

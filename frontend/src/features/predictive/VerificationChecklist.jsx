@@ -11,17 +11,15 @@ export default function VerificationChecklist({
 }) {
   return (
     <section
-      className="fc-check-before fc-verification"
+      className="fc-review-checklist fc-verification"
       aria-label="Manager review checklist"
     >
-      <h3>Before you act</h3>
+      <h3>Your checks</h3>
       <p>
-        Record what you have reviewed outside FreshCast. These checkmarks are
-        your notes; the system cannot verify these facts.
+        Mark the checks you completed. FreshCast does not verify them.
       </p>
       <p role="status">
-        {reviewed.length} of {reviewChecks.length} checks marked reviewed · no
-        action approved
+        {reviewed.length} of {reviewChecks.length} reviewed
       </p>
       {reviewChecks.map((label) => (
         <label className="fc-verification-check" key={label}>
@@ -39,8 +37,9 @@ export default function VerificationChecklist({
           <span>{label}</span>
         </label>
       ))}
+      <details className="fc-review-note"><summary>Add a note (optional)</summary>
       <label className="fc-verification-note">
-        Manager handoff note (optional)
+        Review note
         <textarea
           rows="3"
           maxLength="1000"
@@ -49,11 +48,8 @@ export default function VerificationChecklist({
           placeholder="For example: confirm supplier availability before ordering."
         />
       </label>
-      <p className="pd-note">
-        Notes are local to this ingredient review and included in the downloaded
-        draft. They are cleared on a new forecast or page reload. No action has
-        been executed.
-      </p>
+      <p className="pd-note">Unsaved notes reset on a new forecast or page reload. They are included in your download.</p>
+      </details>
     </section>
   );
 }

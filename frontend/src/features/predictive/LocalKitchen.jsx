@@ -132,8 +132,8 @@ export default function LocalKitchen({ view }) {
               {plan.timezone}
             </span>
             <span>{plan.coverage.included_orders} confirmed orders included · {plan.coverage.excluded_orders} excluded. <button className="local-evidence-trigger" onClick={reviewEvidence} aria-controls="kitchen-data-checks" aria-expanded={evidenceOpen}>Review data checks</button></span>
+            {!plan.coverage.included_orders && <span className="local-forecast-context">Menu forecasts are separate from confirmed orders.</span>}
           </div>
-          {!plan.coverage.included_orders && <p className="local-booking-note">No confirmed bookings qualify in this window. Menu forecasts can still estimate additional demand.</p>}
           {view === "forecast" ? (
             <OrderEvidence plan={plan} />
           ) : view === "inventory" ? (

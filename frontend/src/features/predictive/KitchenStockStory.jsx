@@ -2,8 +2,11 @@ import {stockStory, stockQuantity, kitchenCase} from './kitchenPresentation';
 import {ZeroWasteNotice} from './FreshCastChrome';
 
 export function EvidenceNotes({risk}) {
-  const notes = risk.review_reasons?.length ? risk.review_reasons : [risk.alert_reason];
-  return <details className="local-evidence-notes"><summary>Evidence to review</summary><ul>{notes.filter(Boolean).map(note => <li key={note}>{note}</li>)}</ul></details>;
+  const supplied = Array.isArray(risk.review_reasons) ? risk.review_reasons : [];
+  const notes = [...new Set(supplied.filter(note=>typeof note==='string').map(note=>note.trim()).filter(Boolean))];
+  if(!notes.length && typeof risk.alert_reason==='string' && risk.alert_reason.trim())notes.push(risk.alert_reason.trim());
+  if(!notes.length)return null;
+  return <details className="local-evidence-notes"><summary>Review details</summary><ul>{notes.map(note => <li key={note}>{note}</li>)}</ul></details>;
 }
 
 export default function KitchenStockStory({risk, window, compact = false}) {
