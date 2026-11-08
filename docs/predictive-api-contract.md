@@ -2339,12 +2339,36 @@ are unchanged. No payment transfer, schema migration, live data correction or
 predictive/model change is introduced by this UI batch.
 
 
+### 8 November 2026 — FreshCast dated stock explanation
+
+The stock story replaces its filled explanation box with two calculations in
+the ingredient's recorded unit and a dated outcome table. Unused stock is grouped
+by batch expiry date; forecast shortfalls retain the demand dates in the existing
+ledger. This makes simultaneous expiry surplus and later shortages visible.
+The display uses existing `stock_flow` values; forecasting, date eligibility,
+allocation, saved inventory and predictive models are unchanged.
+
+### 8 November 2026 — Customer finder uses a maximum budget
+
+The customer menu finder no longer offers above-budget or combined-range
+searches. Its optional Maximum budget is the whole-order ceiling after discounts
+and delivery. Requests with a budget explicitly send `budget_mode: within`;
+blank budgets remain unrestricted. Both repeated-menu and mixed-menu choices
+remain available with the exact requested total quantity.
+
+When no suggested basket fits, Edit budget focuses the budget input. It never
+switches to an above-budget search. Legacy API comparison modes remain accepted
+for compatibility, but this customer interface does not request them. Stock,
+date, category and saved-basket checks are unchanged.
+
 ### 8 November 2026 — Account entry during checkout
 
 Guest customers can choose food and review their basket. Continuing to checkout
-opens the customer Login modal directly over the basket. A direct `/checkout`
-visit uses the same modal with the basket behind it; the separate account gate
-panel is removed. Closing this checkout modal returns to `/cart`.
+opens the customer Login modal directly over the basket. Visiting or reloading
+`/cart` never opens this modal automatically. A guest opening `/checkout`
+directly returns to `/cart` without opening a modal; account entry starts only
+when the guest clicks Continue to checkout. The separate account gate panel is
+removed. Closing this checkout modal keeps the customer on `/cart`.
 Basket and checkout route changes omit the exit animation so rapid return,
 retry and account transitions do not leave the previous route visible.
 
@@ -2354,6 +2378,9 @@ previous page visit. Switching modes preserves the registration contact draft.
 Checkout registration explains that the current guest basket is retained;
 login explains that the saved account basket is loaded. Successful account entry
 continues to checkout. Existing passkey and basket ownership rules are unchanged.
+Customer login, registration and staff login share the same responsive 450px
+card, overlay, corners, padding, title, close button and primary-button styling.
+Their heights follow their content; longer forms scroll inside the same card.
 
 ### 8 November 2026 — Clearer inventory expiry and repeated entry
 

@@ -6,6 +6,7 @@ import {createServer} from 'vite';
 
 const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
 try {
+ const {default:KitchenStockStory}=await server.ssrLoadModule('/src/features/predictive/KitchenStockStory.jsx');
  const {default:StockFlowEvidence}=await server.ssrLoadModule('/src/features/predictive/StockFlowEvidence.jsx');
  const flow={opening_quantity:5400,after_confirmed:5400,confirmed_allocated:0,forecast_consumed:4870.986,
   projected_total_remaining:529.014,projected_expiring_unused:196.891,projected_carried_stock:332.123,
@@ -19,6 +20,19 @@ try {
  const render=risk=>renderToStaticMarkup(createElement(StockFlowEvidence,{risk,window:{start_date:'2026-10-17',end_date:'2026-10-23',horizon_days:7}}));
  const risk={unit:'g',forecast_requirement:4870.986,forecast_shortfall:0,forecast_expiring_unused:196.891,stock_flow:flow};
  const html=render(risk);
+ const datedRisk={unit:'g',forecast_requirement:1000,forecast_shortfall:220,forecast_expiring_unused:660,shortfall_quantity:0,
+  stock_flow:{after_confirmed:1440,forecast_consumed:780,projected_carried_stock:0,
+   batches:[{batch_id:1,expiry_date:'2026-11-11',expires_in_window:true,after_confirmed:1440,forecast_consumed:780,projected_remaining:660}],
+   demand_by_day:[{date:'2026-11-10',forecast_requirement:780,forecast_consumed:780},{date:'2026-11-12',forecast_requirement:220,forecast_consumed:0}]}};
+ const datedStory=renderToStaticMarkup(createElement(KitchenStockStory,{risk:datedRisk,window:{start_date:'2026-11-08',end_date:'2026-11-14',horizon_days:7}}));
+ const datedText=datedStory.replace(/<[^>]*>/g,'');
+ assert.match(datedText,/1,440 g − 780 g = 660 g/);assert.match(datedText,/1,000 g − 780 g − 0 g = 220 g/);
+ assert.match(datedText,/2026-11-11Left at expiry660 g/);assert.match(datedText,/2026-11-12Forecast shortfall220 g/);
+ assert.doesNotMatch(datedStory,/local-stock-explanation|After using/);
+ const missingNeed=renderToStaticMarkup(createElement(KitchenStockStory,{risk:{...datedRisk,forecast_requirement:null},window:{start_date:'2026-11-08',end_date:'2026-11-14',horizon_days:7}})).replace(/<[^>]*>/g,'');
+ assert.match(missingNeed,/Forecast shortfallUnavailable − 780 g − 0 g = 220 g/);
+
+
  for(const value of ['529.014 g remaining','196.891','332.123','Unknown'])assert.ok(html.includes(value),value);
  assert.match(html,/Projected waste within this window/);
  assert.match(html,/Carried beyond this window/);

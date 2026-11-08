@@ -15,14 +15,14 @@ import {guideDateBounds} from '../utils/guidePresentation';
 import './GuidedMenuForm.css';
 
 export default function GuidedMenu(){
- const [form,setForm]=useState({date:'',quantity:1,menu_mode:'mixed',budget:'',budget_mode:'within',category:''});
+ const [form,setForm]=useState({date:'',quantity:1,menu_mode:'mixed',budget:'',category:''});
  const [data,setData]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[addingPlan,setAddingPlan]=useState(''),[expanded,setExpanded]=useState(false),[selected,setSelected]=useState(''),[success,setSuccess]=useState(null);
  const adding=!!addingPlan;
  const [requestScope,setRequestScope]=useState('');
  const {cart=[],cartLoading,cartError,cartUpdating,promotion,chooseFulfilment,fulfilmentMethod,deliveryArea,chooseDeliveryDay,addSuggestedBasket}=useCart();
  const {isAuthenticated,accountKey}=useAuth(),{categories:allCategories}=useProduct(),{formatPrice}=useUI();
  const categories=(Array.isArray(allCategories)?allCategories:[]).filter(category=>category.active_menu_count!==0);
- const generation=useRef(0),request=useRef(null),pending=useRef(false),errorRef=useRef(null),dateRef=useRef(null),resultsRef=useRef(null),helpId=useId();
+ const generation=useRef(0),request=useRef(null),pending=useRef(false),errorRef=useRef(null),dateRef=useRef(null),budgetRef=useRef(null),resultsRef=useRef(null),helpId=useId();
  const scope=JSON.stringify([accountKey,isAuthenticated,cart.map(row=>[row.product.id,row.quantity,row.product.price]),fulfilmentMethod,deliveryArea]);
  const scopeRef=useRef(scope);
  const shown=data?.scope===scope?data:null;
@@ -41,12 +41,12 @@ export default function GuidedMenu(){
  useEffect(()=>()=>request.current?.controller.abort(),[]);
  useEffect(()=>{if(expanded && shown?.plans.length)void recommendationEvent(shown.session,'impression');},[shown,expanded]);
  useEffect(()=>{if(visibleError && errorRef.current){errorRef.current.focus();errorRef.current.scrollIntoView({block:'nearest'});}},[visibleError]);
- const updateForm=next=>{request.current?.controller.abort();generation.current++;setForm(next.budget?next:{...next,budget_mode:'within'});setData(null);setError('');setBusy(false);setSuccess(null);};
+ const updateForm=next=>{request.current?.controller.abort();generation.current++;setForm(next);setData(null);setError('');setBusy(false);setSuccess(null);};
  const search=async(event,values=form)=>{
   event?.preventDefault();if(working || pending.current || cartLoading || cartUpdating || cartError)return;
   request.current?.controller.abort();const controller=new AbortController();request.current={controller,scope};
   const version=++generation.current;setRequestScope(scope);setBusy(true);setError('');setData(null);setSuccess(null);setSelected('');
-  const payload={date:values.date,quantity:Number(values.quantity),menu_mode:values.menu_mode,...(fulfilmentMethod?{delivery_method:fulfilmentMethod}:{}),...(deliveryArea?{delivery_area:deliveryArea}:{}),...(values.budget?{budget:values.budget,budget_mode:values.budget_mode}:{}),...(values.category?{category:Number(values.category)}:{})};
+  const payload={date:values.date,quantity:Number(values.quantity),menu_mode:values.menu_mode,...(fulfilmentMethod?{delivery_method:fulfilmentMethod}:{}),...(deliveryArea?{delivery_area:deliveryArea}:{}),...(values.budget?{budget:values.budget,budget_mode:'within'}:{}),...(values.category?{category:Number(values.category)}:{})};
   try{
    const response=await axios.post('/api/menu/basket-guide/',payload,{signal:controller.signal,timeout:45000,headers:{'X-CSRFToken':getCookie('csrftoken')}});
    if(version===generation.current && !controller.signal.aborted && scopeRef.current===scope)setData({...basketGuideResponse(response.data,payload),scope});
@@ -75,8 +75,8 @@ export default function GuidedMenu(){
  const priceExplanation=shown?basketPriceExplanation(shown,formatPrice):'';
  const rangeNotice=shown?basketRangeNotice(shown):'';
  const recover=action=>{
-  if(action==='change_date'){dateRef.current?.focus();dateRef.current?.scrollIntoView({block:'center'});return;}
-  const next={...form,...(action==='basket_quantity'?{quantity:shown.current_quantity}:action==='any_category'?{category:''}:action==='allow_mix'?{menu_mode:'mixed'}:{budget_mode:'all'})};
+  if(action==='change_date'||action==='edit_budget'){const field=action==='change_date'?dateRef.current:budgetRef.current;field?.focus();field?.scrollIntoView({block:'center'});return;}
+  const next={...form,...(action==='basket_quantity'?{quantity:shown.current_quantity}:action==='any_category'?{category:''}:action==='allow_mix'?{menu_mode:'mixed'}:{})};
   setForm(next);void search(null,next);
  };
  return <details id="menu-finder" className="dk-panel guided-menu" onToggle={event=>setExpanded(event.currentTarget.open)}>
@@ -86,9 +86,8 @@ export default function GuidedMenu(){
    <fieldset className="guide-menu-choice" disabled={!!adding}><legend>Menu choice</legend><div>{[['mixed','Allow a mix'],['same','One menu only']].map(([value,label])=><label key={value} data-selected={form.menu_mode===value}><input type="radio" name={helpId+'-menu-choice'} value={value} checked={form.menu_mode===value} onChange={()=>updateForm({...form,menu_mode:value})}/><span>{label}</span></label>)}</div></fieldset>
    {promotion?.ordering_mode==='simple'&&fulfilmentMethod!=='pickup'&&promotion.delivery_areas?.length>0&&<label className="guide-search-field"><span className="guide-field-label">Delivery area</span><select required value={deliveryArea} onChange={e=>chooseFulfilment(fulfilmentMethod,e.target.value)}><option value="">Choose your area</option>{promotion.delivery_areas.map(area=><option key={area} value={area}>{area}</option>)}</select><small>Used to include the correct delivery fee in your budget.</small></label>}
    <label className="guide-search-field"><span className="guide-field-label">Delivery date</span><input ref={dateRef} type="date" required min={bounds.first} max={bounds.last} disabled={!!adding} value={form.date} onChange={event=>updateForm({...form,date:event.target.value})}/></label>
-   <label className="guide-search-field"><span className="guide-field-label">Total items in this order</span><input type="number" required min="1" max="100" step="1" disabled={!!adding} value={form.quantity} onChange={event=>updateForm({...form,quantity:event.target.value})}/><small>Both budget ranges keep this item count fixed. Increase it if you want more items.</small></label>
-   <label className="guide-search-field"><span className="guide-field-label">Whole-order budget (RM, optional)</span><input type="number" min="0.01" max="99999999.99" step="0.01" disabled={!!adding} value={form.budget} onChange={event=>updateForm({...form,budget:event.target.value})}/></label>
-   <label className="guide-search-field"><span className="guide-field-label">Budget preference</span><select aria-label="Budget preference" aria-describedby={!form.budget?helpId+'-budget':undefined} disabled={adding || !form.budget} value={form.budget_mode} onChange={event=>updateForm({...form,budget_mode:event.target.value})}><option value="within">Within this budget</option><option value="above">Above this budget</option><option value="all">Within and above budget</option></select>{!form.budget && <small id={helpId+'-budget'}>Enter a budget to compare within or above it.</small>}</label>
+   <label className="guide-search-field"><span className="guide-field-label">Total items in this order</span><input type="number" required min="1" max="100" step="1" disabled={!!adding} value={form.quantity} onChange={event=>updateForm({...form,quantity:event.target.value})}/><small>This is the total number of items, including repeats.</small></label>
+   <label className="guide-search-field"><span className="guide-field-label">Maximum budget (RM, optional)</span><input ref={budgetRef} type="number" min="0.01" max="99999999.99" step="0.01" disabled={!!adding} value={form.budget} onChange={event=>updateForm({...form,budget:event.target.value})}/></label>
    <label className="guide-search-field"><span className="guide-field-label">Preference for new items</span><select disabled={!!adding} value={form.category} onChange={event=>updateForm({...form,category:event.target.value})}><option value="">Any category</option>{(Array.isArray(categories)?categories:[]).map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
    <div className="guide-search-actions"><button disabled={working || adding || cartLoading || cartUpdating || !!cartError}>{working?'Checking complete baskets…':'Find my options'}</button></div>
   </form>
@@ -103,7 +102,7 @@ export default function GuidedMenu(){
    {!shown.basket_known && <p className="guide-input-help">This preview starts with an empty basket. Sign in to include your saved items before adding.</p>}
    {!shown.plans.length?<div className="guide-empty" role="status"><h3>No matching basket found</h3><p>{basketGuideEmpty(shown.empty_reason,shown.quantity,shown.current_quantity,shown.menu_mode,promotion?.ordering_mode)}</p>
     {priceExplanation && <p className="guide-price-explanation">{priceExplanation}</p>}
-    <div className="guide-recovery-actions">{recovery.map(action=><button key={action} type="button" disabled={working || adding || cartLoading || cartUpdating || !!cartError} onClick={()=>recover(action)}>{action==='basket_quantity'?`Use ${shown.current_quantity} total items`:action==='compare_budget'?'Compare both budget ranges':action==='any_category'?'Try any category':action==='allow_mix'?'Allow a mix instead':'Choose another date'}</button>)}{shown.current_quantity>0 && <Link to="/cart">Review basket</Link>}</div>
+    <div className="guide-recovery-actions">{recovery.map(action=><button key={action} type="button" disabled={working || adding || cartLoading || cartUpdating || !!cartError} onClick={()=>recover(action)}>{action==='basket_quantity'?`Use ${shown.current_quantity} total items`:action==='edit_budget'?'Edit budget':action==='any_category'?'Try any category':action==='allow_mix'?'Allow a mix instead':'Choose another date'}</button>)}{shown.current_quantity>0 && <Link to="/cart">Review basket</Link>}</div>
    </div>:<GuideBasketResults data={shown} selectedId={selected} onSelect={setSelected} onAdd={add} onReview={()=>chooseDeliveryDay?.(shown.date)} onView={id=>selectRecommendation(shown.session,id)} authenticated={!!isAuthenticated} busyId={addingPlan} disabled={cartUpdating || cartLoading || !!cartError} formatPrice={formatPrice} rangeNotice={rangeNotice}/>}
 
    <details className="guide-method"><summary>How suggestions work</summary><p>{shown.message}</p></details>

@@ -5,4 +5,13 @@
 .account-dialog .modal-content { max-height: calc(100dvh - 2rem); overflow-y: auto; }
 .account-dialog .login-form label { display: grid; gap: .5rem; text-align: left; font-weight: 600; }
 .account-dialog .login-form label input { margin: 0; }
+.account-dialog .modal-overlay.account-auth-overlay{background:#172d2370;backdrop-filter:blur(4px);padding:16px;box-sizing:border-box;overflow-y:auto}
+.account-dialog .modal-content.account-auth-card{width:100%;max-width:450px;box-sizing:border-box;padding:32px;border:1px solid #d6dfcf;border-radius:16px;background:#fffefb;box-shadow:0 20px 70px #172c232b;max-height:calc(100dvh - 32px);overflow-y:auto;text-align:left}
+.account-dialog .modal-content.account-auth-card h2{font:600 26px/1.25 system-ui,sans-serif;letter-spacing:0;color:#29472f;margin:0 38px 12px 0;text-align:left}
+.account-dialog .account-auth-card>.account-close{top:12px;right:12px;min-width:44px;min-height:44px}
+.account-dialog .account-auth-card :is(.account-primary,.customer-access-primary){min-height:48px;padding:12px 16px;border:1px solid #285a3e;border-radius:9px;background:#285a3e;color:#fff;font:600 14px/1.5 system-ui,sans-serif}
+.account-dialog .account-auth-card :is(.account-primary,.customer-access-primary):disabled{opacity:.55;cursor:not-allowed}
+.account-dialog .account-auth-card input{min-height:48px;border-color:#b8c9b2;border-radius:8px}
+@media(max-width:500px){.account-dialog .modal-content.account-auth-card{padding:28px 20px}.account-dialog .modal-content.account-auth-card h2{font-size:23px}}
+@media(max-height:650px){.account-dialog .modal-overlay.account-auth-overlay{align-items:flex-start}}
 .account-dialog .account-error { color: #922b21; background: #fff1ee; border: 1px solid #e9b5ad; border-radius: 8px; padding: .75rem; margin: 1rem 0; }

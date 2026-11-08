@@ -12,7 +12,7 @@ export function basketSearchDescription(data,category,formatPrice){
 export function basketRecoveryActions(data,category){
  if(data.empty_reason==='existing_menu_mix')return ['allow_mix'];
  if(data.empty_reason==='quantity_below_basket')return data.current_quantity<=100?['basket_quantity']:[];
- if(data.empty_reason==='no_price_match')return data.budget && data.budget.mode!=='all'?['compare_budget']:[];
+ if(data.empty_reason==='no_price_match')return data.budget?.mode==='within'?['edit_budget']:[];
  if(data.empty_reason==='no_menu_match' || data.empty_reason==='no_kitchen_times')return [...(category?['any_category']:[]),'change_date'];
  return [];
 }
@@ -21,8 +21,8 @@ export function basketPriceExplanation(data,formatPrice){
  const e=data.price_evidence;
  if(data.empty_reason!=='no_price_match' || !e?.considered_baskets || !data.budget)return '';
  const low=formatPrice(e.minimum_order_total),high=formatPrice(e.maximum_order_total);
- const range=moneyCents(e.minimum_order_total)===moneyCents(e.maximum_order_total)?`The proposed baskets total ${low}.`:`Proposed basket totals range from ${low} to ${high}.`;
- const why=e.above_count===0?`None of these proposed combinations is above ${formatPrice(data.budget.amount)}.`:e.within_count===0?`None of these proposed combinations is within ${formatPrice(data.budget.amount)}.`:'';
+ const range=moneyCents(e.minimum_order_total)===moneyCents(e.maximum_order_total)?`The baskets compared total ${low}.`:`Basket prices compared range from ${low} to ${high}.`;
+ const why=e.above_count===0?`None of these proposed combinations is above ${formatPrice(data.budget.amount)}.`:e.within_count===0?`None of these baskets fits the maximum budget of ${formatPrice(data.budget.amount)}.`:'';
  return `${range} ${why} These are price comparisons, before kitchen availability checks.`;
 }
 

@@ -31,12 +31,13 @@ try{
  const {default:PaymentOptions}=await server.ssrLoadModule('/src/components/PaymentOptions.jsx');
  const {default:Summary}=await server.ssrLoadModule('/src/components/CheckoutSummary.jsx');
  const {CartContext}=await server.ssrLoadModule('/src/contexts/CartContext.js');
+ const {AuthContext}=await server.ssrLoadModule('/src/contexts/AuthContext.js');
  const {UIContext}=await server.ssrLoadModule('/src/contexts/UIContext.js');
  const {StoreContext}=await server.ssrLoadModule('/src/contexts/StorefrontContext.js');
  const renderScheduled=node=>renderToStaticMarkup(h(StoreContext.Provider,{value:{store:{ordering_mode:'scheduled'}}},node));
  const row={id:1,quantity:1,product:{id:2,name:'Meal',price:'10.05',selling_status:'active',delivery_weekdays:[]}};
  const base={cart:[row],cartLoading:false,cartUpdating:false,cartError:'',pricingReady:true,pricingError:'',total:10.05,discount:1,SHIPPING_FEE:5,finalTotal:14.05};
- const cart=patch=>renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store:{name:'Kitchen'}}},h(UIContext.Provider,{value:{formatPrice:value=>'RM '+Number(value).toFixed(2)}},h(CartContext.Provider,{value:{...base,...patch}},h(CartPage))))));
+ const cart=patch=>renderToStaticMarkup(h(MemoryRouter,null,h(StoreContext.Provider,{value:{store:{name:'Kitchen'}}},h(UIContext.Provider,{value:{formatPrice:value=>'RM '+Number(value).toFixed(2)}},h(CartContext.Provider,{value:{...base,...patch}},h(AuthContext.Provider,{value:{isGuest:false}},h(CartPage)))))));
  const failed=cart({cartError:'Read failed'});assert.match(failed,/Retry basket/);assert.doesNotMatch(failed,/Continue to checkout|Order summary|Your choices|Your basket is empty/);
  const updating=cart({cartUpdating:true});assert.match(updating,/Updating basket and totals/);assert.match(updating,/<button[^>]*disabled[^>]*>Continue to checkout/);
  const pricing=cart({pricingReady:false,pricingError:'Pricing unavailable'});assert.match(pricing,/Retry pricing/);assert.doesNotMatch(pricing,/RM 14.05|Bulk discount/);

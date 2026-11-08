@@ -37,8 +37,8 @@ export default function AccountForm({create=false}) {
     finally{submitting.current=false;}
   };
   const recoveryEmail=!usernameOnly&&account.identifier.includes('@')?account.identifier:'';
-  return <ModalDialog label={recovering?'Recover password':create?'Create account':'Sign in'} onDismiss={dismiss} fallbackFocusSelector="[data-account-entry]"><div className="modal-overlay account-overlay"><section className="modal-content account-form-card" aria-labelledby="account-form-title">
-    <button className="account-close" type="button" aria-label="Close account dialog" disabled={authPending||recoveryBusy} onClick={dismiss}><X size={21} aria-hidden="true"/></button>
+  return <ModalDialog label={recovering?'Recover password':create?'Create account':'Sign in'} onDismiss={dismiss} fallbackFocusSelector="[data-account-entry]"><div className="modal-overlay account-overlay account-auth-overlay"><section className="modal-content account-form-card account-auth-card" aria-labelledby="account-form-title">
+    <button className="account-close" type="button" aria-label="Close account dialog" disabled={authPending||recoveryBusy} onClick={dismiss}><X size={20} aria-hidden="true"/></button>
     {recovering?<><button className="account-back-button" type="button" disabled={recoveryBusy} onClick={()=>{setRecovering(false);setLocalError('')}}><ArrowLeft size={17} aria-hidden="true"/>Back</button><span className="dk-eyebrow">ACCOUNT HELP</span><h2 id="account-form-title">Reset your password</h2><p className="account-form-intro">Enter the email saved with your account. We’ll send a reset link if it matches an account.</p><PasswordRecoveryRequest initialEmail={recoveryEmail} initialUsername={recoveryEmail?'':account.identifier} onBusyChange={setRecoveryBusy}/></>:<>
     {staffOnly&&<button type="button" className="account-back-button" disabled={authPending} onClick={backToCustomer}><ArrowLeft size={17} aria-hidden="true"/>Back to customer account</button>}
     <span className="dk-eyebrow">{staffOnly?'KITCHEN STAFF':'YOUR KITCHEN ACCOUNT'}</span><h2 id="account-form-title">{staffOnly?'Kitchen sign in':create?'Create your account':'Welcome back'}</h2>

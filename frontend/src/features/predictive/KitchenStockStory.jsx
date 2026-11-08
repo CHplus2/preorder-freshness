@@ -10,6 +10,16 @@ export default function KitchenStockStory({risk, window, compact = false}) {
   const story = stockStory(risk);
   const issue = kitchenCase(risk);
   const amount = value => stockQuantity(value, risk.unit);
+  const nativeAmount = value => value==null || !Number.isFinite(value) ? 'Unavailable' : `${new Intl.NumberFormat('en-MY',{maximumFractionDigits:3}).format(value)} ${risk.unit}`;
+  const unusedByDate = {};
+  for(const batch of risk.stock_flow?.batches || []){
+    if(batch.expires_in_window && batch.projected_remaining>0 && batch.expiry_date)unusedByDate[batch.expiry_date]=(unusedByDate[batch.expiry_date] || 0)+batch.projected_remaining;
+  }
+  const datedOutcomes = [
+    ...Object.entries(unusedByDate).map(([date,quantity])=>({date,quantity,label:'Left at expiry'})),
+    ...(risk.stock_flow?.demand_by_day || []).filter(day=>day.forecast_requirement-day.forecast_consumed>0.001)
+      .map(day=>({date:day.date,quantity:day.forecast_requirement-day.forecast_consumed,label:'Forecast shortfall'})),
+  ].sort((a,b)=>a.date.localeCompare(b.date)||a.label.localeCompare(b.label));
   if (!story) return <p>Refresh kitchen data to see the expiry stock breakdown.</p>;
   if (compact) return <section className={`local-stock-story ${issue.kind}`} aria-label="Forecast and expiry stock summary">
     <div className="local-demand-equation compact">
@@ -37,8 +47,15 @@ export default function KitchenStockStory({risk, window, compact = false}) {
       ].map(([label, value, hint, name]) => <article key={name} className={name}><span>{label}</span><strong>{amount(value)}</strong>{!compact && <small>{hint}</small>}</article>)}
     </div>
     {!compact && <p className="pd-note">Summary amounts are rounded. The stock breakdown retains native ingredient units.</p>}
-    {!compact && <p className="local-stock-explanation">After using {amount(story.nearUsed)} of expiring stock, {amount(story.afterNear)} is still needed. Later stock covers {amount(story.laterUsed)}, leaving <strong>{amount(story.gap)} uncovered</strong>{story.firstGap ? ` from ${story.firstGap}` : ''}. Only stock usable on the demand date counts.</p>}
-    <div className="local-stock-outcome"><span>Expected unused at expiry</span><strong>{amount(story.waste)}</strong>{story.waste>0 && <span>Review a safe use before expiry.</span>}</div>
+    <div className="local-stock-calculations" aria-label={`Stock calculations in ${risk.unit}`}>
+      <p><span>Unused at expiry</span><strong>{nativeAmount(story.nearAvailable)} − {nativeAmount(story.nearUsed)} = {nativeAmount(story.waste)}</strong></p>
+      <p><span>Forecast shortfall</span><strong>{nativeAmount(story.need)} − {nativeAmount(story.nearUsed)} − {nativeAmount(story.laterUsed)} = {nativeAmount(story.gap)}</strong></p>
+    </div>
+    {story.waste>0 && story.gap>0 && <p className="local-stock-timing-note">Stock can expire unused and still be short on another date. Stock must be received and unexpired on the day it is needed.</p>}
+    {datedOutcomes.length>0 && <div className="pd-table-wrap local-stock-dates" tabIndex={0} role="region" aria-label="Expiry and unmet demand dates"><table>
+      <caption>Forecast amounts by date</caption><thead><tr><th>Date</th><th>Outcome</th><th>Amount</th></tr></thead>
+      <tbody>{datedOutcomes.map(row=><tr key={`${row.date}-${row.label}`}><td>{row.date}</td><td>{row.label}</td><td>{nativeAmount(row.quantity)}</td></tr>)}</tbody>
+    </table></div>}
     <ZeroWasteNotice waste={story.waste} carried={story.carried} unit={risk.unit}/>
     {risk.shortfall_quantity > 0 && <p><strong>Confirmed-order gap: {amount(risk.shortfall_quantity)}.</strong> This is separate from the additional forecast gap above.</p>}
   </section>;

@@ -1,6 +1,6 @@
-import {useCallback,useEffect,useRef,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import axios from 'axios';
-import {Link,useNavigate} from 'react-router-dom';
+import {Link,Navigate,useNavigate} from 'react-router-dom';
 import {useAuth} from '../../contexts/AuthContext';
 import {useCart} from '../../contexts/CartContext';
 import {useOrder} from '../../contexts/OrderContext';
@@ -19,16 +19,8 @@ import {contactPhone} from '../../utils/contactPhone';
 import useDeliveryQuote from '../../hooks/useDeliveryQuote';
 import {basketAvailabilityKey} from '../../utils/deliverySlots';
 import {fulfilmentKey,fulfilmentSelectionKey,methodsFor} from '../../utils/fulfilment';
-import CartPage from './CartPage';
 import './CheckoutPage.css';
 import './SimpleCheckoutPage.css';
-
-function CheckoutAccountAccess(){
- const {openCustomerAccess}=useUI();
- const open=useCallback(()=>openCustomerAccess({mode:'signin',next:'/checkout',cancelTo:'/cart'}),[openCustomerAccess]);
- useEffect(()=>{open()},[open]);
- return <CartPage onCheckout={open}/>;
-}
 
 export default function SimpleCheckoutPage(){
  const {cart,cartLoading,cartError,cartUpdating,pricingReady,pricingError,refreshCart,refreshPricing,promotion,pricingRefreshing=false,
@@ -87,11 +79,11 @@ export default function SimpleCheckoutPage(){
   }catch(err){setError(apiError(err));requestAnimationFrame(()=>errorRef.current?.focus());}
   finally{pending.current=false;setBusy(false)}
  };
+ if(isGuest)return <Navigate to="/cart" replace/>;
  if(cartLoading&&!cart.length)return <main className="checkout-container"><h1>Checkout</h1><p role="status">Loading your basket…</p></main>;
  if(cartError||!pricingReady)return <main className="checkout-container client-checkout"><h1>Checkout</h1><div className={cartError||pricingError?'checkout-error':'checkout-loading'} role={cartError||pricingError?'alert':'status'}><p>{cartError||pricingError||'Loading kitchen details…'}</p>{(cartError||pricingError)&&<button type="button" onClick={()=>{refreshCart();refreshPricing?.()}}>Refresh checkout</button>}</div></main>;
  if(!cart.length)return <main className="checkout-container"><h1>Your basket is empty</h1><Link to="/menu">Browse the menu</Link></main>;
  if(!accepting)return <main className="checkout-container client-checkout"><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Ordering is temporarily unavailable</h1><section className="checkout-section"><p>The kitchen is not offering delivery or self-collection right now. Your basket is kept.</p><Link to="/contact">Contact the kitchen</Link></section></main>;
- if(isGuest)return <CheckoutAccountAccess/>;
  return <main className="checkout-container client-checkout"><OrderJourney current="checkout"/><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Checkout</h1><p className="checkout-intro">Choose how and when to receive your food, check your contact details, then confirm payment.</p>
   <form onSubmit={submit} className="client-checkout-grid">
    <fieldset disabled={busy||cartUpdating} className="client-checkout-main">

@@ -23,7 +23,7 @@ assert.match(basketGuideEmpty('quantity_below_basket',3,4),/already has 4/);asse
 assert.match(basketGuideEmpty('no_kitchen_times',3,0),/common kitchen time/);
 assert.match(basketGuideEmpty('no_kitchen_times',3,0,'mixed','simple'),/available for this delivery date/);
 assert.doesNotMatch(basketGuideEmpty('no_kitchen_times',3,0,'mixed','simple'),/ingredient|common kitchen time/);
-assert.match(basketGuideEmpty('no_price_match',3,0),/budget range/);
+assert.match(basketGuideEmpty('no_price_match',3,0),/fits this budget/);
 console.log('Mixed basket response: total quantity, existing items, whole-order arithmetic, price evidence and atomic-add receipt validation passed.');
 
 assert.throws(()=>basketGuideResponse({...response,menu_mode:'same'},{...request,menu_mode:'same'}));

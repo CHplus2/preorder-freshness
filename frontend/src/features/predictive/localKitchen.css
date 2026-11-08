@@ -228,9 +228,6 @@
 .pd .shortage .local-demand-equation .gap,
 .pd .mixed .local-demand-equation .gap { border-color: #b97b50; background: #fff0e4; }
 .pd .local-stock-story small { line-height: 1.5; color: #516456; }
-.pd .local-stock-explanation { padding: 16px; background: #eef2e9; border-left: 3px solid #63846b; line-height: 1.75; }
-.pd .local-stock-outcome { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; padding: 16px 0; }
-.pd .local-stock-outcome strong { font-size: 1.5rem; }
 .pd .local-deep-evidence,
 .pd .local-evidence-notes,
 .pd .local-scene-picker { margin: 14px 0; padding: 14px 16px; border: 1px solid #d5d5c7; border-radius: 12px; }
@@ -270,3 +267,10 @@
   .pd .local-demand-equation,
   .pd .local-demand-equation.compact { grid-template-columns: 1fr; }
 }
+
+.pd .local-stock-calculations{margin:20px 0 12px;padding:12px 0;border-top:1px solid #d6dfd1;border-bottom:1px solid #d6dfd1}
+.pd .local-stock-calculations p{display:grid;gap:6px;margin:12px 0;line-height:1.6}
+.pd .local-stock-calculations p>span{font-size:.85rem;color:#52664f}
+.pd .local-stock-calculations strong{font-size:.95rem;font-weight:600;overflow-wrap:anywhere}
+.pd .local-stock-timing-note{font-size:.9rem;line-height:1.65;margin:16px 0}
+.pd .local-stock-dates{margin:16px 0}.pd .local-stock-dates td:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}

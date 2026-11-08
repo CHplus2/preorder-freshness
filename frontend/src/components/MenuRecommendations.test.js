@@ -24,9 +24,9 @@ try{
  const compact=render(h(Card,{compact:true,maxReasons:1,menu:{id:4,name:'Rice meal',image_url:'',reasons:['Reason one','Reason two']},priceLabel:'RM 12.00 each'}));
  assert.match(compact,/menu-recommendation-card--compact/);assert.match(compact,/Reason one/);assert.doesNotMatch(compact,/Reason two/);
  assert.match(guide,/1–100 total items/);assert.match(guide,/max="100"/);assert.match(guide,/max="99999999.99"/);
- assert.match(guide,/Budget preference/);assert.match(guide,/Above this budget/);assert.match(guide,/Within and above budget/);assert.match(guide,/Totals include the current discount and delivery fee/);
+ assert.doesNotMatch(guide,/Budget preference|Above this budget|Within and above budget|Compare both budget ranges/);assert.match(guide,/Totals include the current discount and delivery fee/);
  assert.match(guide,/<legend>Menu choice<\/legend>/);assert.match(guide,/Allow a mix/);assert.match(guide,/One menu only/);assert.match(guide,/type="radio"/);
- assert.match(guide,/Total items in this order/);assert.match(guide,/Whole-order budget/);
+ assert.match(guide,/Total items in this order/);assert.match(guide,/Maximum budget/);
  const {default:Results}=await server.ssrLoadModule('/src/components/GuideBasketResults.jsx');
  const fixtureItem=(id,name,price,quantity=3)=>({id,name,price,image_url:'',quantity,existing_quantity:0,add_quantity:quantity,line_total:(price*quantity).toFixed(2),reasons:['Popular recently']});
  const fixturePlan=(id,name,price)=>({id,items:[fixtureItem(id,name,price)],totals:{subtotal:(price*3).toFixed(2),discount:'0.00',shipping:'5.00',total:(price*3+5).toFixed(2),quantity:3},budget_relation:'within'});
@@ -41,7 +41,7 @@ try{
  const topUp=results({current_quantity:1,plans:[{...data.plans[0],items:[{...data.plans[0].items[0],add_quantity:2,existing_quantity:1}]}]});assert.match(topUp,/1 option/);assert.match(topUp,/Your basket already contains Rice meal/);assert.match(topUp,/topping up this menu only/);assert.match(topUp,/Add 2 items of Rice meal/);
  const soleMatch=results({plans:[data.plans[0]]});assert.match(soleMatch,/Only one alternative was found/);assert.doesNotMatch(soleMatch,/Your basket already contains/);assert.match(singles,/3 alternatives/);assert.match(guide,/Leave the budget blank for no price limit/);
  const replacement=results({replaces_basket:true,current_quantity:2});assert.match(replacement,/alternatives to your current 2-item basket/);assert.match(replacement,/then confirm replacement/);assert.equal((replacement.match(/Choose this menu/g)||[]).length,3);assert.doesNotMatch(replacement,/topping up this menu only/);
- assert.match(guide,/Enter a budget to compare within or above it/);assert.match(guide,/type="number"[^>]*value="1"/);
+ assert.match(guide,/Maximum budget \(RM, optional\)/);assert.match(guide,/type="number"[^>]*value="1"/);
  assert.match(results({}, {authenticated:false}),/Sign in to add Noodles/);
  console.log('Recommendation UI: visible entry point, loading distinction, shared evidence/photo cards and optional date refinement passed.');
 }finally{await server.close();}

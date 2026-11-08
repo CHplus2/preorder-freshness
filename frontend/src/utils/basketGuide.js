@@ -73,7 +73,7 @@ export function basketGuideEmpty(reason,quantity,current,menuMode='mixed',orderi
  if(reason==='quantity_below_basket' && current>100)return `Your basket already has ${current} items. This finder supports up to 100 total items; edit your basket to use it.`;
  if(reason==='quantity_below_basket')return `Your basket already has ${current} items. Choose a total of at least ${current}, or edit your basket first.`;
  if(reason==='basket_needs_review')return 'An existing basket item needs review for this date. Review your basket before building a complete order.';
- if(reason==='no_price_match')return 'No proposed basket matches this budget range. Try another budget or compare both ranges.';
+ if(reason==='no_price_match')return 'No suggested basket fits this budget. Try a higher budget or fewer items.';
  if(reason==='no_kitchen_times')return orderingMode==='simple'
   ?'No matching basket is available for this delivery date. Try another date or item count, or contact the kitchen about other arrangements.'
   :'No common kitchen time was found for these complete baskets. Try another date, quantity or preference.';

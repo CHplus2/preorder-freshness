@@ -24,7 +24,7 @@ try{
  assert.match(guest,/Your name/);assert.match(guest,/Phone number/);
  assert.doesNotMatch(guest,/type="password"|type="email"|Email address/);
  const gate=render(h(Checkout),{isGuest:true});
- assert.match(gate,/Your basket/);assert.match(gate,/Continue to checkout/);
+ assert.equal(gate,''); // Guest checkout redirects to the basket without opening account UI.
  assert.doesNotMatch(gate,/checkout-account-card|Your basket is ready/);
  assert.doesNotMatch(gate,/Payment receipt|Cash on delivery|Place preorder ·/);
  const account=render(h(Account),{customerAccount:{name:'Local account',phone:'+60123456789'}});
