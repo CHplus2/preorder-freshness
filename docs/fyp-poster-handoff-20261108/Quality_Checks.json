@@ -1,0 +1,43 @@
+{
+  "poster_mm": [
+    594.0,
+    841.0
+  ],
+  "orientation": "portrait",
+  "original_objectives_preserved": 5,
+  "simplified_sequence_messages": 6,
+  "plain_language_test_example": true,
+  "text_bounds": "passed",
+  "text_box_overlap": "none",
+  "blank_logo_region_pt": {
+    "x": 1421.7795275590552,
+    "y": 38,
+    "w": 190,
+    "h": 190
+  },
+  "blank_logo_region_ink_check": "passed",
+  "former_university_logo_included": false,
+  "qr_decoding": [
+    {
+      "file": "Public_Menu_QR.png",
+      "url": "https://preorder-freshness.vercel.app/menu"
+    },
+    {
+      "file": "FYP_Poster_A1.png",
+      "url": "https://preorder-freshness.vercel.app/menu"
+    },
+    {
+      "file": "Poster_Preview.png",
+      "url": "https://preorder-freshness.vercel.app/menu"
+    }
+  ],
+  "optional_diagram_sets": 9,
+  "source_screenshots": 8,
+  "lecturer_final_poster_instructions": "not yet issued, according to author",
+  "official_FYP2_compliance_or_marks_guaranteed": false,
+  "senior_example_module_identified": false,
+  "main_poster_editable": true,
+  "microsoft_powerpoint_render_verified": false,
+  "website_code_changed": false,
+  "live_database_contacted": false
+}

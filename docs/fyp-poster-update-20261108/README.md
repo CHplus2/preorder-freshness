@@ -1,5 +1,7 @@
 # Revised A1 FYP poster with client menu photos
 
+**Latest poster content review and editable handoff:** [Use this version and keep its optional sections for the lecturer’s later instructions](../fyp-poster-handoff-20261108/README.md). Earlier files below predate the new sequence overview, plain-language test caption and reserved logo area.
+
 - [A1 poster PDF](https://github.com/CHplus2/preorder-freshness/raw/main/docs/fyp-poster-update-20261108/FYP_Poster_A1.pdf)
 - [Editable PowerPoint](https://github.com/CHplus2/preorder-freshness/raw/main/docs/fyp-poster-update-20261108/FYP_Poster_A1_Editable.pptx)
 - [Preview PNG](https://github.com/CHplus2/preorder-freshness/raw/main/docs/fyp-poster-update-20261108/Poster_Preview.png)

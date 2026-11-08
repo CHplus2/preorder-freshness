@@ -1,5 +1,7 @@
 # FYP presentation and showcase materials — 7 November 2026
 
+**Latest poster content review and editable handoff:** [Use this version and keep its optional sections for the lecturer’s later instructions](../fyp-poster-handoff-20261108/README.md). Earlier files below predate the new sequence overview, plain-language test caption and reserved logo area.
+
 **Revised A1 poster:** [Download the client-photo version with improved spacing](../fyp-poster-update-20261108/README.md). The standalone poster files below are updated; the older complete showcase ZIP predates this poster revision.
 
 **8 November photo update:** [Download the new client-photo demo and numbered screenshot replacements](../fyp-photo-update-20261108/README.md). Earlier archives on this page predate this photo update. The report text and objectives are unchanged.
