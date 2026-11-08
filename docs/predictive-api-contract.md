@@ -2339,6 +2339,24 @@ are unchanged. No payment transfer, schema migration, live data correction or
 predictive/model change is introduced by this UI batch.
 
 
+### 8 November 2026 — Clearer inventory expiry and repeated entry
+
+The batch form keeps all three expiry methods visible: printed expiry date,
+shelf life from receipt, and shelf life from manufacture. Manufacture means the
+date the product was made; that method requires a reference whose duration starts
+from manufacture. Calculated methods use the plain `Shelf life (days)` input
+and require the existing shelf-life reference and storage conditions. Matching
+saved ingredient guidance can be copied explicitly; a preset is not required.
+
+`Save and add another` uses the existing single-batch create endpoint. After a
+successful create it clears all ingredient-specific fields, keeps only the
+received date, confirms the ingredient saved, and returns focus to ingredient
+selection. Ordinary `Save` closes the form. Both actions use native validation
+and the existing pending-write guard. A failed or unconfirmed save retains the
+draft and does not automatically retry. Each batch remains a separate record;
+there is no bulk transaction or new API/schema. Printed/opened/thawed caps,
+handling holds, quantity audit and checkout stock eligibility are unchanged.
+
 ### 6 November 2026 — Inventory and packaging workspace review
 
 Ingredient and batch dialogs now use shared native forms, validated required

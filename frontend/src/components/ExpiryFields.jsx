@@ -13,39 +13,37 @@ export default function ExpiryFields({value,onChange,disabled=false,material=nul
  const printed=value.original_expiry_date || (basis==='label'?value.expiry_date:'') || '';
  const saved=matchingStorageGuidance(value,material);
  const setPrinted=next=>onChange({...value,original_expiry_date:next || null,...(basis==='label'?{expiry_date:next}:{})});
- const guidance=<Field id={id('guidance')} label={`Guidance source and required storage conditions${needsSource?' (required)':' (optional for a printed date)'}`}><textarea id={id('guidance')} required={needsSource} rows={3} maxLength={300} value={value.guidance_note || ''} onChange={e=>set('guidance_note',e.target.value)} placeholder="Source/document reference and matching ingredient, temperature and handling conditions"/></Field>;
+ const guidance=<Field id={id('guidance')} label={`Shelf-life reference and storage conditions${needsSource?' (required)':' (optional)'}`}><textarea id={id('guidance')} required={needsSource} rows={3} maxLength={300} value={value.guidance_note || ''} onChange={e=>set('guidance_note',e.target.value)} placeholder="Document or supplier reference, ingredient condition and required temperature"/></Field>;
  const recordedLimits=!!value.opened_date || !!value.thawed_date || (basis!=='label' && !!value.original_expiry_date);
  return <div className="expiry-evidence-panel"><fieldset className="expiry-evidence" disabled={disabled}><legend>Date and storage</legend>
   <div className="expiry-fields-grid">
-   <Field id={id('basis')} label="Expiry calculation"><select id={id('basis')} value={basis} onChange={e=>onChange(changeExpiryBasis(value,e.target.value))}><option value="label">Use a package date</option><option value="storage">Calculate from received date</option><option value="manufactured">Calculate from manufacture date</option></select></Field>
-   <Field id={id('storage')} label="Actual storage"><select id={id('storage')} value={value.storage_type || 'chilled'} onChange={e=>onChange(changeBatchStorage(value,e.target.value))}><option value="chilled">Chilled</option><option value="frozen">Frozen</option><option value="ambient">Ambient</option></select></Field>
+   <Field id={id('basis')} label="How is expiry determined?"><select id={id('basis')} value={basis} onChange={e=>onChange(changeExpiryBasis(value,e.target.value))}><option value="label">Printed expiry date</option><option value="storage">Received date + shelf life</option><option value="manufactured">Manufacture date + shelf life</option></select></Field>
+   <Field id={id('storage')} label="Storage condition"><select id={id('storage')} value={value.storage_type || 'chilled'} onChange={e=>onChange(changeBatchStorage(value,e.target.value))}><option value="chilled">Chilled</option><option value="frozen">Frozen</option><option value="ambient">Ambient</option></select></Field>
   </div>
   {basis==='label'?<>
    <div className="expiry-fields-grid">
     <Field id={id('printed')} label="Printed expiry / best-before date"><input id={id('printed')} required type="date" value={printed} onChange={e=>setPrinted(e.target.value)}/></Field>
     <Field id={id('label-type')} label="Printed date meaning"><select id={id('label-type')} value={value.label_date_type || 'not_recorded'} onChange={e=>set('label_date_type',e.target.value)}><option value="not_recorded">Check the label</option><option value="use_by">Use by / expiry</option><option value="best_before">Best before (quality date)</option></select></Field>
    </div>
-   <p>{value.label_date_type==='best_before'?'Best-before describes quality. The app uses this date as a conservative stock-planning cutoff; passing it does not measure spoilage.':value.label_date_type==='use_by'?'Use-by / expiry is the labelled use limit. Follow the supplier’s storage and handling instructions.':'Check whether the label says use-by, expiry or best-before. A manufacture date tells you when it was made; it is not an expiry date.'}</p>
-   <button className="expiry-text-action" type="button" onClick={()=>onChange(changeExpiryBasis(value,'storage'))}>No package date? Calculate from received date</button>
+   <p>{value.label_date_type==='best_before'?'Best-before describes quality. The system uses it as the stock cutoff; it does not confirm when food spoils.':value.label_date_type==='use_by'?'Follow the printed date and the supplier’s storage instructions.':'Enter the expiry or best-before date on the label, not the manufacture date.'}</p>
   </>:<>
    {basis==='storage' && <>
-    <p>For unlabelled ingredients, enter documented days from receipt or use saved ingredient guidance. Receipt is when the batch reached you; it does not reset its age or verify earlier handling. Changing storage clears the previous days and source for review.</p>
-    {material && <div className="expiry-saved-guidance">
+    <p>For unlabelled ingredients, expiry is the received date plus shelf-life days from a suitable reference. Receiving food does not make it new; check its condition and earlier handling.</p>
+    {saved && <div className="expiry-saved-guidance">
      <strong>Saved guidance · {storageNames[value.storage_type || 'chilled']}</strong>
-     {saved?<><p>{saved.shelf_life_days} days from receipt · {saved.conditions}</p><p>Source: {saved.source}</p>
-      <button type="button" onClick={()=>onChange(applyStorageGuidance(value,material))}>Use this guidance for this batch</button>
-      <p>Copies days and source into this form. Check the conditions; custom values remain editable.</p>
-     </>:<p>No saved guidance for this storage type. Enter custom days and a source below. Reusable references can be saved in the ingredient directory.</p>}
+     <p>{saved.shelf_life_days} days from receipt · {saved.conditions}</p><p>Source: {saved.source}</p>
+      <button type="button" onClick={()=>onChange(applyStorageGuidance(value,material))}>Use saved guidance</button>
+      <p>Check that these conditions match this batch. You can edit the copied values.</p>
     </div>}
    </>}
    {basis==='manufactured' && <>
-    <p>Use the actual manufacture date and a documented duration that starts from manufacture. Do not substitute a purchase or received date.</p>
+    <p>Manufacture date means when the product was made. Use this method only when the shelf-life reference counts days from that date.</p>
     <Field id={id('manufactured')} label="Manufacture date"><input id={id('manufactured')} required max={value.received_date || today} type="date" value={value.manufactured_date || ''} onChange={e=>set('manufactured_date',e.target.value || null)}/></Field>
    </>}
-   <Field id={id('days')} label={basis==='storage'?'Documented storage life from receipt (days)':'Documented shelf life from manufacture (days)'}><input id={id('days')} required type="number" step="1" min="1" value={value.shelf_life_days ?? ''} onChange={e=>set('shelf_life_days',e.target.value===''?null:Number(e.target.value))}/></Field>
+   <Field id={id('days')} label="Shelf life (days)"><input id={id('days')} required type="number" step="1" min="1" value={value.shelf_life_days ?? ''} onChange={e=>set('shelf_life_days',e.target.value===''?null:Number(e.target.value))}/></Field>
   </>}
-  {needsSource && guidance}
-  {basis!=='label' && <p className="expiry-guidance-link"><a href="https://www.foodsafety.gov/food-safety-charts/cold-food-storage-charts" target="_blank" rel="noopener noreferrer">FoodSafety.gov cold food storage chart</a> · Match the ingredient, state and storage temperature. This reference does not automatically verify a batch.</p>}
+  {needsSource && <>{guidance}<p>Changing the storage condition clears the days and reference for review.</p></>}
+  {basis!=='label' && <p className="expiry-guidance-link">Need a reference? <a href="https://www.foodsafety.gov/food-safety-charts/cold-food-storage-charts" target="_blank" rel="noopener noreferrer">FoodSafety.gov cold food storage chart</a>. Match the food, its condition and storage temperature.</p>}
   <div className={'expiry-preview'+(preview?.shortened?' expiry-preview-capped':'')} role="status">{preview?<><strong>Stock deadline: {preview.effective}</strong><p>{basis==='label'?`Printed deadline: ${preview.base}.`:`${basis==='storage'?'Received':'Manufactured'} ${basis==='storage'?value.received_date:value.manufactured_date} + ${value.shelf_life_days} days = ${preview.base}.`}</p>{preview.shortened&&<div className="expiry-controlling-limit"><p><strong>Why the saved date is earlier</strong></p><ul>{preview.controlling.map(limit=><li key={limit.kind}>{limit.label}: {limit.date}{limit.anchor?` (${limit.anchor} + ${limit.days} days)`:''}</li>)}</ul><p>This earlier record sets the deadline. Increasing shelf-life days does not remove a printed, opened or thawed limit. Review the recorded limits below.</p></div>}{preview.effective<today&&<p>Past the recorded deadline — excluded from usable stock.</p>}</>:<p>Complete the received date and the relevant expiry fields to preview the deadline.</p>}<p>Dates do not measure physical freshness or confirm food safety. Saving validates the records.</p></div>
   {basis!=='label'&&value.original_expiry_date&&<section className="expiry-recorded-cap" aria-label="Printed date also recorded"><Field id={id('visible-printed-cap')} label="Printed date also recorded for this batch"><input id={id('visible-printed-cap')} type="date" value={value.original_expiry_date} onChange={e=>setPrinted(e.target.value)}/></Field><p>This date was kept when the calculation method changed. If it was entered by mistake and this batch has no printed expiry, correct it here. Removing it does not remove opened or thawed limits.</p><button className="expiry-text-action" type="button" onClick={()=>onChange(removeIncorrectPrintedDate(value))}>Remove incorrectly recorded printed date</button></section>}
   <details className="expiry-handling"><summary>Opened, thawed or handling limits{recordedLimits?' · limits recorded':''}{forcedHold?' · hold required':''}</summary>

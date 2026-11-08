@@ -70,6 +70,7 @@ export default function AdminInventoryPage() {
 
   const [newRawMaterial, setNewRawMaterial] = useState(null);
   const [newInventoryItem, setNewInventoryItem] = useState(null);
+  const [lastSavedBatch,setLastSavedBatch]=useState(null);
 
   const [editingInventoryItem, setEditingInventoryItem] =
     useState(null);
@@ -279,14 +280,14 @@ export default function AdminInventoryPage() {
     }
   };
 
-  const handleCreateInventory = async () => {
+  const handleCreateInventory = async (addAnother=false) => {
     if(writing.current)return;
     writing.current=true;
     setLoading(true);
     setError("");
 
     try {
-      await axios.post(
+      const response=await axios.post(
         `${API_URL}/inventory-items/`,
         {...newInventoryItem, expiry_date:newInventoryItem.expiry_date || undefined},
         getAuthConfig()
@@ -296,7 +297,14 @@ export default function AdminInventoryPage() {
 
       window.dispatchEvent(new Event('inventory-updated'));
 
-      setIngredientScope(currentMaterialIds.has(Number(newInventoryItem.raw_material))?"current":"all");setSelectedRawMaterial(String(newInventoryItem.raw_material));setSearchQuery("");setFreshnessFilter("");setVisibleCount(12);if(Number(newInventoryItem.quantity)===0)setShowEmptyBatches(true);setNewInventoryItem(null);setAlert({type:"success",message:"Stock batch added."});
+      setIngredientScope(currentMaterialIds.has(Number(newInventoryItem.raw_material))?"current":"all");setSelectedRawMaterial(String(newInventoryItem.raw_material));setSearchQuery("");setFreshnessFilter("");setVisibleCount(12);if(Number(newInventoryItem.quantity)===0)setShowEmptyBatches(true);
+      if(addAnother){
+        setNewInventoryItem({...emptyInventoryItem,received_date:newInventoryItem.received_date});
+        setLastSavedBatch({id:response.data.id,name:rawMaterials.find(row=>row.id===Number(newInventoryItem.raw_material))?.name || 'Stock batch'});
+      }else{
+        setNewInventoryItem(null);
+        setAlert({type:"success",message:"Stock batch added."});
+      }
     } catch (err) {
       setError(
         inventorySaveError(err)
@@ -377,7 +385,7 @@ export default function AdminInventoryPage() {
           <button
             className="add-inventory-btn" disabled={refreshing || !!refreshError}
             onClick={() =>
-              (setError(""),setNewInventoryItem({...emptyInventoryItem,received_date:today}))
+              (setError(""),setLastSavedBatch(null),setNewInventoryItem({...emptyInventoryItem,received_date:today}))
             }
           >
             Add stock batch
@@ -403,7 +411,7 @@ export default function AdminInventoryPage() {
         {[["expiring","Expiry within 3 days"],["expired","Past recorded deadline"],["held","On hold"]].map(([status,label])=><button type="button" className="summary-card" key={status} disabled={refreshing || !!refreshError} aria-pressed={freshnessFilter===status} onClick={()=>chooseStatus(freshnessFilter===status?'':status)}><span>{label}</span><strong>{scopedInventoryItems.filter(item=>inventoryCategory(item,today)===status).length}</strong><small>View batches</small></button>)}
       </div>
 
-      <StockReadiness today={today} disabled={formOpen||loading||refreshing||!!refreshError} onAddIngredient={id=>{if(rawMaterials.some(row=>row.id===id)){setError('');setNewInventoryItem({...emptyInventoryItem,raw_material:String(id),received_date:today});}}}/>
+      <StockReadiness today={today} disabled={formOpen||loading||refreshing||!!refreshError} onAddIngredient={id=>{if(rawMaterials.some(row=>row.id===id)){setError('');setLastSavedBatch(null);setNewInventoryItem({...emptyInventoryItem,raw_material:String(id),received_date:today});}}}/>
 
       <details className="inventory-attention-disclosure"><summary>Review priority batches</summary><InventoryAttention disabled={refreshing || !!refreshError} items={scopedInventoryItems} today={today} onReview={id=>openInventory(inventoryItems.find(item=>item.id===id))}/></details>
 
@@ -642,7 +650,7 @@ export default function AdminInventoryPage() {
 
       {newRawMaterial&&<IngredientForm value={newRawMaterial} onChange={setNewRawMaterial} onSave={handleCreateRawMaterial} onClose={()=>closeForm(setNewRawMaterial)} busy={loading} error={error}/>}
       {editingRawMaterial&&<IngredientForm value={editingRawMaterial} onChange={setEditingRawMaterial} onSave={handleUpdateRawMaterial} onClose={()=>closeForm(setEditingRawMaterial)} busy={loading} error={error}/>}
-      {newInventoryItem&&<InventoryBatchForm value={newInventoryItem} onChange={setNewInventoryItem} materials={rawMaterials} onSave={handleCreateInventory} onClose={()=>closeForm(setNewInventoryItem)} busy={loading} error={error} today={today}/>}
+      {newInventoryItem&&<InventoryBatchForm value={newInventoryItem} onChange={setNewInventoryItem} materials={rawMaterials} onSave={handleCreateInventory} onClose={()=>closeForm(setNewInventoryItem)} busy={loading} error={error} today={today} lastSaved={lastSavedBatch}/>}
       {editingInventoryItem&&<InventoryBatchForm value={editingInventoryItem} onChange={setEditingInventoryItem} materials={rawMaterials} originalQuantity={originalQuantity} onSave={handleUpdateInventory} onClose={()=>closeForm(setEditingInventoryItem)} busy={loading} error={error} today={today} onReload={async()=>{
         if(writing.current)return;writing.current=true;setLoading(true);
         try{const response=await axios.get(`${API_URL}/inventory-items/${editingInventoryItem.id}/`,getAuthConfig());openInventory(inventoryRecords([response.data])[0]);setError('')}

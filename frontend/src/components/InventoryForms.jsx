@@ -1,4 +1,4 @@
-import {useId} from 'react';
+import {useEffect,useId,useRef} from 'react';
 import ModalDialog from './ModalDialog';
 import InventoryFeedback from './InventoryFeedback';
 import ExpiryFields from './ExpiryFields';
@@ -20,12 +20,19 @@ export function IngredientForm({value,onChange,onSave,onClose,busy,error}){
   <footer><button type="button" disabled={busy} onClick={onClose}>Cancel</button><button type="submit" className="inventory-entry-primary" disabled={busy}>{busy?'Saving…':editing?'Save ingredient':'Add ingredient'}</button></footer>
  </form></div></ModalDialog>;
 }
-export function InventoryBatchForm({value,onChange,materials,originalQuantity,onSave,onClose,onReload,busy,error,today}){
+export function InventoryBatchForm({value,onChange,materials,originalQuantity,onSave,onClose,onReload,busy,error,today,lastSaved}){
  const id=useId(),editing=!!value.id,material=materials.find(row=>row.id===Number(value.raw_material));
+ const form=useRef(null);
+ useEffect(()=>{
+  if(!lastSaved || busy)return;
+  form.current?.querySelector('[data-initial-focus]')?.focus({preventScroll:true});
+  if(form.current)form.current.scrollTop=0;
+ },[lastSaved,busy]);
  const unit=material?.unit||value.unit||'',changed=editing&&Number(value.quantity)!==Number(originalQuantity);
  const field=(name,next)=>onChange({...value,[name]:next});
- return <ModalDialog label={editing?'Edit stock batch':'Add stock batch'} onDismiss={onClose}><div className="modal-overlay"><form className="modal-content inventory-entry-form inventory-form" onSubmit={event=>{event.preventDefault();if(!busy)onSave()}}>
-  <header><div><h2>{editing?'Edit stock batch':'Add stock batch'}</h2><p>{editing?value.batch_code||'Stock batch':'Record ingredients that have reached the kitchen.'}</p></div><button type="button" disabled={busy} onClick={onClose}>Close</button></header>
+ return <ModalDialog label={editing?'Edit stock batch':'Add stock batch'} onDismiss={onClose}><div className="modal-overlay"><form key={lastSaved?.id || 'initial'} ref={form} className="modal-content inventory-entry-form inventory-form" onSubmit={event=>{event.preventDefault();if(!busy)onSave(!editing&&event.nativeEvent.submitter?.value==='another')}}>
+  <header><div><h2>{editing?'Edit stock batch':'Add stock batch'}</h2><p>{editing?value.batch_code||'Stock batch':'Record one ingredient batch at a time. Use “Save and add another” to continue with the same received date.'}</p></div><button type="button" disabled={busy} onClick={onClose}>Close</button></header>
+  {lastSaved&&<div role="status" className="inventory-entry-success">{lastSaved.name} saved. Choose the next ingredient. Only the received date has been kept.</div>}
   <InventoryFeedback message={error}>{editing&&<button type="button" disabled={busy} onClick={onReload}>Reload latest batch (discards edits)</button>}</InventoryFeedback>
   <fieldset disabled={busy} className="inventory-entry-fields"><legend className="sr-only">Batch details</legend>
    {editing?<div className="inventory-fixed-ingredient"><span>Ingredient</span><strong>{value.raw_material_name||material?.name}</strong></div>:<label htmlFor={id+'-ingredient'}>Ingredient<select id={id+'-ingredient'} data-initial-focus required value={value.raw_material} onChange={event=>onChange(changeBatchMaterial(value,event.target.value?Number(event.target.value):''))}><option value="">Choose an ingredient</option>{materials.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>}
@@ -36,6 +43,6 @@ export function InventoryBatchForm({value,onChange,materials,originalQuantity,on
    <ExpiryFields value={value} onChange={onChange} disabled={busy} material={material}/>
    <details className="inventory-entry-optional"><summary>Batch reference (optional){value.batch_code?` · ${value.batch_code}`:''}</summary><label htmlFor={id+'-code'}>Batch code<input id={id+'-code'} maxLength={100} value={value.batch_code||''} onChange={event=>field('batch_code',event.target.value)} placeholder="Leave blank to generate automatically"/></label><p>Leave blank for a standard ingredient–received date–batch number reference, or use the supplier’s batch code. Previous references stay in the history.</p></details>
   </fieldset>
-  <footer><button type="button" disabled={busy} onClick={onClose}>Cancel</button><button type="submit" className="inventory-entry-primary" disabled={busy}>{busy?'Saving…':editing?'Save batch changes':'Add stock batch'}</button></footer>
+  <footer><button type="button" disabled={busy} onClick={onClose}>Cancel</button><button type="submit" className="inventory-entry-primary" disabled={busy}>{busy?'Saving…':editing?'Save batch changes':'Save'}</button>{!editing&&<button type="submit" value="another" disabled={busy}>Save and add another</button>}</footer>
  </form></div></ModalDialog>;
 }

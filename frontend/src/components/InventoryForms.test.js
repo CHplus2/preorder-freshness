@@ -16,7 +16,12 @@ try{
  assert.match(create,/Stock deadline: <!-- -->2026-12-06|Stock deadline: 2026-12-06/);
  assert.match(create,/Batch reference \(optional\)/);assert.doesNotMatch(create,/Reason for quantity adjustment/);
  assert.match(create,/Chicken &lt;b&gt;raw&lt;\/b&gt;/);assert.doesNotMatch(create,/<b>raw<\/b>/);
+ assert.match(create,/<button type="submit" class="inventory-entry-primary">Save<\/button>/);
+ assert.match(create,/<button type="submit" value="another">Save and add another<\/button>/);
+ const continued=render(h(InventoryBatchForm,{...props,lastSaved:{id:5,name:'Carrot <raw>'}}));
+ assert.match(continued,/Carrot &lt;raw&gt; saved/);assert.match(continued,/Only the received date has been kept/);
  const edit=render(h(InventoryBatchForm,{...props,value:{...base,id:2,quantity:'1400.250'},originalQuantity:'1500.250'}));
+ assert.doesNotMatch(edit,/Save and add another/);
  assert.match(edit,/Quantity remaining \(g\)/);assert.match(edit,/Reason for quantity adjustment/);assert.match(edit,/1,500.25/);assert.match(edit,/1,400.25/);assert.match(edit,/required=""[^>]*maxLength="200"/);
  const disabled=render(h(InventoryBatchForm,{...props,busy:true}));assert.match(disabled,/<fieldset[^>]*disabled=""/);
  const ingredient=render(h(IngredientForm,{value:{name:'',unit:'g',storage_guidance:[]},onChange:()=>{},onSave:()=>{},onClose:()=>{}}));
