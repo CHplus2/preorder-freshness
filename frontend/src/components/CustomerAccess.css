@@ -4,4 +4,3 @@
 .customer-access-form .customer-access-switch>button,.customer-access-form .customer-access-staff>button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:9px 12px;border:1px solid #cbd7c4;border-radius:8px;background:#fff;text-decoration:none;font:600 .8rem/1.5 system-ui,sans-serif}
 .customer-access-form .customer-access-switch>button:hover:not(:disabled),.customer-access-form .customer-access-staff>button:hover:not(:disabled){background:#f4f7f0}
 .customer-access-form .customer-access-staff{justify-content:space-between;gap:8px 12px;padding-top:16px;margin-top:16px}
-.customer-access-form .account-back-button{margin-bottom:18px}

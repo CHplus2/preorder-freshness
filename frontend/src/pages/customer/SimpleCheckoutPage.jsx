@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import axios from 'axios';
 import {Link,useNavigate} from 'react-router-dom';
 import {useAuth} from '../../contexts/AuthContext';
@@ -19,14 +19,22 @@ import {contactPhone} from '../../utils/contactPhone';
 import useDeliveryQuote from '../../hooks/useDeliveryQuote';
 import {basketAvailabilityKey} from '../../utils/deliverySlots';
 import {fulfilmentKey,fulfilmentSelectionKey,methodsFor} from '../../utils/fulfilment';
+import CartPage from './CartPage';
 import './CheckoutPage.css';
 import './SimpleCheckoutPage.css';
+
+function CheckoutAccountAccess(){
+ const {openCustomerAccess}=useUI();
+ const open=useCallback(()=>openCustomerAccess({mode:'signin',next:'/checkout',cancelTo:'/cart'}),[openCustomerAccess]);
+ useEffect(()=>{open()},[open]);
+ return <CartPage onCheckout={open}/>;
+}
 
 export default function SimpleCheckoutPage(){
  const {cart,cartLoading,cartError,cartUpdating,pricingReady,pricingError,refreshCart,refreshPricing,promotion,pricingRefreshing=false,
   fulfilmentMethod='standard',deliveryArea='',chooseFulfilment,preferredDelivery='',preferredDeliveryDay='',chooseDeliveryTime,
   total,discount,SHIPPING_FEE,finalTotal}=useCart();
- const {isSessionCurrent,customerAccount,isGuest,isAdmin,passkeyAction,checkAuth}=useAuth(),{placeOrder}=useOrder(),{formatPrice,openCustomerAccess}=useUI(),navigate=useNavigate();
+ const {isSessionCurrent,customerAccount,isGuest,isAdmin,passkeyAction,checkAuth}=useAuth(),{placeOrder}=useOrder(),{formatPrice}=useUI(),navigate=useNavigate();
  const [enteredName,setName]=useState(null),[enteredPhone,setPhone]=useState(null),[profile,setProfile]=useState(null),[address,setAddress]=useState(''),[notes,setNotes]=useState('');
  const [saveContact,setSaveContact]=useState(false),hasCustomerAccount=!!customerAccount;
  // Staff and older password accounts keep their name in the existing profile.
@@ -46,7 +54,6 @@ export default function SimpleCheckoutPage(){
  const [payment,setPayment]=useState(''),[proof,setProof]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const [receiptUploaded,setReceiptUploaded]=useState(false);
  const pending=useRef(false),errorRef=useRef(null);
- const basketCount=cart.reduce((count,item)=>count+item.quantity,0);
  const pickup=fulfilmentMethod==='pickup',transfer=manualPaymentAvailable(promotion,fulfilmentMethod),qr=!!promotion.duitnow_qr_url;
  const accepting=methodsFor(promotion).length>0;
  const areaIssue=!pickup&&promotion?.delivery_areas?.length>0&&!promotion.delivery_areas.includes(deliveryArea);
@@ -84,7 +91,7 @@ export default function SimpleCheckoutPage(){
  if(cartError||!pricingReady)return <main className="checkout-container client-checkout"><h1>Checkout</h1><div className={cartError||pricingError?'checkout-error':'checkout-loading'} role={cartError||pricingError?'alert':'status'}><p>{cartError||pricingError||'Loading kitchen details…'}</p>{(cartError||pricingError)&&<button type="button" onClick={()=>{refreshCart();refreshPricing?.()}}>Refresh checkout</button>}</div></main>;
  if(!cart.length)return <main className="checkout-container"><h1>Your basket is empty</h1><Link to="/menu">Browse the menu</Link></main>;
  if(!accepting)return <main className="checkout-container client-checkout"><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Ordering is temporarily unavailable</h1><section className="checkout-section"><p>The kitchen is not offering delivery or self-collection right now. Your basket is kept.</p><Link to="/contact">Contact the kitchen</Link></section></main>;
- if(isGuest)return <main className="checkout-container client-checkout checkout-account-page"><OrderJourney current="checkout"/><Link className="checkout-back" to="/cart">Back to basket</Link><section className="checkout-account-card" aria-labelledby="checkout-account-title"><span className="dk-eyebrow">YOUR PREORDER</span><h1 id="checkout-account-title">Your basket is ready</h1><p>Use an account to save and follow your preorder.</p><div className="checkout-account-summary"><strong>{basketCount} {basketCount===1?'item':'items'}</strong><span>Food subtotal <strong>{formatPrice(total)}</strong></span></div><div className="checkout-account-actions"><button type="button" className="checkout-submit" onClick={()=>openCustomerAccess({mode:'create',next:'/checkout'})}>Register</button><button type="button" className="checkout-account-login" onClick={()=>openCustomerAccess({mode:'signin',next:'/checkout'})}>Login</button></div><p className="checkout-account-note">Register to keep this basket. Logging in loads your saved basket.</p></section></main>;
+ if(isGuest)return <CheckoutAccountAccess/>;
  return <main className="checkout-container client-checkout"><OrderJourney current="checkout"/><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Checkout</h1><p className="checkout-intro">Choose how and when to receive your food, check your contact details, then confirm payment.</p>
   <form onSubmit={submit} className="client-checkout-grid">
    <fieldset disabled={busy||cartUpdating} className="client-checkout-main">

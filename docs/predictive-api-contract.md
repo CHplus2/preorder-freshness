@@ -2339,6 +2339,22 @@ are unchanged. No payment transfer, schema migration, live data correction or
 predictive/model change is introduced by this UI batch.
 
 
+### 8 November 2026 — Account entry during checkout
+
+Guest customers can choose food and review their basket. Continuing to checkout
+opens the customer Login modal directly over the basket. A direct `/checkout`
+visit uses the same modal with the basket behind it; the separate account gate
+panel is removed. Closing this checkout modal returns to `/cart`.
+Basket and checkout route changes omit the exit animation so rapid return,
+retry and account transitions do not leave the previous route visible.
+
+The navbar Login entry still opens login first. Login offers `New here? Register`
+and registration offers `Already have an account? Login`; neither implies a
+previous page visit. Switching modes preserves the registration contact draft.
+Checkout registration explains that the current guest basket is retained;
+login explains that the saved account basket is loaded. Successful account entry
+continues to checkout. Existing passkey and basket ownership rules are unchanged.
+
 ### 8 November 2026 — Clearer inventory expiry and repeated entry
 
 The batch form keeps all three expiry methods visible: printed expiry date,
