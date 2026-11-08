@@ -1,0 +1,44 @@
+[
+  {
+    "figure": "4.1",
+    "title": "Menu browsing",
+    "file": "Report_Figures/Figure_4_1_Menu_browsing.png",
+    "source_capture": "menu-current-desktop.png"
+  },
+  {
+    "figure": "4.2",
+    "title": "Customer account form",
+    "file": "Report_Figures/Figure_4_2_Customer_account_form.png",
+    "source_capture": "create-account-current-mobile.png"
+  },
+  {
+    "figure": "4.4",
+    "title": "Menu finder controls",
+    "file": "Report_Figures/Figure_4_4_Menu_finder_controls.png",
+    "source_capture": "suggestions-current-desktop.png"
+  },
+  {
+    "figure": "4.5",
+    "title": "Basket review",
+    "file": "Report_Figures/Figure_4_5_Basket_review.png",
+    "source_capture": "cart-current-desktop.png"
+  },
+  {
+    "figure": "4.6",
+    "title": "Checkout date and time",
+    "file": "Report_Figures/Figure_4_6_Checkout_date_and_time.png",
+    "source_capture": "checkout-current-desktop.png"
+  },
+  {
+    "figure": "4.7",
+    "title": "Checkout payment evidence",
+    "file": "Report_Figures/Figure_4_7_Checkout_payment_evidence.png",
+    "source_capture": "checkout-payment-current-desktop.png"
+  },
+  {
+    "figure": "4.9",
+    "title": "Edit menu",
+    "file": "Report_Figures/Figure_4_9_Edit_menu.png",
+    "source_capture": "menu-edit-current-desktop.png"
+  }
+]

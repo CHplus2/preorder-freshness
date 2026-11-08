@@ -1,0 +1,28 @@
+{
+  "source_commit": "3c75be0fbbf37fd258683bffb256e7fa31007322",
+  "live_vercel_capture": false,
+  "production_database_contacted": false,
+  "client_menu_photos": 8,
+  "clean_photos": 7,
+  "labelled_photos": 1,
+  "browser_page_errors": [],
+  "video_page_errors": [],
+  "numbered_replacement_figures": 7,
+  "additional_views": 4,
+  "video_observed_stock_after": {
+    "chicken_g": "4870.000",
+    "salad_bowls": 199
+  },
+  "Demo_120s_Client_Photos_1080p.mp4": {
+    "seconds": 120.0,
+    "width": 1920,
+    "height": 1080,
+    "audio": true
+  },
+  "Demo_120s_Client_Photos_Silent.mp4": {
+    "seconds": 120.0,
+    "width": 1920,
+    "height": 1080,
+    "audio": false
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "format": "1920x1080 H.264/AAC",
+  "duration_seconds": 120,
+  "source_capture_viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "page_frame_in_video": {
+    "x": 96,
+    "y": 48,
+    "width": 1728,
+    "height": 972
+  },
+  "editing": "Original local browser WebM and PNG captures, scaled once; one final H.264 visual encode at CRF 17; chapter/caption strips outside page image",
+  "source_commit": "3c75be0fbbf37fd258683bffb256e7fa31007322",
+  "live_vercel_capture": false,
+  "production_database_contacted": false,
+  "photographs": "Eight client menu photos selected from the user-supplied ZIP; processed using the application upload pipeline",
+  "voice": "Existing Kokoro v1.0 af_heart neural narration reused; not a new voice generation",
+  "source_pieces": [
+    {
+      "file": "video-title.png",
+      "duration": 4,
+      "source": "original PNG capture"
+    },
+    {
+      "file": "01-menu.webm",
+      "duration": 12,
+      "source": "original browser WebM"
+    },
+    {
+      "file": "account-dialog.png",
+      "duration": 6,
+      "source": "original PNG capture"
+    },
+    {
+      "file": "02-account.png",
+      "duration": 4,
+      "source": "original PNG capture"
+    },
+    {
+      "file": "03-suggestions.webm",
+      "duration": 13,
+      "source": "original browser WebM"
+    },
+    {
+      "file": "checkout-date.png",
+      "duration": 7,
+      "source": "original PNG capture"
+    },
+    {
+      "file": "checkout-proof.png",
+      "duration": 6,
+      "source": "original PNG capture"
+    },
+    {
+      "file": "04-checkout.png",
+      "duration": 7,
+      "source": "original PNG capture"
+    },
+    {
+      "file": "05-owner-review.webm",
+      "duration": 12,
+      "source": "original browser WebM"
+    },
+    {
+      "file": "ingredient-balance.png",
+      "duration": 8,
+      "source": "original PNG capture"
+    },
+    {
+      "file": "06-stock.png",
+      "duration": 8,
+      "source": "original PNG capture"
+    },
+    {
+      "file": "07-batch-dates.webm",
+      "duration": 18,
+      "source": "original browser WebM"
+    },
+    {
+      "file": "daily-summary.png",
+      "duration": 6,
+      "source": "original PNG capture"
+    },
+    {
+      "file": "08-reports.png",
+      "duration": 9,
+      "source": "original PNG capture"
+    }
+  ],
+  "observed_stock_after": {
+    "chicken_g": "4870.000",
+    "salad_bowls": 199
+  }
+}

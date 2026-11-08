@@ -1,5 +1,7 @@
 # Revised FYP2 report — 7 November 2026
 
+**8 November photo update:** [Download the new client-photo demo and numbered screenshot replacements](../fyp-photo-update-20261108/README.md). Earlier archives on this page predate this photo update. The report text and objectives are unchanged.
+
 This is the completed editorial revision after the four report batches. It replaces the earlier download set for this revision.
 
 - [Download the editable Word report](https://github.com/CHplus2/preorder-freshness/raw/main/docs/fyp-report-20261107-final/FYP2_Christopher_2402081406_Updated.docx)
