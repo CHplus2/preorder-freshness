@@ -1,0 +1,111 @@
+1
+00:00:00,200 --> 00:00:05,379
+Wrap and Bowl Kuch connects preorders, stock records, and kitchen reporting.
+
+2
+00:00:06,200 --> 00:00:11,552
+Customers browse the kitchen's menu, inspect prices and portions, and add food
+
+3
+00:00:11,577 --> 00:00:12,896
+before signing in.
+
+4
+00:00:12,921 --> 00:00:16,032
+Their basket remains visible while they decide.
+
+5
+00:00:18,200 --> 00:00:19,950
+Checkout opens account access.
+
+6
+00:00:19,975 --> 00:00:24,387
+A name, phone number and passkey create the customer account.
+
+7
+00:00:24,412 --> 00:00:28,381
+No separate website password or email address is needed.
+
+8
+00:00:30,200 --> 00:00:34,984
+For ideas, customers choose a date, quantity and whole order budget.
+
+9
+00:00:35,009 --> 00:00:38,481
+Suggestions can mix menus or repeat one menu.
+
+10
+00:00:38,506 --> 00:00:41,542
+A suggestion still needs an availability check.
+
+11
+00:00:44,200 --> 00:00:48,494
+The customer chooses the delivery area and a permitted morning time.
+
+12
+00:00:48,519 --> 00:00:53,205
+Changing the area keeps the time and rechecks the fee and stock.
+
+13
+00:00:53,230 --> 00:00:57,523
+The kitchen's receiving QR is shown after the total is confirmed.
+
+14
+00:00:57,548 --> 00:00:59,879
+A sample receipt is uploaded here.
+
+15
+00:00:59,904 --> 00:01:02,235
+The owner must still verify payment.
+
+16
+00:01:08,200 --> 00:01:11,162
+The order appears in the kitchen's queue.
+
+17
+00:01:11,187 --> 00:01:15,857
+Payment review and confirmation that food was received remain separate records.
+
+18
+00:01:18,200 --> 00:01:21,235
+Order placement deducts ingredients and packaging together.
+
+19
+00:01:21,260 --> 00:01:26,481
+This example uses one hundred and thirty grams of chicken and one
+
+20
+00:01:26,506 --> 00:01:27,356
+salad bowl.
+
+21
+00:01:27,381 --> 00:01:29,979
+Batches must cover the delivery date.
+
+22
+00:01:32,200 --> 00:01:36,138
+The owner records printed dates or documented shelf life.
+
+23
+00:01:36,163 --> 00:01:39,662
+Held batches and earlier limits affect usable stock.
+
+24
+00:01:39,687 --> 00:01:43,625
+These records support planning, rather than guaranteeing food safety.
+
+25
+00:01:44,200 --> 00:01:49,628
+Daily summaries and Print all help the kitchen prepare several orders together.
+
+26
+00:01:49,653 --> 00:01:53,263
+Sales and costs use their stated inclusion rules.
+
+27
+00:01:53,288 --> 00:01:55,990
+Automated checks support the tested functions.
+
+28
+00:01:56,015 --> 00:01:59,625
+Client and participant evaluation results are still pending.

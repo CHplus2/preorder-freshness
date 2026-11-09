@@ -1,0 +1,30 @@
+Two-minute system walkthrough
+
+The Female and Male editions use the same script and browser footage. Stock synthetic voices: Kokoro af_heart and am_michael.
+
+[00:00:00,000] Preorders, stock and kitchen records
+Wrap and Bowl Kuch connects preorders, stock records, and kitchen reporting.
+
+[00:00:06,000] Browse before signing in
+Customers browse the kitchen's menu, inspect prices and portions, and add food before signing in. Their basket remains visible while they decide.
+
+[00:00:18,000] A name, phone number and passkey
+Checkout opens account access. A name, phone number and passkey create the customer account. No separate website password or email address is needed.
+
+[00:00:30,000] Suggestions for a date and budget
+For ideas, customers choose a date, quantity and whole order budget. Suggestions can mix menus or repeat one menu. A suggestion still needs an availability check.
+
+[00:00:44,000] Confirm the total and upload evidence
+The customer chooses the delivery area and a permitted morning time. Changing the area keeps the time and rechecks the fee and stock. The kitchen's receiving QR is shown after the total is confirmed. A sample receipt is uploaded here. The owner must still verify payment.
+
+[00:01:08,000] Payment and food receipt stay separate
+The order appears in the kitchen's queue. Payment review and confirmation that food was received remain separate records.
+
+[00:01:18,000] Ingredients and packaging update together
+Order placement deducts ingredients and packaging together. This example uses one hundred and thirty grams of chicken and one salad bowl. Batches must cover the delivery date.
+
+[00:01:32,000] Record the date evidence
+The owner records printed dates or documented shelf life. Held batches and earlier limits affect usable stock. These records support planning, rather than guaranteeing food safety.
+
+[00:01:44,000] Daily summaries, Print all and sales
+Daily summaries and Print all help the kitchen prepare several orders together. Sales and costs use their stated inclusion rules. Automated checks support the tested functions. Client and participant evaluation results are still pending.

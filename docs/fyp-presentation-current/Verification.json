@@ -1,0 +1,52 @@
+{
+  "prepared": "2026-11-09",
+  "application_source": "3819a8cdb018c40406f20935ec8351afc3f24351",
+  "source": "current main running locally with isolated example data; not a production capture",
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "timing_seconds": {
+    "main_talk": 480,
+    "demo": 120,
+    "total": 600,
+    "questions": "outside timed talk"
+  },
+  "main_slide_count": 14,
+  "original_objective_count": 5,
+  "voice_variants": [
+    "Female",
+    "Male"
+  ],
+  "video_format": "1920x1080 H.264/AAC, 48 kHz audio, 120 seconds each",
+  "capture_page_errors": [],
+  "stock_example": {
+    "before": {
+      "chicken_g": 5000,
+      "salad_bowls": 200
+    },
+    "after": {
+      "chicken_g": "4870",
+      "salad_bowls": 199
+    }
+  },
+  "checks": {
+    "all_four_powerpoints_finalized": true,
+    "pptx_package_integrity": "passed",
+    "pptx_layout_geometry": "passed",
+    "embedded_video_matches_standalone": "SHA-256 equality checked for both variants",
+    "slide_notes": "14 per main deck",
+    "video_decode": "both MP4s decoded fully without reported errors",
+    "video_duration": "120.000 seconds each",
+    "audio_integrated_loudness_lufs": {
+      "Female": -18.33,
+      "Male": -18.48
+    },
+    "visual_review": "main, backup and fallback slides, speaker script and selected frames across every demo scene reviewed",
+    "human_evaluation": "client acceptance and participant survey results pending",
+    "powerpoint_native_playback": "not exercised; rehearse on presentation laptop"
+  },
+  "application_code_changed": false,
+  "forecasting_model_changed": false,
+  "production_database_contacted": false
+}
