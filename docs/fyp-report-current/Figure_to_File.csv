@@ -1,0 +1,24 @@
+figure,caption,filename,report_printed_page,viewport
+Figure 4.1,"Figure 4.1: Menu browsing with category choices, prices and food cards.",menu-current-desktop.png,52,1366 × 768
+Figure 4.2,"Figure 4.2: Customer account creation with name, phone number and a passkey.",create-account-current-mobile.png,53,390 × 844
+Figure 4.3,Figure 4.3: Separate sign-in form for kitchen staff.,staff-signin-current-desktop.png,54,1366 × 768
+Figure 4.4,"Figure 4.4: Date-based finder with quantity, budget and menu-choice controls.",suggestions-current-desktop.png,55,1366 × 768
+Figure 4.5,Figure 4.5: Basket review before entering delivery and payment details.,cart-current-desktop.png,56,1366 × 768
+Figure 4.6,"Figure 4.6: Checkout date guidance, morning time and stock-availability result.",checkout-current-desktop.png,57,1366 × 768
+Figure 4.7,Figure 4.7: Payment section with an uploaded illustrative receipt.,checkout-payment-current-desktop.png,58,1366 × 768
+Figure 4.8,Figure 4.8: Customer order card and cancellation confirmation.,cancel-order-current-desktop.png,59,1366 × 768
+Figure 4.9,Figure 4.9: Editing a menu and its selling information.,menu-edit-current-desktop.png,60,1366 × 768
+Figure 4.10,Figure 4.10: Inventory overview with stock filters and recorded batch status.,inventory-current-desktop.png,61,1366 × 768
+Figure 4.11,Figure 4.11: Stock-batch form with date and storage information.,batch-form-current-desktop.png,61,1366 × 768
+Figure 4.12,Figure 4.12: Checking ingredient requirements for a target quantity per menu.,stock-target-current-desktop.png,62,1366 × 768
+Figure 4.13,Figure 4.13: Packaging balances and stock-management actions.,packaging-current-desktop.png,63,1366 × 768
+Figure 4.14,Figure 4.14: Assigning packaging pieces to one menu unit.,packaging-mapping-current-desktop.png,63,1366 × 768
+Figure 4.15,Figure 4.15: Owner order queue with filtering and receipt actions.,owner-orders-current-desktop.png,64,1366 × 768
+Figure 4.16,Figure 4.16: Reviewing payment details separately from food receipt.,payment-review-current-desktop.png,64,1366 × 768
+Figure 4.17,Figure 4.17: Daily order summary for a date containing example orders.,daily-summary-current-desktop.png,65,1366 × 768
+Figure 4.18,Figure 4.18: Matching daily order slips prepared together for printing.,batch-print-current-desktop.png,66,1366 × 768
+Figure 4.19,Figure 4.19: Sales overview with date controls and summary values.,sales-current-desktop.png,66,1366 × 768
+Figure 4.20,Figure 4.20: Price and bulk-offer scenario using current cost estimates.,costs-current-desktop.png,67,1366 × 768
+Figure 4.21,Figure 4.21: Delivery hours and area-based fees in Settings.,delivery-settings-current-desktop.png,68,1366 × 768
+Figure 4.22,Figure 4.22: Reminder-status interface using local example configuration.,reminders-current-desktop.png,69,1366 × 768
+Figure 4.24,Figure 4.24: Public summary of recorded ingredient-batch status.,public-storage-current-desktop.png,73,1366 × 768
