@@ -64,7 +64,7 @@ Production migrations are an explicit release step. The build checks database re
 
 ## Current presentation materials
 
-The [presentation package](docs/fyp-presentation-20261108/README.md) contains a provisional ten-minute deck with the client-photo demo embedded near the end, speaker notes/script, a PDF, screenshot fallback and separate design slides for questions. These presentation materials predate the latest client-order changes; the next requested batch refreshes both demo voices and slides for review. The official speaking limit remains unconfirmed. The editing guide lists exact poster font settings and explains how to insert genuine evaluation results before final submission.
+The [current presentation package](docs/fyp-presentation-current/README.md) contains a provisional ten-minute deck with a two-minute current-system demo embedded near the end. Female and male narration editions, speaker notes/script, a PDF, screenshot fallback and design slides for questions are included. The recording uses isolated local example records, client menu photos and the supplied receiving QR. The official speaking limit remains unconfirmed. Formal client acceptance and participant survey results remain pending.
 
 The [current FYP report downloads](docs/fyp-report-current/README.md) provide the Batch 2 PDF, editable Word document, replacement screenshots and complete ZIP package, updated on 9 November 2026 with the latest interface, courier/COD explanation, testing evidence and literature discussion. The exact owner portrait remains pending as an image file for the local screenshot setup. Formal client acceptance and student survey results are still awaiting collection.
 

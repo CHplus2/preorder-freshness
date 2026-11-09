@@ -1,6 +1,6 @@
 {
   "prepared": "2026-11-09",
-  "application_source": "3819a8cdb018c40406f20935ec8351afc3f24351",
+  "application_source": "4e2ba10c3c276a0adddd6ab002630ff6c55e228d",
   "source": "current main running locally with isolated example data; not a production capture",
   "viewport": {
     "width": 1366,
@@ -59,6 +59,36 @@
       },
       "slide_preservation": "only the embedded MP4 changed; all slide XML, notes, layout and images are byte-identical to the preceding presentation",
       "perceptual_quality": "technical checks cannot establish listener preference"
+    },
+    "order_links": {
+      "link_state_checks": 24,
+      "viewport_widths": [
+        1366,
+        390
+      ],
+      "states": [
+        "normal",
+        "hover",
+        "keyboard focus"
+      ],
+      "underline": "none for all checked links",
+      "minimum_control_height_px": 44,
+      "horizontal_overflow": "none in checked pages",
+      "examples": "Daily summary in owner navigation and queue, View payment receipt, Review Wanpaku Chicken Grilled in customer History"
+    },
+    "latest_video_tracks": {
+      "Female": {
+        "video_seconds": 120.0,
+        "audio_seconds": 120.0,
+        "decoded_clipped_samples": 0,
+        "full_decode": "passed"
+      },
+      "Male": {
+        "video_seconds": 120.0,
+        "audio_seconds": 120.0,
+        "decoded_clipped_samples": 0,
+        "full_decode": "passed"
+      }
     }
   },
   "application_code_changed": false,

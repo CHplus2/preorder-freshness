@@ -21,3 +21,5 @@ The screenshot archive contains 32 laptop/phone captures and a figure-to-file gu
 Formal client acceptance and student survey results remain pending. Section 5.4 now includes detailed tables, chart positions and interpretation prompts to fill with genuine results. The proposed target of 30 completed customer responses is a planning target, not a recorded result or a confirmed university requirement. Front approval/agreement/declaration pages and Appendix I manual-execution records are unsigned completion templates. The report distinguishes implemented/tested behaviour from user and business outcomes that have not been measured. No grade is guaranteed.
 
 The complete ZIP contains the report, screenshots, editable diagrams and separate testing evidence. It excludes credentials, production databases and participant responses. These report files are excluded from Vercel application uploads by `.vercelignore`.
+
+Order-link follow-up: [replacement screenshots and figure guide](order-link-replacements/README.md) cover Figures 4.8, 4.15 and 4.17, with supplementary receipt/review views. The Word/PDF has not been rebuilt for these link-style changes.

@@ -1,0 +1,294 @@
+{
+  "checks": [
+    {
+      "label": "View payment receipt",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "normal",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/api/checkout-proofs/3ca092ee-2c39-4a7c-8cb3-023042a33998/"
+    },
+    {
+      "label": "View payment receipt",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "hover",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/api/checkout-proofs/3ca092ee-2c39-4a7c-8cb3-023042a33998/"
+    },
+    {
+      "label": "View payment receipt",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "focus",
+      "decoration": "none",
+      "height": 44,
+      "outline": "solid",
+      "href": "/api/checkout-proofs/3ca092ee-2c39-4a7c-8cb3-023042a33998/"
+    },
+    {
+      "label": "Review Wanpaku Chicken Grilled",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "normal",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/products/6"
+    },
+    {
+      "label": "Review Wanpaku Chicken Grilled",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "hover",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/products/6"
+    },
+    {
+      "label": "Review Wanpaku Chicken Grilled",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "focus",
+      "decoration": "none",
+      "height": 44,
+      "outline": "solid",
+      "href": "/products/6"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "normal",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/admin/orders?view=daily&date=2026-11-09"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "hover",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/admin/orders?view=daily&date=2026-11-09"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "focus",
+      "decoration": "none",
+      "height": 44,
+      "outline": "solid",
+      "href": "/admin/orders?view=daily&date=2026-11-09"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "normal",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/admin/orders?view=daily"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "hover",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/admin/orders?view=daily"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "state": "focus",
+      "decoration": "none",
+      "height": 44,
+      "outline": "solid",
+      "href": "/admin/orders?view=daily"
+    },
+    {
+      "label": "View payment receipt",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "normal",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/api/checkout-proofs/3ca092ee-2c39-4a7c-8cb3-023042a33998/"
+    },
+    {
+      "label": "View payment receipt",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "hover",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/api/checkout-proofs/3ca092ee-2c39-4a7c-8cb3-023042a33998/"
+    },
+    {
+      "label": "View payment receipt",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "focus",
+      "decoration": "none",
+      "height": 44,
+      "outline": "solid",
+      "href": "/api/checkout-proofs/3ca092ee-2c39-4a7c-8cb3-023042a33998/"
+    },
+    {
+      "label": "Review Wanpaku Chicken Grilled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "normal",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/products/6"
+    },
+    {
+      "label": "Review Wanpaku Chicken Grilled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "hover",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/products/6"
+    },
+    {
+      "label": "Review Wanpaku Chicken Grilled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "focus",
+      "decoration": "none",
+      "height": 44,
+      "outline": "solid",
+      "href": "/products/6"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "normal",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/admin/orders?view=daily&date=2026-11-09"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "hover",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/admin/orders?view=daily&date=2026-11-09"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "focus",
+      "decoration": "none",
+      "height": 44,
+      "outline": "solid",
+      "href": "/admin/orders?view=daily&date=2026-11-09"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "normal",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/admin/orders?view=daily"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "hover",
+      "decoration": "none",
+      "height": 44,
+      "outline": "none",
+      "href": "/admin/orders?view=daily"
+    },
+    {
+      "label": "Daily summary",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "focus",
+      "decoration": "none",
+      "height": 44,
+      "outline": "solid",
+      "href": "/admin/orders?view=daily"
+    }
+  ],
+  "page_errors": [],
+  "production_database_contacted": false
+}

@@ -6,6 +6,8 @@ The talk follows problem, solution, mechanism, implemented functions, evaluation
 
 Download the [complete package](FYP_Presentation_Complete.zip), or choose individual files below. The complete package includes both voice editions.
 
+Latest order-link fixes and refreshed demo footage: [update notes](Order_Link_Update_Notes.md).
+
 ## Start here
 
 - **FYP_Presentation_10min_Female.pptx**: editable main deck with the female-narrated video embedded on slide 13.
