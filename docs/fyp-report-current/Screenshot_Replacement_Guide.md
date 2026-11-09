@@ -1,10 +1,8 @@
 # Replacement screenshots
 
-These are browser screenshots from the latest tested application source captured on 9 November 2026. They use an isolated example database and the client's menu photos. They are not live production sales, stock or Vercel captures. The QR image and payment evidence are illustrative; no bank transfer was made.
+The Word/PDF already contains these 23 interface images. They are unchanged from the fresh local browser captures made on 9 November 2026 using isolated example records and client menu photographs. They are not live Vercel captures; payment evidence is illustrative. The ten empty Figure 5.x survey positions are awaiting genuine charts and are not interface screenshots.
 
-The revised Word/PDF already contains the 23 mapped replacements below. Use the original PNG files if replacing figures manually in another copy. Keep each image's aspect ratio. The additional images provide alternative views; they are not extra numbered report figures.
-
-Figure 4.21 now shows the delivery hours and area fees, so its caption also changed. The test table numbered 5.6 is new; the objective evidence table is now Table 5.7.
+The archive includes 32 captures, including alternative views. Keep original image proportions when replacing manually. Printed page references below match this expanded report.
 
 | Figure | File | Printed report page |
 | --- | --- | --- |
