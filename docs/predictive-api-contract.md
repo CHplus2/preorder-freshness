@@ -1739,8 +1739,8 @@ See [delivery-time choices](DELIVERY-TIME-PICKER.md) for verified customer behav
 
 The optional Sepolia checkout described by the October handoff was removed from
 `main` on 8 November 2026. Its config/order API paths return 404 and no new escrow
-payment can be selected. Existing evidence remains read-only. The
-[October implementation note](ESCROW-ORDER-INTEGRATION.md) is historical.
+payment can be selected. Existing evidence remains read-only. The prior implementation remains in Git
+history; see the [retirement record](FYP-CLEANUP-BATCH2.md) for the current scope.
 
 
 ### Optional selling units and accepted contents (home-food batch 3)

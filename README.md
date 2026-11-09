@@ -69,3 +69,5 @@ The [current presentation package](docs/fyp-presentation-current/README.md) cont
 The [current FYP report downloads](docs/fyp-report-current/README.md) provide the Batch 2 PDF, editable Word document, replacement screenshots and complete ZIP package, updated on 9 November 2026 with the latest interface, courier/COD explanation, testing evidence and literature discussion. The exact owner portrait remains pending as an image file for the local screenshot setup. Formal client acceptance and student survey results are still awaiting collection.
 
 Generated reports, posters and presentation downloads are under `docs/` for access from GitHub; `.vercelignore` excludes them from application uploads. Their presence in Git is separate from the function’s runtime storage. Published downloads are preserved during cleanup.
+
+Obsolete training prompts and retired workflow guides have been removed from `main`. The [cleanup record](docs/REPOSITORY-CLEANUP.md) identifies the changes. The original FreshCast evaluation audit remains available under `docs/freshcast/`; its model code, saved model release and showcase branch are preserved.
