@@ -35,7 +35,7 @@
   border-radius: 10px; background: #f3f7ee; color: #244b35;
   text-decoration: none; font-size: 14px; font-weight: 600; line-height: 1.4;
 }
-.pd .fc-workflow-links a:hover { background: #e2ecd9; text-decoration: underline; }
+.pd .fc-workflow-links a:hover { background: #e2ecd9; text-decoration: none; }
 .pd .fc-workflow-links a:focus-visible { outline: 3px solid #386747; outline-offset: 3px; }
 .pd .fc-workflow-links a.admin-primary { background: #356449; color: #fff; }
 .pd .fc-workflow-links a.admin-primary:hover { background: #274e38; }

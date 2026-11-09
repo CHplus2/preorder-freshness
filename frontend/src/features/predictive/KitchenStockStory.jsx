@@ -44,16 +44,20 @@ export default function KitchenStockStory({risk, window, compact = false}) {
     <div className="local-demand-equation" aria-label="Forecast need minus dated stock coverage">
       {[
         ['Forecast need', story.need, 'Additional demand after order adjustments', 'need'],
-        ['− From expiring stock', story.nearUsed, 'Forecast use before each batch expires', 'near'],
-        ['− From later stock', story.laterUsed, 'Forecast use from later-expiring batches', 'later'],
-        ['= Forecast stock gap', story.gap, 'Review this estimate before purchasing', 'gap'],
+        ['From expiring stock', story.nearUsed, 'Forecast use before each batch expires', 'near'],
+        ['From later stock', story.laterUsed, 'Forecast use from later-expiring batches', 'later'],
+        ['Forecast stock gap', story.gap, 'Review this estimate before purchasing', 'gap'],
       ].map(([label, value, hint, name]) => <article key={name} className={name}><span>{label}</span><strong>{amount(value)}</strong>{!compact && <small>{hint}</small>}</article>)}
     </div>
     {!compact && <p className="pd-note">Summary amounts are rounded. The stock breakdown retains native ingredient units.</p>}
-    <div className="local-stock-calculations" aria-label={`Stock calculations in ${risk.unit}`}>
+    <dl className="local-stock-outcomes" aria-label="Stock outcome explanation">
+      <div><dt>Expected unused at expiry</dt><dd><strong>{amount(story.waste)}</strong><p>{amount(story.nearAvailable)} in expiring batches, with {amount(story.nearUsed)} forecast to be used before their deadlines.</p></dd></div>
+      <div><dt>Forecast shortfall</dt><dd><strong>{amount(story.gap)}</strong><p>Forecast demand is {amount(story.need)}. Stock usable on the required dates covers {amount(risk.stock_flow.forecast_consumed)}.</p></dd></div>
+    </dl>
+    <details className="local-stock-calculations" aria-label={`Stock calculations in ${risk.unit}`}><summary>See calculation</summary>
       <p><span>Unused at expiry</span><strong>{nativeAmount(story.nearAvailable)} − {nativeAmount(story.nearUsed)} = {nativeAmount(story.waste)}</strong></p>
       <p><span>Forecast shortfall</span><strong>{nativeAmount(story.need)} − {nativeAmount(story.nearUsed)} − {nativeAmount(story.laterUsed)} = {nativeAmount(story.gap)}</strong></p>
-    </div>
+    </details>
     {story.waste>0 && story.gap>0 && <p className="local-stock-timing-note">Stock can expire unused and still be short on another date. Stock must be received and unexpired on the day it is needed.</p>}
     {datedOutcomes.length>0 && <div className="pd-table-wrap local-stock-dates" tabIndex={0} role="region" aria-label="Expiry and unmet demand dates"><table>
       <caption>Forecast amounts by date</caption><thead><tr><th>Date</th><th>Outcome</th><th>Amount</th></tr></thead>

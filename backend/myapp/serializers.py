@@ -73,11 +73,13 @@ class SellingDetailsSerializer(serializers.Serializer):
         return attrs
 
 
-class MenuImageReference(serializers.CharField):
+class ManagedImageReference(serializers.CharField):
+    allow_menu_illustrations = False
+
     def to_internal_value(self, data):
         import re
         data = super().to_internal_value(data)
-        if data in {'/static/client-menu/salad-bowl.svg','/static/client-menu/sandwich.svg','/static/client-menu/rice-bowl.svg'}:
+        if self.allow_menu_illustrations and data in {'/static/client-menu/salad-bowl.svg','/static/client-menu/sandwich.svg','/static/client-menu/rice-bowl.svg'}:
             return data
         if re.fullmatch(r'/api/menu-photos/[0-9a-f]{64}/', data):
             from .models import MenuPhoto
@@ -85,6 +87,10 @@ class MenuImageReference(serializers.CharField):
                 raise serializers.ValidationError('This uploaded photo is unavailable. Upload it again.')
             return data
         return serializers.URLField(max_length=200).run_validation(data)
+
+
+class MenuImageReference(ManagedImageReference):
+    allow_menu_illustrations = True
 
 
 class ProductSerializer(serializers.ModelSerializer):

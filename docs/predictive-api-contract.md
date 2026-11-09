@@ -2339,6 +2339,28 @@ are unchanged. No payment transfer, schema migration, live data correction or
 predictive/model change is introduced by this UI batch.
 
 
+### 9 November 2026 — Owner photo upload
+
+Your business story now has an owner-photo upload with a preview, draft removal,
+and an optional image-link field. It reuses the staff-only multipart photo
+endpoint and the existing sanitized, immutable WebP asset storage. The
+`founder_image_url` settings field accepts an existing managed asset or a public
+HTTP(S) image URL; unknown assets, other relative paths and menu illustrations
+are rejected. Uploading an asset does not change the public owner photo until
+Save business story succeeds. That save is disabled during upload. Failed or
+invalid uploads keep the selected photo and other story entries. No schema or
+database migration is needed.
+
+### 9 November 2026 — FreshCast context and action styling
+
+Planning counts and Review data checks now occupy separate elements with a
+responsive gap. The review and ingredient-inspection actions omit underlines
+and the global navigation hover pseudo-element; keyboard focus remains visible.
+The stock explanation presents the unused amount and shortfall with plain
+descriptions. Exact arithmetic remains available under See calculation. These
+are presentation changes using the same response fields and planning callbacks;
+forecasting, models, date eligibility, stock allocation and APIs are unchanged.
+
 ### 8 November 2026 — FreshCast review layout
 
 The local final review uses a plain selected-action summary with ingredient,

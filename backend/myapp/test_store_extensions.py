@@ -97,6 +97,40 @@ class StoreExtensionsTests(TestCase):
             self.client.force_authenticate(user)
             self.assertEqual(self.client.post('/api/admin/menu-photos/', {'image':self.photo()}, format='multipart').status_code,403)
 
+    def test_owner_photo_uses_uploaded_asset_and_is_public_after_settings_save(self):
+        original_menu_photo = self.product.image_url
+        upload = self.client.post('/api/admin/menu-photos/', {'image': self.photo(size=(240, 320))}, format='multipart')
+        self.assertEqual(upload.status_code, 201, upload.data)
+        url = upload.data['image_url']
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.founder_image_url, '')
+        saved = self.client.patch('/api/storefront/', {'founder_image_url': url}, format='json')
+        self.assertEqual(saved.status_code, 200, saved.data)
+        self.store.refresh_from_db(); self.product.refresh_from_db()
+        self.assertEqual(self.store.founder_image_url, url)
+        self.assertEqual(self.product.image_url, original_menu_photo)
+        self.client.force_authenticate(None)
+        self.assertEqual(self.client.get('/api/storefront/').data['founder_image_url'], url)
+        photo = self.client.get(url)
+        self.assertEqual(photo.status_code, 200)
+        self.assertEqual(photo['Content-Type'], 'image/webp')
+
+    def test_owner_photo_rejects_invalid_references_and_keeps_existing_photo(self):
+        self.store.founder_image_url = 'https://example.com/owner.jpg'
+        self.store.save(update_fields=['founder_image_url'])
+        for url in ['/api/menu-photos/'+'a'*64+'/', '/static/client-menu/salad-bowl.svg', '/private/photo.jpg', 'javascript:alert(1)']:
+            response = self.client.patch('/api/storefront/', {'founder_image_url': url}, format='json')
+            self.assertEqual(response.status_code, 400, response.data)
+            self.store.refresh_from_db()
+            self.assertEqual(self.store.founder_image_url, 'https://example.com/owner.jpg')
+        self.client.force_authenticate(self.buyer)
+        self.assertEqual(self.client.patch('/api/storefront/', {'founder_image_url': ''}, format='json').status_code, 403)
+        self.client.force_authenticate(self.owner)
+        self.assertEqual(self.client.patch('/api/storefront/', {'founder_image_url': 'https://example.com/replacement.jpg'}, format='json').status_code, 200)
+        self.assertEqual(self.client.patch('/api/storefront/', {'founder_image_url': ''}, format='json').status_code, 200)
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.founder_image_url, '')
+
     def test_managed_photo_reference_rejects_unknown_or_other_relative_paths(self):
         for url in ['/api/menu-photos/'+'a'*64+'/', '/static/random.png', 'javascript:alert(1)']:
             response = self.client.patch(f'/api/admin/products/{self.product.pk}/', {'image_url':url}, format='json')

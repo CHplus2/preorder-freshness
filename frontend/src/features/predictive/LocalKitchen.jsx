@@ -14,6 +14,7 @@ import {kitchenCase, caseQuantity, stockQuantity} from "./kitchenPresentation";
 import {FreshCastHeading, SourceNotice, SourceSelector, BuildIdentity} from './FreshCastChrome';
 import {stockViewSelection} from './decisionNavigation';
 import EvidenceTabs from './EvidenceTabs';
+import KitchenPlanningContext from './KitchenPlanningContext';
 
 const qty = (v) =>
   new Intl.NumberFormat("en-MY", { maximumFractionDigits: 3 }).format(v);
@@ -126,14 +127,7 @@ export default function LocalKitchen({ view }) {
       )}
       {current.status === "ready" && (
         <>
-          <div className="pd-context">
-            <span>
-              Stock planning: {plan.window.start_date}–{plan.window.end_date} ·{" "}
-              {plan.timezone}
-            </span>
-            <span>{plan.coverage.included_orders} confirmed orders included · {plan.coverage.excluded_orders} excluded. <button className="local-evidence-trigger" onClick={reviewEvidence} aria-controls="kitchen-data-checks" aria-expanded={evidenceOpen}>Review data checks</button></span>
-            {!plan.coverage.included_orders && <span className="local-forecast-context">Menu forecasts are separate from confirmed orders.</span>}
-          </div>
+          <KitchenPlanningContext plan={plan} evidenceOpen={evidenceOpen} onReviewEvidence={reviewEvidence}/>
           {view === "forecast" ? (
             <OrderEvidence plan={plan} />
           ) : view === "inventory" ? (

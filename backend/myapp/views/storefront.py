@@ -7,10 +7,11 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from ..models import Storefront, Review, Product, OrderItem
 
-from ..serializers import MenuImageReference
+from ..serializers import MenuImageReference, ManagedImageReference
 
 class StoreSerializer(serializers.ModelSerializer):
     duitnow_qr_url=MenuImageReference(max_length=200,allow_blank=True,required=False)
+    founder_image_url=ManagedImageReference(max_length=200,allow_blank=True,required=False)
     def validate(self, attrs):
         enabled = attrs.get('manual_payment_enabled', getattr(self.instance, 'manual_payment_enabled', False))
         instructions = attrs.get('bank_transfer_instructions', getattr(self.instance, 'bank_transfer_instructions', ''))

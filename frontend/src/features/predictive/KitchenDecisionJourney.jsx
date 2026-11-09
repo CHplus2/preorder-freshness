@@ -322,7 +322,7 @@ export default function KitchenDecisionJourney({
                 >
                   Explore this decision →
                 </button>
-                <Link to={links.inventory}>Inspect ingredient batches →</Link>
+                <Link className="fc-inline-action" to={links.inventory}>Inspect ingredient batches <span aria-hidden="true">→</span></Link>
               </aside>
             </div>
           ) : (

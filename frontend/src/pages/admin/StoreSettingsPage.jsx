@@ -1,6 +1,7 @@
 /* global __FRESHCAST_REVISION__ */
 import QrSettingsControls from '../../components/QrSettingsControls';
 import ReceivingQrUpload from '../../components/ReceivingQrUpload';
+import OwnerPhotoField from '../../components/OwnerPhotoField';
 import {deliverySettingsPayload} from '../../utils/deliveryAreaEditor';
 import {deliveryAreasError} from '../../utils/deliveryAreas';
 import CourierConnectionStatus from '../../components/CourierConnectionStatus';
@@ -13,7 +14,7 @@ import './StoreSettingsPage.css';
 import SetupChecklist from '../../components/SetupChecklist';
 import BackupDownloads from '../../components/BackupDownloads';
 import ReminderStatus from '../../components/ReminderStatus';
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import axios from 'axios';
 import {apiError} from '../../utils/apiError';
 import {getCookie} from '../../utils/cookieUtils';
@@ -29,6 +30,8 @@ export default function StoreSettingsPage(){
  const {isSessionCurrent}=useAuth();
  const writing=useRef(false),feedback=useRef(null);
  const [sectionError,setSectionError]=useState(null),[savedSection,setSavedSection]=useState('');
+ const [photoUploading,setPhotoUploading]=useState(false);
+ const photoBusy=useCallback(value=>{setPhotoUploading(value);if(value)setSavedSection('')},[]);
  const [setupRevision,setSetupRevision]=useState(0);
  const [paymentError,setPaymentError]=useState('');
  const [areaError,setAreaError]=useState('');
@@ -44,7 +47,7 @@ export default function StoreSettingsPage(){
  useEffect(()=>{if(sectionError){feedback.current?.focus();feedback.current?.scrollIntoView({block:'nearest'})}},[sectionError]);
  const save=async(event,group)=>{
   event.preventDefault();if(writing.current||busy)return;
-  const key=group.key;setSectionError(null);setSavedSection('');
+  const key=group.key;if(key==='story'&&photoUploading)return;setSectionError(null);setSavedSection('');
   if(key==='fulfilment'){const issue=deliveryAreasError(store.delivery_areas||[]);if(issue){setAreaError(issue);revealSettingsTarget('delivery-area-names');return}}
   if(key==='payments'&&store.manual_payment_enabled&&!store.bank_transfer_instructions?.trim()&&!store.duitnow_qr_url?.trim()){setPaymentError('Add a receiving QR image or bank details before enabling payment.');return}
   writing.current=true;setBusy(true);
@@ -113,6 +116,7 @@ export default function StoreSettingsPage(){
  };
  const fields=g=><><p>{store.ordering_mode==='simple'&&g.title==='Manual payments'?'Add your business receiving QR image and/or bank account instructions, then enable payment below. A QR image is required for self-collection. Customers upload a receipt at checkout; verify it against your bank records before recording payment.':g.help}</p><div className="admin-fields">{g.fields.map(([key,label,type='text',min,max])=>{
   if(key==='duitnow_qr_url')return <ReceivingQrUpload key={key} value={store.duitnow_qr_url} disabled={busy} onChange={value=>setStore({...store,duitnow_qr_url:value})}/>;
+  if(key==='founder_image_url')return <OwnerPhotoField key={key} value={store.founder_image_url||''} disabled={busy} onBusy={photoBusy} onChange={value=>{setSavedSection('');setStore(current=>({...current,founder_image_url:value}))}}/>;
   const fieldId=key==='service_area'?'store-contact':'setting-'+key;
   return <div className="settings-field" key={key} style={type==='textarea'?{gridColumn:'1 / -1'}:undefined}>
    <label htmlFor={fieldId}>{label}</label>{type==='textarea'?<textarea id={fieldId} disabled={busy} value={store[key] || ''} onChange={e=>(setSavedSection(''),setStore({...store,[key]:e.target.value}))}/>:<input id={fieldId} disabled={busy} type={type} required={key==='name'} min={min} max={max} value={store[key] ?? ''} onChange={e=>(setSavedSection(''),setStore({...store,[key]:e.target.value}))}/>}
@@ -124,7 +128,7 @@ export default function StoreSettingsPage(){
   {fields(group)}
   {group.key==='payments'&&store.ordering_mode==='scheduled'&&<><label className="settings-payment-toggle"><input id="manual-payment-toggle" type="checkbox" disabled={busy} checked={!!store.manual_payment_enabled} onChange={event=>setStore({...store,manual_payment_enabled:event.target.checked})}/>Enable bank QR / transfer at checkout</label>{paymentError&&<p role="alert" className="settings-field-error">{paymentError}</p>}</>}
   {sectionError?.key===group.key&&<p ref={feedback} tabIndex={-1} role="alert" className="settings-field-error">{sectionError.message}</p>}
-  {!(group.key==='payments'&&store.ordering_mode==='simple')&&<footer className="settings-section-save"><button className="admin-primary" type="submit" disabled={busy}>{busy?'Saving…':group.key==='identity'?'Save kitchen profile':group.key==='story'?'Save business story':group.key==='promotion'?'Save bulk promotion':'Save these settings'}</button><span role="status">{savedSection===group.key?'Saved.':''}</span></footer>}
+  {!(group.key==='payments'&&store.ordering_mode==='simple')&&<footer className="settings-section-save"><button className="admin-primary" type="submit" disabled={busy||group.key==='story'&&photoUploading}>{busy?'Saving…':group.key==='identity'?'Save kitchen profile':group.key==='story'?'Save business story':group.key==='promotion'?'Save bulk promotion':'Save these settings'}</button><span role="status">{savedSection===group.key?'Saved.':''}</span></footer>}
  </form>;
  return <main className="dk-workspace settings-page"><div className="admin-page-heading"><div><span className="admin-kicker">YOUR BUSINESS</span><h1>Settings</h1><p>Update your kitchen details, ordering options and customer-facing information. Save each section separately.</p></div></div>
   <nav className="settings-shortcuts" aria-label="Settings shortcuts"><a href="#store-identity">Kitchen profile</a><a href="#fulfilment">Collection &amp; delivery</a><a href="#qr-payments">Payments</a><a href="#reminders">Email reminders</a><a href="#setup">Setup checks</a></nav>
