@@ -12,6 +12,7 @@ import DeliveryTimePicker from '../../components/DeliveryTimePicker';
 import AvailabilityResult from '../../components/AvailabilityResult';
 import CheckoutSummary from '../../components/CheckoutSummary';
 import CheckoutAction from '../../components/CheckoutAction';
+import PageState from '../../components/PageState';
 import OrderJourney from '../../components/OrderJourney';
 import CheckoutProofUpload from '../../components/CheckoutProofUpload';
 import ContactPhoneField from '../../components/ContactPhoneField';
@@ -81,7 +82,14 @@ export default function SimpleCheckoutPage(){
  };
  if(isGuest)return <Navigate to="/cart" replace/>;
  if(cartLoading&&!cart.length)return <main className="checkout-container"><h1>Checkout</h1><p role="status">Loading your basket…</p></main>;
- if(cartError||!pricingReady)return <main className="checkout-container client-checkout"><h1>Checkout</h1><div className={cartError||pricingError?'checkout-error':'checkout-loading'} role={cartError||pricingError?'alert':'status'}><p>{cartError||pricingError||'Loading kitchen details…'}</p>{(cartError||pricingError)&&<button type="button" onClick={()=>{refreshCart();refreshPricing?.()}}>Refresh checkout</button>}</div></main>;
+ if(cartError||!pricingReady){
+  if(!cartError&&!pricingError)return <main className="checkout-container client-checkout"><h1>Checkout</h1><p role="status">Loading kitchen details…</p></main>;
+  const retrying=cartLoading||pricingRefreshing;
+  return <PageState title="Checkout" description={cartError||'Kitchen details couldn’t be loaded. Your basket is saved.'} error>
+   <button className="checkout-retry" type="button" disabled={retrying} onClick={()=>{refreshCart();refreshPricing?.()}}>{retrying?'Retrying…':'Retry'}</button>
+   <Link to="/cart">Basket</Link>
+  </PageState>;
+ }
  if(!cart.length)return <main className="checkout-container"><h1>Your basket is empty</h1><Link to="/menu">Browse the menu</Link></main>;
  if(!accepting)return <main className="checkout-container client-checkout"><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Ordering is temporarily unavailable</h1><section className="checkout-section"><p>The kitchen is not offering delivery or self-collection right now. Your basket is kept.</p><Link to="/contact">Contact the kitchen</Link></section></main>;
  return <main className="checkout-container client-checkout"><OrderJourney current="checkout"/><Link className="checkout-back" to="/cart">Back to basket</Link><h1>Checkout</h1><p className="checkout-intro">Choose how and when to receive your food, check your contact details, then confirm payment.</p>

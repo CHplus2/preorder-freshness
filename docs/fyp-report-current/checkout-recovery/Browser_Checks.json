@@ -1,0 +1,32 @@
+{
+  "scenario": "Simulated storefront 503; failed retry; successful retry to real local endpoint",
+  "state_checks": [
+    {
+      "viewport": [
+        1366,
+        768
+      ],
+      "background": "rgba(0, 0, 0, 0)",
+      "border": "0px",
+      "gap": 26,
+      "horizontal_overflow": false
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "background": "rgba(0, 0, 0, 0)",
+      "border": "0px",
+      "gap": 26,
+      "horizontal_overflow": false
+    }
+  ],
+  "retry_disabled_while_loading": true,
+  "failed_retry_keeps_recovery_actions": true,
+  "successful_retry_restores_checkout": true,
+  "basket_preserved": true,
+  "page_errors": [],
+  "storefront_requests": 3,
+  "capture": "current application running locally with isolated example basket; deliberate local fault injection, not a live outage"
+}

@@ -12,3 +12,5 @@
 .client-checkout .checkout-proof a.checkout-proof-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;max-width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid #b9cbb2;border-radius:8px;background:#fff;color:#285a3e;text-decoration:none;font-size:.875rem;font-weight:600;line-height:1.5}.client-checkout .checkout-proof a.checkout-proof-link:hover{background:#edf3e8}.checkout-proof-link svg{flex:none}
 
 .client-checkout #checkout-payment>.checkout-hint{margin:20px 0 0}
+
+.page-state-actions .checkout-retry:disabled{opacity:.65;cursor:wait;filter:none}

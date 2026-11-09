@@ -20,7 +20,9 @@ try{
  const render=changes=>renderToStaticMarkup(h(MemoryRouter,null,h(AuthContext.Provider,{value:{customerAccount:{name:'Buyer',phone:'+60123456789'},isSessionCurrent:()=>true}},h(StoreContext.Provider,{value:{store:promotion}},h(UIContext.Provider,{value:{formatPrice:value=>'RM '+Number(value).toFixed(2)}},h(OrderContext.Provider,{value:{}},h(CartContext.Provider,{value:{cart:[{id:1,quantity:1,product:{id:1,name:'Salad',price:'13.00'}}],pricingReady:true,promotion,total:13,discount:0,SHIPPING_FEE:8,finalTotal:21,chooseDeliveryTime:()=>{},...changes}},h(Checkout))))))));
  const checkout=render({});assert.ok(checkout.indexOf('id="checkout-time"')<checkout.indexOf('id="checkout-contact"'));assert.ok(checkout.indexOf('id="checkout-contact"')<checkout.indexOf('id="checkout-payment"'));
  assert.match(checkout,/Preorder steps/);assert.match(checkout,/client-order-action order-action-bar/);assert.match(checkout,/Choose your delivery area above/);
- const loading=render({pricingReady:false});assert.match(loading,/role="status"/);assert.doesNotMatch(loading,/role="alert"|Refresh checkout/);
- const failed=render({pricingReady:false,pricingError:'Pricing unavailable'});assert.match(failed,/role="alert"/);assert.match(failed,/Refresh checkout/);
+ const loading=render({pricingReady:false});assert.match(loading,/role="status"/);assert.doesNotMatch(loading,/role="alert"|checkout-retry/);
+ const failed=render({pricingReady:false,pricingError:'Pricing unavailable'});assert.match(failed,/role="alert"/);assert.match(failed,/>Retry<\/button>/);assert.match(failed,/href="\/cart"[^>]*>Basket<\/a>/);assert.match(failed,/Your basket is saved/);assert.doesNotMatch(failed,/class="checkout-error"/);
+ const retrying=render({pricingReady:false,pricingError:'Pricing unavailable',pricingRefreshing:true});assert.match(retrying,/<button[^>]*disabled=""[^>]*>Retrying…<\/button>/);
+ const basketFailure=render({cartError:'Your basket could not be loaded.'});assert.match(basketFailure,/Your basket could not be loaded/);
  console.log('Ordering flow: real service hours, time-before-contact, honest totals/loading and explicit blocked-action guidance passed.');
 }finally{await server.close()}
