@@ -1,0 +1,20 @@
+{
+  "uploaded_through": "Local Settings > QR & bank transfer > receiving image > Use this QR crop > Save payment settings",
+  "crop": {
+    "x": 246,
+    "y": 52,
+    "size": 448
+  },
+  "saved_crop_matches_original_pixels": true,
+  "saved_qr_persists_after_reload": true,
+  "checkout_uses_saved_qr": true,
+  "sample_receipt_uploaded": true,
+  "no_bank_transfer_made": true,
+  "report_figure": "Figure 4.7",
+  "viewport": [
+    1366,
+    768
+  ],
+  "page_errors": [],
+  "capture": "real current local app with user-supplied receiving QR, client menu photos and isolated example order data; not a production capture"
+}

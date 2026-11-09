@@ -1,16 +1,22 @@
 # Payment and checkout screenshot replacements — 9 November 2026
 
-These are actual browser captures of the corrected application running locally with isolated example records and the client's menu photographs. They are not live Vercel or production-data screenshots. Payment proof and the QR placeholder are illustrative; no bank transfer was made. Laptop captures use 1366 × 768. The additional phone guidance view uses 390 × 844.
+These are actual browser captures of the corrected application running locally with isolated example records and the client's menu photographs. They are not live Vercel or production-data screenshots. The receiving QR in the updated Figure 4.7 is the user-supplied image, uploaded and saved through local Settings. The receipt is a sample; no bank transfer was made. Laptop captures use 1366 × 768. The additional phone guidance view uses 390 × 844.
 
 ## Replace existing figures
 
 | Figure | Replacement image | Keep this caption |
 | --- | --- | --- |
 | 4.6 | [Figure_4.6_Checkout_Time.png](Figure_4.6_Checkout_Time.png) | Checkout date guidance, morning time and stock-availability result. |
-| 4.7 | [Figure_4.7_Checkout_Payment.png](Figure_4.7_Checkout_Payment.png) | Payment section with an uploaded illustrative receipt. |
+| 4.7 | [Figure_4.7_Checkout_Payment.png](Figure_4.7_Checkout_Payment.png) | Payment section showing the kitchen’s receiving QR code and an uploaded sample receipt. |
 | 4.16 | [Figure_4.16_Payment_Review.png](Figure_4.16_Payment_Review.png) | Reviewing payment details separately from food receipt. |
 
 The existing report's Figure 4.6 shows a valid time, rather than the out-of-range error. Its replacement reflects the adjusted time-field layout. Figure 4.7 retains its uploaded-receipt state. The supplementary screens below show the guidance and error states; they do not replace a caption describing an uploaded receipt.
+
+## QR and reminder follow-up
+
+Figure 4.7 now uses the supplied receiving QR, not the earlier placeholder. The browser verified the exact crop pixels, the saved image after reload and its use in checkout. This changes the local screenshot data only; no live settings or source code were changed in this follow-up.
+
+[Copy-ready replacement captions and explanations for Figures 4.7 and 4.22](Report_Text_Replacements.md). Take Figure 4.22 from your Vercel screen; the earlier local “Setup needed” screenshot did not reflect the deployed email configuration. Configuration readiness, recorded worker activity and actual email delivery are separate facts.
 
 ## Additional states
 

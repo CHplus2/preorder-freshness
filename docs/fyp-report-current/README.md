@@ -1,5 +1,7 @@
 # Current FYP report
 
+Receiving QR follow-up: Figure 4.7 now has the supplied real QR in the [replacement screenshot set](payment-ui-replacements/README.md). [Copy-ready caption and reminder wording](payment-ui-replacements/Report_Text_Replacements.md) is provided for manual editing; the full Word/PDF below has not been rebuilt for these follow-ups.
+
 Latest checkout recovery layout: [plain error state and verified retry behaviour](checkout-recovery/README.md).
 
 Latest UI follow-up: [replacement Figures 4.6, 4.7 and 4.16, plus checkout guidance/error screenshots](payment-ui-replacements/README.md). These follow-up images are available for manual replacement; the report files below precede this UI follow-up.
