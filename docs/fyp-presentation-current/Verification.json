@@ -18,7 +18,7 @@
     "Female",
     "Male"
   ],
-  "video_format": "1920x1080 H.264/AAC, 48 kHz audio, 120 seconds each",
+  "video_format": "1920x1080 H.264/AAC, native 24 kHz audio, 120 seconds for video and audio",
   "capture_page_errors": [],
   "stock_example": {
     "before": {
@@ -39,12 +39,27 @@
     "video_decode": "both MP4s decoded fully without reported errors",
     "video_duration": "120.000 seconds each",
     "audio_integrated_loudness_lufs": {
-      "Female": -18.33,
-      "Male": -18.48
+      "Female": -21.32,
+      "Male": -22.46
     },
     "visual_review": "main, backup and fallback slides, speaker script and selected frames across every demo scene reviewed",
     "human_evaluation": "client acceptance and participant survey results pending",
-    "powerpoint_native_playback": "not exercised; rehearse on presentation laptop"
+    "powerpoint_native_playback": "not exercised; rehearse on presentation laptop",
+    "audio_revision": {
+      "processing": "native generated pace, one constant gain per voice, no post-generation time stretching or dynamic loudness processing",
+      "scene_padding": "exact sample counts, eliminating the previous accumulated shortfall",
+      "caption_timing": "retimed for native speech",
+      "decoded_clipped_samples": {
+        "Female": 0,
+        "Male": 0
+      },
+      "audio_duration_seconds": {
+        "Female": 120.0,
+        "Male": 120.0
+      },
+      "slide_preservation": "only the embedded MP4 changed; all slide XML, notes, layout and images are byte-identical to the preceding presentation",
+      "perceptual_quality": "technical checks cannot establish listener preference"
+    }
   },
   "application_code_changed": false,
   "forecasting_model_changed": false,

@@ -11,12 +11,13 @@ Download the [complete package](FYP_Presentation_Complete.zip), or choose indivi
 - **FYP_Presentation_10min_Female.pptx**: editable main deck with the female-narrated video embedded on slide 13.
 - **FYP_Presentation_10min_Male.pptx**: the same slides with the male-narrated video on slide 13. Choose one deck for the presentation.
 - **FYP_Presentation_10min.pdf**: static slide preview; PDFs do not play the demo.
-- **Demo_120s_Female.mp4** and **Demo_120s_Male.mp4**: matching standalone videos. Each is two minutes, 1920 × 1080, H.264 with AAC audio.
+- **Demo_120s_Female.mp4** and **Demo_120s_Male.mp4**: matching standalone videos. Each is two minutes, 1920 × 1080, H.264 with AAC audio at the voice model’s native 24 kHz sample rate.
 - **Speaker_Script_10min.md / .pdf**: slide timings and rehearsal notes. The notes are also included in both PowerPoint files.
 - **Design_Backup_Slides.pptx / .pdf**: use cases, class model and order-placement sequence, outside the timed talk. The diagrams.net sources are in `diagram-sources/`.
 - **Screenshot_Fallback.pptx / .pdf**: eight screenshots for presenting the journey if the video cannot be played.
 - **Demo_*_Captions.srt**: editable timed captions. Captions are already visible in the MP4s; do not enable a second caption track unless you want duplicate captions.
 - **Demo_*_Voiceover.mp3** and **Demo_Narration_Script.txt**: separate narration assets for future editing.
+- **Demo_Female_Audio_Preview.mp3** and **Demo_Male_Audio_Preview.mp3**: short previews of the revised audio.
 
 The main deck contains fourteen slides, including the demonstration and questions. It retains all five original objectives. There is no old university logo; add the approved new logo when it becomes available.
 
@@ -46,6 +47,6 @@ The video covers browsing, customer account access, date/budget suggestions, che
 
 ## Narration and assets
 
-Both videos use the same script and browser footage. Female narration uses Kokoro `af_heart`; male narration uses `am_michael`, generated locally with Sherpa-ONNX and the existing Kokoro model. These are stock synthetic voices, not recordings or clones of the student or client. Voice timing is adjusted without changing pitch.
+Both videos use the same script and browser footage. Female narration uses Kokoro `af_heart`; male narration uses `am_michael`, generated locally with Sherpa-ONNX and the existing Kokoro model. These are stock synthetic voices, not recordings or clones of the student or client. The generated speech plays at its original pace. One constant volume adjustment is applied to each voice, with no post-generation time-stretching or dynamic loudness processing. Each scene is padded to its exact duration and the captions are retimed.
 
 Client food photographs and the receiving QR were supplied by the user. Architecture and design diagrams come from the current project report. Model weights, private example databases, raw browser recordings and credentials are excluded from the download.
