@@ -12,4 +12,4 @@
 
 .simple-orders .order-workspace-nav a{margin:0;font-size:.875rem;line-height:1.5}.simple-orders .order-workspace-nav a::after{display:none}.simple-orders .order-workspace-nav a:hover{background:#edf3ee;color:#285a3e}.simple-orders .order-workspace-nav a[aria-current=page]:hover{background:#234f36;color:#fff}
 
-.simple-orders-count{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;margin:16px 0}.simple-orders .order-summary-link.admin-action-link{padding:8px 0;border:0;background:none;text-decoration:none}.simple-orders .order-summary-link.admin-action-link:hover{color:#173e29;text-decoration:none}.simple-orders .order-workspace-nav a:is(:hover,:focus-visible){text-decoration:none}
+.simple-order-list-summary{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;margin:16px 0}.simple-orders .order-summary-link.admin-action-link{padding:8px 0;border:0;background:none;text-decoration:none}.simple-orders .order-summary-link.admin-action-link:hover{color:#173e29;text-decoration:none}.simple-orders .order-workspace-nav a:is(:hover,:focus-visible){text-decoration:none}
