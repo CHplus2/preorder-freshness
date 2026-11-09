@@ -90,7 +90,7 @@ protect repeat runs against content changes; they do not independently certify
 publisher provenance. Training is deterministic by fixed data, seed, parameters
 and dependency versions; byte-identical files across different platforms are not
 promised. The original observed holdout scores are 28.23% model WAPE and 34.81%
-previous-observation baseline WAPE. See the [historical FreshCast audit](../../docs/freshcast/Backend_Audit_History.md) for limitations.
+previous-observation baseline WAPE. See `DORMATHON_REPORT.md` for limitations.
 
 ## Make artifacts available to Django locally
 

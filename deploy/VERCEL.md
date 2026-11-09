@@ -224,8 +224,8 @@ or a guarantee of permanent storage. Never put a token in the URL or repository.
 Hosted staff/API validation remains separate from a successful build. Existing
 Vercel protection and FYP staff authentication are retained. Codex egress needs
 the generated deployment hostname allowed before browser/HTTP checks there.
-Earlier pantry UI integration and local browser validation are recorded in the
-[historical FreshCast audit](../docs/freshcast/Backend_Audit_History.md). Those historical results do not verify the current deployment.
+Latest pantry UI integration and local browser validation are recorded in
+`DORMATHON_REPORT.md`; use the latest candidate URL supplied with that task.
 
 ## Direct upload of the original model: no separate storage required initially
 
