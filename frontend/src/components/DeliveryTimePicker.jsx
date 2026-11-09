@@ -54,7 +54,7 @@ function SimpleTimePicker({cart=[],value='',day='',method='standard',onSelect,di
  const dates=upcomingBasketDates(cart,closing,now);
  const [chosenDay,setDay]=useState(()=>value.slice(0,10)||day||(cart.length?dates[0]||'':defaultDeliveryDay(closing,now)));
  const [clock,setClock]=useState(()=>value.slice(11));
- const issueId=useId(),dateHelpId=useId(),dateErrorId=useId(),dateInput=useRef(null);
+ const issueId=useId(),timeHelpId=useId(),dateHelpId=useId(),dateErrorId=useId(),dateInput=useRef(null);
  // An invalid draft stays visible; only valid selections enter shared checkout state.
  const [syncedValue,setSyncedValue]=useState(value);
  if(value!==syncedValue){setSyncedValue(value);if(value){setDay(value.slice(0,10));setClock(value.slice(11));}}
@@ -72,8 +72,9 @@ function SimpleTimePicker({cart=[],value='',day='',method='standard',onSelect,di
    <p className="ordering-dates-note">Dates match the menus’ offered days and cutoffs. Availability is confirmed after you choose a time.</p>
   </div>}
   <div className="simple-date-fields"><div className="simple-date-field"><label>Delivery or collection date<input ref={dateInput} required type="date" min={malaysiaInput(now).slice(0,10)} max={malaysiaInput(now+90*86400000).slice(0,10)} value={chosenDay} disabled={disabled} aria-invalid={!!dateIssue} aria-describedby={dateIssue?`${dateHelpId} ${dateErrorId}`:cart.length?dateHelpId:undefined} onChange={e=>choose(e.target.value,clock)}/></label>{dateIssue&&<p id={dateErrorId} role="alert" className="ordering-date-error">{dateIssue} {dates.length>0&&'Choose one of the ordering dates above.'}</p>}</div>
-  <label>{pickup?'Collection':'Delivery'} time<input required type="time" step="60" min={opening} max={closing} value={clock} disabled={disabled} aria-invalid={!!issue&&!dateIssue} aria-describedby={issue&&!dateIssue?issueId:undefined} onChange={e=>choose(chosenDay,e.target.value)}/></label></div>
-  <p className="delivery-picker-hint">{timeLabel(opening)}–{timeLabel(closing)} · Malaysia time</p>
-  {!dateIssue&&issue&&<p id={issueId} role="alert" className="ordering-date-error">{issue}</p>}
+  <div className="simple-date-field"><label>{pickup?'Collection':'Delivery'} time<input required type="time" step="60" min={opening} max={closing} value={clock} disabled={disabled} aria-invalid={!!issue&&!dateIssue} aria-describedby={issue&&!dateIssue?`${timeHelpId} ${issueId}`:timeHelpId} onChange={e=>choose(chosenDay,e.target.value)}/></label>
+  <p id={timeHelpId} className="delivery-picker-hint">{timeLabel(opening)}–{timeLabel(closing)} · Malaysia time</p>
+  {!dateIssue&&issue&&<p id={issueId} role="alert" className="ordering-time-error">{issue}</p>}
+  </div></div>
  </div>;
 }

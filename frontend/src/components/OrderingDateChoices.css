@@ -22,3 +22,6 @@
 .simple-time-picker .ordering-date-error{border-left:3px solid #9a735b;background:#fbf6ef;border-radius:4px;padding:12px 14px;margin:14px 0 0;font-size:.875rem;line-height:1.65;color:#734d36}
 .simple-time-picker :is(button,input,a):focus-visible{outline:3px solid #b28d46;outline-offset:3px}
 @media(max-width:520px){.simple-time-picker .simple-date-fields{grid-template-columns:minmax(0,1fr);gap:16px}.simple-time-picker .basket-ordering-dates{padding:14px}.simple-time-picker .ordering-date-choices button{flex:1 0 88px;padding-inline:8px}}
+
+.simple-time-picker .simple-date-field>.delivery-picker-hint{margin:8px 0 0;font-size:.8rem;line-height:1.6}
+.simple-time-picker .ordering-time-error{margin:8px 0 0;padding:0;border:0;background:none;color:#8a382d;font-size:.875rem;line-height:1.6}

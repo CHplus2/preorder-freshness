@@ -1,0 +1,97 @@
+{
+  "payment_proof_checks": [
+    {
+      "viewport": [
+        1366,
+        768
+      ],
+      "normal": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "width": 160.578125,
+        "height": 44
+      },
+      "hover": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "width": 160.578125,
+        "height": 44
+      },
+      "focus": {
+        "decoration": "none",
+        "outline": "solid",
+        "outlineWidth": "3px",
+        "width": 160.578125,
+        "height": 44
+      },
+      "proof_opens": true,
+      "horizontal_overflow": false
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "normal": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "width": 160.578125,
+        "height": 44
+      },
+      "hover": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px",
+        "width": 160.578125,
+        "height": 44
+      },
+      "focus": {
+        "decoration": "none",
+        "outline": "solid",
+        "outlineWidth": "3px",
+        "width": 160.578125,
+        "height": 44
+      },
+      "proof_opens": true,
+      "horizontal_overflow": false
+    }
+  ],
+  "checkout_spacing": [
+    {
+      "viewport": [
+        1366,
+        768
+      ],
+      "gap": 20,
+      "marginBottom": "0px",
+      "inside": true
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "gap": 20,
+      "marginBottom": "0px",
+      "inside": true
+    }
+  ],
+  "inline_time_error": {
+    "background": "rgba(0, 0, 0, 0)",
+    "border": "0px",
+    "description": "_r_g_ _r_f_",
+    "id": "_r_f_"
+  },
+  "area_change_preserves_time_and_rechecks_fee": true,
+  "time_survives_reload": true,
+  "page_errors": [],
+  "data": "isolated illustrative orders and proof; not production data",
+  "capture": "actual current local application build",
+  "report_viewport": [
+    1366,
+    768
+  ]
+}

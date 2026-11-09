@@ -36,7 +36,14 @@ export default function CartProvider({ children }) {
   const preferredDelivery=activeDeliveryChoice(deliveryChoice,choiceScope);
   const preferredDeliveryDay=activeDeliveryDay(deliveryChoice,choiceScope);
   const saveChoice=record=>{setDeliveryChoice(record);try{saveDeliveryChoice(sessionStorage,record)}catch{/* Keep the choice in memory. */}};
-  const chooseFulfilment=(method,area='')=>{const window_minutes=fulfilment.window_minutes ?? 60;setFulfilment({account:accountKey,method,area,window_minutes});saveChoice(null);try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method,area,window_minutes}));}catch{/* The current choice remains usable. */}};
+  const chooseFulfilment=(method,area='')=>{
+    const window_minutes=fulfilment.window_minutes ?? 60;
+    // A simple delivery-area change needs a fresh quote, not a new time.
+    const keepTime=promotion.ordering_mode==='simple'&&method===fulfilmentMethod;
+    const choice=keepTime&&(preferredDelivery||preferredDeliveryDay)?{version:1,value:preferredDelivery,day:preferredDeliveryDay,scope:deliveryChoiceScope(accountKey,cart,promotion,method,area,arrivalWindowMinutes)}:null;
+    setFulfilment({account:accountKey,method,area,window_minutes});saveChoice(choice);
+    try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method,area,window_minutes}));}catch{/* The current choice remains usable. */}
+  };
   const chooseArrivalWindow=minutes=>{if(![0,30,60].includes(minutes))return;setFulfilment({account:accountKey,method:fulfilmentMethod,area:deliveryArea,window_minutes:minutes});saveChoice(null);try{sessionStorage.setItem('fulfilmentChoice',JSON.stringify({method:fulfilmentMethod,area:deliveryArea,window_minutes:minutes}));}catch{/* Keep the current timing usable. */}};
   const chooseDeliveryTime=(time,{rows=cart,windowMinutes=arrivalWindowMinutes}={})=>{
     if(!isSessionCurrent() || ![0,30,60].includes(windowMinutes))return;
