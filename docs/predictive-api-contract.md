@@ -2584,3 +2584,27 @@ Validation: focused frontend tests, scoped lint/build, 26 existing backend
 stock/report tests and isolated local Chromium at desktop/tablet/phone widths.
 Checks covered measured alignment, target arithmetic, included menu names,
 stale-result clearing and GET-only requests. No live data was changed.
+
+### 9 November 2026 — checkout and delivery workspace presentation
+
+Checkout QR and uploaded-receipt links now use outlined controls with external-link
+icons and visible keyboard focus. The basket edit action has 16px of space below
+its summary divider. The Orders workspace navigation uses the existing green and
+neutral palette without the inherited full-width navigation background or bottom
+border. Delivery hours are separated from the delivery-area editor by 28px and
+stack on phones.
+
+Settings no longer repeats the informational courier-handover panel, which had
+no editable configuration. The optional per-order handover/tracking tool remains:
+the kitchen arranges any external courier outside this website and manually saves
+its reference/link. Own delivery does not require a courier reference. Tracking
+does not book a rider, receive live courier events, change the payment method or
+confirm receipt. COD requires an agreed person to collect payment. WhatsApp links
+are external contact shortcuts, not an integrated messaging service.
+
+No API/schema, stock-reservation, payment, forecasting or model behavior changed.
+Validation: existing checkout/account/report frontend checks, lint and production
+build; isolated Chromium checks at laptop, tablet and phone widths verified receipt
+upload, link styling, basket spacing, active navigation, delivery-field spacing,
+no horizontal overflow and the retained optional order tool. These are local
+current-source checks with example records, not live Vercel verification.

@@ -4,7 +4,7 @@ import './FulfilmentChoices.css';
 export default function SimpleFulfilmentSettings({store,onChange,disabled=false,areaError='',onSavePickup,pickupSaving=false,pickupError='',onSaveDelivery,deliverySaving=false}){
  const update=value=>onChange({...store,...value});
  const clock=(key,label,fallback)=><label>{label}<input required type="time" step="60" value={(store[key]||fallback).slice(0,5)} onChange={e=>update({[key]:e.target.value})}/></label>;
- return <section className="settings-group fulfilment-settings" id="fulfilment"><h2>Collection & delivery</h2><fieldset className="fulfilment-settings-fields" disabled={disabled}><legend className="sr-only">Collection and delivery settings</legend>
+ return <section className="settings-group fulfilment-settings simple-fulfilment-settings" id="fulfilment"><h2>Collection & delivery</h2><fieldset className="fulfilment-settings-fields" disabled={disabled}><legend className="sr-only">Collection and delivery settings</legend>
   <p>Choose when customers can receive food. These settings apply to new orders; accepted orders keep their agreed terms.</p>
   <section className="pickup-setup" id="pickup-setup"><h3>Self-collection</h3><p>{store.pickup_enabled?'Customers can collect from the kitchen.':'Add a collection location, then enable pickup.'} Self-collection accepts QR payment only.</p>
    {store.pickup_enabled&&!manualPaymentAvailable(store,'pickup')&&<p className="settings-field-error">Pickup is enabled, but customers need a receiving QR code before they can pay. <a href="#qr-payments">Set up QR payment</a>.</p>}

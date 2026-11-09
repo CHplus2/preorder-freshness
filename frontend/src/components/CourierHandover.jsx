@@ -19,6 +19,7 @@ export default function CourierHandover({order,onSaved}){
  }
  return <details className="courier-handover"><summary>Arrange courier handover</summary>
   <p>Book the rider in your courier app. Use the customer as recipient and the kitchen as pickup contact. This website does not book a rider or receive live courier events.</p>
+  {simple&&<p>Optional: use this when you arrange an external courier. For your own delivery, no courier reference is needed. For cash on delivery, agree who will collect payment; adding tracking does not change the payment method.</p>}
   {recipient.reviewTime && <p className="courier-handover-review">The requested arrival still needs kitchen confirmation. Agree a workable time before booking.</p>}
   <dl><div><dt>Recipient</dt><dd>{recipient.name || 'Confirm name with customer'}</dd></div><div><dt>Recipient phone</dt><dd>{recipient.phone || 'Confirm number with customer'}</dd></div><div><dt>Order’s delivery address</dt><dd>{recipient.lines.length?recipient.lines.map((line,i)=><span key={i}>{line}</span>):'Confirm address with customer'}</dd></div></dl>
   <p>{recipient.arrangement}</p>{recipient.notes && <p className="courier-handover-note">{recipient.notes}</p>}

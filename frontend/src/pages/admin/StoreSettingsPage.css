@@ -102,3 +102,14 @@
  .settings-page .setup-progress-label{align-items:flex-start;flex-direction:column;gap:6px}
  .reminder-monitor .reminder-run-summary{padding:16px}
 }
+
+/* Separate opening hours from the area editor, including stacked phone fields. */
+.settings-page .simple-fulfilment-settings .fulfilment-setting-section{display:grid;gap:28px;padding:0;border:0}
+.settings-page .simple-fulfilment-settings .admin-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 24px}
+.settings-page .simple-fulfilment-settings .admin-fields>label{min-width:0;margin:0;display:grid;gap:8px}
+.settings-page .simple-fulfilment-settings input[type=time]{width:100%;min-width:0;max-width:100%;margin:0;font:inherit}
+.settings-page .simple-fulfilment-settings .pickup-setup>label{display:grid;gap:8px;margin:16px 0}
+.settings-page .simple-fulfilment-settings .pickup-setup>label>:is(input,textarea){margin:0;width:100%;min-width:0}
+.settings-page .simple-fulfilment-settings .pickup-setup>.admin-fields{margin:20px 0}
+.settings-page .simple-fulfilment-settings .delivery-areas-editor>h3{margin:0 0 10px}
+@media(max-width:600px){.settings-page .simple-fulfilment-settings .admin-fields{grid-template-columns:minmax(0,1fr)}}
