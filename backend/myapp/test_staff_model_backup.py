@@ -31,7 +31,11 @@ class StaffModelBackupTests(TestCase):
                 self.assertEqual(response.status_code,200)
                 self.assertEqual(response['X-Checksum-SHA256'],checksum)
                 self.assertIn('no-store',response['Cache-Control'])
-                self.assertEqual(b''.join(response.streaming_content),content);response.close()
+                self.assertEqual(b''.join(response.streaming_content),content)
+                # Django's test-client streaming wrapper already closes the
+                # response; closing it twice emits request_finished twice and
+                # can close the PostgreSQL connection inside TestCase.
+                self.assertTrue(response.closed)
                 self.assertEqual(archive.stat().st_mtime_ns,stamp)
                 self.assertEqual(self.client.get(ROUTE+'?file=database').status_code,400)
                 self.assertEqual(self.client.post(ROUTE).status_code,405)

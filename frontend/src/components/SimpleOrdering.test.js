@@ -43,7 +43,7 @@ try{
  assert.match(picker,/type="time"/);assert.match(picker,/type="date"/);
  assert.doesNotMatch(picker,/Need a different time|preparation|kitchen bookings/);
  const offered=render(h(Picker,{cart:[{product:{name:'Monday menu',delivery_weekdays:[0]}}],onSelect:()=>{}}));
- assert.match(offered,/Offered for this basket/);assert.match(offered,/Upcoming ordering dates/);assert.match(offered,/stock is checked after/);
+ assert.match(offered,/Offered for this basket/);assert.match(offered,/Upcoming ordering dates/);assert.match(offered,/Availability is confirmed after you choose a time/);
  const incompatible=render(h(Picker,{cart:[{product:{name:'Monday menu',delivery_weekdays:[0]}},{product:{name:'Tuesday menu',delivery_weekdays:[1]}}],onSelect:()=>{}}));
  assert.match(incompatible,/no delivery weekday in common/);assert.match(incompatible,/Edit basket/);assert.doesNotMatch(incompatible,/role="group" aria-label="Upcoming ordering dates"/);
  const {default:Recipe}=await load('components/RecipeEditor.jsx');

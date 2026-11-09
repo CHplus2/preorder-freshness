@@ -11,14 +11,16 @@ from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group, Permission
 from django.core.management import call_command, CommandError
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.utils import timezone
 from datetime import timedelta
 
 from .models import Order, OrderItem, Product, ProductIngredient, RawMaterial, InventoryItem
 
 
-class KitchenBackupTests(TestCase):
+class KitchenBackupTests(TransactionTestCase):
+    # The command starts its own read-only snapshot. PostgreSQL cannot change
+    # isolation inside TestCase's enclosing transaction after setup has queried.
     def setUp(self):
         self.user = User.objects.create_user('backup-owner', password='example-not-a-real-secret', is_staff=True)
         self.menu = Product.objects.create(name='Nasi Lemak', price=8)
