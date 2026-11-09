@@ -40,9 +40,9 @@ export function ReminderEvidence({status}){
    {status.email_delivery && <EmailDeliveryCheck key={`${status.email_delivery.sender_address}|${status.email_delivery.owner_recipient}`} configuration={status.email_delivery}/>}
    <h3>Automatic sending</h3>
    <p>{status.scheduler_secret_configured?'The sending connection is configured.':'The sending connection needs setup.'} Check that one automatic schedule is enabled; these recorded checks can include manual runs.</p>
-   <p><a href="https://github.com/CHplus2/preorder-freshness/actions/workflows/delivery-reminders.yml" target="_blank" rel="noopener noreferrer">View sending schedule in GitHub</a></p>
+   <p><a className="admin-action-link" href="https://github.com/CHplus2/preorder-freshness/actions/workflows/delivery-reminders.yml" target="_blank" rel="noopener noreferrer">View sending schedule in GitHub</a></p>
    <p>Check about every five minutes. GitHub schedules can be delayed; this page cannot verify that the schedule is enabled or that emails reached an inbox.</p>
-   <p><a href="https://github.com/CHplus2/preorder-freshness/blob/main/docs/customer-delivery-batches.md" target="_blank" rel="noopener noreferrer">Email setup guide</a></p>
+   <p><a className="admin-action-link" href="https://github.com/CHplus2/preorder-freshness/blob/main/docs/customer-delivery-batches.md" target="_blank" rel="noopener noreferrer">Email setup guide</a></p>
    <h3>Recent email checks</h3>
    <p>{activity.authenticated_runs_24h} checks recorded here in 24 hours. Includes manual checks; command-line sends are separate.</p>
    {activity.recent_runs.length>0?<div className="admin-table-scroll" role="region" aria-label="Recent email check history" tabIndex={0}><table><caption>Latest 10 checks in 24 hours. Accepted means the email provider accepted the message for sending.</caption><thead><tr><th scope="col">Started (Malaysia)</th><th scope="col">Result</th><th scope="col">Accepted</th><th scope="col">Failed</th></tr></thead><tbody>{activity.recent_runs.map((run,index)=><tr key={index}><td>{workerTime(run.started_at)}</td><td>{workerOutcome(run.outcome)}</td><td>{run.sent ?? '—'}</td><td>{run.failed ?? '—'}</td></tr>)}</tbody></table></div>:<p>No checks recorded here in the last 24 hours.</p>}

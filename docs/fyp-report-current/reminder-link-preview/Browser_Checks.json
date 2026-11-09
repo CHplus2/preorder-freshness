@@ -1,0 +1,101 @@
+{
+  "link_checks": [
+    {
+      "link": "View sending schedule in GitHub",
+      "viewport": [
+        1366,
+        768
+      ],
+      "normal": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px"
+      },
+      "hover": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px"
+      },
+      "focus": {
+        "decoration": "none",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      },
+      "href": "https://github.com/CHplus2/preorder-freshness/actions/workflows/delivery-reminders.yml"
+    },
+    {
+      "link": "Email setup guide",
+      "viewport": [
+        1366,
+        768
+      ],
+      "normal": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px"
+      },
+      "hover": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px"
+      },
+      "focus": {
+        "decoration": "none",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      },
+      "href": "https://github.com/CHplus2/preorder-freshness/blob/main/docs/customer-delivery-batches.md"
+    },
+    {
+      "link": "View sending schedule in GitHub",
+      "viewport": [
+        390,
+        844
+      ],
+      "normal": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px"
+      },
+      "hover": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px"
+      },
+      "focus": {
+        "decoration": "none",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      },
+      "href": "https://github.com/CHplus2/preorder-freshness/actions/workflows/delivery-reminders.yml"
+    },
+    {
+      "link": "Email setup guide",
+      "viewport": [
+        390,
+        844
+      ],
+      "normal": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px"
+      },
+      "hover": {
+        "decoration": "none",
+        "outline": "none",
+        "outlineWidth": "3px"
+      },
+      "focus": {
+        "decoration": "none",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      },
+      "href": "https://github.com/CHplus2/preorder-freshness/blob/main/docs/customer-delivery-batches.md"
+    }
+  ],
+  "page_errors": [],
+  "existing_figure_4_22_affected": false,
+  "reason": "The two links are inside Email settings & history; neither is visible in the existing Figure 4.22 crop.",
+  "screenshots": "Supplementary styling reference from the current local build with isolated example data; not a production reminder-status capture.",
+  "reminder_sending_triggered": false
+}
