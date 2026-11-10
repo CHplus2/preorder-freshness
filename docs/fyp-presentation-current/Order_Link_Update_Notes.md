@@ -1,11 +1,13 @@
-# Corrected order links and refreshed demos
+# Calmer walkthrough and current order links
 
-The website now styles Daily summary in the owner order queue, meal review links on received customer orders, and View payment receipt consistently with their surrounding actions. All three stay free of underlines in normal, hover and keyboard-focus states. The owner list count remains plain text with a separated action; tab-count badges keep their existing appearance.
+Updated 10 November 2026. Both two-minute demos have been recaptured from the current local application at 1920 × 1080. The wider page proportions follow the supplied older demo. Visible cursor movement, gradual scrolling and short reading pauses make the journey easier to follow. Browser interactions play at their recorded speed; reading holds complete the two-minute timeline.
 
-Both demo videos use actual local browser captures of the corrected application. The latest owner scenes use the final rebuilt assets. The two-minute timeline, script, original generated voice pace and simple volume adjustment are retained. No artificial slowing or dynamic loudness processing has been reintroduced. The recordings use an isolated example database, the client menu photos and the supplied receiving QR; no bank transfer or real customer order was made.
+The revised narration ends with daily printing and sales. It contains no closing comments about surveys, participants, evaluation or automated testing. Female and male editions use the same script and browser footage, with stock synthetic voices at their original generated pace.
 
-The newly placed Chicken Grilled Salad order still deducts 130 g of chicken and one salad bowl. The additional received Wanpaku example is used for the supplementary History screenshot; it is separate from the pending order and does not mark the new receipt as paid.
+The corrected Daily summary, customer meal-review and View payment receipt styles remain in the application. The isolated capture uses the client menu photographs, the supplied receiving QR saved through local Settings, a sample receipt and example orders. No real bank transfer or production customer order was made. A virtual browser authenticator demonstrates passkey registration.
 
-Both main PowerPoint editions contain the corresponding updated MP4. Their text, notes, poster images and layouts are unchanged. The PDF and screenshot fallback do not show these affected customer/queue links and remain unchanged. Package, geometry and media matching checks were rerun; native PowerPoint playback still needs rehearsal on the presentation laptop.
+The new Chicken Grilled Salad order deducts 130 g of chicken and one salad bowl: 5,000 g becomes 4,870 g and 200 bowls becomes 199. Print all opens two example slips. The sales example is a separate paid-and-received record; uploading the new receipt does not mark it paid.
 
-Replacement report images and a figure guide are available in [the order-link screenshot set](../fyp-report-current/order-link-replacements/README.md). The report Word/PDF is not rebuilt. Repository cleanup is deferred to batch 2, as requested.
+Both main PowerPoint editions embed their updated MP4. Every other package part, including slide text, notes, images and layouts, is byte-identical to the preceding deck. Both updated decks passed package, geometry and presentation import checks. The static PDF, backup diagrams and screenshot fallback are unchanged. Rehearse embedded playback in desktop PowerPoint on the presentation laptop.
+
+[The existing order-link report replacements](../fyp-report-current/order-link-replacements/README.md) remain available. This recording batch does not change website source, forecasting models, the report or production settings. The previous documentation cleanup was already published separately; no further cleanup is included here.

@@ -1,12 +1,12 @@
 # FYP presentation and demo
 
-Prepared 9 November 2026 for Christopher Hansen, 2402081406.
+Updated 10 November 2026 for Christopher Hansen, 2402081406.
 
 The talk follows problem, solution, mechanism, implemented functions, evaluation and a demonstration at the end. The provisional timing is ten minutes: eight minutes of speaking followed by a two-minute video. Questions are outside that timing. Confirm the final duration with the lecturer.
 
 Download the [complete package](FYP_Presentation_Complete.zip), or choose individual files below. The complete package includes both voice editions.
 
-Latest order-link fixes and refreshed demo footage: [update notes](Order_Link_Update_Notes.md).
+Wider framing, calmer interactions and revised demo ending: [update notes](Order_Link_Update_Notes.md).
 
 ## Start here
 
@@ -39,7 +39,7 @@ The five original objective statements remain unchanged. The claim of reducing d
 
 ## Recording context
 
-The footage is an actual browser recording of the current application source running locally, captured on 9 November 2026 at a 1366 × 768 laptop viewport. The page is scaled proportionally into the 1080p video. Chapter labels and captions sit outside the page image. Interactions are edited to the two-minute timeline, with final-frame holds where appropriate; website screens were not drawn or regenerated.
+The footage is an actual browser recording of the current application source running locally, captured on 10 November 2026 at a 1920 × 1080 desktop viewport. This restores the wider responsive page proportions of the supplied older demo. The page is scaled proportionally to 1728 × 972 within the 1080p video. Chapter labels and captions sit outside the page image. A cursor overlay makes real mouse movements visible during capture; it is a recording aid, not a website feature. Clicks, gradual scrolling and typing are shown at their original speed, with reading holds fitted to the two-minute timeline. Website screens were not drawn or regenerated. The ending covers daily printing and sales, without survey or testing commentary.
 
 The isolated local example database uses the supplied client menu photographs and the user's receiving QR uploaded through local Settings. The receipt is a sample; no real bank transfer or customer order was made. A virtual browser authenticator completes the demonstration passkey flow. This records implemented functionality, not a live production transaction or deployment verification.
 

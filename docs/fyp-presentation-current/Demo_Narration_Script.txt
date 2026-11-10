@@ -1,30 +1,30 @@
-Two-minute system walkthrough
+FYP two-minute demonstration narration
+Updated 10 November 2026
+Female: Kokoro af_heart. Male: Kokoro am_michael. Stock synthetic voices.
 
-The Female and Male editions use the same script and browser footage. Stock synthetic voices: Kokoro af_heart and am_michael.
+00:00.00–00:05.44 | From the menu to the kitchen
+Here's how a preorder moves from the menu to the kitchen.
 
-[00:00:00,000] Preorders, stock and kitchen records
-Wrap and Bowl Kuch connects preorders, stock records, and kitchen reporting.
+00:05.44–00:17.16 | Browse the kitchen menu
+Let's start with the menu. Customers can see prices and portions, then add a meal. They can review their basket before signing in.
 
-[00:00:06,000] Browse before signing in
-Customers browse the kitchen's menu, inspect prices and portions, and add food before signing in. Their basket remains visible while they decide.
+00:17.16–00:29.28 | Create an account with a passkey
+At checkout, customers enter their name and phone number, then create a passkey. They don't need a separate website password or email address.
 
-[00:00:18,000] A name, phone number and passkey
-Checkout opens account access. A name, phone number and passkey create the customer account. No separate website password or email address is needed.
+00:29.28–00:43.08 | Find ideas for a date and budget
+Want some ideas? Choose a date, quantity and budget. The finder suggests complete options, including one menu repeated. Customers can compare the choices before ordering.
 
-[00:00:30,000] Suggestions for a date and budget
-For ideas, customers choose a date, quantity and whole order budget. Suggestions can mix menus or repeat one menu. A suggestion still needs an availability check.
+00:43.08–01:06.60 | Confirm the date, total and receipt
+At checkout, choose an offered date, a morning time and the delivery area. The total is confirmed before the kitchen's receiving QR appears. A sample receipt is uploaded here. The kitchen still needs to verify the payment. The saved order is then shown in My orders.
 
-[00:00:44,000] Confirm the total and upload evidence
-The customer chooses the delivery area and a permitted morning time. Changing the area keeps the time and rechecks the fee and stock. The kitchen's receiving QR is shown after the total is confirmed. A sample receipt is uploaded here. The owner must still verify payment.
+01:06.60–01:16.76 | Review payment separately
+The kitchen can open the order and review its payment evidence. Recording payment and confirming that the food was received are separate actions.
 
-[00:01:08,000] Payment and food receipt stay separate
-The order appears in the kitchen's queue. Payment review and confirmation that food was received remain separate records.
+01:16.76–01:30.40 | Ingredients and packaging update together
+Stock updates when the order is placed. In this example, chicken goes from five thousand to four thousand eight hundred and seventy grams. One salad bowl is also deducted.
 
-[00:01:18,000] Ingredients and packaging update together
-Order placement deducts ingredients and packaging together. This example uses one hundred and thirty grams of chicken and one salad bowl. Batches must cover the delivery date.
+01:30.40–01:44.24 | Record batch dates and storage life
+For unlabelled ingredients, the owner can record shelf life and its reference. Earlier limits and held batches affect usable stock. These dates help with planning; they don't guarantee food safety.
 
-[00:01:32,000] Record the date evidence
-The owner records printed dates or documented shelf life. Held batches and earlier limits affect usable stock. These records support planning, rather than guaranteeing food safety.
-
-[00:01:44,000] Daily summaries, Print all and sales
-Daily summaries and Print all help the kitchen prepare several orders together. Sales and costs use their stated inclusion rules. Automated checks support the tested functions. Client and participant evaluation results are still pending.
+01:44.24–02:00.00 | Print daily orders and review sales
+Finally, the kitchen can review the day's orders and print the matching slips together. Sales and costs follow their recorded payment and receipt rules. The order stays connected to the kitchen's records.

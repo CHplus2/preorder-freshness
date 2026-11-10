@@ -1,10 +1,10 @@
 {
-  "prepared": "2026-11-09",
-  "application_source": "4e2ba10c3c276a0adddd6ab002630ff6c55e228d",
+  "prepared": "2026-11-10",
+  "application_source": "2c7cb5d32eab72820767af37c98ad66bbb0ab8fa",
   "source": "current main running locally with isolated example data; not a production capture",
   "viewport": {
-    "width": 1366,
-    "height": 768
+    "width": 1920,
+    "height": 1080
   },
   "timing_seconds": {
     "main_talk": 480,
@@ -31,7 +31,6 @@
     }
   },
   "checks": {
-    "all_four_powerpoints_finalized": true,
     "pptx_package_integrity": "passed",
     "pptx_layout_geometry": "passed",
     "embedded_video_matches_standalone": "SHA-256 equality checked for both variants",
@@ -39,16 +38,16 @@
     "video_decode": "both MP4s decoded fully without reported errors",
     "video_duration": "120.000 seconds each",
     "audio_integrated_loudness_lufs": {
-      "Female": -21.32,
-      "Male": -22.46
+      "Female": -21.48,
+      "Male": -23.48
     },
-    "visual_review": "main, backup and fallback slides, speaker script and selected frames across every demo scene reviewed",
+    "visual_review": "Selected frames across all nine scenes, supplied receiving QR, Print all preview, final sales view and visible cursor reviewed",
     "human_evaluation": "client acceptance and participant survey results pending",
     "powerpoint_native_playback": "not exercised; rehearse on presentation laptop",
     "audio_revision": {
       "processing": "native generated pace, one constant gain per voice, no post-generation time stretching or dynamic loudness processing",
-      "scene_padding": "exact sample counts, eliminating the previous accumulated shortfall",
-      "caption_timing": "retimed for native speech",
+      "scene_padding": "exact sample counts to fit the 120-second timeline",
+      "caption_timing": "retimed for the revised narration",
       "decoded_clipped_samples": {
         "Female": 0,
         "Male": 0
@@ -57,7 +56,7 @@
         "Female": 120.0,
         "Male": 120.0
       },
-      "slide_preservation": "only the embedded MP4 changed; all slide XML, notes, layout and images are byte-identical to the preceding presentation",
+      "slide_preservation": "only embedded MP4 changed; all other PPTX parts byte-identical to preceding decks",
       "perceptual_quality": "technical checks cannot establish listener preference"
     },
     "order_links": {
@@ -74,24 +73,44 @@
       "underline": "none for all checked links",
       "minimum_control_height_px": 44,
       "horizontal_overflow": "none in checked pages",
-      "examples": "Daily summary in owner navigation and queue, View payment receipt, Review Wanpaku Chicken Grilled in customer History"
+      "examples": "Daily summary in owner navigation and queue, View payment receipt, Review Wanpaku Chicken Grilled in customer History",
+      "checked_on": "2026-11-09 (preceding application link check; unchanged website source)"
     },
     "latest_video_tracks": {
       "Female": {
         "video_seconds": 120.0,
         "audio_seconds": 120.0,
+        "sample_rate": 24000,
         "decoded_clipped_samples": 0,
+        "decoded_peak": 0.7065225839614868,
+        "integrated_lufs": -21.48,
+        "true_peak_dbfs": -3.02,
         "full_decode": "passed"
       },
       "Male": {
         "video_seconds": 120.0,
         "audio_seconds": 120.0,
+        "sample_rate": 24000,
         "decoded_clipped_samples": 0,
+        "decoded_peak": 0.7087057828903198,
+        "integrated_lufs": -23.48,
+        "true_peak_dbfs": -2.98,
         "full_decode": "passed"
       }
-    }
+    },
+    "both_updated_main_powerpoints_finalized": true,
+    "unchanged_supporting_presentations": "backup and fallback retained from preceding validated package"
   },
   "application_code_changed": false,
   "forecasting_model_changed": false,
-  "production_database_contacted": false
+  "production_database_contacted": false,
+  "recording_update": {
+    "capture_date": "2026-11-10",
+    "responsive_page": "1920\u00d71080 capture, scaled proportionally to 1728\u00d7972 in 1080p output",
+    "cursor": "local recording overlay follows actual mouse movements; no website code changes",
+    "playback_speed": 1.0,
+    "pacing": "gradual scrolling, cursor movement and reading holds",
+    "ending": "daily printing and sales; no survey or testing commentary",
+    "native_narration_pace": true
+  }
 }
