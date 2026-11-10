@@ -380,7 +380,7 @@ automated verification from business/user validation. Discuss failures, correcti
 and limits. Use synthetic data labels on screenshots.
 
 The latest automated run and exact pass/skip results are recorded in
-[LATEST-VERIFICATION-20261009.md](LATEST-VERIFICATION-20261009.md).
+[LATEST-VERIFICATION-20261009.md](https://github.com/CHplus2/preorder-freshness/blob/93ca8da7a53bc7199533bb586a5a8cfd468f8309/docs/LATEST-VERIFICATION-20261009.md).
 Logs and source hashes allow a reviewer to identify what was tested.
 
 Automated passes do not guarantee full marks, usability, production uptime, inbox
@@ -461,7 +461,7 @@ Automatic-plan confirmation can be retried with the same preview after an
 uncertain response; the server saves it once. Changed availability still needs
 a fresh calculation. Invalid saved dates leave repair controls available, and
 calendar downloads report omitted invalid task timings. See the
-[planner review](PLANNER-REVIEW-2026-10-20.md) for tested behavior and limits.
+[planner review](https://github.com/CHplus2/preorder-freshness/blob/93ca8da7a53bc7199533bb586a5a8cfd468f8309/docs/PLANNER-REVIEW-2026-10-20.md) for tested behavior and limits.
 
 
 Email origin setup: an explicit `PUBLIC_APP_URL` takes precedence. If unset on

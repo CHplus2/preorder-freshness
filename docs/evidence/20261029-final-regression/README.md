@@ -51,7 +51,7 @@ change. PostgreSQL inventory tests were rerun after correcting their setup.
   is not a load benchmark, new browser walkthrough, customer study or guarantee
   that every possible bug has been found. Browser/accessibility evidence from
   the UI batches remains documented in the
-  [UI review](../../UI-UX-REVIEW-2026-10-28.md).
+  [UI review](https://github.com/CHplus2/preorder-freshness/blob/93ca8da7a53bc7199533bb586a5a8cfd468f8309/docs/UI-UX-REVIEW-2026-10-28.md).
 - Live Vercel deployment status remains unverified because of the environment's
   access restrictions. No new production migration or model training is needed
   for these test and verification-tool changes.

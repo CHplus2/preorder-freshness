@@ -1711,7 +1711,7 @@ The separate delivery-change endpoint can reserve a feasible replacement plan
 when its preview is confirmed. An infeasible unconfirmed request can instead
 remain `needs_review: true` with no reserved tasks. Such requests are excluded
 from planner delivery commitments, packing totals and calendar exports. See
-[planner review](PLANNER-REVIEW-2026-10-20.md) for integration checks and limits.
+[planner review](https://github.com/CHplus2/preorder-freshness/blob/93ca8da7a53bc7199533bb586a5a8cfd468f8309/docs/PLANNER-REVIEW-2026-10-20.md) for integration checks and limits.
 
 ## Customer delivery-time discovery: existing separate endpoint
 

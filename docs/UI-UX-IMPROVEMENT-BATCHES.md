@@ -1,7 +1,7 @@
 # Home-kitchen UX improvement batches
 
 The follow-up review requested after later feature additions is tracked in
-[the 28 October review](UI-UX-REVIEW-2026-10-28.md). The completed batches below
+[the 28 October review](https://github.com/CHplus2/preorder-freshness/blob/93ca8da7a53bc7199533bb586a5a8cfd468f8309/docs/UI-UX-REVIEW-2026-10-28.md). The completed batches below
 remain the record of the earlier review.
 
 ## Direction

@@ -2,7 +2,7 @@
 
 A web application for **Wrap & Bowl Kuch**, a home-based food business in Kuching, Sarawak. This is Christopher Hansen’s final-year project: *Web-Based Preorder and Freshness Management System for Home-Based Entrepreneurs*.
 
-[Open the menu](https://preorder-freshness.vercel.app/menu) · [Presentation and demo](docs/fyp-presentation-20261108/README.md) · [Report](docs/fyp-report-20261107-final/README.md) · [Editable poster](docs/fyp-poster-handoff-20261108/README.md)
+[Open the menu](https://preorder-freshness.vercel.app/menu) · [Presentation and demo](docs/fyp-presentation-current/README.md) · [Report](docs/fyp-report-current/README.md) · [Editable poster](docs/fyp-poster-handoff-20261108/README.md)
 
 ## Current FYP workflow
 

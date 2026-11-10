@@ -8,7 +8,7 @@ client checkout. See the [FYP revision map](client-fyp-feature-map.md).
 
 **Earlier behaviour:** see [the feature guide updated 9 October 2026](DAPUR-KITA-FEATURE-GUIDE.md)
 for owner-review fallback, manual windows, step editing and email rules. Latest
-automated results: [verification summary](LATEST-VERIFICATION-20261009.md).
+automated results: [verification summary](https://github.com/CHplus2/preorder-freshness/blob/93ca8da7a53bc7199533bb586a5a8cfd468f8309/docs/LATEST-VERIFICATION-20261009.md).
 
 Scope: single-vendor home-food preorder system. Screens can vary by role. Prices, dates and stock shown in screenshots must be labelled as test data when synthetic. Never share passwords or live customer details in the report.
 
